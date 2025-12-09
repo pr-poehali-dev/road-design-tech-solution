@@ -234,11 +234,11 @@ const Index = () => {
       <section className="relative pt-32 pb-24 px-4 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
-            src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&auto=format&fit=crop&q=80" 
-            alt="Highway background"
-            className="w-full h-full object-cover opacity-15"
+            src="https://images.unsplash.com/photo-1449157291145-7efd050a4d0e?w=2000&auto=format&fit=crop&q=80" 
+            alt="Modern highway construction"
+            className="w-full h-full object-cover opacity-25"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/90 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/85 to-background" />
         </div>
         <div className="absolute inset-0 bg-grid-pattern opacity-20 z-[1]" />
         <div className="container mx-auto relative z-10">
