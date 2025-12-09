@@ -312,9 +312,17 @@ const Index = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="bg-card border-border hover:border-primary transition-all group">
-              <CardHeader>
-                <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
+            <Card className="bg-card border-border hover:border-primary transition-all group relative overflow-hidden">
+              <div className="absolute inset-0 z-0">
+                <img 
+                  src="https://cdn.poehali.dev/files/фед.дорога.jpg" 
+                  alt="Федеральная дорога"
+                  className="w-full h-full object-cover opacity-50"
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-background/85 via-background/80 to-background/75" />
+              </div>
+              <CardHeader className="relative z-10">
+                <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm">
                   <Icon name="Highway" size={32} className="text-primary" />
                 </div>
                 <CardTitle className="font-heading text-2xl mb-3">Дороги федерального и регионального значения</CardTitle>
@@ -333,9 +341,17 @@ const Index = () => {
               </CardHeader>
             </Card>
 
-            <Card className="bg-card border-border hover:border-primary transition-all group">
-              <CardHeader>
-                <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
+            <Card className="bg-card border-border hover:border-primary transition-all group relative overflow-hidden">
+              <div className="absolute inset-0 z-0">
+                <img 
+                  src="https://cdn.poehali.dev/files/город.дорога.jpg" 
+                  alt="Городская дорога"
+                  className="w-full h-full object-cover opacity-50"
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-background/85 via-background/80 to-background/75" />
+              </div>
+              <CardHeader className="relative z-10">
+                <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm">
                   <Icon name="Building2" size={32} className="text-primary" />
                 </div>
                 <CardTitle className="font-heading text-2xl mb-3">Городские улицы и дороги</CardTitle>
@@ -354,9 +370,17 @@ const Index = () => {
               </CardHeader>
             </Card>
 
-            <Card className="bg-card border-border hover:border-primary transition-all group">
-              <CardHeader>
-                <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
+            <Card className="bg-card border-border hover:border-primary transition-all group relative overflow-hidden">
+              <div className="absolute inset-0 z-0">
+                <img 
+                  src="https://cdn.poehali.dev/files/пром.дорога.jpg" 
+                  alt="Промышленная дорога"
+                  className="w-full h-full object-cover opacity-50"
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-background/85 via-background/80 to-background/75" />
+              </div>
+              <CardHeader className="relative z-10">
+                <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm">
                   <Icon name="Truck" size={32} className="text-primary" />
                 </div>
                 <CardTitle className="font-heading text-2xl mb-3">Промышленные и специальные дороги</CardTitle>
@@ -375,9 +399,17 @@ const Index = () => {
               </CardHeader>
             </Card>
 
-            <Card className="bg-card border-border hover:border-primary transition-all group">
-              <CardHeader>
-                <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
+            <Card className="bg-card border-border hover:border-primary transition-all group relative overflow-hidden">
+              <div className="absolute inset-0 z-0">
+                <img 
+                  src="https://cdn.poehali.dev/files/мост.jpg" 
+                  alt="Мостовое сооружение"
+                  className="w-full h-full object-cover opacity-50"
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-background/85 via-background/80 to-background/75" />
+              </div>
+              <CardHeader className="relative z-10">
+                <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-4 backdrop-blur-sm">
                   <Icon name="Bridge" size={32} className="text-primary" />
                 </div>
                 <CardTitle className="font-heading text-2xl mb-3">Объекты дорожной инфраструктуры (ИССО)</CardTitle>
