@@ -24,7 +24,7 @@
     --muted: 217 33% 17%;
     --muted-foreground: 215 20% 65%;
 
-    --accent: 25 95% 53%;
+    --accent: 210 80% 55%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -65,7 +65,7 @@
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
 
-    --accent: 15 75% 56%;
+    --accent: 210 80% 55%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -115,7 +115,7 @@
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-primary via-blue-400 to-accent bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary via-blue-400 to-blue-500 bg-clip-text text-transparent;
   }
 
   .animate-float {
@@ -164,7 +164,7 @@
     ),
     radial-gradient(
       circle at 80% 50%,
-      rgba(217, 91, 67, 0.15) 0%,
+      rgba(59, 130, 246, 0.1) 0%,
       transparent 50%
     );
   filter: blur(80px);

@@ -181,6 +181,7 @@ const Index = () => {
             <span className="text-gradient">DEOD</span>
           </div>
           <div className="hidden lg:flex gap-8 text-sm font-medium">
+            <a href="#road-types" className="hover:text-primary transition-colors">Типы дорог</a>
             <a href="#challenges" className="hover:text-primary transition-colors">Задачи</a>
             <a href="#services" className="hover:text-primary transition-colors">Этапы</a>
             <a href="#technologies" className="hover:text-primary transition-colors">Технологии</a>
@@ -188,7 +189,7 @@ const Index = () => {
             <a href="#projects" className="hover:text-primary transition-colors">Кейсы</a>
             <a href="#contact" className="hover:text-primary transition-colors">Контакты</a>
           </div>
-          <Button size="lg" className="bg-accent hover:bg-accent/90 font-semibold">
+          <Button size="lg" className="bg-primary hover:bg-primary/90 font-semibold">
             Консультация
           </Button>
         </nav>
@@ -199,7 +200,7 @@ const Index = () => {
         <div className="container mx-auto relative z-10">
           <div className="max-w-5xl mx-auto text-center">
             <Badge className="mb-6 bg-primary/10 text-primary border-primary/30 px-4 py-2 text-sm font-semibold animate-fade-in">
-              BIM-проектирование и стабилизация грунтов
+              Проектирование дорог и стабилизация грунтов
             </Badge>
             <h1 className="font-heading font-black text-5xl md:text-7xl lg:text-8xl mb-8 leading-[1.1] animate-fade-in">
               Проектируем не просто дороги.{' '}
@@ -208,11 +209,11 @@ const Index = () => {
               </span>
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in font-light">
-              Внедряем BIM и технологии стабилизации грунтов на этапе проектирования. 
+              Разрабатываем проекты дорог любых категорий с применением технологий стабилизации грунтов. 
               Гарантируем прохождение экспертизы и снижение ваших затрат на строительство до 30%.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-scale-in">
-              <Button size="lg" className="bg-accent hover:bg-accent/90 text-lg px-8 py-6 font-semibold group">
+              <Button size="lg" className="bg-primary hover:bg-primary/90 text-lg px-8 py-6 font-semibold group">
                 <Icon name="Calculator" size={24} className="mr-2 group-hover:scale-110 transition-transform" />
                 Рассчитать экономию
               </Button>
@@ -233,10 +234,10 @@ const Index = () => {
                 <CardDescription className="text-base">экономии на строительстве</CardDescription>
               </CardHeader>
             </Card>
-            <Card className="bg-card/50 backdrop-blur-sm border-accent/20 hover:border-accent transition-all hover:scale-105 hover:shadow-xl hover:shadow-accent/20">
+            <Card className="bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/20">
               <CardHeader>
-                <div className="w-16 h-16 bg-accent/10 rounded-xl flex items-center justify-center mb-4 animate-float" style={{animationDelay: '1s'}}>
-                  <Icon name="Zap" size={32} className="text-accent" />
+                <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-4 animate-float" style={{animationDelay: '1s'}}>
+                  <Icon name="Zap" size={32} className="text-primary" />
                 </div>
                 <CardTitle className="font-heading text-3xl">в 2 раза</CardTitle>
                 <CardDescription className="text-base">быстрее сроков реализации</CardDescription>
@@ -249,6 +250,105 @@ const Index = () => {
                 </div>
                 <CardTitle className="font-heading text-3xl">100%</CardTitle>
                 <CardDescription className="text-base">прохождение экспертизы</CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      <section id="road-types" className="py-24 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-16">
+            <h2 className="font-heading font-bold text-4xl md:text-6xl mb-6">
+              От федеральной трассы до городского проезда
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Полный спектр проектных работ. Проектируем дороги всех типов и категорий.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="bg-card border-border hover:border-primary transition-all group">
+              <CardHeader>
+                <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
+                  <Icon name="Highway" size={32} className="text-primary" />
+                </div>
+                <CardTitle className="font-heading text-2xl mb-3">Дороги федерального и регионального значения</CardTitle>
+                <CardDescription className="text-base leading-relaxed mb-4">
+                  <span className="font-semibold text-foreground">Для кого:</span> Минтранс, крупные госкомпании, инвесторы в межрегиональную инфраструктуру
+                </CardDescription>
+                <div className="space-y-2 text-sm text-muted-foreground mb-4">
+                  <p>• Скоростные дороги и автомагистрали (I кат.)</p>
+                  <p>• Дороги обычные (I-IV кат.)</p>
+                  <p>• Обходы населенных пунктов</p>
+                  <p>• Подъезды к транспортным узлам</p>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Сложные инженерные изыскания, проектирование многоуровневых развязок, стабилизация грунтов на протяженных участках
+                </p>
+              </CardHeader>
+            </Card>
+
+            <Card className="bg-card border-border hover:border-primary transition-all group">
+              <CardHeader>
+                <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
+                  <Icon name="Building2" size={32} className="text-primary" />
+                </div>
+                <CardTitle className="font-heading text-2xl mb-3">Городские улицы и дороги</CardTitle>
+                <CardDescription className="text-base leading-relaxed mb-4">
+                  <span className="font-semibold text-foreground">Для кого:</span> Муниципалитеты, девелоперы, застройщики кварталов
+                </CardDescription>
+                <div className="space-y-2 text-sm text-muted-foreground mb-4">
+                  <p>• Магистральные улицы общегородского значения</p>
+                  <p>• Улицы местного значения</p>
+                  <p>• Проекты организации дорожного движения (ПОДД)</p>
+                  <p>• Транспортные узлы в стесненных условиях</p>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Интеграция с инженерными коммуникациями, проектирование ливневой канализации, организация пешеходных потоков
+                </p>
+              </CardHeader>
+            </Card>
+
+            <Card className="bg-card border-border hover:border-primary transition-all group">
+              <CardHeader>
+                <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
+                  <Icon name="Truck" size={32} className="text-primary" />
+                </div>
+                <CardTitle className="font-heading text-2xl mb-3">Промышленные и специальные дороги</CardTitle>
+                <CardDescription className="text-base leading-relaxed mb-4">
+                  <span className="font-semibold text-foreground">Для кого:</span> Горнодобывающие, нефтегазовые, промышленные предприятия
+                </CardDescription>
+                <div className="space-y-2 text-sm text-muted-foreground mb-4">
+                  <p>• Карьерные, рудничные, лесовозные дороги</p>
+                  <p>• Подъезды к промплощадкам и складам</p>
+                  <p>• Дороги на территориях предприятий</p>
+                  <p>• Дороги для тяжелых нагрузок (спецтехника)</p>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Расчет на сверхнормативные нагрузки, усиленные дорожные одежды, стабилизация под тяжелой техникой
+                </p>
+              </CardHeader>
+            </Card>
+
+            <Card className="bg-card border-border hover:border-primary transition-all group">
+              <CardHeader>
+                <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
+                  <Icon name="Bridge" size={32} className="text-primary" />
+                </div>
+                <CardTitle className="font-heading text-2xl mb-3">Объекты дорожной инфраструктуры (ИССО)</CardTitle>
+                <CardDescription className="text-base leading-relaxed mb-4">
+                  <span className="font-semibold text-foreground">Для кого:</span> Все заказчики, чьи трассы требуют сложных пересечений
+                </CardDescription>
+                <div className="space-y-2 text-sm text-muted-foreground mb-4">
+                  <p>• Мосты, путепроводы, эстакады</p>
+                  <p>• Тоннели</p>
+                  <p>• Шумозащитные экраны, галереи</p>
+                  <p>• Большепролетные водопропускные трубы</p>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Комплексное проектирование «мост + подходы», устройство оснований под опорами, расчет фундаментов в слабых грунтах
+                </p>
               </CardHeader>
             </Card>
           </div>
@@ -278,8 +378,8 @@ const Index = () => {
                 onClick={() => setActiveChallenge(activeChallenge === challenge.id ? null : challenge.id)}
               >
                 <CardHeader>
-                  <div className="w-16 h-16 bg-accent/10 rounded-xl flex items-center justify-center mb-4">
-                    <Icon name={challenge.icon} size={32} className="text-accent" />
+                  <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
+                    <Icon name={challenge.icon} size={32} className="text-primary" />
                   </div>
                   <CardTitle className="font-heading text-xl mb-3">Проблема</CardTitle>
                   <CardDescription className="text-base text-foreground/80 mb-4">
@@ -509,14 +609,14 @@ const Index = () => {
               <Button 
                 onClick={handleCalculate}
                 size="lg" 
-                className="w-full bg-accent hover:bg-accent/90 text-lg py-6 font-semibold"
+                className="w-full bg-primary hover:bg-primary/90 text-lg py-6 font-semibold"
               >
                 <Icon name="Calculator" size={24} className="mr-2" />
                 Рассчитать потенциал экономии
               </Button>
 
               {showCalcResult && (
-                <Card className="bg-gradient-to-br from-primary/10 to-accent/10 border-primary/30 animate-scale-in">
+                <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30 animate-scale-in">
                   <CardHeader>
                     <CardTitle className="font-heading text-2xl text-center">Предварительный результат</CardTitle>
                   </CardHeader>
@@ -526,7 +626,7 @@ const Index = () => {
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                       <div className="bg-background/50 rounded-xl p-6">
-                        <p className="text-4xl font-heading font-bold text-accent mb-2">до 40%</p>
+                        <p className="text-4xl font-heading font-bold text-primary mb-2">до 40%</p>
                         <p className="text-sm text-muted-foreground">сокращение объема привозного щебня</p>
                       </div>
                       <div className="bg-background/50 rounded-xl p-6">
@@ -623,7 +723,7 @@ const Index = () => {
                   <div className="space-y-3 pt-4 border-t border-border">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">Экономия</span>
-                      <span className="font-bold text-accent text-lg">{project.results.saved}</span>
+                      <span className="font-bold text-primary text-lg">{project.results.saved}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">Сокращение объемов</span>
@@ -643,7 +743,7 @@ const Index = () => {
 
       <section className="py-24 px-4 bg-card/30">
         <div className="container mx-auto max-w-5xl">
-          <Card className="bg-gradient-to-br from-primary/10 via-card to-accent/10 border-primary/30">
+          <Card className="bg-gradient-to-br from-primary/10 via-card to-primary/5 border-primary/30">
             <CardHeader className="text-center">
               <CardTitle className="font-heading text-4xl md:text-5xl mb-12">Почему выбирают нас</CardTitle>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
@@ -652,7 +752,7 @@ const Index = () => {
                   <p className="text-base text-muted-foreground">опыт проектирования со стабилизацией</p>
                 </div>
                 <div>
-                  <div className="text-6xl md:text-7xl font-heading font-black text-accent mb-4 animate-float" style={{animationDelay: '1s'}}>{'> 20%'}</div>
+                  <div className="text-6xl md:text-7xl font-heading font-black text-primary mb-4 animate-float" style={{animationDelay: '1s'}}>{'> 20%'}</div>
                   <p className="text-base text-muted-foreground">средняя экономия для заказчика</p>
                 </div>
                 <div>
@@ -719,7 +819,7 @@ const Index = () => {
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     rows={4}
                   />
-                  <Button type="submit" size="lg" className="w-full bg-accent hover:bg-accent/90">
+                  <Button type="submit" size="lg" className="w-full bg-primary hover:bg-primary/90">
                     <Icon name="Send" size={20} className="mr-2" />
                     Отправить запрос
                   </Button>
@@ -742,8 +842,8 @@ const Index = () => {
 
               <Card className="bg-card border-border">
                 <CardHeader className="flex flex-row items-center gap-4">
-                  <div className="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center">
-                    <Icon name="Phone" size={28} className="text-accent" />
+                  <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center">
+                    <Icon name="Phone" size={28} className="text-primary" />
                   </div>
                   <div>
                     <CardTitle className="font-heading text-lg">Телефон</CardTitle>
@@ -807,7 +907,7 @@ const Index = () => {
       {!showChatbot && (
         <Button
           onClick={() => setShowChatbot(true)}
-          className="fixed bottom-6 right-6 w-16 h-16 rounded-full bg-accent hover:bg-accent/90 shadow-2xl z-50 animate-pulse-slow"
+          className="fixed bottom-6 right-6 w-16 h-16 rounded-full bg-primary hover:bg-primary/90 shadow-2xl z-50 animate-pulse-slow"
         >
           <Icon name="MessageCircle" size={28} />
         </Button>
@@ -815,7 +915,7 @@ const Index = () => {
 
       {showChatbot && (
         <Card className="fixed bottom-6 right-6 w-96 shadow-2xl border-primary/30 z-50 animate-scale-in">
-          <CardHeader className="bg-gradient-to-r from-primary/10 to-accent/10">
+          <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5">
             <div className="flex justify-between items-start">
               <div>
                 <CardTitle className="font-heading text-xl flex items-center gap-2">
@@ -892,7 +992,7 @@ const Index = () => {
                 />
                 <Button
                   onClick={handleChatNext}
-                  className="w-full bg-accent hover:bg-accent/90"
+                  className="w-full bg-primary hover:bg-primary/90"
                   disabled={!chatData.email}
                 >
                   <Icon name="Send" size={18} className="mr-2" />
@@ -921,10 +1021,10 @@ const Index = () => {
 
       {showExitPopup && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-          <Card className="max-w-md w-full shadow-2xl border-accent/30">
+          <Card className="max-w-md w-full shadow-2xl border-primary/30">
             <CardHeader className="text-center">
-              <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Icon name="AlertCircle" size={32} className="text-accent" />
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Icon name="AlertCircle" size={32} className="text-primary" />
               </div>
               <CardTitle className="font-heading text-2xl">Уходите?</CardTitle>
               <CardDescription className="text-base">
@@ -939,7 +1039,7 @@ const Index = () => {
                   required
                 />
                 <div className="flex gap-3">
-                  <Button type="submit" className="flex-1 bg-accent hover:bg-accent/90">
+                  <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90">
                     <Icon name="Download" size={18} className="mr-2" />
                     Получить презентацию
                   </Button>
