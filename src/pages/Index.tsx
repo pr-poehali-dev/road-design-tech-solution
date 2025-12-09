@@ -236,9 +236,9 @@ const Index = () => {
           <img 
             src="https://cdn.poehali.dev/files/Дороги.png" 
             alt="Highway interchange complex"
-            className="w-full h-full object-cover opacity-30"
+            className="w-full h-full object-cover opacity-40"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/85 via-background/80 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/75 via-background/70 to-background" />
         </div>
         <div className="absolute inset-0 bg-grid-pattern opacity-20 z-[1]" />
         <div className="container mx-auto relative z-10">
