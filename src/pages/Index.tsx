@@ -137,6 +137,42 @@ const Index = () => {
         time: '3 недели'
       },
       image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&auto=format&fit=crop'
+    },
+    {
+      title: 'Трасса Р-21 "Кола"',
+      location: 'Мурманская область',
+      challenge: 'Вечная мерзлота и крайне низкие температуры',
+      solution: 'Проектирование с учетом сезонного промерзания, стабилизация морозостойкими вяжущими',
+      results: {
+        saved: '120 млн ₽',
+        reduction: '65%',
+        time: '2.5 месяца'
+      },
+      image: 'https://images.unsplash.com/photo-1464037866556-6812c9d1c72e?w=800&auto=format&fit=crop'
+    },
+    {
+      title: 'Магистраль М-7 "Волга"',
+      location: 'Республика Татарстан',
+      challenge: 'Участки с высоким уровнем грунтовых вод',
+      solution: 'Комплексное решение с дренажем и стабилизацией известью',
+      results: {
+        saved: '75 млн ₽',
+        reduction: '50%',
+        time: '1 месяц'
+      },
+      image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&auto=format&fit=crop'
+    },
+    {
+      title: 'Подъезд к промзоне',
+      location: 'Свердловская область',
+      challenge: 'Расчет на нагрузку от тяжелой карьерной техники',
+      solution: 'Усиленная дорожная одежда с глубокой стабилизацией и георешеткой',
+      results: {
+        saved: '35 млн ₽',
+        reduction: '75%',
+        time: '3 недели'
+      },
+      image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&auto=format&fit=crop'
     }
   ];
 
@@ -195,16 +231,24 @@ const Index = () => {
         </nav>
       </header>
 
-      <section className="relative pt-32 pb-24 px-4 overflow-hidden gradient-blur">
-        <div className="absolute inset-0 bg-grid-pattern opacity-20" />
+      <section className="relative pt-32 pb-24 px-4 overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&auto=format&fit=crop&q=80" 
+            alt="Highway background"
+            className="w-full h-full object-cover opacity-15"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/90 to-background" />
+        </div>
+        <div className="absolute inset-0 bg-grid-pattern opacity-20 z-[1]" />
         <div className="container mx-auto relative z-10">
           <div className="max-w-5xl mx-auto text-center">
             <Badge className="mb-6 bg-primary/10 text-primary border-primary/30 px-4 py-2 text-sm font-semibold animate-fade-in">
               Проектирование дорог и стабилизация грунтов
             </Badge>
-            <h1 className="font-heading font-black text-5xl md:text-7xl lg:text-8xl mb-8 leading-[1.1] animate-fade-in">
+            <h1 className="font-heading font-black text-4xl sm:text-5xl md:text-7xl lg:text-8xl mb-8 leading-[1.1] animate-fade-in">
               Проектируем не просто дороги.{' '}
-              <span className="text-gradient animate-shimmer bg-[length:200%_auto]">
+              <span className="text-gradient-white block mt-2">
                 Проектируем надежное основание
               </span>
             </h1>
@@ -212,44 +256,44 @@ const Index = () => {
               Разрабатываем проекты дорог любых категорий с применением технологий стабилизации грунтов. 
               Гарантируем прохождение экспертизы и снижение ваших затрат на строительство до 30%.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-scale-in">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-lg px-8 py-6 font-semibold group">
-                <Icon name="Calculator" size={24} className="mr-2 group-hover:scale-110 transition-transform" />
-                Рассчитать экономию
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center animate-scale-in px-4 sm:px-0">
+              <Button size="lg" className="bg-primary hover:bg-primary/90 text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 font-semibold group w-full sm:w-auto">
+                <Icon name="Calculator" size={20} className="mr-2 group-hover:scale-110 transition-transform sm:w-6 sm:h-6" />
+                <span className="text-sm sm:text-base">Рассчитать экономию</span>
               </Button>
-              <Button size="lg" variant="outline" className="text-lg px-8 py-6 font-semibold border-2 group">
-                <Icon name="Presentation" size={24} className="mr-2 group-hover:scale-110 transition-transform" />
-                Технологические решения
+              <Button size="lg" variant="outline" className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 font-semibold border-2 group w-full sm:w-auto">
+                <Icon name="Presentation" size={20} className="mr-2 group-hover:scale-110 transition-transform sm:w-6 sm:h-6" />
+                <span className="text-sm sm:text-base">Технологические решения</span>
               </Button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-20 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mt-12 sm:mt-20 max-w-6xl mx-auto px-4 sm:px-0">
             <Card className="bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/20">
-              <CardHeader>
-                <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-4 animate-float">
-                  <Icon name="TrendingDown" size={32} className="text-primary" />
+              <CardHeader className="p-4 sm:p-6">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-3 sm:mb-4 animate-float">
+                  <Icon name="TrendingDown" size={24} className="text-primary sm:w-8 sm:h-8" />
                 </div>
-                <CardTitle className="font-heading text-3xl">до 30%</CardTitle>
-                <CardDescription className="text-base">экономии на строительстве</CardDescription>
+                <CardTitle className="font-heading text-2xl sm:text-3xl">до 30%</CardTitle>
+                <CardDescription className="text-sm sm:text-base">экономии на строительстве</CardDescription>
               </CardHeader>
             </Card>
             <Card className="bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/20">
-              <CardHeader>
-                <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-4 animate-float" style={{animationDelay: '1s'}}>
-                  <Icon name="Zap" size={32} className="text-primary" />
+              <CardHeader className="p-4 sm:p-6">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-3 sm:mb-4 animate-float" style={{animationDelay: '1s'}}>
+                  <Icon name="Zap" size={24} className="text-primary sm:w-8 sm:h-8" />
                 </div>
-                <CardTitle className="font-heading text-3xl">в 2 раза</CardTitle>
-                <CardDescription className="text-base">быстрее сроков реализации</CardDescription>
+                <CardTitle className="font-heading text-2xl sm:text-3xl">в 2 раза</CardTitle>
+                <CardDescription className="text-sm sm:text-base">быстрее сроков реализации</CardDescription>
               </CardHeader>
             </Card>
-            <Card className="bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/20">
-              <CardHeader>
-                <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-4 animate-float" style={{animationDelay: '2s'}}>
-                  <Icon name="Shield" size={32} className="text-primary" />
+            <Card className="bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/20 sm:col-span-2 md:col-span-1">
+              <CardHeader className="p-4 sm:p-6">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-3 sm:mb-4 animate-float" style={{animationDelay: '2s'}}>
+                  <Icon name="Shield" size={24} className="text-primary sm:w-8 sm:h-8" />
                 </div>
-                <CardTitle className="font-heading text-3xl">100%</CardTitle>
-                <CardDescription className="text-base">прохождение экспертизы</CardDescription>
+                <CardTitle className="font-heading text-2xl sm:text-3xl">100%</CardTitle>
+                <CardDescription className="text-sm sm:text-base">прохождение экспертизы</CardDescription>
               </CardHeader>
             </Card>
           </div>
@@ -692,17 +736,17 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-7xl mx-auto">
             {projects.map((project, idx) => (
               <Card key={idx} className="overflow-hidden border-border hover:border-primary transition-all group hover:shadow-2xl">
-                <div className="relative h-64 overflow-hidden">
+                <div className="relative h-48 sm:h-56 md:h-64 overflow-hidden">
                   <img 
                     src={project.image} 
                     alt={project.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-                  <Badge className="absolute top-4 left-4 bg-background/90 backdrop-blur-sm">
+                  <Badge className="absolute top-4 left-4 bg-background/90 backdrop-blur-sm text-xs sm:text-sm">
                     {project.location}
                   </Badge>
                 </div>
