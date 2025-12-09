@@ -466,7 +466,8 @@ const Index = () => {
                 step: '01',
                 icon: 'Search',
                 title: 'Инженерные изыскания и анализ',
-                description: 'Не просто отчет. Цифровая модель грунтов для расчета стабилизации.'
+                description: 'Не просто отчет. Цифровая модель грунтов для расчета стабилизации.',
+                bgImage: 'https://cdn.poehali.dev/files/изыскания.jpg'
               },
               {
                 step: '02',
@@ -488,7 +489,19 @@ const Index = () => {
               }
             ].map((service) => (
               <Card key={service.step} className="bg-card border-border hover:border-primary transition-all group relative overflow-hidden">
-                <div className="absolute top-0 right-0 text-[120px] font-heading font-black text-primary/5 group-hover:text-primary/10 transition-colors leading-none pt-4 pr-4">
+                {service.bgImage && (
+                  <>
+                    <div className="absolute inset-0 z-0">
+                      <img 
+                        src={service.bgImage} 
+                        alt={service.title}
+                        className="w-full h-full object-cover opacity-20"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-br from-background/95 via-background/90 to-background/85" />
+                    </div>
+                  </>
+                )}
+                <div className="absolute top-0 right-0 text-[120px] font-heading font-black text-primary/5 group-hover:text-primary/10 transition-colors leading-none pt-4 pr-4 z-[5]">
                   {service.step}
                 </div>
                 <CardHeader className="relative z-10">
