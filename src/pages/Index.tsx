@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,41 @@ const Index = () => {
     phone: '',
     message: ''
   });
+  
+  const [showChatbot, setShowChatbot] = useState(false);
+  const [chatStep, setChatStep] = useState(0);
+  const [chatData, setChatData] = useState({
+    projectType: '',
+    timeline: '',
+    email: ''
+  });
+  const [showExitPopup, setShowExitPopup] = useState(false);
+  const [showTimePopup, setShowTimePopup] = useState(false);
+  const [hasShownExitPopup, setHasShownExitPopup] = useState(false);
+  const [hasShownTimePopup, setHasShownTimePopup] = useState(false);
+  
+  useEffect(() => {
+    const handleMouseLeave = (e: MouseEvent) => {
+      if (e.clientY <= 0 && !hasShownExitPopup) {
+        setShowExitPopup(true);
+        setHasShownExitPopup(true);
+      }
+    };
+    
+    document.addEventListener('mouseleave', handleMouseLeave);
+    
+    const timeoutId = setTimeout(() => {
+      if (!hasShownTimePopup) {
+        setShowTimePopup(true);
+        setHasShownTimePopup(true);
+      }
+    }, 60000);
+    
+    return () => {
+      document.removeEventListener('mouseleave', handleMouseLeave);
+      clearTimeout(timeoutId);
+    };
+  }, [hasShownExitPopup, hasShownTimePopup]);
 
   const challenges = [
     {
@@ -114,6 +149,28 @@ const Index = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Form submitted:', formData);
+  };
+  
+  const handleChatNext = () => {
+    if (chatStep < 3) {
+      setChatStep(chatStep + 1);
+    } else {
+      console.log('Chat completed:', chatData);
+      setShowChatbot(false);
+      setChatStep(0);
+    }
+  };
+  
+  const handleExitPopupSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Exit popup submitted');
+    setShowExitPopup(false);
+  };
+  
+  const handleTimePopupSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Time popup submitted');
+    setShowTimePopup(false);
   };
 
   return (
@@ -746,6 +803,207 @@ const Index = () => {
           </div>
         </div>
       </footer>
+
+      {!showChatbot && (
+        <Button
+          onClick={() => setShowChatbot(true)}
+          className="fixed bottom-6 right-6 w-16 h-16 rounded-full bg-accent hover:bg-accent/90 shadow-2xl z-50 animate-pulse-slow"
+        >
+          <Icon name="MessageCircle" size={28} />
+        </Button>
+      )}
+
+      {showChatbot && (
+        <Card className="fixed bottom-6 right-6 w-96 shadow-2xl border-primary/30 z-50 animate-scale-in">
+          <CardHeader className="bg-gradient-to-r from-primary/10 to-accent/10">
+            <div className="flex justify-between items-start">
+              <div>
+                <CardTitle className="font-heading text-xl flex items-center gap-2">
+                  <Icon name="UserCircle" size={24} className="text-primary" />
+                  Инженер-консультант
+                </CardTitle>
+                <CardDescription>Помогу оценить ваш проект</CardDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowChatbot(false)}
+                className="hover:bg-background/50"
+              >
+                <Icon name="X" size={20} />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-6">
+            {chatStep === 0 && (
+              <div className="space-y-4 animate-fade-in">
+                <p className="text-sm text-muted-foreground">Здравствуйте! Давайте оценим потенциал вашего проекта. Какой тип работ планируется?</p>
+                <div className="space-y-2">
+                  {['Новое строительство', 'Реконструкция', 'Ремонт', 'Экспертиза проекта'].map((type) => (
+                    <Button
+                      key={type}
+                      variant="outline"
+                      className="w-full justify-start hover:bg-primary/10 hover:border-primary"
+                      onClick={() => {
+                        setChatData({...chatData, projectType: type});
+                        handleChatNext();
+                      }}
+                    >
+                      {type}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {chatStep === 1 && (
+              <div className="space-y-4 animate-fade-in">
+                <p className="text-sm text-muted-foreground">Отлично! В какие сроки нужно выполнить проектирование?</p>
+                <div className="space-y-2">
+                  {['До 1 месяца (срочно)', '1-3 месяца', '3-6 месяцев', 'Более 6 месяцев'].map((time) => (
+                    <Button
+                      key={time}
+                      variant="outline"
+                      className="w-full justify-start hover:bg-primary/10 hover:border-primary"
+                      onClick={() => {
+                        setChatData({...chatData, timeline: time});
+                        handleChatNext();
+                      }}
+                    >
+                      {time}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {chatStep === 2 && (
+              <div className="space-y-4 animate-fade-in">
+                <p className="text-sm text-muted-foreground">
+                  Проект: <span className="font-semibold text-foreground">{chatData.projectType}</span><br/>
+                  Сроки: <span className="font-semibold text-foreground">{chatData.timeline}</span>
+                </p>
+                <p className="text-sm text-muted-foreground">Оставьте email для получения предварительного расчета стоимости:</p>
+                <Input
+                  type="email"
+                  placeholder="your@email.com"
+                  value={chatData.email}
+                  onChange={(e) => setChatData({...chatData, email: e.target.value})}
+                />
+                <Button
+                  onClick={handleChatNext}
+                  className="w-full bg-accent hover:bg-accent/90"
+                  disabled={!chatData.email}
+                >
+                  <Icon name="Send" size={18} className="mr-2" />
+                  Получить расчет
+                </Button>
+              </div>
+            )}
+
+            {chatStep === 3 && (
+              <div className="space-y-4 animate-fade-in text-center">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                  <Icon name="CheckCircle2" size={32} className="text-primary" />
+                </div>
+                <p className="font-semibold">Спасибо за обращение!</p>
+                <p className="text-sm text-muted-foreground">
+                  Мы отправим предварительный расчет на {chatData.email} в течение 2 часов.
+                </p>
+                <Button onClick={() => setShowChatbot(false)} variant="outline" className="w-full">
+                  Закрыть
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {showExitPopup && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+          <Card className="max-w-md w-full shadow-2xl border-accent/30">
+            <CardHeader className="text-center">
+              <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Icon name="AlertCircle" size={32} className="text-accent" />
+              </div>
+              <CardTitle className="font-heading text-2xl">Уходите?</CardTitle>
+              <CardDescription className="text-base">
+                Получите презентацию наших технологий стабилизации на почту
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleExitPopupSubmit} className="space-y-4">
+                <Input
+                  type="email"
+                  placeholder="Ваш email"
+                  required
+                />
+                <div className="flex gap-3">
+                  <Button type="submit" className="flex-1 bg-accent hover:bg-accent/90">
+                    <Icon name="Download" size={18} className="mr-2" />
+                    Получить презентацию
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowExitPopup(false)}
+                  >
+                    <Icon name="X" size={18} />
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {showTimePopup && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+          <Card className="max-w-md w-full shadow-2xl border-primary/30">
+            <CardHeader className="text-center">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Icon name="Gift" size={32} className="text-primary" />
+              </div>
+              <CardTitle className="font-heading text-2xl">Специальное предложение!</CardTitle>
+              <CardDescription className="text-base">
+                Бесплатный аудит вашего проекта при заявке сегодня
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleTimePopupSubmit} className="space-y-4">
+                <Input
+                  type="text"
+                  placeholder="Ваше имя"
+                  required
+                />
+                <Input
+                  type="email"
+                  placeholder="Email"
+                  required
+                />
+                <Input
+                  type="tel"
+                  placeholder="Телефон"
+                  required
+                />
+                <div className="flex gap-3">
+                  <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90">
+                    <Icon name="CheckCircle2" size={18} className="mr-2" />
+                    Получить аудит
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowTimePopup(false)}
+                  >
+                    <Icon name="X" size={18} />
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
