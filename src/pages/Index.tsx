@@ -273,7 +273,7 @@ const Index = () => {
           </div>
           <Button 
             size="lg" 
-            className="bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base px-3 sm:px-4 md:px-6 py-2"
+            className="bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base px-3 sm:px-4 md:px-6 py-2 touch-manipulation"
             onClick={() => {
               saveLead({
                 type: 'Консультация',
@@ -296,8 +296,9 @@ const Index = () => {
             src="https://cdn.poehali.dev/files/Дороги.png" 
             alt="Highway interchange complex"
             className="w-full h-full object-cover opacity-40"
+            style={{ opacity: 0.8 }}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/75 via-background/70 to-background" />
+          <div className="absolute inset-0 bg-white/80" />
         </div>
         <div className="absolute inset-0 bg-grid-pattern opacity-20 z-[1]" />
         <div className="container mx-auto relative z-10">
@@ -305,20 +306,20 @@ const Index = () => {
             <Badge className="mb-6 bg-primary/10 text-primary border-primary/30 px-4 py-2 text-sm font-semibold animate-fade-in">
               Проектирование дорог и стабилизация грунтов
             </Badge>
-            <h1 className="font-heading font-black text-4xl sm:text-5xl md:text-7xl lg:text-8xl mb-8 leading-[1.1] animate-fade-in">
+            <h1 className="font-heading font-black text-4xl sm:text-5xl md:text-7xl lg:text-8xl mb-8 leading-[1.1] animate-fade-in text-gray-900">
               Проектируем не просто дороги.{' '}
-              <span className="text-gradient-white block mt-2">
+              <span className="text-gradient block mt-2">
                 Проектируем надежное основание
               </span>
             </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in font-light">
+            <p className="text-xl md:text-2xl text-gray-900/90 mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in font-light">
               Разрабатываем проекты дорог любых категорий с применением технологий стабилизации грунтов. 
               Гарантируем прохождение экспертизы и снижение ваших затрат на строительство до 30%.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center animate-scale-in px-4 sm:px-0">
               <Button 
                 size="lg" 
-                className="w-full sm:w-auto bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 group"
+                className="w-full sm:w-auto bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 group touch-manipulation"
                 onClick={() => {
                   document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' });
                 }}
@@ -329,7 +330,7 @@ const Index = () => {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="w-full sm:w-auto border-2 font-semibold text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 group"
+                className="w-full sm:w-auto border-2 font-semibold text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 group touch-manipulation"
                 onClick={() => {
                   document.getElementById('technologies')?.scrollIntoView({ behavior: 'smooth' });
                 }}
@@ -372,7 +373,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="road-types" className="py-12 md:py-24 px-4">
+      <section id="road-types" className="py-12 md:py-24 px-4 bg-white">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-8 md:mb-16">
             <h2 className="font-heading font-bold text-3xl md:text-4xl lg:text-6xl mb-4 md:mb-6 px-2">
@@ -390,6 +391,7 @@ const Index = () => {
                   src="https://cdn.poehali.dev/files/фед.дорога.jpg" 
                   alt="Федеральная дорога"
                   className="w-full h-full object-cover opacity-70"
+                  style={{ opacity: 0.8 }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-br from-background/85 via-background/80 to-background/75" />
               </div>
@@ -419,6 +421,7 @@ const Index = () => {
                   src="https://cdn.poehali.dev/files/город.дорога.jpg" 
                   alt="Городская дорога"
                   className="w-full h-full object-cover opacity-50"
+                  style={{ opacity: 0.8 }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-br from-background/85 via-background/80 to-background/75" />
               </div>
@@ -448,6 +451,7 @@ const Index = () => {
                   src="https://cdn.poehali.dev/files/пром.дорога.jpg" 
                   alt="Промышленная дорога"
                   className="w-full h-full object-cover opacity-50"
+                  style={{ opacity: 0.8 }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-br from-background/85 via-background/80 to-background/75" />
               </div>
@@ -477,6 +481,7 @@ const Index = () => {
                   src="https://cdn.poehali.dev/files/мост.jpg" 
                   alt="Мостовое сооружение"
                   className="w-full h-full object-cover opacity-50"
+                  style={{ opacity: 0.8 }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-br from-background/85 via-background/80 to-background/75" />
               </div>
@@ -503,7 +508,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="challenges" className="py-12 md:py-24 px-4 bg-card/30">
+      <section id="challenges" className="py-12 md:py-24 px-4 bg-gray-50">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-8 md:mb-16">
             <h2 className="font-heading font-bold text-3xl md:text-4xl lg:text-6xl mb-4 md:mb-6 px-2">
@@ -556,7 +561,7 @@ const Index = () => {
           </div>
 
           <div className="text-center mt-8 md:mt-12">
-            <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 text-xs sm:text-sm md:text-base px-4 sm:px-6 py-3 sm:py-4">
+            <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 text-xs sm:text-sm md:text-base px-4 sm:px-6 py-3 sm:py-4 touch-manipulation">
               <Icon name="MessageSquare" size={16} className="mr-2" />
               <span className="truncate">Какая у вас задача? Узнать решение</span>
             </Button>
@@ -564,7 +569,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="services" className="py-12 md:py-24 px-4">
+      <section id="services" className="py-12 md:py-24 px-4 bg-white">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-8 md:mb-16">
             <h2 className="font-heading font-bold text-3xl md:text-4xl lg:text-6xl mb-4 md:mb-6 px-2">
@@ -611,6 +616,7 @@ const Index = () => {
                         src={service.bgImage} 
                         alt={service.title}
                         className="w-full h-full object-cover opacity-60"
+                        style={{ opacity: 0.8 }}
                       />
                       <div className="absolute inset-0 bg-background/90" />
                     </div>
@@ -622,6 +628,7 @@ const Index = () => {
                         src="https://images.unsplash.com/photo-1568992687947-868a62a9f521?w=800" 
                         alt={service.title}
                         className="w-full h-full object-cover opacity-60"
+                        style={{ opacity: 0.8 }}
                       />
                       <div className="absolute inset-0 bg-background/90" />
                     </div>
@@ -643,7 +650,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="technologies" className="py-12 md:py-24 px-4 bg-card/30">
+      <section id="technologies" className="py-12 md:py-24 px-4 bg-gray-50">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-8 md:mb-16">
             <h2 className="font-heading font-bold text-3xl md:text-4xl lg:text-6xl mb-4 md:mb-6 px-2">
@@ -661,7 +668,7 @@ const Index = () => {
                 <Button 
                   key={task}
                   variant="outline" 
-                  className={`h-auto py-3 md:py-4 px-3 md:px-4 text-left justify-start hover:bg-primary/10 hover:border-primary whitespace-normal min-h-[60px] ${selectedTask === task ? 'bg-primary/10 border-primary' : ''}`}
+                  className={`h-auto py-3 md:py-4 px-3 md:px-4 text-left justify-start hover:bg-primary/10 hover:border-primary whitespace-normal min-h-[60px] touch-manipulation ${selectedTask === task ? 'bg-primary/10 border-primary' : ''}`}
                   onClick={() => {
                     setSelectedTask(task);
                     saveLead({
@@ -725,7 +732,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="calculator" className="py-12 md:py-24 px-4 bg-gradient-to-b from-background to-card/30">
+      <section id="calculator" className="py-12 md:py-24 px-4 bg-white">
         <div className="container mx-auto max-w-4xl">
           <div className="text-center mb-8 md:mb-12 px-4">
             <h2 className="font-heading font-bold text-2xl sm:text-3xl md:text-4xl lg:text-5xl mb-4 md:mb-6">
@@ -802,7 +809,7 @@ const Index = () => {
               <Button 
                 onClick={handleCalculate}
                 size="lg" 
-                className="w-full bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base py-3 sm:py-4 md:py-5 px-4"
+                className="w-full bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base py-3 sm:py-4 md:py-5 px-4 touch-manipulation"
               >
                 <Icon name="Calculator" size={16} className="mr-2" />
                 <span className="truncate">Рассчитать потенциал экономии</span>
@@ -873,7 +880,7 @@ const Index = () => {
                             required
                           />
                         </div>
-                        <Button type="submit" size="lg" className="w-full bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base py-3 sm:py-4 px-4">
+                        <Button type="submit" size="lg" className="w-full bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base py-3 sm:py-4 px-4 touch-manipulation">
                           <Icon name="Send" size={16} className="mr-2" />
                           <span className="truncate">Получить предварительный расчет</span>
                         </Button>
@@ -887,7 +894,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="projects" className="py-12 md:py-24 px-4">
+      <section id="projects" className="py-12 md:py-24 px-4 bg-gray-50">
         <div className="container mx-auto">
           <div className="text-center mb-8 md:mb-16">
             <h2 className="font-heading font-bold text-3xl md:text-4xl lg:text-6xl mb-4 md:mb-6 px-2">
@@ -904,7 +911,7 @@ const Index = () => {
                 <div className="relative h-48 sm:h-56 md:h-64 overflow-hidden">
                   <div 
                     className="w-full h-full bg-cover bg-center group-hover:scale-110 transition-transform duration-500"
-                    style={{ backgroundImage: `url(${project.image})` }}
+                    style={{ backgroundImage: `url(${project.image})`, opacity: 0.8 }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
                   <Badge className="absolute top-4 left-4 bg-background/90 backdrop-blur-sm text-xs sm:text-sm">
@@ -946,7 +953,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section className="py-24 px-4 bg-card/30">
+      <section className="py-24 px-4 bg-white">
         <div className="container mx-auto max-w-5xl">
           <Card className="bg-gradient-to-br from-primary/10 via-card to-primary/5 border-primary/30">
             <CardHeader className="text-center">
@@ -970,7 +977,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="contact" className="py-12 md:py-24 px-4">
+      <section id="contact" className="py-12 md:py-24 px-4 bg-gray-50">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-8 md:mb-16">
             <h2 className="font-heading font-bold text-3xl md:text-4xl lg:text-6xl mb-4 md:mb-6 px-2">
@@ -1024,7 +1031,7 @@ const Index = () => {
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     rows={4}
                   />
-                  <Button type="submit" size="lg" className="w-full bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base py-3 sm:py-4 px-4">
+                  <Button type="submit" size="lg" className="w-full bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base py-3 sm:py-4 px-4 touch-manipulation">
                     <Icon name="Send" size={16} className="mr-2" />
                     <span className="truncate">Отправить запрос</span>
                   </Button>
@@ -1113,7 +1120,7 @@ const Index = () => {
       {!showChatbot && (
         <Button
           onClick={() => setShowChatbot(true)}
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-primary hover:bg-primary/90 shadow-2xl z-50 animate-pulse-slow p-0"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-primary hover:bg-primary/90 shadow-2xl z-50 animate-pulse-slow p-0 touch-manipulation"
         >
           <Icon name="MessageCircle" size={24} className="sm:hidden" />
           <Icon name="MessageCircle" size={28} className="hidden sm:block" />
@@ -1135,7 +1142,7 @@ const Index = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowChatbot(false)}
-                className="hover:bg-background/50 p-2"
+                className="hover:bg-background/50 p-2 touch-manipulation"
               >
                 <Icon name="X" size={16} className="sm:hidden" />
                 <Icon name="X" size={20} className="hidden sm:block" />
@@ -1151,7 +1158,7 @@ const Index = () => {
                     <Button
                       key={type}
                       variant="outline"
-                      className="w-full justify-start hover:bg-primary/10 hover:border-primary text-xs sm:text-sm py-2 px-3"
+                      className="w-full justify-start hover:bg-primary/10 hover:border-primary text-xs sm:text-sm py-2 px-3 touch-manipulation"
                       onClick={() => {
                         setChatData({...chatData, projectType: type});
                         handleChatNext();
@@ -1172,7 +1179,7 @@ const Index = () => {
                     <Button
                       key={time}
                       variant="outline"
-                      className="w-full justify-start hover:bg-primary/10 hover:border-primary text-xs sm:text-sm py-2 px-3"
+                      className="w-full justify-start hover:bg-primary/10 hover:border-primary text-xs sm:text-sm py-2 px-3 touch-manipulation"
                       onClick={() => {
                         setChatData({...chatData, timeline: time});
                         handleChatNext();
@@ -1200,7 +1207,7 @@ const Index = () => {
                 />
                 <Button
                   onClick={handleChatNext}
-                  className="w-full bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm py-2 px-3"
+                  className="w-full bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm py-2 px-3 touch-manipulation"
                   disabled={!chatData.email}
                 >
                   <Icon name="Send" size={16} className="mr-2" />
@@ -1218,7 +1225,7 @@ const Index = () => {
                 <p className="text-sm text-muted-foreground">
                   Мы отправим предварительный расчет на {chatData.email} в течение 2 часов.
                 </p>
-                <Button onClick={() => setShowChatbot(false)} variant="outline" className="w-full text-xs sm:text-sm py-2 px-3">
+                <Button onClick={() => setShowChatbot(false)} variant="outline" className="w-full text-xs sm:text-sm py-2 px-3 touch-manipulation">
                   <span className="truncate">Закрыть</span>
                 </Button>
               </div>
@@ -1256,7 +1263,7 @@ const Index = () => {
                     type="button"
                     variant="outline"
                     onClick={() => setShowExitPopup(false)}
-                    className="px-3 py-2"
+                    className="px-3 py-2 touch-manipulation"
                   >
                     <Icon name="X" size={16} />
                   </Button>
@@ -1300,7 +1307,7 @@ const Index = () => {
                   required
                 />
                 <div className="flex gap-3">
-                  <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm py-2 px-3">
+                  <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm py-2 px-3 touch-manipulation">
                     <Icon name="CheckCircle2" size={16} className="mr-2" />
                     <span className="truncate">Получить аудит</span>
                   </Button>
@@ -1308,7 +1315,7 @@ const Index = () => {
                     type="button"
                     variant="outline"
                     onClick={() => setShowTimePopup(false)}
-                    className="px-3 py-2"
+                    className="px-3 py-2 touch-manipulation"
                   >
                     <Icon name="X" size={16} />
                   </Button>

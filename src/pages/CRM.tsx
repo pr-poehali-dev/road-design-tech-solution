@@ -364,34 +364,33 @@ const CRM = () => {
     <div className="min-h-screen bg-white">
       <header className="border-b bg-white sticky top-0 z-40 shadow-sm">
         <div className="px-4 py-3">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <h1 className="font-semibold text-xl text-gray-900">DEOD CRM</h1>
-              <div className="flex gap-2 ml-4">
-                <Button 
-                  onClick={() => openCreateLeadModal()}
-                  size="sm"
-                  className="bg-blue-600 hover:bg-blue-700 h-8"
-                >
-                  <Icon name="Plus" size={16} className="mr-1" />
-                  Новая сделка
-                </Button>
-              </div>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
+              <h1 className="font-semibold text-lg sm:text-xl text-gray-900">DEOD CRM</h1>
+              <Button 
+                onClick={() => openCreateLeadModal()}
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700 h-8 text-xs ml-auto sm:ml-0 touch-manipulation"
+              >
+                <Icon name="Plus" size={14} className="mr-1" />
+                <span className="hidden sm:inline">Новая сделка</span>
+                <span className="sm:hidden">Создать</span>
+              </Button>
             </div>
-            <div className="flex gap-2 items-center">
-              <div className="relative">
+            <div className="flex gap-2 items-center w-full sm:w-auto">
+              <div className="relative flex-1 sm:flex-initial">
                 <Icon name="Search" size={16} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
                 <Input
                   placeholder="Поиск..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 w-64 h-8 text-sm"
+                  className="pl-8 w-full sm:w-48 h-8 text-sm"
                 />
               </div>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="h-8">
+              <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="h-8 w-8 p-0 touch-manipulation">
                 <Icon name="Home" size={16} />
               </Button>
-              <Button variant="ghost" size="sm" onClick={handleLogout} className="h-8">
+              <Button variant="ghost" size="sm" onClick={handleLogout} className="h-8 w-8 p-0 touch-manipulation">
                 <Icon name="LogOut" size={16} />
               </Button>
             </div>
@@ -399,37 +398,37 @@ const CRM = () => {
         </div>
       </header>
 
-      <div className="bg-gray-50 border-b px-4 py-4">
-        <div className="grid grid-cols-4 gap-4 max-w-7xl">
-          <div className="bg-white rounded p-3 border">
+      <div className="bg-gray-50 border-b px-4 py-4 overflow-x-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 min-w-max sm:min-w-0">
+          <div className="bg-white rounded p-2 sm:p-3 border min-w-[120px]">
             <div className="text-xs text-gray-500 mb-1">Всего сделок</div>
-            <div className="text-2xl font-semibold">{leads.length}</div>
+            <div className="text-xl sm:text-2xl font-semibold">{leads.length}</div>
           </div>
-          <div className="bg-white rounded p-3 border">
+          <div className="bg-white rounded p-2 sm:p-3 border min-w-[120px]">
             <div className="text-xs text-gray-500 mb-1">В работе</div>
-            <div className="text-2xl font-semibold">
+            <div className="text-xl sm:text-2xl font-semibold">
               {leads.filter(l => !['closed-won', 'closed-lost'].includes(l.status)).length}
             </div>
           </div>
-          <div className="bg-white rounded p-3 border">
+          <div className="bg-white rounded p-2 sm:p-3 border min-w-[120px]">
             <div className="text-xs text-gray-500 mb-1">Конверсия</div>
-            <div className="text-2xl font-semibold text-green-600">{getConversionRate()}%</div>
+            <div className="text-xl sm:text-2xl font-semibold text-green-600">{getConversionRate()}%</div>
           </div>
-          <div className="bg-white rounded p-3 border">
+          <div className="bg-white rounded p-2 sm:p-3 border min-w-[120px]">
             <div className="text-xs text-gray-500 mb-1">Общая сумма</div>
-            <div className="text-2xl font-semibold">{getTotalBudget().toLocaleString()} ₽</div>
+            <div className="text-xl sm:text-2xl font-semibold">{getTotalBudget().toLocaleString()} ₽</div>
           </div>
         </div>
       </div>
 
-      <main className="p-4 overflow-x-auto">
-        <div className="flex gap-3 min-w-max">
+      <main className="p-2 sm:p-4 overflow-x-auto">
+        <div className="flex gap-2 sm:gap-3 min-w-max pb-4">
           {statusStages.map((stage) => {
             const stageLeads = filteredLeads.filter(l => l.status === stage.id);
             const stageBudget = stageLeads.reduce((sum, l) => sum + parseInt(l.budget || '0'), 0);
             
             return (
-              <div key={stage.id} className="w-72 flex-shrink-0">
+              <div key={stage.id} className="w-64 sm:w-72 flex-shrink-0">
                 <div 
                   className="rounded-t p-2 mb-2"
                   style={{ backgroundColor: stage.color }}
@@ -446,7 +445,7 @@ const CRM = () => {
                     <Button 
                       size="sm"
                       variant="ghost"
-                      className="h-6 w-6 p-0 hover:bg-black/5"
+                      className="h-6 w-6 p-0 hover:bg-black/5 touch-manipulation"
                       onClick={() => openCreateLeadModal(stage.id as Lead['status'])}
                     >
                       <Icon name="Plus" size={14} style={{ color: stage.textColor }} />
@@ -475,7 +474,7 @@ const CRM = () => {
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100"
+                          className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 touch-manipulation"
                           onClick={(e) => {
                             e.stopPropagation();
                             deleteLead(lead.id);
@@ -522,8 +521,8 @@ const CRM = () => {
       </main>
 
       {showCreateLead && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <Card className="max-w-xl w-full">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <Card className="max-w-xl w-full my-8">
             <CardHeader className="border-b">
               <div className="flex justify-between items-start">
                 <div>
@@ -532,13 +531,13 @@ const CRM = () => {
                     Этап: {getStatusStage(newLead.status).label}
                   </CardDescription>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => setShowCreateLead(false)}>
+                <Button variant="ghost" size="sm" onClick={() => setShowCreateLead(false)} className="touch-manipulation">
                   <Icon name="X" size={16} />
                 </Button>
               </div>
             </CardHeader>
             <CardContent className="p-4 space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-gray-700">Имя *</label>
                   <Input
@@ -588,11 +587,11 @@ const CRM = () => {
                   className="text-sm"
                 />
               </div>
-              <div className="flex gap-2 pt-2">
-                <Button onClick={createLead} className="flex-1 h-9 bg-blue-600 hover:bg-blue-700">
+              <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                <Button onClick={createLead} className="flex-1 h-9 bg-blue-600 hover:bg-blue-700 touch-manipulation">
                   Создать
                 </Button>
-                <Button variant="outline" onClick={() => setShowCreateLead(false)} className="h-9">
+                <Button variant="outline" onClick={() => setShowCreateLead(false)} className="h-9 sm:w-auto touch-manipulation">
                   Отмена
                 </Button>
               </div>
@@ -602,8 +601,8 @@ const CRM = () => {
       )}
 
       {showLeadCard && selectedLead && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4 overflow-y-auto">
+          <Card className="w-full max-w-4xl max-h-[95vh] overflow-y-auto my-2 sm:my-8">
             <CardHeader className="border-b sticky top-0 bg-white z-10">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
@@ -613,19 +612,19 @@ const CRM = () => {
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => deleteLead(selectedLead.id)} className="text-red-600">
+                  <Button variant="ghost" size="sm" onClick={() => deleteLead(selectedLead.id)} className="text-red-600 touch-manipulation w-8 h-8 p-0">
                     <Icon name="Trash2" size={16} />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setShowLeadCard(false)}>
+                  <Button variant="ghost" size="sm" onClick={() => setShowLeadCard(false)} className="touch-manipulation w-8 h-8 p-0">
                     <Icon name="X" size={16} />
                   </Button>
                 </div>
               </div>
             </CardHeader>
 
-            <CardContent className="p-4">
-              <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-2 space-y-4">
+            <CardContent className="p-3 sm:p-4">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="lg:col-span-2 space-y-4">
                   <div className="bg-gray-50 rounded p-3 space-y-2">
                     <div className="text-xs font-medium text-gray-500">Контакты</div>
                     <div className="space-y-1">
@@ -640,7 +639,7 @@ const CRM = () => {
                           <Button 
                             size="sm" 
                             onClick={() => makeCall(selectedLead.phone)} 
-                            className="ml-auto h-6 text-xs bg-green-600 hover:bg-green-700"
+                            className="ml-auto h-6 text-xs bg-green-600 hover:bg-green-700 touch-manipulation"
                           >
                             Позвонить
                           </Button>
@@ -684,7 +683,7 @@ const CRM = () => {
                       rows={2}
                       className="text-sm"
                     />
-                    <Button onClick={addNote} size="sm" className="h-8 bg-blue-600 hover:bg-blue-700">
+                    <Button onClick={addNote} size="sm" className="h-8 bg-blue-600 hover:bg-blue-700 touch-manipulation">
                       Добавить
                     </Button>
                   </div>
@@ -699,7 +698,7 @@ const CRM = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-4 w-4 p-0"
+                            className="h-4 w-4 p-0 touch-manipulation"
                             onClick={() => toggleTaskComplete(task.id)}
                           >
                             <Icon name="Circle" size={14} className="text-gray-400" />
@@ -728,7 +727,7 @@ const CRM = () => {
                       onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
                       className="h-8 text-xs mb-2"
                     />
-                    <Button onClick={addTask} size="sm" className="w-full h-7 text-xs bg-blue-600 hover:bg-blue-700">
+                    <Button onClick={addTask} size="sm" className="w-full h-7 text-xs bg-blue-600 hover:bg-blue-700 touch-manipulation">
                       Добавить задачу
                     </Button>
                   </div>
