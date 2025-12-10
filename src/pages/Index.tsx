@@ -584,15 +584,15 @@ const Index = () => {
 
           <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20 mb-8 md:mb-12 p-4 md:p-8">
             <CardTitle className="font-heading text-xl md:text-2xl mb-4 md:mb-6 text-center">Выберите вашу основную задачу</CardTitle>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
               {['Усиление слабого основания', 'Экономия на материалах', 'Ускорение строительства', 'Ремонт/реконструкция'].map((task) => (
                 <Button 
                   key={task}
                   variant="outline" 
-                  className="h-auto py-3 md:py-4 px-4 md:px-6 text-left justify-start hover:bg-primary/10 hover:border-primary"
+                  className="h-auto py-3 md:py-4 px-3 md:px-4 text-left justify-start hover:bg-primary/10 hover:border-primary whitespace-normal min-h-[60px]"
                 >
-                  <Icon name="CheckCircle2" size={18} className="mr-2 flex-shrink-0 md:w-5 md:h-5" />
-                  <span className="text-xs md:text-sm font-medium">{task}</span>
+                  <Icon name="CheckCircle2" size={16} className="mr-2 flex-shrink-0 md:w-5 md:h-5" />
+                  <span className="text-xs md:text-sm font-medium leading-tight">{task}</span>
                 </Button>
               ))}
             </div>
@@ -645,20 +645,20 @@ const Index = () => {
 
       <section id="calculator" className="py-12 md:py-24 px-4 bg-gradient-to-b from-background to-card/30">
         <div className="container mx-auto max-w-4xl">
-          <div className="text-center mb-8 md:mb-12">
-            <h2 className="font-heading font-bold text-3xl md:text-4xl lg:text-6xl mb-4 md:mb-6 px-2">
+          <div className="text-center mb-8 md:mb-12 px-4">
+            <h2 className="font-heading font-bold text-2xl sm:text-3xl md:text-4xl lg:text-5xl mb-4 md:mb-6">
               Калькулятор предварительной экономии
             </h2>
-            <p className="text-base md:text-xl text-muted-foreground px-4">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto">
               Оцените потенциал экономии с проектным решением по стабилизации
             </p>
           </div>
 
-          <Card className="bg-card border-primary/20 shadow-2xl">
-            <CardHeader className="p-4 md:p-6">
-              <CardTitle className="font-heading text-xl md:text-2xl">Параметры вашего объекта</CardTitle>
+          <Card className="bg-card border-primary/20 shadow-2xl mx-4 sm:mx-0">
+            <CardHeader className="p-4 sm:p-5 md:p-6">
+              <CardTitle className="font-heading text-lg sm:text-xl md:text-2xl">Параметры вашего объекта</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 md:space-y-6 p-4 md:p-6 pt-0">
+            <CardContent className="space-y-4 md:space-y-6 p-4 sm:p-5 md:p-6 pt-0">
               <div>
                 <label className="block text-sm font-semibold mb-2">Тип объекта</label>
                 <Select onValueChange={(value) => setCalcData({...calcData, objectType: value})}>
@@ -720,29 +720,29 @@ const Index = () => {
               <Button 
                 onClick={handleCalculate}
                 size="lg" 
-                className="w-full bg-primary hover:bg-primary/90 text-lg py-6 font-semibold"
+                className="w-full bg-primary hover:bg-primary/90 text-sm sm:text-base md:text-lg py-5 sm:py-6 font-semibold"
               >
-                <Icon name="Calculator" size={24} className="mr-2" />
-                Рассчитать потенциал экономии
+                <Icon name="Calculator" size={20} className="mr-2 sm:w-6 sm:h-6" />
+                <span className="truncate">Рассчитать потенциал экономии</span>
               </Button>
 
               {showCalcResult && (
                 <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30 animate-scale-in">
-                  <CardHeader>
-                    <CardTitle className="font-heading text-2xl text-center">Предварительный результат</CardTitle>
+                  <CardHeader className="p-4 sm:p-6">
+                    <CardTitle className="font-heading text-lg sm:text-xl md:text-2xl text-center">Предварительный результат</CardTitle>
                   </CardHeader>
-                  <CardContent className="text-center space-y-4">
-                    <p className="text-lg text-muted-foreground">
+                  <CardContent className="text-center space-y-4 p-4 sm:p-6 pt-0">
+                    <p className="text-sm sm:text-base md:text-lg text-muted-foreground">
                       На проектах с аналогичными параметрами внедрение стабилизации позволило:
                     </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                      <div className="bg-background/50 rounded-xl p-6">
-                        <p className="text-4xl font-heading font-bold text-primary mb-2">до 40%</p>
-                        <p className="text-sm text-muted-foreground">сокращение объема привозного щебня</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                      <div className="bg-background/50 rounded-xl p-4 sm:p-6">
+                        <p className="text-3xl sm:text-4xl font-heading font-bold text-primary mb-2">до 40%</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">сокращение объема привозного щебня</p>
                       </div>
-                      <div className="bg-background/50 rounded-xl p-6">
-                        <p className="text-4xl font-heading font-bold text-primary mb-2">15-25%</p>
-                        <p className="text-sm text-muted-foreground">снижение стоимости земляного полотна</p>
+                      <div className="bg-background/50 rounded-xl p-4 sm:p-6">
+                        <p className="text-3xl sm:text-4xl font-heading font-bold text-primary mb-2">15-25%</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">снижение стоимости земляного полотна</p>
                       </div>
                     </div>
                     
