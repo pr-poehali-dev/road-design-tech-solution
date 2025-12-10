@@ -112,7 +112,7 @@ const Index = () => {
         reduction: '70%',
         time: '2 месяца'
       },
-      image: 'https://images.unsplash.com/photo-1621159753203-36269feba2f4?w=800&auto=format&fit=crop'
+      image: 'https://cdn.poehali.dev/files/д4.jpeg'
     },
     {
       title: 'Обход г. Тверь',
@@ -124,7 +124,7 @@ const Index = () => {
         reduction: '55%',
         time: '1.5 месяца'
       },
-      image: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=800&auto=format&fit=crop'
+      image: 'https://cdn.poehali.dev/files/д.jpg'
     },
     {
       title: 'Реконструкция А-108',
@@ -136,7 +136,7 @@ const Index = () => {
         reduction: '60%',
         time: '3 недели'
       },
-      image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&auto=format&fit=crop'
+      image: 'https://cdn.poehali.dev/files/д2.jpg'
     },
     {
       title: 'Трасса Р-21 "Кола"',
@@ -148,7 +148,7 @@ const Index = () => {
         reduction: '65%',
         time: '2.5 месяца'
       },
-      image: 'https://images.unsplash.com/photo-1464037866556-6812c9d1c72e?w=800&auto=format&fit=crop'
+      image: 'https://cdn.poehali.dev/files/фед.дорога.jpg'
     },
     {
       title: 'Магистраль М-7 "Волга"',
@@ -160,7 +160,7 @@ const Index = () => {
         reduction: '50%',
         time: '1 месяц'
       },
-      image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&auto=format&fit=crop'
+      image: 'https://cdn.poehali.dev/files/город.дорога.jpg'
     },
     {
       title: 'Подъезд к промзоне',
@@ -172,7 +172,7 @@ const Index = () => {
         reduction: '75%',
         time: '3 недели'
       },
-      image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&auto=format&fit=crop'
+      image: 'https://cdn.poehali.dev/files/пром.дорога.jpg'
     }
   ];
 
