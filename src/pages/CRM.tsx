@@ -52,7 +52,6 @@ const CRM = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
-  const [activeTab, setActiveTab] = useState('pipeline');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showLeadCard, setShowLeadCard] = useState(false);
   const [showCreateLead, setShowCreateLead] = useState(false);
@@ -61,6 +60,7 @@ const CRM = () => {
   const [newNote, setNewNote] = useState('');
   const [editingName, setEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [newLead, setNewLead] = useState({
     name: '',
     email: '',
@@ -72,13 +72,13 @@ const CRM = () => {
   });
 
   const statusStages = [
-    { id: 'new', label: 'Новый лид', color: 'bg-blue-500', icon: 'Sparkles' },
-    { id: 'first-contact', label: 'Первый контакт', color: 'bg-cyan-500', icon: 'Phone' },
-    { id: 'evaluation', label: 'Оценка', color: 'bg-yellow-500', icon: 'Search' },
-    { id: 'proposal', label: 'Предложение', color: 'bg-orange-500', icon: 'FileText' },
-    { id: 'negotiation', label: 'Переговоры', color: 'bg-purple-500', icon: 'MessageSquare' },
-    { id: 'closed-won', label: 'Выиграна', color: 'bg-green-500', icon: 'CheckCircle2' },
-    { id: 'closed-lost', label: 'Проиграна', color: 'bg-red-500', icon: 'XCircle' }
+    { id: 'new', label: 'Новый лид', color: 'from-blue-400 to-blue-600', icon: 'Sparkles', emoji: '✨' },
+    { id: 'first-contact', label: 'Контакт', color: 'from-cyan-400 to-cyan-600', icon: 'Phone', emoji: '📞' },
+    { id: 'evaluation', label: 'Оценка', color: 'from-amber-400 to-amber-600', icon: 'Search', emoji: '🔍' },
+    { id: 'proposal', label: 'Предложение', color: 'from-orange-400 to-orange-600', icon: 'FileText', emoji: '📄' },
+    { id: 'negotiation', label: 'Переговоры', color: 'from-purple-400 to-purple-600', icon: 'MessageSquare', emoji: '💬' },
+    { id: 'closed-won', label: 'Выиграна', color: 'from-green-400 to-green-600', icon: 'Trophy', emoji: '🏆' },
+    { id: 'closed-lost', label: 'Проиграна', color: 'from-red-400 to-red-600', icon: 'XCircle', emoji: '❌' }
   ];
 
   useEffect(() => {
@@ -308,16 +308,8 @@ const CRM = () => {
     window.open(`tel:${phone}`);
   };
 
-  const getStatusColor = (status: string) => {
-    return statusStages.find(s => s.id === status)?.color || 'bg-gray-500';
-  };
-
-  const getStatusLabel = (status: string) => {
-    return statusStages.find(s => s.id === status)?.label || status;
-  };
-
-  const getStatusIcon = (status: string) => {
-    return statusStages.find(s => s.id === status)?.icon || 'Circle';
+  const getStatusStage = (status: string) => {
+    return statusStages.find(s => s.id === status) || statusStages[0];
   };
 
   const getTaskIcon = (type: string) => {
@@ -348,32 +340,44 @@ const CRM = () => {
     return ((won / total) * 100).toFixed(1);
   };
 
+  const filteredLeads = leads.filter(lead => 
+    lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    lead.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    lead.company?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full shadow-2xl border-primary/20">
-          <CardHeader className="text-center space-y-4">
-            <div className="w-20 h-20 bg-gradient-to-br from-primary to-primary/60 rounded-2xl flex items-center justify-center mx-auto shadow-lg">
-              <Icon name="Lock" size={36} className="text-primary-foreground" />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnoiIHN0cm9rZT0iIzkzYzVmZCIgc3Ryb2tlLXdpZHRoPSIuNSIgb3BhY2l0eT0iLjMiLz48L2c+PC9zdmc+')] opacity-40"></div>
+        <Card className="max-w-md w-full shadow-2xl border-0 backdrop-blur-xl bg-white/80 relative">
+          <div className="absolute -top-20 left-1/2 -translate-x-1/2">
+            <div className="w-32 h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl transform rotate-3 hover:rotate-6 transition-transform">
+              <Icon name="Rocket" size={64} className="text-white" />
             </div>
-            <div>
-              <CardTitle className="font-heading text-3xl mb-2">CRM Система</CardTitle>
-              <CardDescription>Введите пароль для доступа</CardDescription>
-            </div>
+          </div>
+          <CardHeader className="text-center pt-20 space-y-2">
+            <CardTitle className="font-heading text-4xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              DEOD CRM
+            </CardTitle>
+            <CardDescription className="text-base">CRM нового поколения</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pb-8">
             <form onSubmit={handleLogin} className="space-y-4">
-              <Input
-                type="password"
-                placeholder="Пароль"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-12"
-                required
-              />
-              <Button type="submit" className="w-full h-12 text-lg">
+              <div className="relative">
+                <Icon name="Lock" size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="password"
+                  placeholder="Введите пароль"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-11 h-12 border-2 focus:border-blue-500"
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full h-12 text-base bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
                 <Icon name="LogIn" size={20} className="mr-2" />
-                Войти
+                Войти в систему
               </Button>
               <Button 
                 type="button" 
@@ -381,8 +385,8 @@ const CRM = () => {
                 className="w-full h-12"
                 onClick={() => navigate('/')}
               >
-                <Icon name="ArrowLeft" size={20} className="mr-2" />
-                Вернуться на сайт
+                <Icon name="Home" size={20} className="mr-2" />
+                На главную
               </Button>
             </form>
           </CardContent>
@@ -392,27 +396,42 @@ const CRM = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <header className="border-b border-border bg-card/80 backdrop-blur-lg sticky top-0 z-40 shadow-sm">
-        <div className="container mx-auto px-4 py-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnoiIHN0cm9rZT0iIzkzYzVmZCIgc3Ryb2tlLXdpZHRoPSIuNSIgb3BhY2l0eT0iLjMiLz48L2c+PC9zdmc+')] opacity-40"></div>
+      
+      <header className="border-b border-gray-200 bg-white/80 backdrop-blur-xl sticky top-0 z-40 shadow-sm relative">
+        <div className="container mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/60 rounded-xl flex items-center justify-center shadow-lg">
-                <Icon name="LayoutDashboard" size={24} className="text-primary-foreground" />
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform">
+                <Icon name="Rocket" size={28} className="text-white" />
               </div>
               <div>
-                <h1 className="font-heading font-bold text-2xl text-gradient">DEOD CRM</h1>
-                <p className="text-sm text-muted-foreground">Управление продажами</p>
+                <h1 className="font-heading font-bold text-2xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  DEOD CRM
+                </h1>
+                <p className="text-sm text-gray-600">Ваши продажи на автопилоте</p>
               </div>
             </div>
             <div className="flex gap-3">
-              <Button onClick={() => openCreateLeadModal()}>
+              <div className="relative hidden md:block">
+                <Icon name="Search" size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Input
+                  placeholder="Поиск по лидам..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 w-64 border-gray-200"
+                />
+              </div>
+              <Button 
+                onClick={() => openCreateLeadModal()}
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg"
+              >
                 <Icon name="Plus" size={20} className="mr-2" />
                 Создать лид
               </Button>
               <Button variant="outline" onClick={() => navigate('/')}>
-                <Icon name="Home" size={20} className="mr-2" />
-                На сайт
+                <Icon name="Home" size={20} />
               </Button>
               <Button variant="outline" onClick={handleLogout}>
                 <Icon name="LogOut" size={20} />
@@ -422,114 +441,128 @@ const CRM = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card className="border-primary/20 shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-sm text-muted-foreground mb-2">Всего лидов</CardTitle>
-                  <p className="text-4xl font-bold">{leads.length}</p>
-                </div>
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-                  <Icon name="Users" size={24} className="text-primary" />
+      <main className="container mx-auto px-6 py-8 relative">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card className="border-0 shadow-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white overflow-hidden relative">
+            <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+            <CardHeader className="pb-2 relative">
+              <CardTitle className="text-sm font-medium text-blue-100">Всего лидов</CardTitle>
+              <div className="flex items-end justify-between mt-2">
+                <p className="text-5xl font-bold">{leads.length}</p>
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <Icon name="Users" size={24} />
                 </div>
               </div>
             </CardHeader>
           </Card>
           
-          <Card className="border-blue-500/20 shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-sm text-muted-foreground mb-2">Новые</CardTitle>
-                  <p className="text-4xl font-bold text-blue-500">
-                    {leads.filter(l => l.status === 'new').length}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center">
-                  <Icon name="Sparkles" size={24} className="text-blue-500" />
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-
-          <Card className="border-yellow-500/20 shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-sm text-muted-foreground mb-2">В работе</CardTitle>
-                  <p className="text-4xl font-bold text-yellow-500">
-                    {leads.filter(l => ['first-contact', 'evaluation', 'proposal', 'negotiation'].includes(l.status)).length}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center">
-                  <Icon name="Target" size={24} className="text-yellow-500" />
+          <Card className="border-0 shadow-xl bg-gradient-to-br from-purple-500 to-purple-600 text-white overflow-hidden relative">
+            <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+            <CardHeader className="pb-2 relative">
+              <CardTitle className="text-sm font-medium text-purple-100">В работе</CardTitle>
+              <div className="flex items-end justify-between mt-2">
+                <p className="text-5xl font-bold">
+                  {leads.filter(l => !['closed-won', 'closed-lost'].includes(l.status)).length}
+                </p>
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <Icon name="Target" size={24} />
                 </div>
               </div>
             </CardHeader>
           </Card>
 
-          <Card className="border-green-500/20 shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-sm text-muted-foreground mb-2">Конверсия</CardTitle>
-                  <p className="text-4xl font-bold text-green-500">{getConversionRate()}%</p>
+          <Card className="border-0 shadow-xl bg-gradient-to-br from-green-500 to-green-600 text-white overflow-hidden relative">
+            <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+            <CardHeader className="pb-2 relative">
+              <CardTitle className="text-sm font-medium text-green-100">Выиграно</CardTitle>
+              <div className="flex items-end justify-between mt-2">
+                <p className="text-5xl font-bold">
+                  {leads.filter(l => l.status === 'closed-won').length}
+                </p>
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <Icon name="Trophy" size={24} />
                 </div>
-                <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center">
-                  <Icon name="TrendingUp" size={24} className="text-green-500" />
+              </div>
+            </CardHeader>
+          </Card>
+
+          <Card className="border-0 shadow-xl bg-gradient-to-br from-orange-500 to-pink-600 text-white overflow-hidden relative">
+            <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+            <CardHeader className="pb-2 relative">
+              <CardTitle className="text-sm font-medium text-orange-100">Конверсия</CardTitle>
+              <div className="flex items-end justify-between mt-2">
+                <p className="text-5xl font-bold">{getConversionRate()}%</p>
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <Icon name="TrendingUp" size={24} />
                 </div>
               </div>
             </CardHeader>
           </Card>
         </div>
 
-        <Card className="shadow-xl border-primary/20">
-          <CardHeader>
-            <CardTitle className="text-2xl">Воронка продаж</CardTitle>
-            <CardDescription>Перетащите карточки между этапами</CardDescription>
+        <Card className="shadow-2xl border-0 backdrop-blur-xl bg-white/80">
+          <CardHeader className="border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-2xl font-bold">Воронка продаж</CardTitle>
+                <CardDescription className="text-base mt-1">
+                  Управляйте сделками на каждом этапе
+                </CardDescription>
+              </div>
+              <Badge variant="outline" className="text-base px-4 py-2">
+                {filteredLeads.length} лидов
+              </Badge>
+            </div>
           </CardHeader>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-7 gap-4">
+          <CardContent className="p-8">
+            <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
               {statusStages.map((stage) => {
-                const stageLeads = leads.filter(l => l.status === stage.id);
+                const stageLeads = filteredLeads.filter(l => l.status === stage.id);
+                const totalValue = stageLeads.length;
+                
                 return (
-                  <div key={stage.id} className="space-y-3">
-                    <div className="sticky top-20 bg-background/95 backdrop-blur-sm pb-3 border-b border-border">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Icon name={stage.icon as any} size={18} className={`${stage.color.replace('bg-', 'text-')}`} />
-                        <h3 className="font-semibold text-sm">{stage.label}</h3>
+                  <div key={stage.id} className="space-y-4">
+                    <div className={`sticky top-24 bg-gradient-to-br ${stage.color} rounded-2xl p-4 shadow-lg transform hover:scale-105 transition-all`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">{stage.emoji}</span>
+                          <div>
+                            <h3 className="font-bold text-white text-sm">{stage.label}</h3>
+                            <p className="text-white/80 text-xs">{totalValue} лидов</p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <Badge className={`${stage.color} text-white`}>{stageLeads.length}</Badge>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          onClick={() => openCreateLeadModal(stage.id as Lead['status'])}
-                          className="h-7 w-7 p-0"
-                        >
-                          <Icon name="Plus" size={14} />
-                        </Button>
-                      </div>
+                      <Button 
+                        size="sm" 
+                        className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border-0"
+                        onClick={() => openCreateLeadModal(stage.id as Lead['status'])}
+                      >
+                        <Icon name="Plus" size={16} className="mr-1" />
+                        Добавить
+                      </Button>
                     </div>
                     
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {stageLeads.map(lead => (
                         <Card 
                           key={lead.id} 
-                          className="cursor-pointer hover:shadow-lg hover:border-primary/50 transition-all group"
+                          className="cursor-pointer hover:shadow-2xl hover:scale-105 transition-all border-0 shadow-lg bg-white group"
                           onClick={() => openLeadCard(lead)}
                         >
                           <CardHeader className="p-4">
                             <div className="flex items-start justify-between mb-2">
-                              <CardTitle className="text-sm font-medium line-clamp-1 group-hover:text-primary transition-colors">
-                                {lead.name}
-                              </CardTitle>
+                              <div className="flex-1 min-w-0">
+                                <CardTitle className="text-sm font-bold line-clamp-1 group-hover:text-blue-600 transition-colors">
+                                  {lead.name}
+                                </CardTitle>
+                                <CardDescription className="text-xs mt-1 line-clamp-1">
+                                  {lead.company || lead.email}
+                                </CardDescription>
+                              </div>
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity -mr-1"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   deleteLead(lead.id);
@@ -538,19 +571,21 @@ const CRM = () => {
                                 <Icon name="Trash2" size={14} className="text-red-500" />
                               </Button>
                             </div>
-                            <CardDescription className="text-xs line-clamp-1">
-                              {lead.company || lead.email}
-                            </CardDescription>
-                            <div className="flex gap-1 mt-2">
-                              <Badge variant="outline" className="text-xs">{lead.type}</Badge>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Badge variant="secondary" className="text-xs">
+                                {lead.type}
+                              </Badge>
+                              {lead.phone && (
+                                <Icon name="Phone" size={12} className="text-green-500" />
+                              )}
                             </div>
                           </CardHeader>
                         </Card>
                       ))}
                       {stageLeads.length === 0 && (
-                        <div className="text-center py-8 text-muted-foreground text-xs">
-                          <Icon name="Inbox" size={32} className="mx-auto mb-2 opacity-20" />
-                          <p>Пусто</p>
+                        <div className="text-center py-12 text-gray-400">
+                          <Icon name="Inbox" size={40} className="mx-auto mb-3 opacity-30" />
+                          <p className="text-sm">Пусто</p>
                         </div>
                       )}
                     </div>
@@ -563,19 +598,17 @@ const CRM = () => {
       </main>
 
       {showCreateLead && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <Card className="max-w-2xl w-full shadow-2xl">
-            <CardHeader className="border-b">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="max-w-2xl w-full shadow-2xl border-0">
+            <CardHeader className="border-b bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-t-lg">
               <div className="flex justify-between items-start">
                 <div>
-                  <CardTitle className="text-2xl">Создать лид</CardTitle>
-                  <CardDescription className="mt-2">
-                    Добавить в этап: <Badge className={`${getStatusColor(newLead.status)} text-white ml-2`}>
-                      {getStatusLabel(newLead.status)}
-                    </Badge>
+                  <CardTitle className="text-2xl">Создать новый лид</CardTitle>
+                  <CardDescription className="mt-2 text-white/80">
+                    Добавить в: {getStatusStage(newLead.status).emoji} {getStatusStage(newLead.status).label}
                   </CardDescription>
                 </div>
-                <Button variant="ghost" onClick={() => setShowCreateLead(false)}>
+                <Button variant="ghost" onClick={() => setShowCreateLead(false)} className="text-white hover:bg-white/20">
                   <Icon name="X" size={20} />
                 </Button>
               </div>
@@ -583,55 +616,75 @@ const CRM = () => {
             <CardContent className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold">Имя *</label>
+                  <label className="text-sm font-semibold flex items-center gap-1">
+                    <Icon name="User" size={14} />
+                    Имя *
+                  </label>
                   <Input
                     placeholder="Иван Иванов"
                     value={newLead.name}
                     onChange={(e) => setNewLead({ ...newLead, name: e.target.value })}
+                    className="border-2"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold">Email *</label>
+                  <label className="text-sm font-semibold flex items-center gap-1">
+                    <Icon name="Mail" size={14} />
+                    Email *
+                  </label>
                   <Input
                     type="email"
                     placeholder="ivan@example.com"
                     value={newLead.email}
                     onChange={(e) => setNewLead({ ...newLead, email: e.target.value })}
+                    className="border-2"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold">Телефон</label>
+                  <label className="text-sm font-semibold flex items-center gap-1">
+                    <Icon name="Phone" size={14} />
+                    Телефон
+                  </label>
                   <Input
                     type="tel"
                     placeholder="+7 999 123-45-67"
                     value={newLead.phone}
                     onChange={(e) => setNewLead({ ...newLead, phone: e.target.value })}
+                    className="border-2"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold">Компания</label>
+                  <label className="text-sm font-semibold flex items-center gap-1">
+                    <Icon name="Building2" size={14} />
+                    Компания
+                  </label>
                   <Input
                     placeholder="ООО Компания"
                     value={newLead.company}
                     onChange={(e) => setNewLead({ ...newLead, company: e.target.value })}
+                    className="border-2"
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-semibold">Комментарий</label>
+                <label className="text-sm font-semibold flex items-center gap-1">
+                  <Icon name="MessageSquare" size={14} />
+                  Комментарий
+                </label>
                 <Textarea
-                  placeholder="Дополнительная информация о клиенте..."
+                  placeholder="Дополнительная информация..."
                   value={newLead.message}
                   onChange={(e) => setNewLead({ ...newLead, message: e.target.value })}
                   rows={3}
+                  className="border-2"
                 />
               </div>
               <div className="flex gap-3 pt-4">
-                <Button onClick={createLead} className="flex-1">
+                <Button onClick={createLead} className="flex-1 h-12 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
                   <Icon name="Check" size={20} className="mr-2" />
                   Создать лид
                 </Button>
-                <Button variant="outline" onClick={() => setShowCreateLead(false)}>
+                <Button variant="outline" onClick={() => setShowCreateLead(false)} className="h-12">
                   Отмена
                 </Button>
               </div>
@@ -641,9 +694,9 @@ const CRM = () => {
       )}
 
       {showLeadCard && selectedLead && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-0 md:p-4">
-          <Card className="w-full md:max-w-5xl md:max-h-[90vh] h-full md:h-auto overflow-y-auto shadow-2xl">
-            <CardHeader className="border-b sticky top-0 bg-card z-10">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-0 md:p-4">
+          <Card className="w-full md:max-w-6xl md:max-h-[90vh] h-full md:h-auto overflow-y-auto shadow-2xl border-0 md:rounded-2xl">
+            <CardHeader className={`border-b sticky top-0 z-10 bg-gradient-to-r ${getStatusStage(selectedLead.status).color} text-white`}>
               <div className="flex justify-between items-start gap-4">
                 <div className="flex-1">
                   {editingName ? (
@@ -651,85 +704,109 @@ const CRM = () => {
                       <Input
                         value={editedName}
                         onChange={(e) => setEditedName(e.target.value)}
-                        className="text-xl font-bold"
+                        className="text-xl font-bold bg-white/20 border-white/30 text-white placeholder:text-white/60"
                         autoFocus
                       />
-                      <Button size="sm" onClick={updateLeadName}>
+                      <Button size="sm" onClick={updateLeadName} className="bg-white/20 hover:bg-white/30">
                         <Icon name="Check" size={16} />
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => setEditingName(false)}>
+                      <Button size="sm" variant="outline" onClick={() => setEditingName(false)} className="border-white/30 text-white hover:bg-white/20">
                         <Icon name="X" size={16} />
                       </Button>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2">
-                      <CardTitle className="text-2xl">{selectedLead.name}</CardTitle>
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        onClick={() => setEditingName(true)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Icon name="Pencil" size={14} />
-                      </Button>
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl">{getStatusStage(selectedLead.status).emoji}</span>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <CardTitle className="text-3xl">{selectedLead.name}</CardTitle>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => setEditingName(true)}
+                            className="h-8 w-8 p-0 hover:bg-white/20 text-white"
+                          >
+                            <Icon name="Pencil" size={14} />
+                          </Button>
+                        </div>
+                        <CardDescription className="mt-2 text-white/80 flex items-center gap-3 flex-wrap text-base">
+                          {selectedLead.company && <span className="flex items-center gap-1">
+                            <Icon name="Building2" size={14} />
+                            {selectedLead.company}
+                          </span>}
+                          <Badge variant="secondary" className="bg-white/20 text-white border-0">
+                            {selectedLead.source}
+                          </Badge>
+                        </CardDescription>
+                      </div>
                     </div>
                   )}
-                  <CardDescription className="mt-2 flex items-center gap-2 flex-wrap">
-                    {selectedLead.company && <span>{selectedLead.company}</span>}
-                    <Badge variant="outline">{selectedLead.source}</Badge>
-                  </CardDescription>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="destructive" size="sm" onClick={() => deleteLead(selectedLead.id)}>
+                  <Button variant="ghost" size="sm" onClick={() => deleteLead(selectedLead.id)} className="bg-red-500/20 hover:bg-red-500/30 text-white">
                     <Icon name="Trash2" size={16} />
                   </Button>
-                  <Button variant="ghost" onClick={() => setShowLeadCard(false)}>
+                  <Button variant="ghost" onClick={() => setShowLeadCard(false)} className="hover:bg-white/20 text-white">
                     <Icon name="X" size={20} />
                   </Button>
                 </div>
               </div>
             </CardHeader>
 
-            <CardContent className="p-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="shadow-none border-2">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Icon name="User" size={18} />
-                      Контактная информация
+            <CardContent className="p-8 space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="shadow-lg border-2">
+                  <CardHeader className="pb-4 bg-gradient-to-br from-blue-50 to-white">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Icon name="User" size={20} className="text-blue-600" />
+                      Контакты
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
+                  <CardContent className="space-y-4">
                     <div>
-                      <label className="text-xs text-muted-foreground">Email</label>
-                      <p className="text-sm font-medium">{selectedLead.email}</p>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</label>
+                      <p className="text-base font-medium mt-1 flex items-center gap-2">
+                        <Icon name="Mail" size={16} className="text-gray-400" />
+                        {selectedLead.email}
+                      </p>
                     </div>
                     <div>
-                      <label className="text-xs text-muted-foreground">Телефон</label>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium">{selectedLead.phone || 'Не указан'}</p>
-                        {selectedLead.phone && (
-                          <Button size="sm" variant="outline" onClick={() => makeCall(selectedLead.phone)} className="h-7">
-                            <Icon name="Phone" size={12} className="mr-1" />
-                            Позвонить
-                          </Button>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Телефон</label>
+                      <div className="flex items-center gap-2 mt-1">
+                        {selectedLead.phone ? (
+                          <>
+                            <p className="text-base font-medium flex items-center gap-2">
+                              <Icon name="Phone" size={16} className="text-gray-400" />
+                              {selectedLead.phone}
+                            </p>
+                            <Button 
+                              size="sm" 
+                              onClick={() => makeCall(selectedLead.phone)} 
+                              className="ml-auto bg-green-500 hover:bg-green-600"
+                            >
+                              <Icon name="Phone" size={14} className="mr-1" />
+                              Позвонить
+                            </Button>
+                          </>
+                        ) : (
+                          <p className="text-sm text-gray-400">Не указан</p>
                         )}
                       </div>
                     </div>
                     <div>
-                      <label className="text-xs text-muted-foreground">Статус</label>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Этап</label>
                       <Select 
                         value={selectedLead.status} 
                         onValueChange={(value) => updateLeadStatus(selectedLead.id, value as Lead['status'])}
                       >
-                        <SelectTrigger className="mt-1">
+                        <SelectTrigger className="mt-1 border-2">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                           {statusStages.map(stage => (
                             <SelectItem key={stage.id} value={stage.id}>
                               <div className="flex items-center gap-2">
-                                <div className={`w-2 h-2 rounded-full ${stage.color}`} />
+                                <span>{stage.emoji}</span>
                                 {stage.label}
                               </div>
                             </SelectItem>
@@ -739,126 +816,125 @@ const CRM = () => {
                     </div>
                     {selectedLead.message && (
                       <div>
-                        <label className="text-xs text-muted-foreground">Сообщение</label>
-                        <p className="text-sm mt-1 p-3 bg-muted rounded-lg">{selectedLead.message}</p>
+                        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Сообщение</label>
+                        <p className="text-sm mt-2 p-3 bg-gray-50 rounded-lg border">{selectedLead.message}</p>
                       </div>
                     )}
                   </CardContent>
                 </Card>
 
-                <Card className="shadow-none border-2">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Icon name="CheckSquare" size={18} />
+                <Card className="shadow-lg border-2">
+                  <CardHeader className="pb-4 bg-gradient-to-br from-purple-50 to-white">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Icon name="CheckSquare" size={20} className="text-purple-600" />
                       Задачи
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
                       {tasks.filter(t => t.leadId === selectedLead.id && !t.completed).map(task => (
-                        <Card key={task.id} className="p-3 shadow-none border">
-                          <div className="flex items-start gap-2">
+                        <Card key={task.id} className="p-3 shadow-sm border-2 hover:border-purple-300 transition-colors">
+                          <div className="flex items-start gap-3">
                             <Button
                               variant="ghost"
                               size="sm"
                               className="h-6 w-6 p-0 mt-0.5"
                               onClick={() => toggleTaskComplete(task.id)}
                             >
-                              <Icon name="Circle" size={16} />
+                              <Icon name="Circle" size={18} className="text-gray-400" />
                             </Button>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium line-clamp-2">{task.title}</p>
-                              <p className="text-xs text-muted-foreground mt-1">
+                              <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                <Icon name="Calendar" size={12} />
                                 {new Date(task.dueDate).toLocaleDateString('ru-RU')}
                               </p>
                             </div>
-                            <Badge variant="outline" className="text-xs">
-                              <Icon name={getTaskIcon(task.type)} size={12} />
-                            </Badge>
                           </div>
                         </Card>
                       ))}
                       {tasks.filter(t => t.leadId === selectedLead.id && !t.completed).length === 0 && (
-                        <p className="text-xs text-muted-foreground text-center py-4">Нет активных задач</p>
+                        <p className="text-sm text-gray-400 text-center py-6">Нет активных задач</p>
                       )}
                     </div>
-                    <div className="pt-2 border-t space-y-2">
+                    <div className="pt-3 border-t space-y-3">
                       <Input
-                        placeholder="Название задачи"
+                        placeholder="Новая задача..."
                         value={newTask.title}
                         onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                        className="h-9"
+                        className="border-2"
                       />
                       <div className="grid grid-cols-2 gap-2">
                         <Select value={newTask.type} onValueChange={(value) => setNewTask({ ...newTask, type: value })}>
-                          <SelectTrigger className="h-9">
+                          <SelectTrigger className="border-2">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="call">Звонок</SelectItem>
-                            <SelectItem value="meeting">Встреча</SelectItem>
-                            <SelectItem value="proposal">КП</SelectItem>
-                            <SelectItem value="follow-up">Контроль</SelectItem>
+                            <SelectItem value="call">📞 Звонок</SelectItem>
+                            <SelectItem value="meeting">👥 Встреча</SelectItem>
+                            <SelectItem value="proposal">📄 КП</SelectItem>
+                            <SelectItem value="follow-up">⏰ Контроль</SelectItem>
                           </SelectContent>
                         </Select>
                         <Input
                           type="date"
                           value={newTask.dueDate}
                           onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
-                          className="h-9"
+                          className="border-2"
                         />
                       </div>
-                      <Button onClick={addTask} size="sm" className="w-full">
-                        <Icon name="Plus" size={14} className="mr-2" />
-                        Добавить
+                      <Button onClick={addTask} className="w-full bg-purple-600 hover:bg-purple-700">
+                        <Icon name="Plus" size={16} className="mr-2" />
+                        Добавить задачу
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
-              </div>
 
-              <Card className="shadow-none border-2">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Icon name="Activity" size={18} />
-                    Лента активности
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="space-y-2">
-                    <Textarea
-                      placeholder="Добавить заметку..."
-                      value={newNote}
-                      onChange={(e) => setNewNote(e.target.value)}
-                      rows={2}
-                    />
-                    <Button onClick={addNote} size="sm">
-                      <Icon name="Plus" size={14} className="mr-2" />
-                      Добавить заметку
-                    </Button>
-                  </div>
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {activities
-                      .filter(a => a.leadId === selectedLead.id)
-                      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                      .map(activity => (
-                        <Card key={activity.id} className="p-3 shadow-none">
-                          <div className="flex gap-3">
-                            <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                              <Icon name={getActivityIcon(activity.type)} size={14} className="text-primary" />
+                <Card className="shadow-lg border-2">
+                  <CardHeader className="pb-4 bg-gradient-to-br from-orange-50 to-white">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Icon name="Activity" size={20} className="text-orange-600" />
+                      Активность
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Textarea
+                        placeholder="Добавить заметку..."
+                        value={newNote}
+                        onChange={(e) => setNewNote(e.target.value)}
+                        rows={3}
+                        className="border-2"
+                      />
+                      <Button onClick={addNote} className="w-full bg-orange-600 hover:bg-orange-700">
+                        <Icon name="Plus" size={16} className="mr-2" />
+                        Добавить заметку
+                      </Button>
+                    </div>
+                    <div className="space-y-2 max-h-96 overflow-y-auto pt-2 border-t">
+                      {activities
+                        .filter(a => a.leadId === selectedLead.id)
+                        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                        .map(activity => (
+                          <Card key={activity.id} className="p-3 shadow-sm border">
+                            <div className="flex gap-3">
+                              <div className="w-8 h-8 bg-gradient-to-br from-orange-100 to-orange-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <Icon name={getActivityIcon(activity.type)} size={14} className="text-orange-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm">{activity.description}</p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {new Date(activity.createdAt).toLocaleString('ru-RU')}
+                                </p>
+                              </div>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm">{activity.description}</p>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {new Date(activity.createdAt).toLocaleString('ru-RU')}
-                              </p>
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
-                  </div>
-                </CardContent>
-              </Card>
+                          </Card>
+                        ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </CardContent>
           </Card>
         </div>
