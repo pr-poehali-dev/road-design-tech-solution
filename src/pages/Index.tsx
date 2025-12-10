@@ -308,7 +308,7 @@ const Index = () => {
             </Badge>
             <h1 className="font-heading font-black text-4xl sm:text-5xl md:text-7xl lg:text-8xl mb-8 leading-[1.1] animate-fade-in text-white">
               Проектируем не просто дороги.{' '}
-              <span className="text-gradient block mt-2">
+              <span className="text-gradient-white block mt-2">
                 Проектируем надежное основание
               </span>
             </h1>
