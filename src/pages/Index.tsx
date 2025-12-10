@@ -225,7 +225,7 @@ const Index = () => {
             <a href="#projects" className="hover:text-primary transition-colors">Кейсы</a>
             <a href="#contact" className="hover:text-primary transition-colors">Контакты</a>
           </div>
-          <Button size="lg" className="bg-primary hover:bg-primary/90 font-semibold text-sm md:text-base px-3 md:px-4 py-2 md:py-2.5">
+          <Button size="lg" className="bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base px-3 sm:px-4 md:px-6 py-2">
             Консультация
           </Button>
         </nav>
@@ -257,13 +257,13 @@ const Index = () => {
               Гарантируем прохождение экспертизы и снижение ваших затрат на строительство до 30%.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center animate-scale-in px-4 sm:px-0">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 font-semibold group w-full sm:w-auto">
-                <Icon name="Calculator" size={20} className="mr-2 group-hover:scale-110 transition-transform sm:w-6 sm:h-6" />
-                <span className="text-sm sm:text-base">Рассчитать экономию</span>
+              <Button size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 group">
+                <Icon name="Calculator" className="mr-2 group-hover:scale-110 transition-transform" size={16} />
+                <span className="truncate">Рассчитать экономию</span>
               </Button>
-              <Button size="lg" variant="outline" className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 font-semibold border-2 group w-full sm:w-auto">
-                <Icon name="Presentation" size={20} className="mr-2 group-hover:scale-110 transition-transform sm:w-6 sm:h-6" />
-                <span className="text-sm sm:text-base">Технологические решения</span>
+              <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 font-semibold text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 group">
+                <Icon name="Presentation" className="mr-2 group-hover:scale-110 transition-transform" size={16} />
+                <span className="truncate">Технологические решения</span>
               </Button>
             </div>
           </div>
@@ -484,9 +484,9 @@ const Index = () => {
           </div>
 
           <div className="text-center mt-8 md:mt-12">
-            <Button size="lg" variant="outline" className="border-2">
-              <Icon name="MessageSquare" size={20} className="mr-2" />
-              Какая у вас задача? Узнать решение
+            <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 text-xs sm:text-sm md:text-base px-4 sm:px-6 py-3 sm:py-4">
+              <Icon name="MessageSquare" size={16} className="mr-2" />
+              <span className="truncate">Какая у вас задача? Узнать решение</span>
             </Button>
           </div>
         </div>
@@ -720,9 +720,9 @@ const Index = () => {
               <Button 
                 onClick={handleCalculate}
                 size="lg" 
-                className="w-full bg-primary hover:bg-primary/90 text-sm sm:text-base md:text-lg py-5 sm:py-6 font-semibold"
+                className="w-full bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base py-3 sm:py-4 md:py-5 px-4"
               >
-                <Icon name="Calculator" size={20} className="mr-2 sm:w-6 sm:h-6" />
+                <Icon name="Calculator" size={16} className="mr-2" />
                 <span className="truncate">Рассчитать потенциал экономии</span>
               </Button>
 
@@ -778,9 +778,9 @@ const Index = () => {
                             required
                           />
                         </div>
-                        <Button type="submit" size="lg" className="w-full bg-primary hover:bg-primary/90">
-                          <Icon name="Send" size={20} className="mr-2" />
-                          Получить предварительный расчет
+                        <Button type="submit" size="lg" className="w-full bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base py-3 sm:py-4 px-4">
+                          <Icon name="Send" size={16} className="mr-2" />
+                          <span className="truncate">Получить предварительный расчет</span>
                         </Button>
                       </form>
                     </div>
@@ -929,9 +929,9 @@ const Index = () => {
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     rows={4}
                   />
-                  <Button type="submit" size="lg" className="w-full bg-primary hover:bg-primary/90">
-                    <Icon name="Send" size={20} className="mr-2" />
-                    Отправить запрос
+                  <Button type="submit" size="lg" className="w-full bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base py-3 sm:py-4 px-4">
+                    <Icon name="Send" size={16} className="mr-2" />
+                    <span className="truncate">Отправить запрос</span>
                   </Button>
                 </form>
               </CardContent>
@@ -1017,9 +1017,10 @@ const Index = () => {
       {!showChatbot && (
         <Button
           onClick={() => setShowChatbot(true)}
-          className="fixed bottom-6 right-6 w-16 h-16 rounded-full bg-primary hover:bg-primary/90 shadow-2xl z-50 animate-pulse-slow"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-primary hover:bg-primary/90 shadow-2xl z-50 animate-pulse-slow p-0"
         >
-          <Icon name="MessageCircle" size={28} />
+          <Icon name="MessageCircle" size={24} className="sm:hidden" />
+          <Icon name="MessageCircle" size={28} className="hidden sm:block" />
         </Button>
       )}
 
@@ -1038,9 +1039,10 @@ const Index = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowChatbot(false)}
-                className="hover:bg-background/50"
+                className="hover:bg-background/50 p-2"
               >
-                <Icon name="X" size={20} />
+                <Icon name="X" size={16} className="sm:hidden" />
+                <Icon name="X" size={20} className="hidden sm:block" />
               </Button>
             </div>
           </CardHeader>
@@ -1053,13 +1055,13 @@ const Index = () => {
                     <Button
                       key={type}
                       variant="outline"
-                      className="w-full justify-start hover:bg-primary/10 hover:border-primary"
+                      className="w-full justify-start hover:bg-primary/10 hover:border-primary text-xs sm:text-sm py-2 px-3"
                       onClick={() => {
                         setChatData({...chatData, projectType: type});
                         handleChatNext();
                       }}
                     >
-                      {type}
+                      <span className="truncate">{type}</span>
                     </Button>
                   ))}
                 </div>
@@ -1074,13 +1076,13 @@ const Index = () => {
                     <Button
                       key={time}
                       variant="outline"
-                      className="w-full justify-start hover:bg-primary/10 hover:border-primary"
+                      className="w-full justify-start hover:bg-primary/10 hover:border-primary text-xs sm:text-sm py-2 px-3"
                       onClick={() => {
                         setChatData({...chatData, timeline: time});
                         handleChatNext();
                       }}
                     >
-                      {time}
+                      <span className="truncate">{time}</span>
                     </Button>
                   ))}
                 </div>
@@ -1102,11 +1104,11 @@ const Index = () => {
                 />
                 <Button
                   onClick={handleChatNext}
-                  className="w-full bg-primary hover:bg-primary/90"
+                  className="w-full bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm py-2 px-3"
                   disabled={!chatData.email}
                 >
-                  <Icon name="Send" size={18} className="mr-2" />
-                  Получить расчет
+                  <Icon name="Send" size={16} className="mr-2" />
+                  <span className="truncate">Получить расчет</span>
                 </Button>
               </div>
             )}
@@ -1120,8 +1122,8 @@ const Index = () => {
                 <p className="text-sm text-muted-foreground">
                   Мы отправим предварительный расчет на {chatData.email} в течение 2 часов.
                 </p>
-                <Button onClick={() => setShowChatbot(false)} variant="outline" className="w-full">
-                  Закрыть
+                <Button onClick={() => setShowChatbot(false)} variant="outline" className="w-full text-xs sm:text-sm py-2 px-3">
+                  <span className="truncate">Закрыть</span>
                 </Button>
               </div>
             )}
@@ -1149,16 +1151,17 @@ const Index = () => {
                   required
                 />
                 <div className="flex gap-3">
-                  <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90">
-                    <Icon name="Download" size={18} className="mr-2" />
-                    Получить презентацию
+                  <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm py-2 px-3">
+                    <Icon name="Download" size={16} className="mr-2" />
+                    <span className="truncate">Получить презентацию</span>
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setShowExitPopup(false)}
+                    className="px-3 py-2"
                   >
-                    <Icon name="X" size={18} />
+                    <Icon name="X" size={16} />
                   </Button>
                 </div>
               </form>
@@ -1197,16 +1200,17 @@ const Index = () => {
                   required
                 />
                 <div className="flex gap-3">
-                  <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90">
-                    <Icon name="CheckCircle2" size={18} className="mr-2" />
-                    Получить аудит
+                  <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm py-2 px-3">
+                    <Icon name="CheckCircle2" size={16} className="mr-2" />
+                    <span className="truncate">Получить аудит</span>
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setShowTimePopup(false)}
+                    className="px-3 py-2"
                   >
-                    <Icon name="X" size={18} />
+                    <Icon name="X" size={16} />
                   </Button>
                 </div>
               </form>
