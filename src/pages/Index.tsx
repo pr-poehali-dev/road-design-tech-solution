@@ -316,28 +316,46 @@ const Index = () => {
               Разрабатываем проекты дорог любых категорий с применением технологий стабилизации грунтов. 
               Гарантируем прохождение экспертизы и снижение ваших затрат на строительство до 30%.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center animate-scale-in px-4 sm:px-0">
-              <Button 
-                size="lg" 
-                className="w-full sm:w-auto bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 group touch-manipulation"
-                onClick={() => {
-                  document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-              >
-                <Icon name="Calculator" className="mr-2 group-hover:scale-110 transition-transform" size={16} />
-                <span className="truncate">Рассчитать экономию</span>
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="w-full sm:w-auto border-2 font-semibold text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 group touch-manipulation"
-                onClick={() => {
-                  document.getElementById('technologies')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-              >
-                <Icon name="Presentation" className="mr-2 group-hover:scale-110 transition-transform" size={16} />
-                <span className="truncate">Технологические решения</span>
-              </Button>
+            <div className="flex flex-col gap-6 items-center animate-scale-in px-4 sm:px-0">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full">
+                <Button 
+                  size="lg" 
+                  className="w-full sm:w-auto bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 group touch-manipulation"
+                  onClick={() => {
+                    document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  <Icon name="Calculator" className="mr-2 group-hover:scale-110 transition-transform" size={16} />
+                  <span className="truncate">Рассчитать экономию</span>
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="w-full sm:w-auto border-2 font-semibold text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 group touch-manipulation"
+                  onClick={() => {
+                    document.getElementById('technologies')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  <Icon name="Presentation" className="mr-2 group-hover:scale-110 transition-transform" size={16} />
+                  <span className="truncate">Технологические решения</span>
+                </Button>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 text-white/90 text-sm sm:text-base">
+                <a 
+                  href="tel:+79011478767" 
+                  className="flex items-center gap-2 hover:text-primary transition-colors group"
+                >
+                  <Icon name="Phone" size={18} className="group-hover:scale-110 transition-transform" />
+                  <span>+7 (901) 147-87-67</span>
+                </a>
+                <a 
+                  href="mailto:infosppi.ooo@mail.ru" 
+                  className="flex items-center gap-2 hover:text-primary transition-colors group"
+                >
+                  <Icon name="Mail" size={18} className="group-hover:scale-110 transition-transform" />
+                  <span>infosppi.ooo@mail.ru</span>
+                </a>
+              </div>
             </div>
           </div>
 
