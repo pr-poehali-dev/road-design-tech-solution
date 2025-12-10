@@ -296,9 +296,9 @@ const Index = () => {
             src="https://cdn.poehali.dev/files/Дороги.png" 
             alt="Highway interchange complex"
             className="w-full h-full object-cover opacity-40"
-            style={{ opacity: 0.8 }}
+            style={{ opacity: 0.9 }}
           />
-          <div className="absolute inset-0 bg-white/80" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/80" />
         </div>
         <div className="absolute inset-0 bg-grid-pattern opacity-20 z-[1]" />
         <div className="container mx-auto relative z-10">
@@ -306,13 +306,13 @@ const Index = () => {
             <Badge className="mb-6 bg-primary/10 text-primary border-primary/30 px-4 py-2 text-sm font-semibold animate-fade-in">
               Проектирование дорог и стабилизация грунтов
             </Badge>
-            <h1 className="font-heading font-black text-4xl sm:text-5xl md:text-7xl lg:text-8xl mb-8 leading-[1.1] animate-fade-in text-gray-900">
+            <h1 className="font-heading font-black text-4xl sm:text-5xl md:text-7xl lg:text-8xl mb-8 leading-[1.1] animate-fade-in text-white">
               Проектируем не просто дороги.{' '}
               <span className="text-gradient block mt-2">
                 Проектируем надежное основание
               </span>
             </h1>
-            <p className="text-xl md:text-2xl text-gray-900/90 mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in font-light">
+            <p className="text-xl md:text-2xl text-white/90 mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in font-light">
               Разрабатываем проекты дорог любых категорий с применением технологий стабилизации грунтов. 
               Гарантируем прохождение экспертизы и снижение ваших затрат на строительство до 30%.
             </p>
@@ -373,7 +373,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="road-types" className="py-12 md:py-24 px-4 bg-white">
+      <section id="road-types" className="py-12 md:py-24 px-4 bg-background">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-8 md:mb-16">
             <h2 className="font-heading font-bold text-3xl md:text-4xl lg:text-6xl mb-4 md:mb-6 px-2">
@@ -391,7 +391,6 @@ const Index = () => {
                   src="https://cdn.poehali.dev/files/фед.дорога.jpg" 
                   alt="Федеральная дорога"
                   className="w-full h-full object-cover opacity-70"
-                  style={{ opacity: 0.8 }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-br from-background/85 via-background/80 to-background/75" />
               </div>
@@ -421,7 +420,6 @@ const Index = () => {
                   src="https://cdn.poehali.dev/files/город.дорога.jpg" 
                   alt="Городская дорога"
                   className="w-full h-full object-cover opacity-50"
-                  style={{ opacity: 0.8 }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-br from-background/85 via-background/80 to-background/75" />
               </div>
@@ -451,7 +449,6 @@ const Index = () => {
                   src="https://cdn.poehali.dev/files/пром.дорога.jpg" 
                   alt="Промышленная дорога"
                   className="w-full h-full object-cover opacity-50"
-                  style={{ opacity: 0.8 }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-br from-background/85 via-background/80 to-background/75" />
               </div>
@@ -481,7 +478,6 @@ const Index = () => {
                   src="https://cdn.poehali.dev/files/мост.jpg" 
                   alt="Мостовое сооружение"
                   className="w-full h-full object-cover opacity-50"
-                  style={{ opacity: 0.8 }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-br from-background/85 via-background/80 to-background/75" />
               </div>
@@ -508,7 +504,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="challenges" className="py-12 md:py-24 px-4 bg-gray-50">
+      <section id="challenges" className="py-12 md:py-24 px-4 bg-card/30">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-8 md:mb-16">
             <h2 className="font-heading font-bold text-3xl md:text-4xl lg:text-6xl mb-4 md:mb-6 px-2">
@@ -569,7 +565,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="services" className="py-12 md:py-24 px-4 bg-white">
+      <section id="services" className="py-12 md:py-24 px-4 bg-background">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-8 md:mb-16">
             <h2 className="font-heading font-bold text-3xl md:text-4xl lg:text-6xl mb-4 md:mb-6 px-2">
@@ -650,7 +646,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="technologies" className="py-12 md:py-24 px-4 bg-gray-50">
+      <section id="technologies" className="py-12 md:py-24 px-4 bg-card/30">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-8 md:mb-16">
             <h2 className="font-heading font-bold text-3xl md:text-4xl lg:text-6xl mb-4 md:mb-6 px-2">
@@ -732,7 +728,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="calculator" className="py-12 md:py-24 px-4 bg-white">
+      <section id="calculator" className="py-12 md:py-24 px-4 bg-card/30">
         <div className="container mx-auto max-w-4xl">
           <div className="text-center mb-8 md:mb-12 px-4">
             <h2 className="font-heading font-bold text-2xl sm:text-3xl md:text-4xl lg:text-5xl mb-4 md:mb-6">
@@ -894,7 +890,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="projects" className="py-12 md:py-24 px-4 bg-gray-50">
+      <section id="projects" className="py-12 md:py-24 px-4 bg-background">
         <div className="container mx-auto">
           <div className="text-center mb-8 md:mb-16">
             <h2 className="font-heading font-bold text-3xl md:text-4xl lg:text-6xl mb-4 md:mb-6 px-2">
@@ -911,7 +907,7 @@ const Index = () => {
                 <div className="relative h-48 sm:h-56 md:h-64 overflow-hidden">
                   <div 
                     className="w-full h-full bg-cover bg-center group-hover:scale-110 transition-transform duration-500"
-                    style={{ backgroundImage: `url(${project.image})`, opacity: 0.8 }}
+                    style={{ backgroundImage: `url(${project.image})` }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
                   <Badge className="absolute top-4 left-4 bg-background/90 backdrop-blur-sm text-xs sm:text-sm">
@@ -953,7 +949,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section className="py-24 px-4 bg-white">
+      <section className="py-24 px-4 bg-card/30">
         <div className="container mx-auto max-w-5xl">
           <Card className="bg-gradient-to-br from-primary/10 via-card to-primary/5 border-primary/30">
             <CardHeader className="text-center">
@@ -977,7 +973,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="contact" className="py-12 md:py-24 px-4 bg-gray-50">
+      <section id="contact" className="py-12 md:py-24 px-4 bg-background">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-8 md:mb-16">
             <h2 className="font-heading font-bold text-3xl md:text-4xl lg:text-6xl mb-4 md:mb-6 px-2">
