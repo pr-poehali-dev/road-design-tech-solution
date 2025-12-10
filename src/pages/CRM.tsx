@@ -56,8 +56,18 @@ const CRM = () => {
   const [activeTab, setActiveTab] = useState('pipeline');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showLeadCard, setShowLeadCard] = useState(false);
+  const [showCreateLead, setShowCreateLead] = useState(false);
   const [newTask, setNewTask] = useState({ title: '', type: 'call', dueDate: '' });
   const [newNote, setNewNote] = useState('');
+  const [newLead, setNewLead] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    company: '',
+    message: '',
+    type: 'Ручной ввод',
+    status: 'new' as Lead['status']
+  });
 
   const statusStages = [
     { id: 'new', label: 'Новый лид', color: 'bg-blue-500' },
@@ -108,6 +118,52 @@ const CRM = () => {
     localStorage.removeItem('crm_auth');
     setIsAuthenticated(false);
     setPassword('');
+  };
+
+  const createLead = () => {
+    if (!newLead.name || !newLead.email) {
+      alert('Заполните имя и email');
+      return;
+    }
+
+    const lead: Lead = {
+      id: Date.now().toString(),
+      name: newLead.name,
+      email: newLead.email,
+      phone: newLead.phone || undefined,
+      company: newLead.company || undefined,
+      message: newLead.message || undefined,
+      type: newLead.type,
+      status: newLead.status,
+      source: 'Ручное создание',
+      createdAt: new Date().toISOString()
+    };
+
+    const updatedLeads = [...leads, lead];
+    setLeads(updatedLeads);
+
+    const activity: Activity = {
+      id: (Date.now() + 1).toString(),
+      leadId: lead.id,
+      type: 'note',
+      description: 'Лид создан вручную',
+      createdAt: new Date().toISOString()
+    };
+    const updatedActivities = [...activities, activity];
+    setActivities(updatedActivities);
+
+    saveData(updatedLeads, tasks, updatedActivities);
+
+    setNewLead({
+      name: '',
+      email: '',
+      phone: '',
+      company: '',
+      message: '',
+      type: 'Ручной ввод',
+      status: 'new'
+    });
+    setShowCreateLead(false);
   };
 
   const updateLeadStatus = (id: string, newStatus: Lead['status']) => {
@@ -319,6 +375,10 @@ const CRM = () => {
             <p className="text-sm text-muted-foreground">Управление продажами</p>
           </div>
           <div className="flex gap-3">
+            <Button onClick={() => setShowCreateLead(true)}>
+              <Icon name="Plus" size={20} className="mr-2" />
+              Создать лид
+            </Button>
             <Button variant="outline" onClick={() => navigate('/')}>
               <Icon name="Home" size={20} className="mr-2" />
               На сайт
@@ -518,6 +578,104 @@ const CRM = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {showCreateLead && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="max-w-2xl w-full">
+            <CardHeader className="border-b">
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="text-2xl">Создать лид</CardTitle>
+                  <CardDescription className="mt-2">Добавьте нового клиента в систему</CardDescription>
+                </div>
+                <Button variant="ghost" onClick={() => setShowCreateLead(false)}>
+                  <Icon name="X" size={20} />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">Имя *</label>
+                  <Input
+                    placeholder="Иван Иванов"
+                    value={newLead.name}
+                    onChange={(e) => setNewLead({ ...newLead, name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">Email *</label>
+                  <Input
+                    type="email"
+                    placeholder="ivan@example.com"
+                    value={newLead.email}
+                    onChange={(e) => setNewLead({ ...newLead, email: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">Телефон</label>
+                  <Input
+                    type="tel"
+                    placeholder="+7 999 123-45-67"
+                    value={newLead.phone}
+                    onChange={(e) => setNewLead({ ...newLead, phone: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">Компания</label>
+                  <Input
+                    placeholder="ООО Компания"
+                    value={newLead.company}
+                    onChange={(e) => setNewLead({ ...newLead, company: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">Тип заявки</label>
+                  <Input
+                    placeholder="Ручной ввод"
+                    value={newLead.type}
+                    onChange={(e) => setNewLead({ ...newLead, type: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">Начальный статус</label>
+                  <Select 
+                    value={newLead.status} 
+                    onValueChange={(value) => setNewLead({ ...newLead, status: value as Lead['status'] })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusStages.map(stage => (
+                        <SelectItem key={stage.id} value={stage.id}>{stage.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Комментарий</label>
+                <Textarea
+                  placeholder="Дополнительная информация о клиенте..."
+                  value={newLead.message}
+                  onChange={(e) => setNewLead({ ...newLead, message: e.target.value })}
+                  rows={3}
+                />
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button onClick={createLead} className="flex-1">
+                  <Icon name="Check" size={20} className="mr-2" />
+                  Создать лид
+                </Button>
+                <Button variant="outline" onClick={() => setShowCreateLead(false)}>
+                  Отмена
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {showLeadCard && selectedLead && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
