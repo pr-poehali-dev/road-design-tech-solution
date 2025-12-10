@@ -38,6 +38,19 @@ const Index = () => {
   const [showTimePopup, setShowTimePopup] = useState(false);
   const [hasShownExitPopup, setHasShownExitPopup] = useState(false);
   const [hasShownTimePopup, setHasShownTimePopup] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<string | null>(null);
+
+  const saveLead = (leadData: any) => {
+    const leads = JSON.parse(localStorage.getItem('crm_leads') || '[]');
+    const newLead = {
+      id: Date.now().toString(),
+      ...leadData,
+      createdAt: new Date().toISOString(),
+      status: 'new'
+    };
+    leads.push(newLead);
+    localStorage.setItem('crm_leads', JSON.stringify(leads));
+  };
   
   useEffect(() => {
     const handleMouseLeave = (e: MouseEvent) => {
@@ -184,14 +197,30 @@ const Index = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    saveLead({
+      type: 'Контактная форма',
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      company: formData.company,
+      message: formData.message,
+      source: 'Форма обратной связи'
+    });
+    alert('Спасибо! Ваша заявка отправлена. Мы свяжемся с вами в течение 24 часов.');
+    setFormData({ name: '', company: '', email: '', phone: '', message: '' });
   };
   
   const handleChatNext = () => {
     if (chatStep < 3) {
       setChatStep(chatStep + 1);
     } else {
-      console.log('Chat completed:', chatData);
+      saveLead({
+        type: 'Чат-бот',
+        name: 'Не указано',
+        email: chatData.email,
+        message: `Тип проекта: ${chatData.projectType}, Сроки: ${chatData.timeline}`,
+        source: 'Чат-консультант'
+      });
       setShowChatbot(false);
       setChatStep(0);
     }
@@ -199,13 +228,30 @@ const Index = () => {
   
   const handleExitPopupSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Exit popup submitted');
+    const email = (e.target as any).email.value;
+    saveLead({
+      type: 'Презентация',
+      name: 'Не указано',
+      email: email,
+      message: 'Запрос презентации технологий стабилизации',
+      source: 'Exit popup'
+    });
+    alert('Презентация отправлена на вашу почту!');
     setShowExitPopup(false);
   };
   
   const handleTimePopupSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Time popup submitted');
+    const formData = new FormData(e.target as HTMLFormElement);
+    saveLead({
+      type: 'Бесплатный аудит',
+      name: formData.get('name'),
+      email: formData.get('email'),
+      phone: formData.get('phone'),
+      message: 'Запрос бесплатного аудита проекта',
+      source: 'Time popup (60 сек)'
+    });
+    alert('Заявка на бесплатный аудит принята!');
     setShowTimePopup(false);
   };
 
@@ -225,7 +271,20 @@ const Index = () => {
             <a href="#projects" className="hover:text-primary transition-colors">Кейсы</a>
             <a href="#contact" className="hover:text-primary transition-colors">Контакты</a>
           </div>
-          <Button size="lg" className="bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base px-3 sm:px-4 md:px-6 py-2">
+          <Button 
+            size="lg" 
+            className="bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base px-3 sm:px-4 md:px-6 py-2"
+            onClick={() => {
+              saveLead({
+                type: 'Консультация',
+                name: 'Не указано',
+                email: 'Не указано',
+                message: 'Клик на кнопку "Консультация" в header',
+                source: 'Header кнопка'
+              });
+              document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          >
             Консультация
           </Button>
         </nav>
@@ -257,11 +316,24 @@ const Index = () => {
               Гарантируем прохождение экспертизы и снижение ваших затрат на строительство до 30%.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center animate-scale-in px-4 sm:px-0">
-              <Button size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 group">
+              <Button 
+                size="lg" 
+                className="w-full sm:w-auto bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 group"
+                onClick={() => {
+                  document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
                 <Icon name="Calculator" className="mr-2 group-hover:scale-110 transition-transform" size={16} />
                 <span className="truncate">Рассчитать экономию</span>
               </Button>
-              <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 font-semibold text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 group">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="w-full sm:w-auto border-2 font-semibold text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 group"
+                onClick={() => {
+                  document.getElementById('technologies')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
                 <Icon name="Presentation" className="mr-2 group-hover:scale-110 transition-transform" size={16} />
                 <span className="truncate">Технологические решения</span>
               </Button>
@@ -589,7 +661,17 @@ const Index = () => {
                 <Button 
                   key={task}
                   variant="outline" 
-                  className="h-auto py-3 md:py-4 px-3 md:px-4 text-left justify-start hover:bg-primary/10 hover:border-primary whitespace-normal min-h-[60px]"
+                  className={`h-auto py-3 md:py-4 px-3 md:px-4 text-left justify-start hover:bg-primary/10 hover:border-primary whitespace-normal min-h-[60px] ${selectedTask === task ? 'bg-primary/10 border-primary' : ''}`}
+                  onClick={() => {
+                    setSelectedTask(task);
+                    saveLead({
+                      type: 'Выбор задачи',
+                      name: 'Не указано',
+                      email: 'Не указано',
+                      message: `Выбранная задача: ${task}`,
+                      source: 'Технологические решения'
+                    });
+                  }}
                 >
                   <Icon name="CheckCircle2" size={16} className="mr-2 flex-shrink-0 md:w-5 md:h-5" />
                   <span className="text-xs md:text-sm font-medium leading-tight">{task}</span>
@@ -748,7 +830,20 @@ const Index = () => {
                     
                     <div className="mt-8 pt-6 border-t border-border">
                       <p className="font-semibold mb-4">Для получения индивидуального инженерного расчета оставьте контакты</p>
-                      <form onSubmit={handleSubmit} className="space-y-4">
+                      <form onSubmit={(e) => {
+                        e.preventDefault();
+                        saveLead({
+                          type: 'Калькулятор экономии',
+                          name: formData.name,
+                          email: formData.email,
+                          phone: formData.phone,
+                          company: formData.company,
+                          message: `Тип объекта: ${calcData.objectType}, Длина: ${calcData.length[0]} км, Тип грунта: ${calcData.soilType}, Категория: ${calcData.roadCategory}`,
+                          source: 'Калькулятор'
+                        });
+                        alert('Спасибо! Мы отправим предварительный расчет на ваш email в течение 2 часов.');
+                        setFormData({ name: '', company: '', email: '', phone: '', message: '' });
+                      }} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <Input
                             placeholder="Ваше имя"
@@ -1005,6 +1100,7 @@ const Index = () => {
                 <li><a href="#projects" className="hover:text-primary transition-colors">Кейсы</a></li>
                 <li><a href="#technologies" className="hover:text-primary transition-colors">Технологии</a></li>
                 <li><a href="#contact" className="hover:text-primary transition-colors">Контакты</a></li>
+                <li><a href="/crm" className="hover:text-primary transition-colors font-semibold">CRM Система</a></li>
               </ul>
             </div>
           </div>
@@ -1147,6 +1243,7 @@ const Index = () => {
               <form onSubmit={handleExitPopupSubmit} className="space-y-4">
                 <Input
                   type="email"
+                  name="email"
                   placeholder="Ваш email"
                   required
                 />
@@ -1186,16 +1283,19 @@ const Index = () => {
               <form onSubmit={handleTimePopupSubmit} className="space-y-4">
                 <Input
                   type="text"
+                  name="name"
                   placeholder="Ваше имя"
                   required
                 />
                 <Input
                   type="email"
+                  name="email"
                   placeholder="Email"
                   required
                 />
                 <Input
                   type="tel"
+                  name="phone"
                   placeholder="Телефон"
                   required
                 />
