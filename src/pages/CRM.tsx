@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useNavigate } from 'react-router-dom';
 
@@ -57,8 +56,11 @@ const CRM = () => {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showLeadCard, setShowLeadCard] = useState(false);
   const [showCreateLead, setShowCreateLead] = useState(false);
+  const [createLeadStatus, setCreateLeadStatus] = useState<Lead['status'] | null>(null);
   const [newTask, setNewTask] = useState({ title: '', type: 'call', dueDate: '' });
   const [newNote, setNewNote] = useState('');
+  const [editingName, setEditingName] = useState(false);
+  const [editedName, setEditedName] = useState('');
   const [newLead, setNewLead] = useState({
     name: '',
     email: '',
@@ -70,13 +72,13 @@ const CRM = () => {
   });
 
   const statusStages = [
-    { id: 'new', label: 'Новый лид', color: 'bg-blue-500' },
-    { id: 'first-contact', label: 'Первый контакт', color: 'bg-cyan-500' },
-    { id: 'evaluation', label: 'Оценка', color: 'bg-yellow-500' },
-    { id: 'proposal', label: 'Предложение', color: 'bg-orange-500' },
-    { id: 'negotiation', label: 'Переговоры', color: 'bg-purple-500' },
-    { id: 'closed-won', label: 'Сделка заключена', color: 'bg-green-500' },
-    { id: 'closed-lost', label: 'Не состоялась', color: 'bg-red-500' }
+    { id: 'new', label: 'Новый лид', color: 'bg-blue-500', icon: 'Sparkles' },
+    { id: 'first-contact', label: 'Первый контакт', color: 'bg-cyan-500', icon: 'Phone' },
+    { id: 'evaluation', label: 'Оценка', color: 'bg-yellow-500', icon: 'Search' },
+    { id: 'proposal', label: 'Предложение', color: 'bg-orange-500', icon: 'FileText' },
+    { id: 'negotiation', label: 'Переговоры', color: 'bg-purple-500', icon: 'MessageSquare' },
+    { id: 'closed-won', label: 'Выиграна', color: 'bg-green-500', icon: 'CheckCircle2' },
+    { id: 'closed-lost', label: 'Проиграна', color: 'bg-red-500', icon: 'XCircle' }
   ];
 
   useEffect(() => {
@@ -118,6 +120,12 @@ const CRM = () => {
     localStorage.removeItem('crm_auth');
     setIsAuthenticated(false);
     setPassword('');
+  };
+
+  const openCreateLeadModal = (status?: Lead['status']) => {
+    setCreateLeadStatus(status || 'new');
+    setNewLead({ ...newLead, status: status || 'new' });
+    setShowCreateLead(true);
   };
 
   const createLead = () => {
@@ -164,6 +172,7 @@ const CRM = () => {
       status: 'new'
     });
     setShowCreateLead(false);
+    setCreateLeadStatus(null);
   };
 
   const updateLeadStatus = (id: string, newStatus: Lead['status']) => {
@@ -189,7 +198,21 @@ const CRM = () => {
     }
   };
 
+  const updateLeadName = () => {
+    if (!selectedLead || !editedName.trim()) return;
+    
+    const updatedLeads = leads.map(lead =>
+      lead.id === selectedLead.id ? { ...lead, name: editedName } : lead
+    );
+    setLeads(updatedLeads);
+    setSelectedLead({ ...selectedLead, name: editedName });
+    saveData(updatedLeads, tasks, activities);
+    setEditingName(false);
+  };
+
   const deleteLead = (id: string) => {
+    if (!confirm('Удалить этот лид?')) return;
+    
     const updatedLeads = leads.filter(lead => lead.id !== id);
     const updatedTasks = tasks.filter(task => task.leadId !== id);
     const updatedActivities = activities.filter(activity => activity.leadId !== id);
@@ -207,6 +230,8 @@ const CRM = () => {
 
   const openLeadCard = (lead: Lead) => {
     setSelectedLead(lead);
+    setEditedName(lead.name);
+    setEditingName(false);
     setShowLeadCard(true);
   };
 
@@ -291,6 +316,10 @@ const CRM = () => {
     return statusStages.find(s => s.id === status)?.label || status;
   };
 
+  const getStatusIcon = (status: string) => {
+    return statusStages.find(s => s.id === status)?.icon || 'Circle';
+  };
+
   const getTaskIcon = (type: string) => {
     switch (type) {
       case 'call': return 'Phone';
@@ -312,13 +341,6 @@ const CRM = () => {
     }
   };
 
-  const getPipelineStats = () => {
-    return statusStages.map(stage => ({
-      ...stage,
-      count: leads.filter(l => l.status === stage.id).length
-    }));
-  };
-
   const getConversionRate = () => {
     const total = leads.length;
     if (total === 0) return 0;
@@ -328,14 +350,16 @@ const CRM = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardHeader className="text-center">
-            <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <Icon name="Lock" size={32} className="text-primary" />
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full shadow-2xl border-primary/20">
+          <CardHeader className="text-center space-y-4">
+            <div className="w-20 h-20 bg-gradient-to-br from-primary to-primary/60 rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+              <Icon name="Lock" size={36} className="text-primary-foreground" />
             </div>
-            <CardTitle className="font-heading text-3xl mb-2">CRM Система</CardTitle>
-            <CardDescription>Введите пароль для доступа</CardDescription>
+            <div>
+              <CardTitle className="font-heading text-3xl mb-2">CRM Система</CardTitle>
+              <CardDescription>Введите пароль для доступа</CardDescription>
+            </div>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -344,16 +368,17 @@ const CRM = () => {
                 placeholder="Пароль"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="h-12"
                 required
               />
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
+              <Button type="submit" className="w-full h-12 text-lg">
                 <Icon name="LogIn" size={20} className="mr-2" />
                 Войти
               </Button>
               <Button 
                 type="button" 
                 variant="outline" 
-                className="w-full"
+                className="w-full h-12"
                 onClick={() => navigate('/')}
               >
                 <Icon name="ArrowLeft" size={20} className="mr-2" />
@@ -367,101 +392,155 @@ const CRM = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="font-heading font-bold text-2xl text-gradient">DEOD CRM</h1>
-            <p className="text-sm text-muted-foreground">Управление продажами</p>
-          </div>
-          <div className="flex gap-3">
-            <Button onClick={() => setShowCreateLead(true)}>
-              <Icon name="Plus" size={20} className="mr-2" />
-              Создать лид
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/')}>
-              <Icon name="Home" size={20} className="mr-2" />
-              На сайт
-            </Button>
-            <Button variant="outline" onClick={handleLogout}>
-              <Icon name="LogOut" size={20} className="mr-2" />
-              Выйти
-            </Button>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <header className="border-b border-border bg-card/80 backdrop-blur-lg sticky top-0 z-40 shadow-sm">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/60 rounded-xl flex items-center justify-center shadow-lg">
+                <Icon name="LayoutDashboard" size={24} className="text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="font-heading font-bold text-2xl text-gradient">DEOD CRM</h1>
+                <p className="text-sm text-muted-foreground">Управление продажами</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Button onClick={() => openCreateLeadModal()}>
+                <Icon name="Plus" size={20} className="mr-2" />
+                Создать лид
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/')}>
+                <Icon name="Home" size={20} className="mr-2" />
+                На сайт
+              </Button>
+              <Button variant="outline" onClick={handleLogout}>
+                <Icon name="LogOut" size={20} />
+              </Button>
+            </div>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <Card>
-              <CardHeader className="p-4">
-                <CardTitle className="text-sm text-muted-foreground">Всего лидов</CardTitle>
-                <p className="text-3xl font-bold">{leads.length}</p>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="p-4">
-                <CardTitle className="text-sm text-muted-foreground">Новые</CardTitle>
-                <p className="text-3xl font-bold text-blue-500">
-                  {leads.filter(l => l.status === 'new').length}
-                </p>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="p-4">
-                <CardTitle className="text-sm text-muted-foreground">В работе</CardTitle>
-                <p className="text-3xl font-bold text-yellow-500">
-                  {leads.filter(l => ['first-contact', 'evaluation', 'proposal', 'negotiation'].includes(l.status)).length}
-                </p>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="p-4">
-                <CardTitle className="text-sm text-muted-foreground">Выиграно</CardTitle>
-                <p className="text-3xl font-bold text-green-500">
-                  {leads.filter(l => l.status === 'closed-won').length}
-                </p>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="p-4">
-                <CardTitle className="text-sm text-muted-foreground">Конверсия</CardTitle>
-                <p className="text-3xl font-bold text-primary">
-                  {getConversionRate()}%
-                </p>
-              </CardHeader>
-            </Card>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <Card className="border-primary/20 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-sm text-muted-foreground mb-2">Всего лидов</CardTitle>
+                  <p className="text-4xl font-bold">{leads.length}</p>
+                </div>
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                  <Icon name="Users" size={24} className="text-primary" />
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+          
+          <Card className="border-blue-500/20 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-sm text-muted-foreground mb-2">Новые</CardTitle>
+                  <p className="text-4xl font-bold text-blue-500">
+                    {leads.filter(l => l.status === 'new').length}
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center">
+                  <Icon name="Sparkles" size={24} className="text-blue-500" />
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+
+          <Card className="border-yellow-500/20 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-sm text-muted-foreground mb-2">В работе</CardTitle>
+                  <p className="text-4xl font-bold text-yellow-500">
+                    {leads.filter(l => ['first-contact', 'evaluation', 'proposal', 'negotiation'].includes(l.status)).length}
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center">
+                  <Icon name="Target" size={24} className="text-yellow-500" />
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+
+          <Card className="border-green-500/20 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-sm text-muted-foreground mb-2">Конверсия</CardTitle>
+                  <p className="text-4xl font-bold text-green-500">{getConversionRate()}%</p>
+                </div>
+                <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center">
+                  <Icon name="TrendingUp" size={24} className="text-green-500" />
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="pipeline">Воронка продаж</TabsTrigger>
-            <TabsTrigger value="tasks">Задачи ({tasks.filter(t => !t.completed).length})</TabsTrigger>
-            <TabsTrigger value="analytics">Аналитика</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="pipeline">
+        <Card className="shadow-xl border-primary/20">
+          <CardHeader>
+            <CardTitle className="text-2xl">Воронка продаж</CardTitle>
+            <CardDescription>Перетащите карточки между этапами</CardDescription>
+          </CardHeader>
+          <CardContent className="p-6">
             <div className="grid grid-cols-1 lg:grid-cols-7 gap-4">
               {statusStages.map((stage) => {
                 const stageLeads = leads.filter(l => l.status === stage.id);
                 return (
                   <div key={stage.id} className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-sm">{stage.label}</h3>
-                      <Badge className={stage.color}>{stageLeads.length}</Badge>
+                    <div className="sticky top-20 bg-background/95 backdrop-blur-sm pb-3 border-b border-border">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon name={stage.icon as any} size={18} className={`${stage.color.replace('bg-', 'text-')}`} />
+                        <h3 className="font-semibold text-sm">{stage.label}</h3>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Badge className={`${stage.color} text-white`}>{stageLeads.length}</Badge>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => openCreateLeadModal(stage.id as Lead['status'])}
+                          className="h-7 w-7 p-0"
+                        >
+                          <Icon name="Plus" size={14} />
+                        </Button>
+                      </div>
                     </div>
+                    
                     <div className="space-y-2">
                       {stageLeads.map(lead => (
                         <Card 
                           key={lead.id} 
-                          className="cursor-pointer hover:border-primary transition-all"
+                          className="cursor-pointer hover:shadow-lg hover:border-primary/50 transition-all group"
                           onClick={() => openLeadCard(lead)}
                         >
-                          <CardHeader className="p-3">
-                            <CardTitle className="text-sm font-medium">{lead.name}</CardTitle>
-                            <CardDescription className="text-xs">{lead.company || lead.email}</CardDescription>
+                          <CardHeader className="p-4">
+                            <div className="flex items-start justify-between mb-2">
+                              <CardTitle className="text-sm font-medium line-clamp-1 group-hover:text-primary transition-colors">
+                                {lead.name}
+                              </CardTitle>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteLead(lead.id);
+                                }}
+                              >
+                                <Icon name="Trash2" size={14} className="text-red-500" />
+                              </Button>
+                            </div>
+                            <CardDescription className="text-xs line-clamp-1">
+                              {lead.company || lead.email}
+                            </CardDescription>
                             <div className="flex gap-1 mt-2">
                               <Badge variant="outline" className="text-xs">{lead.type}</Badge>
                             </div>
@@ -470,7 +549,8 @@ const CRM = () => {
                       ))}
                       {stageLeads.length === 0 && (
                         <div className="text-center py-8 text-muted-foreground text-xs">
-                          Пусто
+                          <Icon name="Inbox" size={32} className="mx-auto mb-2 opacity-20" />
+                          <p>Пусто</p>
                         </div>
                       )}
                     </div>
@@ -478,115 +558,22 @@ const CRM = () => {
                 );
               })}
             </div>
-          </TabsContent>
-
-          <TabsContent value="tasks">
-            <Card>
-              <CardHeader>
-                <CardTitle>Мои задачи</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {tasks.filter(t => !t.completed).length === 0 ? (
-                  <div className="text-center py-12">
-                    <Icon name="CheckCircle2" size={48} className="mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">Все задачи выполнены!</p>
-                  </div>
-                ) : (
-                  tasks.filter(t => !t.completed).map(task => {
-                    const lead = leads.find(l => l.id === task.leadId);
-                    return (
-                      <Card key={task.id} className="border-border">
-                        <CardHeader className="p-4">
-                          <div className="flex items-start justify-between">
-                            <div className="flex gap-3">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => toggleTaskComplete(task.id)}
-                              >
-                                <Icon name="Circle" size={20} />
-                              </Button>
-                              <div>
-                                <CardTitle className="text-base">{task.title}</CardTitle>
-                                <CardDescription className="text-sm mt-1">
-                                  {lead?.name} • {new Date(task.dueDate).toLocaleDateString('ru-RU')}
-                                </CardDescription>
-                              </div>
-                            </div>
-                            <Badge variant="outline">
-                              <Icon name={getTaskIcon(task.type)} size={14} className="mr-1" />
-                              {task.type}
-                            </Badge>
-                          </div>
-                        </CardHeader>
-                      </Card>
-                    );
-                  })
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="analytics">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Конверсия по этапам воронки</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {getPipelineStats().map(stage => {
-                      const percentage = leads.length > 0 ? ((stage.count / leads.length) * 100).toFixed(1) : 0;
-                      return (
-                        <div key={stage.id}>
-                          <div className="flex justify-between text-sm mb-2">
-                            <span>{stage.label}</span>
-                            <span className="font-semibold">{stage.count} ({percentage}%)</span>
-                          </div>
-                          <div className="w-full bg-muted rounded-full h-2">
-                            <div 
-                              className={`${stage.color} h-2 rounded-full transition-all`}
-                              style={{ width: `${percentage}%` }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Источники лидов</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {Array.from(new Set(leads.map(l => l.source))).map(source => {
-                      const count = leads.filter(l => l.source === source).length;
-                      return (
-                        <div key={source} className="flex justify-between items-center">
-                          <span className="text-sm">{source}</span>
-                          <Badge>{count}</Badge>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
+          </CardContent>
+        </Card>
       </main>
 
       {showCreateLead && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <Card className="max-w-2xl w-full">
+          <Card className="max-w-2xl w-full shadow-2xl">
             <CardHeader className="border-b">
               <div className="flex justify-between items-start">
                 <div>
                   <CardTitle className="text-2xl">Создать лид</CardTitle>
-                  <CardDescription className="mt-2">Добавьте нового клиента в систему</CardDescription>
+                  <CardDescription className="mt-2">
+                    Добавить в этап: <Badge className={`${getStatusColor(newLead.status)} text-white ml-2`}>
+                      {getStatusLabel(newLead.status)}
+                    </Badge>
+                  </CardDescription>
                 </div>
                 <Button variant="ghost" onClick={() => setShowCreateLead(false)}>
                   <Icon name="X" size={20} />
@@ -629,30 +616,6 @@ const CRM = () => {
                     onChange={(e) => setNewLead({ ...newLead, company: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold">Тип заявки</label>
-                  <Input
-                    placeholder="Ручной ввод"
-                    value={newLead.type}
-                    onChange={(e) => setNewLead({ ...newLead, type: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold">Начальный статус</label>
-                  <Select 
-                    value={newLead.status} 
-                    onValueChange={(value) => setNewLead({ ...newLead, status: value as Lead['status'] })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statusStages.map(stage => (
-                        <SelectItem key={stage.id} value={stage.id}>{stage.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-semibold">Комментарий</label>
@@ -678,209 +641,224 @@ const CRM = () => {
       )}
 
       {showLeadCard && selectedLead && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <Card className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <CardHeader className="border-b">
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-2xl">{selectedLead.name}</CardTitle>
-                  <CardDescription className="mt-2">
-                    {selectedLead.company && <span>{selectedLead.company} • </span>}
-                    {selectedLead.source}
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-0 md:p-4">
+          <Card className="w-full md:max-w-5xl md:max-h-[90vh] h-full md:h-auto overflow-y-auto shadow-2xl">
+            <CardHeader className="border-b sticky top-0 bg-card z-10">
+              <div className="flex justify-between items-start gap-4">
+                <div className="flex-1">
+                  {editingName ? (
+                    <div className="flex gap-2">
+                      <Input
+                        value={editedName}
+                        onChange={(e) => setEditedName(e.target.value)}
+                        className="text-xl font-bold"
+                        autoFocus
+                      />
+                      <Button size="sm" onClick={updateLeadName}>
+                        <Icon name="Check" size={16} />
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setEditingName(false)}>
+                        <Icon name="X" size={16} />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-2xl">{selectedLead.name}</CardTitle>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => setEditingName(true)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Icon name="Pencil" size={14} />
+                      </Button>
+                    </div>
+                  )}
+                  <CardDescription className="mt-2 flex items-center gap-2 flex-wrap">
+                    {selectedLead.company && <span>{selectedLead.company}</span>}
+                    <Badge variant="outline">{selectedLead.source}</Badge>
                   </CardDescription>
                 </div>
-                <Button variant="ghost" onClick={() => setShowLeadCard(false)}>
-                  <Icon name="X" size={20} />
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="destructive" size="sm" onClick={() => deleteLead(selectedLead.id)}>
+                    <Icon name="Trash2" size={16} />
+                  </Button>
+                  <Button variant="ghost" onClick={() => setShowLeadCard(false)}>
+                    <Icon name="X" size={20} />
+                  </Button>
+                </div>
               </div>
             </CardHeader>
 
-            <CardContent className="p-6">
-              <Tabs defaultValue="info">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="info">Информация</TabsTrigger>
-                  <TabsTrigger value="tasks">Задачи</TabsTrigger>
-                  <TabsTrigger value="activity">История</TabsTrigger>
-                  <TabsTrigger value="notes">Заметки</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="info" className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+            <CardContent className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="shadow-none border-2">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Icon name="User" size={18} />
+                      Контактная информация
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
                     <div>
-                      <label className="text-sm font-semibold">Email</label>
-                      <p className="text-sm text-muted-foreground">{selectedLead.email}</p>
+                      <label className="text-xs text-muted-foreground">Email</label>
+                      <p className="text-sm font-medium">{selectedLead.email}</p>
                     </div>
                     <div>
-                      <label className="text-sm font-semibold">Телефон</label>
+                      <label className="text-xs text-muted-foreground">Телефон</label>
                       <div className="flex items-center gap-2">
-                        <p className="text-sm text-muted-foreground">{selectedLead.phone || 'Не указан'}</p>
+                        <p className="text-sm font-medium">{selectedLead.phone || 'Не указан'}</p>
                         {selectedLead.phone && (
-                          <Button size="sm" variant="outline" onClick={() => makeCall(selectedLead.phone)}>
-                            <Icon name="Phone" size={14} className="mr-1" />
+                          <Button size="sm" variant="outline" onClick={() => makeCall(selectedLead.phone)} className="h-7">
+                            <Icon name="Phone" size={12} className="mr-1" />
                             Позвонить
                           </Button>
                         )}
                       </div>
                     </div>
                     <div>
-                      <label className="text-sm font-semibold">Статус</label>
+                      <label className="text-xs text-muted-foreground">Статус</label>
                       <Select 
                         value={selectedLead.status} 
                         onValueChange={(value) => updateLeadStatus(selectedLead.id, value as Lead['status'])}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="mt-1">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                           {statusStages.map(stage => (
-                            <SelectItem key={stage.id} value={stage.id}>{stage.label}</SelectItem>
+                            <SelectItem key={stage.id} value={stage.id}>
+                              <div className="flex items-center gap-2">
+                                <div className={`w-2 h-2 rounded-full ${stage.color}`} />
+                                {stage.label}
+                              </div>
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
-                    <div>
-                      <label className="text-sm font-semibold">Тип заявки</label>
-                      <Badge>{selectedLead.type}</Badge>
-                    </div>
-                  </div>
-                  {selectedLead.message && (
-                    <div>
-                      <label className="text-sm font-semibold">Сообщение</label>
-                      <p className="text-sm text-muted-foreground mt-1">{selectedLead.message}</p>
-                    </div>
-                  )}
-                  <div className="pt-4 border-t">
-                    <Button variant="destructive" onClick={() => deleteLead(selectedLead.id)}>
-                      <Icon name="Trash2" size={16} className="mr-2" />
-                      Удалить лид
-                    </Button>
-                  </div>
-                </TabsContent>
+                    {selectedLead.message && (
+                      <div>
+                        <label className="text-xs text-muted-foreground">Сообщение</label>
+                        <p className="text-sm mt-1 p-3 bg-muted rounded-lg">{selectedLead.message}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
 
-                <TabsContent value="tasks" className="space-y-4">
-                  <Card className="bg-card/50">
-                    <CardHeader className="p-4">
-                      <CardTitle className="text-base">Создать задачу</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-4 pt-0 space-y-3">
+                <Card className="shadow-none border-2">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Icon name="CheckSquare" size={18} />
+                      Задачи
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {tasks.filter(t => t.leadId === selectedLead.id && !t.completed).map(task => (
+                        <Card key={task.id} className="p-3 shadow-none border">
+                          <div className="flex items-start gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 mt-0.5"
+                              onClick={() => toggleTaskComplete(task.id)}
+                            >
+                              <Icon name="Circle" size={16} />
+                            </Button>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium line-clamp-2">{task.title}</p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {new Date(task.dueDate).toLocaleDateString('ru-RU')}
+                              </p>
+                            </div>
+                            <Badge variant="outline" className="text-xs">
+                              <Icon name={getTaskIcon(task.type)} size={12} />
+                            </Badge>
+                          </div>
+                        </Card>
+                      ))}
+                      {tasks.filter(t => t.leadId === selectedLead.id && !t.completed).length === 0 && (
+                        <p className="text-xs text-muted-foreground text-center py-4">Нет активных задач</p>
+                      )}
+                    </div>
+                    <div className="pt-2 border-t space-y-2">
                       <Input
                         placeholder="Название задачи"
                         value={newTask.title}
                         onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                        className="h-9"
                       />
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2 gap-2">
                         <Select value={newTask.type} onValueChange={(value) => setNewTask({ ...newTask, type: value })}>
-                          <SelectTrigger>
+                          <SelectTrigger className="h-9">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="call">Звонок</SelectItem>
                             <SelectItem value="meeting">Встреча</SelectItem>
-                            <SelectItem value="proposal">Отправить КП</SelectItem>
-                            <SelectItem value="follow-up">Контрольный звонок</SelectItem>
+                            <SelectItem value="proposal">КП</SelectItem>
+                            <SelectItem value="follow-up">Контроль</SelectItem>
                           </SelectContent>
                         </Select>
                         <Input
-                          type="datetime-local"
+                          type="date"
                           value={newTask.dueDate}
                           onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
+                          className="h-9"
                         />
                       </div>
-                      <Button onClick={addTask} className="w-full">
-                        <Icon name="Plus" size={16} className="mr-2" />
-                        Добавить задачу
+                      <Button onClick={addTask} size="sm" className="w-full">
+                        <Icon name="Plus" size={14} className="mr-2" />
+                        Добавить
                       </Button>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
 
+              <Card className="shadow-none border-2">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Icon name="Activity" size={18} />
+                    Лента активности
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
                   <div className="space-y-2">
-                    {tasks.filter(t => t.leadId === selectedLead.id).map(task => (
-                      <Card key={task.id} className={task.completed ? 'opacity-50' : ''}>
-                        <CardHeader className="p-4">
-                          <div className="flex items-center gap-3">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleTaskComplete(task.id)}
-                            >
-                              <Icon name={task.completed ? 'CheckCircle2' : 'Circle'} size={20} />
-                            </Button>
-                            <div className="flex-1">
-                              <p className={task.completed ? 'line-through' : ''}>{task.title}</p>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {new Date(task.dueDate).toLocaleString('ru-RU')}
-                              </p>
-                            </div>
-                            <Badge variant="outline">
-                              <Icon name={getTaskIcon(task.type)} size={14} className="mr-1" />
-                              {task.type}
-                            </Badge>
-                          </div>
-                        </CardHeader>
-                      </Card>
-                    ))}
+                    <Textarea
+                      placeholder="Добавить заметку..."
+                      value={newNote}
+                      onChange={(e) => setNewNote(e.target.value)}
+                      rows={2}
+                    />
+                    <Button onClick={addNote} size="sm">
+                      <Icon name="Plus" size={14} className="mr-2" />
+                      Добавить заметку
+                    </Button>
                   </div>
-                </TabsContent>
-
-                <TabsContent value="activity" className="space-y-3">
-                  {activities
-                    .filter(a => a.leadId === selectedLead.id)
-                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                    .map(activity => (
-                      <Card key={activity.id}>
-                        <CardHeader className="p-4">
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {activities
+                      .filter(a => a.leadId === selectedLead.id)
+                      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                      .map(activity => (
+                        <Card key={activity.id} className="p-3 shadow-none">
                           <div className="flex gap-3">
-                            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                              <Icon name={getActivityIcon(activity.type)} size={16} className="text-primary" />
+                            <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <Icon name={getActivityIcon(activity.type)} size={14} className="text-primary" />
                             </div>
-                            <div className="flex-1">
+                            <div className="flex-1 min-w-0">
                               <p className="text-sm">{activity.description}</p>
                               <p className="text-xs text-muted-foreground mt-1">
                                 {new Date(activity.createdAt).toLocaleString('ru-RU')}
                               </p>
                             </div>
                           </div>
-                        </CardHeader>
-                      </Card>
-                    ))}
-                </TabsContent>
-
-                <TabsContent value="notes" className="space-y-4">
-                  <Card className="bg-card/50">
-                    <CardHeader className="p-4">
-                      <CardTitle className="text-base">Добавить заметку</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-4 pt-0 space-y-3">
-                      <Textarea
-                        placeholder="Заметка или комментарий..."
-                        value={newNote}
-                        onChange={(e) => setNewNote(e.target.value)}
-                        rows={3}
-                      />
-                      <Button onClick={addNote} className="w-full">
-                        <Icon name="Plus" size={16} className="mr-2" />
-                        Добавить заметку
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  <div className="space-y-2">
-                    {activities
-                      .filter(a => a.leadId === selectedLead.id && a.type === 'note')
-                      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                      .map(note => (
-                        <Card key={note.id}>
-                          <CardHeader className="p-4">
-                            <p className="text-sm">{note.description}</p>
-                            <p className="text-xs text-muted-foreground mt-2">
-                              {new Date(note.createdAt).toLocaleString('ru-RU')}
-                            </p>
-                          </CardHeader>
                         </Card>
                       ))}
                   </div>
-                </TabsContent>
-              </Tabs>
+                </CardContent>
+              </Card>
             </CardContent>
           </Card>
         </div>
