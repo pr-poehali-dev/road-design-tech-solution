@@ -212,11 +212,11 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="fixed top-0 w-full bg-background/80 backdrop-blur-md border-b border-border z-50">
-        <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="font-heading font-black text-3xl tracking-tight">
+        <nav className="container mx-auto px-4 py-3 md:py-4 flex justify-between items-center">
+          <div className="font-heading font-black text-2xl md:text-3xl tracking-tight">
             <span className="text-gradient">DEOD</span>
           </div>
-          <div className="hidden lg:flex gap-8 text-sm font-medium">
+          <div className="hidden lg:flex gap-6 xl:gap-8 text-sm font-medium">
             <a href="#road-types" className="hover:text-primary transition-colors">Типы дорог</a>
             <a href="#challenges" className="hover:text-primary transition-colors">Задачи</a>
             <a href="#services" className="hover:text-primary transition-colors">Этапы</a>
@@ -225,7 +225,7 @@ const Index = () => {
             <a href="#projects" className="hover:text-primary transition-colors">Кейсы</a>
             <a href="#contact" className="hover:text-primary transition-colors">Контакты</a>
           </div>
-          <Button size="lg" className="bg-primary hover:bg-primary/90 font-semibold">
+          <Button size="lg" className="bg-primary hover:bg-primary/90 font-semibold text-sm md:text-base px-3 md:px-4 py-2 md:py-2.5">
             Консультация
           </Button>
         </nav>
@@ -300,24 +300,24 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="road-types" className="py-24 px-4">
+      <section id="road-types" className="py-12 md:py-24 px-4">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <h2 className="font-heading font-bold text-4xl md:text-6xl mb-6">
+          <div className="text-center mb-8 md:mb-16">
+            <h2 className="font-heading font-bold text-3xl md:text-4xl lg:text-6xl mb-4 md:mb-6 px-2">
               От федеральной трассы до городского проезда
             </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-base md:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
               Полный спектр проектных работ. Проектируем дороги всех типов и категорий.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             <Card className="bg-card border-border hover:border-primary transition-all group relative overflow-hidden">
               <div className="absolute inset-0 z-0">
                 <img 
                   src="https://cdn.poehali.dev/files/фед.дорога.jpg" 
                   alt="Федеральная дорога"
-                  className="w-full h-full object-cover opacity-50"
+                  className="w-full h-full object-cover opacity-70"
                 />
                 <div className="absolute inset-0 bg-gradient-to-br from-background/85 via-background/80 to-background/75" />
               </div>
@@ -431,40 +431,51 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="challenges" className="py-24 px-4 bg-card/30">
+      <section id="challenges" className="py-12 md:py-24 px-4 bg-card/30">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <h2 className="font-heading font-bold text-4xl md:text-6xl mb-6">
+          <div className="text-center mb-8 md:mb-16">
+            <h2 className="font-heading font-bold text-3xl md:text-4xl lg:text-6xl mb-4 md:mb-6 px-2">
               Слабый грунт, перерасход бюджета и срывы сроков?
             </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-base md:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
               Это решается на этапе проектирования
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {challenges.map((challenge) => (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
+            {challenges.map((challenge, idx) => (
               <Card 
                 key={challenge.id}
-                className={`cursor-pointer transition-all hover:scale-105 ${
+                className={`cursor-pointer transition-all hover:scale-105 relative overflow-hidden ${
                   activeChallenge === challenge.id 
                     ? 'border-primary shadow-xl shadow-primary/20' 
                     : 'border-border hover:border-primary/50'
                 }`}
                 onClick={() => setActiveChallenge(activeChallenge === challenge.id ? null : challenge.id)}
               >
-                <CardHeader>
-                  <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
-                    <Icon name={challenge.icon} size={32} className="text-primary" />
+                <div 
+                  className="absolute inset-0 z-0 bg-cover bg-center"
+                  style={{ 
+                    backgroundImage: `url(${
+                      idx === 0 ? 'https://images.unsplash.com/photo-1581094271901-8022df4466f9?w=800' :
+                      idx === 1 ? 'https://images.unsplash.com/photo-1554224311-beee460c201f?w=800' :
+                      'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800'
+                    })` 
+                  }}
+                />
+                <div className="absolute inset-0 z-[1] bg-background/90" />
+                <CardHeader className="relative z-10">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-3 md:mb-4">
+                    <Icon name={challenge.icon} size={24} className="text-primary md:w-8 md:h-8" />
                   </div>
-                  <CardTitle className="font-heading text-xl mb-3">Проблема</CardTitle>
-                  <CardDescription className="text-base text-foreground/80 mb-4">
+                  <CardTitle className="font-heading text-lg md:text-xl mb-2 md:mb-3">Проблема</CardTitle>
+                  <CardDescription className="text-sm md:text-base text-foreground/80 mb-4">
                     {challenge.problem}
                   </CardDescription>
                   {activeChallenge === challenge.id && (
                     <div className="mt-4 pt-4 border-t border-border animate-fade-in">
-                      <p className="text-sm font-semibold text-primary mb-2">Наш подход</p>
-                      <p className="text-sm text-muted-foreground">{challenge.solution}</p>
+                      <p className="text-xs md:text-sm font-semibold text-primary mb-2">Наш подход</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">{challenge.solution}</p>
                     </div>
                   )}
                 </CardHeader>
@@ -472,7 +483,7 @@ const Index = () => {
             ))}
           </div>
 
-          <div className="text-center mt-12">
+          <div className="text-center mt-8 md:mt-12">
             <Button size="lg" variant="outline" className="border-2">
               <Icon name="MessageSquare" size={20} className="mr-2" />
               Какая у вас задача? Узнать решение
@@ -481,18 +492,18 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="services" className="py-24 px-4">
+      <section id="services" className="py-12 md:py-24 px-4">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <h2 className="font-heading font-bold text-4xl md:text-6xl mb-6">
+          <div className="text-center mb-8 md:mb-16">
+            <h2 className="font-heading font-bold text-3xl md:text-4xl lg:text-6xl mb-4 md:mb-6 px-2">
               Наш полный цикл проектирования
             </h2>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-base md:text-xl text-muted-foreground px-4">
               От изысканий до рабочей документации в BIM. С акцентом на оптимальные конструкции.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
             {[
               {
                 step: '01',
@@ -521,27 +532,38 @@ const Index = () => {
               }
             ].map((service) => (
               <Card key={service.step} className="bg-card border-border hover:border-primary transition-all group relative overflow-hidden">
-                {service.bgImage && (
+                {service.bgImage ? (
                   <>
                     <div className="absolute inset-0 z-0">
                       <img 
                         src={service.bgImage} 
                         alt={service.title}
-                        className="w-full h-full object-cover opacity-20"
+                        className="w-full h-full object-cover opacity-60"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-br from-background/95 via-background/90 to-background/85" />
+                      <div className="absolute inset-0 bg-background/90" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="absolute inset-0 z-0">
+                      <img 
+                        src="https://images.unsplash.com/photo-1568992687947-868a62a9f521?w=800" 
+                        alt={service.title}
+                        className="w-full h-full object-cover opacity-60"
+                      />
+                      <div className="absolute inset-0 bg-background/90" />
                     </div>
                   </>
                 )}
                 <div className="absolute top-0 right-0 text-[120px] font-heading font-black text-primary/5 group-hover:text-primary/10 transition-colors leading-none pt-4 pr-4 z-[5]">
                   {service.step}
                 </div>
-                <CardHeader className="relative z-10">
-                  <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
-                    <Icon name={service.icon} size={32} className="text-primary" />
+                <CardHeader className="relative z-10 p-4 md:p-6">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-3 md:mb-4">
+                    <Icon name={service.icon} size={24} className="text-primary md:w-8 md:h-8" />
                   </div>
-                  <CardTitle className="font-heading text-2xl mb-3">{service.title}</CardTitle>
-                  <CardDescription className="text-base leading-relaxed">{service.description}</CardDescription>
+                  <CardTitle className="font-heading text-xl md:text-2xl mb-2 md:mb-3">{service.title}</CardTitle>
+                  <CardDescription className="text-sm md:text-base leading-relaxed">{service.description}</CardDescription>
                 </CardHeader>
               </Card>
             ))}
@@ -549,53 +571,53 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="technologies" className="py-24 px-4 bg-card/30">
+      <section id="technologies" className="py-12 md:py-24 px-4 bg-card/30">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <h2 className="font-heading font-bold text-4xl md:text-6xl mb-6">
+          <div className="text-center mb-8 md:mb-16">
+            <h2 className="font-heading font-bold text-3xl md:text-4xl lg:text-6xl mb-4 md:mb-6 px-2">
               Наши технологические решения
             </h2>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-base md:text-xl text-muted-foreground px-4">
               Мы не маскируем проблему грунта. Мы проектируем её устранение.
             </p>
           </div>
 
-          <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20 mb-12 p-8">
-            <CardTitle className="font-heading text-2xl mb-6 text-center">Выберите вашу основную задачу</CardTitle>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20 mb-8 md:mb-12 p-4 md:p-8">
+            <CardTitle className="font-heading text-xl md:text-2xl mb-4 md:mb-6 text-center">Выберите вашу основную задачу</CardTitle>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
               {['Усиление слабого основания', 'Экономия на материалах', 'Ускорение строительства', 'Ремонт/реконструкция'].map((task) => (
                 <Button 
                   key={task}
                   variant="outline" 
-                  className="h-auto py-4 px-6 text-left justify-start hover:bg-primary/10 hover:border-primary"
+                  className="h-auto py-3 md:py-4 px-4 md:px-6 text-left justify-start hover:bg-primary/10 hover:border-primary"
                 >
-                  <Icon name="CheckCircle2" size={20} className="mr-2 flex-shrink-0" />
-                  <span className="text-sm font-medium">{task}</span>
+                  <Icon name="CheckCircle2" size={18} className="mr-2 flex-shrink-0 md:w-5 md:h-5" />
+                  <span className="text-xs md:text-sm font-medium">{task}</span>
                 </Button>
               ))}
             </div>
           </Card>
 
           <Tabs value={activeTech} onValueChange={setActiveTech} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-8">
-              <TabsTrigger value="cement" className="text-sm md:text-base">Вяжущие</TabsTrigger>
-              <TabsTrigger value="bitumen" className="text-sm md:text-base">Битумные</TabsTrigger>
-              <TabsTrigger value="mechanical" className="text-sm md:text-base">Армирование</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 mb-6 md:mb-8 h-auto">
+              <TabsTrigger value="cement" className="text-xs md:text-sm lg:text-base py-2 md:py-2.5">Вяжущие</TabsTrigger>
+              <TabsTrigger value="bitumen" className="text-xs md:text-sm lg:text-base py-2 md:py-2.5">Битумные</TabsTrigger>
+              <TabsTrigger value="mechanical" className="text-xs md:text-sm lg:text-base py-2 md:py-2.5">Армирование</TabsTrigger>
             </TabsList>
             {Object.entries(technologies).map(([key, tech]) => (
               <TabsContent key={key} value={key}>
                 <Card className="bg-card border-border">
-                  <CardHeader>
-                    <CardTitle className="font-heading text-3xl mb-4">{tech.title}</CardTitle>
-                    <CardDescription className="text-lg leading-relaxed mb-6">{tech.description}</CardDescription>
+                  <CardHeader className="p-4 md:p-6">
+                    <CardTitle className="font-heading text-2xl md:text-3xl mb-3 md:mb-4">{tech.title}</CardTitle>
+                    <CardDescription className="text-base md:text-lg leading-relaxed mb-4 md:mb-6">{tech.description}</CardDescription>
                     <div className="flex gap-2 flex-wrap">
                       {tech.tags.map((tag) => (
-                        <Badge key={tag} variant="outline" className="px-3 py-1">{tag}</Badge>
+                        <Badge key={tag} variant="outline" className="px-2 md:px-3 py-1 text-xs md:text-sm">{tag}</Badge>
                       ))}
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-8 mt-6">
+                  <CardContent className="p-4 md:p-6 pt-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 mt-4 md:mt-6">
                       <div className="bg-destructive/10 rounded-xl p-6 border border-destructive/20">
                         <p className="text-sm font-semibold mb-2 text-destructive">ДО применения</p>
                         <div className="space-y-2 text-sm text-muted-foreground">
@@ -621,22 +643,22 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="calculator" className="py-24 px-4 bg-gradient-to-b from-background to-card/30">
+      <section id="calculator" className="py-12 md:py-24 px-4 bg-gradient-to-b from-background to-card/30">
         <div className="container mx-auto max-w-4xl">
-          <div className="text-center mb-12">
-            <h2 className="font-heading font-bold text-4xl md:text-6xl mb-6">
+          <div className="text-center mb-8 md:mb-12">
+            <h2 className="font-heading font-bold text-3xl md:text-4xl lg:text-6xl mb-4 md:mb-6 px-2">
               Калькулятор предварительной экономии
             </h2>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-base md:text-xl text-muted-foreground px-4">
               Оцените потенциал экономии с проектным решением по стабилизации
             </p>
           </div>
 
           <Card className="bg-card border-primary/20 shadow-2xl">
-            <CardHeader>
-              <CardTitle className="font-heading text-2xl">Параметры вашего объекта</CardTitle>
+            <CardHeader className="p-4 md:p-6">
+              <CardTitle className="font-heading text-xl md:text-2xl">Параметры вашего объекта</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4 md:space-y-6 p-4 md:p-6 pt-0">
               <div>
                 <label className="block text-sm font-semibold mb-2">Тип объекта</label>
                 <Select onValueChange={(value) => setCalcData({...calcData, objectType: value})}>
@@ -770,57 +792,56 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="projects" className="py-24 px-4">
+      <section id="projects" className="py-12 md:py-24 px-4">
         <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="font-heading font-bold text-4xl md:text-6xl mb-6">
+          <div className="text-center mb-8 md:mb-16">
+            <h2 className="font-heading font-bold text-3xl md:text-4xl lg:text-6xl mb-4 md:mb-6 px-2">
               Реализованные проекты и кейсы
             </h2>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-base md:text-xl text-muted-foreground px-4">
               Цифры, результаты и доказательства эффективности
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8 max-w-7xl mx-auto">
             {projects.map((project, idx) => (
               <Card key={idx} className="overflow-hidden border-border hover:border-primary transition-all group hover:shadow-2xl">
                 <div className="relative h-48 sm:h-56 md:h-64 overflow-hidden">
-                  <img 
-                    src={project.image} 
-                    alt={project.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  <div 
+                    className="w-full h-full bg-cover bg-center group-hover:scale-110 transition-transform duration-500"
+                    style={{ backgroundImage: `url(${project.image})` }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
                   <Badge className="absolute top-4 left-4 bg-background/90 backdrop-blur-sm text-xs sm:text-sm">
                     {project.location}
                   </Badge>
                 </div>
-                <CardHeader>
-                  <CardTitle className="font-heading text-2xl mb-4">{project.title}</CardTitle>
-                  <div className="space-y-4">
+                <CardHeader className="p-4 md:p-6">
+                  <CardTitle className="font-heading text-xl md:text-2xl mb-3 md:mb-4">{project.title}</CardTitle>
+                  <div className="space-y-3 md:space-y-4">
                     <div>
-                      <p className="text-sm font-semibold text-destructive mb-1">Вызов</p>
-                      <p className="text-sm text-muted-foreground">{project.challenge}</p>
+                      <p className="text-xs md:text-sm font-semibold text-destructive mb-1">Вызов</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">{project.challenge}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-primary mb-1">Проектное решение</p>
-                      <p className="text-sm text-muted-foreground">{project.solution}</p>
+                      <p className="text-xs md:text-sm font-semibold text-primary mb-1">Проектное решение</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">{project.solution}</p>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-3 pt-4 border-t border-border">
+                <CardContent className="p-4 md:p-6 pt-0">
+                  <div className="space-y-2 md:space-y-3 pt-3 md:pt-4 border-t border-border">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Экономия</span>
-                      <span className="font-bold text-primary text-lg">{project.results.saved}</span>
+                      <span className="text-xs md:text-sm text-muted-foreground">Экономия</span>
+                      <span className="font-bold text-primary text-base md:text-lg">{project.results.saved}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Сокращение объемов</span>
-                      <span className="font-bold text-primary">{project.results.reduction}</span>
+                      <span className="text-xs md:text-sm text-muted-foreground">Сокращение объемов</span>
+                      <span className="font-bold text-primary text-sm md:text-base">{project.results.reduction}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Сокращение сроков</span>
-                      <span className="font-bold text-primary">{project.results.time}</span>
+                      <span className="text-xs md:text-sm text-muted-foreground">Сокращение сроков</span>
+                      <span className="font-bold text-primary text-sm md:text-base">{project.results.time}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -854,18 +875,18 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="contact" className="py-24 px-4">
+      <section id="contact" className="py-12 md:py-24 px-4">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <h2 className="font-heading font-bold text-4xl md:text-6xl mb-6">
+          <div className="text-center mb-8 md:mb-16">
+            <h2 className="font-heading font-bold text-3xl md:text-4xl lg:text-6xl mb-4 md:mb-6 px-2">
               Готовы проектировать дорогу будущего?
             </h2>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-base md:text-xl text-muted-foreground px-4">
               Бесплатная консультация инженера-проектировщика
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 md:gap-8">
             <Card className="lg:col-span-3 bg-card border-border">
               <CardHeader>
                 <CardTitle className="font-heading text-2xl">Свяжитесь с нами</CardTitle>
