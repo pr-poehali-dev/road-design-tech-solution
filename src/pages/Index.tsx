@@ -24,6 +24,11 @@ const Index = () => {
     name: '',
     phone: ''
   });
+
+  const isPhoneValid = (phone: string) => {
+    const digitsOnly = phone.replace(/\D/g, '');
+    return digitsOnly.length === 11;
+  };
   
   const [showChatbot, setShowChatbot] = useState(false);
   const [chatStep, setChatStep] = useState(0);
@@ -1033,7 +1038,12 @@ const Index = () => {
                       />
                     )}
                   </InputMask>
-                  <Button type="submit" size="lg" className="w-full bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base py-6 px-4 touch-manipulation">
+                  <Button 
+                    type="submit" 
+                    size="lg" 
+                    className="w-full bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base py-6 px-4 touch-manipulation"
+                    disabled={!formData.name || !isPhoneValid(formData.phone)}
+                  >
                     <Icon name="Send" size={16} className="mr-2" />
                     <span className="truncate">Отправить запрос</span>
                   </Button>
@@ -1223,7 +1233,7 @@ const Index = () => {
                 <Button
                   onClick={handleChatNext}
                   className="w-full bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm py-2 px-3 touch-manipulation"
-                  disabled={!chatData.name || !chatData.phone}
+                  disabled={!chatData.name || !isPhoneValid(chatData.phone)}
                 >
                   <Icon name="Send" size={16} className="mr-2" />
                   <span className="truncate">Получить расчет</span>
