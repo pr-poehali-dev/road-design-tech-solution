@@ -1061,7 +1061,7 @@ const Index = () => {
                   </div>
                   <div>
                     <CardTitle className="font-heading text-lg">Email</CardTitle>
-                    <CardDescription className="text-base">info@deod.ru</CardDescription>
+                    <CardDescription className="text-base">infosppi.ooo@mail.ru</CardDescription>
                   </div>
                 </CardHeader>
               </Card>
@@ -1073,7 +1073,7 @@ const Index = () => {
                   </div>
                   <div>
                     <CardTitle className="font-heading text-lg">Телефон</CardTitle>
-                    <CardDescription className="text-base">+7 (495) 123-45-67</CardDescription>
+                    <CardDescription className="text-base">+7 (901) 147-87-67</CardDescription>
                   </div>
                 </CardHeader>
               </Card>
@@ -1085,7 +1085,7 @@ const Index = () => {
                   </div>
                   <div>
                     <CardTitle className="font-heading text-lg">Офис</CardTitle>
-                    <CardDescription className="text-base">г. Москва, ул. Проектная, д. 1</CardDescription>
+                    <CardDescription className="text-base leading-relaxed">190005, Санкт-Петербург,<br/>Наб. реки Фонтанки, д. 136 литера А,<br/>помещ. 1-н, офис 4, р.м. 6</CardDescription>
                   </div>
                 </CardHeader>
               </Card>
