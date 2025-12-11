@@ -43,6 +43,8 @@ const Index = () => {
   const [hasShownExitPopup, setHasShownExitPopup] = useState(false);
   const [hasShownTimePopup, setHasShownTimePopup] = useState(false);
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
+  const [exitPopupPhone, setExitPopupPhone] = useState('');
+  const [timePopupPhone, setTimePopupPhone] = useState('');
 
   const saveLead = (leadData: any) => {
     const leads = JSON.parse(localStorage.getItem('crm_leads') || '[]');
@@ -237,13 +239,14 @@ const Index = () => {
     saveLead({
       type: 'Презентация',
       name: formData.get('name') as string,
-      phone: formData.get('phone') as string,
+      phone: exitPopupPhone,
       email: '',
       message: 'Запрос презентации технологий стабилизации',
       source: 'Exit popup'
     });
     alert('Презентация отправлена на вашу почту!');
     setShowExitPopup(false);
+    setExitPopupPhone('');
   };
   
   const handleTimePopupSubmit = (e: React.FormEvent) => {
@@ -252,13 +255,14 @@ const Index = () => {
     saveLead({
       type: 'Бесплатный аудит',
       name: formData.get('name') as string,
-      phone: formData.get('phone') as string,
+      phone: timePopupPhone,
       email: '',
       message: 'Запрос бесплатного аудита проекта',
       source: 'Time popup (60 сек)'
     });
     alert('Заявка на бесплатный аудит принята!');
     setShowTimePopup(false);
+    setTimePopupPhone('');
   };
 
   return (
@@ -1023,21 +1027,28 @@ const Index = () => {
                     required
                     className="text-lg py-6"
                   />
-                  <InputMask
-                    mask="+7 (999) 999-99-99"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  >
-                    {(inputProps: any) => (
-                      <Input
-                        {...inputProps}
-                        type="tel"
-                        placeholder="+7 (___) ___-__-__"
-                        required
-                        className="text-lg py-6"
-                      />
+                  <div className="relative">
+                    <InputMask
+                      mask="+7 (999) 999-99-99"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    >
+                      {(inputProps: any) => (
+                        <Input
+                          {...inputProps}
+                          type="tel"
+                          placeholder="+7 (___) ___-__-__"
+                          required
+                          className="text-lg py-6 pr-12"
+                        />
+                      )}
+                    </InputMask>
+                    {isPhoneValid(formData.phone) && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <Icon name="CheckCircle2" size={24} className="text-green-500" />
+                      </div>
                     )}
-                  </InputMask>
+                  </div>
                   <Button 
                     type="submit" 
                     size="lg" 
@@ -1217,19 +1228,27 @@ const Index = () => {
                   value={chatData.name}
                   onChange={(e) => setChatData({...chatData, name: e.target.value})}
                 />
-                <InputMask 
-                  mask="+7 (999) 999-99-99"
-                  value={chatData.phone}
-                  onChange={(e) => setChatData({...chatData, phone: e.target.value})}
-                >
-                  {(inputProps: any) => (
-                    <Input
-                      {...inputProps}
-                      type="tel"
-                      placeholder="+7 (___) ___-__-__"
-                    />
+                <div className="relative">
+                  <InputMask 
+                    mask="+7 (999) 999-99-99"
+                    value={chatData.phone}
+                    onChange={(e) => setChatData({...chatData, phone: e.target.value})}
+                  >
+                    {(inputProps: any) => (
+                      <Input
+                        {...inputProps}
+                        type="tel"
+                        placeholder="+7 (___) ___-__-__"
+                        className="pr-10"
+                      />
+                    )}
+                  </InputMask>
+                  {isPhoneValid(chatData.phone) && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <Icon name="CheckCircle2" size={20} className="text-green-500" />
+                    </div>
                   )}
-                </InputMask>
+                </div>
                 <Button
                   onClick={handleChatNext}
                   className="w-full bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm py-2 px-3 touch-manipulation"
@@ -1279,19 +1298,31 @@ const Index = () => {
                   placeholder="Ваше имя"
                   required
                 />
-                <InputMask mask="+7 (999) 999-99-99">
-                  {(inputProps: any) => (
-                    <Input
-                      {...inputProps}
-                      type="tel"
-                      name="phone"
-                      placeholder="+7 (___) ___-__-__"
-                      required
-                    />
+                <div className="relative">
+                  <InputMask 
+                    mask="+7 (999) 999-99-99"
+                    value={exitPopupPhone}
+                    onChange={(e) => setExitPopupPhone(e.target.value)}
+                  >
+                    {(inputProps: any) => (
+                      <Input
+                        {...inputProps}
+                        type="tel"
+                        name="phone"
+                        placeholder="+7 (___) ___-__-__"
+                        required
+                        className="pr-10"
+                      />
+                    )}
+                  </InputMask>
+                  {isPhoneValid(exitPopupPhone) && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <Icon name="CheckCircle2" size={20} className="text-green-500" />
+                    </div>
                   )}
-                </InputMask>
+                </div>
                 <div className="flex gap-3">
-                  <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm py-2 px-3">
+                  <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm py-2 px-3" disabled={!isPhoneValid(exitPopupPhone)}>
                     <Icon name="Download" size={16} className="mr-2" />
                     <span className="truncate">Получить презентацию</span>
                   </Button>
@@ -1330,19 +1361,31 @@ const Index = () => {
                   placeholder="Ваше имя"
                   required
                 />
-                <InputMask mask="+7 (999) 999-99-99">
-                  {(inputProps: any) => (
-                    <Input
-                      {...inputProps}
-                      type="tel"
-                      name="phone"
-                      placeholder="+7 (___) ___-__-__"
-                      required
-                    />
+                <div className="relative">
+                  <InputMask 
+                    mask="+7 (999) 999-99-99"
+                    value={timePopupPhone}
+                    onChange={(e) => setTimePopupPhone(e.target.value)}
+                  >
+                    {(inputProps: any) => (
+                      <Input
+                        {...inputProps}
+                        type="tel"
+                        name="phone"
+                        placeholder="+7 (___) ___-__-__"
+                        required
+                        className="pr-10"
+                      />
+                    )}
+                  </InputMask>
+                  {isPhoneValid(timePopupPhone) && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <Icon name="CheckCircle2" size={20} className="text-green-500" />
+                    </div>
                   )}
-                </InputMask>
+                </div>
                 <div className="flex gap-3">
-                  <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm py-2 px-3 touch-manipulation">
+                  <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm py-2 px-3 touch-manipulation" disabled={!isPhoneValid(timePopupPhone)}>
                     <Icon name="CheckCircle2" size={16} className="mr-2" />
                     <span className="truncate">Получить аудит</span>
                   </Button>
