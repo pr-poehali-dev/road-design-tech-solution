@@ -21,10 +21,7 @@ const Index = () => {
   const [showCalcResult, setShowCalcResult] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    company: '',
-    email: '',
-    phone: '',
-    message: ''
+    phone: ''
   });
   
   const [showChatbot, setShowChatbot] = useState(false);
@@ -32,7 +29,8 @@ const Index = () => {
   const [chatData, setChatData] = useState({
     projectType: '',
     timeline: '',
-    email: ''
+    name: '',
+    phone: ''
   });
   const [showExitPopup, setShowExitPopup] = useState(false);
   const [showTimePopup, setShowTimePopup] = useState(false);
@@ -200,14 +198,14 @@ const Index = () => {
     saveLead({
       type: 'Контактная форма',
       name: formData.name,
-      email: formData.email,
       phone: formData.phone,
-      company: formData.company,
-      message: formData.message,
+      email: '',
+      company: '',
+      message: '',
       source: 'Форма обратной связи'
     });
     alert('Спасибо! Ваша заявка отправлена. Мы свяжемся с вами в течение 24 часов.');
-    setFormData({ name: '', company: '', email: '', phone: '', message: '' });
+    setFormData({ name: '', phone: '' });
   };
   
   const handleChatNext = () => {
@@ -216,8 +214,9 @@ const Index = () => {
     } else {
       saveLead({
         type: 'Чат-бот',
-        name: 'Не указано',
-        email: chatData.email,
+        name: chatData.name,
+        phone: chatData.phone,
+        email: '',
         message: `Тип проекта: ${chatData.projectType}, Сроки: ${chatData.timeline}`,
         source: 'Чат-консультант'
       });
@@ -228,11 +227,12 @@ const Index = () => {
   
   const handleExitPopupSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const email = (e.target as any).email.value;
+    const formData = new FormData(e.target as HTMLFormElement);
     saveLead({
       type: 'Презентация',
-      name: 'Не указано',
-      email: email,
+      name: formData.get('name') as string,
+      phone: formData.get('phone') as string,
+      email: '',
       message: 'Запрос презентации технологий стабилизации',
       source: 'Exit popup'
     });
@@ -245,9 +245,9 @@ const Index = () => {
     const formData = new FormData(e.target as HTMLFormElement);
     saveLead({
       type: 'Бесплатный аудит',
-      name: formData.get('name'),
-      email: formData.get('email'),
-      phone: formData.get('phone'),
+      name: formData.get('name') as string,
+      phone: formData.get('phone') as string,
+      email: '',
       message: 'Запрос бесплатного аудита проекта',
       source: 'Time popup (60 сек)'
     });
@@ -1010,42 +1010,22 @@ const Index = () => {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                      placeholder="Ваше имя"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                    />
-                    <Input
-                      placeholder="Компания"
-                      value={formData.company}
-                      onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                      type="email"
-                      placeholder="Email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      required
-                    />
-                    <Input
-                      type="tel"
-                      placeholder="Телефон"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <Textarea
-                    placeholder="Опишите ваш проект или задачу"
-                    value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    rows={4}
+                  <Input
+                    placeholder="Ваше имя"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
+                    className="text-lg py-6"
                   />
-                  <Button type="submit" size="lg" className="w-full bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base py-3 sm:py-4 px-4 touch-manipulation">
+                  <Input
+                    type="tel"
+                    placeholder="Телефон"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    required
+                    className="text-lg py-6"
+                  />
+                  <Button type="submit" size="lg" className="w-full bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base py-6 px-4 touch-manipulation">
                     <Icon name="Send" size={16} className="mr-2" />
                     <span className="truncate">Отправить запрос</span>
                   </Button>
@@ -1212,17 +1192,23 @@ const Index = () => {
                   Проект: <span className="font-semibold text-foreground">{chatData.projectType}</span><br/>
                   Сроки: <span className="font-semibold text-foreground">{chatData.timeline}</span>
                 </p>
-                <p className="text-sm text-muted-foreground">Оставьте email для получения предварительного расчета стоимости:</p>
+                <p className="text-sm text-muted-foreground">Оставьте контактные данные для получения предварительного расчета стоимости:</p>
                 <Input
-                  type="email"
-                  placeholder="your@email.com"
-                  value={chatData.email}
-                  onChange={(e) => setChatData({...chatData, email: e.target.value})}
+                  type="text"
+                  placeholder="Ваше имя"
+                  value={chatData.name}
+                  onChange={(e) => setChatData({...chatData, name: e.target.value})}
+                />
+                <Input
+                  type="tel"
+                  placeholder="Телефон"
+                  value={chatData.phone}
+                  onChange={(e) => setChatData({...chatData, phone: e.target.value})}
                 />
                 <Button
                   onClick={handleChatNext}
                   className="w-full bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm py-2 px-3 touch-manipulation"
-                  disabled={!chatData.email}
+                  disabled={!chatData.name || !chatData.phone}
                 >
                   <Icon name="Send" size={16} className="mr-2" />
                   <span className="truncate">Получить расчет</span>
@@ -1237,7 +1223,7 @@ const Index = () => {
                 </div>
                 <p className="font-semibold">Спасибо за обращение!</p>
                 <p className="text-sm text-muted-foreground">
-                  Мы отправим предварительный расчет на {chatData.email} в течение 2 часов.
+                  Мы свяжемся с вами по телефону {chatData.phone} в течение 2 часов.
                 </p>
                 <Button onClick={() => setShowChatbot(false)} variant="outline" className="w-full text-xs sm:text-sm py-2 px-3 touch-manipulation">
                   <span className="truncate">Закрыть</span>
@@ -1263,9 +1249,15 @@ const Index = () => {
             <CardContent>
               <form onSubmit={handleExitPopupSubmit} className="space-y-4">
                 <Input
-                  type="email"
-                  name="email"
-                  placeholder="Ваш email"
+                  type="text"
+                  name="name"
+                  placeholder="Ваше имя"
+                  required
+                />
+                <Input
+                  type="tel"
+                  name="phone"
+                  placeholder="Телефон"
                   required
                 />
                 <div className="flex gap-3">
@@ -1306,12 +1298,6 @@ const Index = () => {
                   type="text"
                   name="name"
                   placeholder="Ваше имя"
-                  required
-                />
-                <Input
-                  type="email"
-                  name="email"
-                  placeholder="Email"
                   required
                 />
                 <Input
