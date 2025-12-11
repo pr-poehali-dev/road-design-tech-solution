@@ -753,6 +753,20 @@ const Index = () => {
               </TabsContent>
             ))}
           </Tabs>
+
+          <div className="flex justify-center mt-8 md:mt-12">
+            <Button 
+              size="lg" 
+              onClick={() => {
+                const contactSection = document.getElementById('contact');
+                contactSection?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="bg-primary hover:bg-primary/90 font-semibold text-base md:text-lg py-6 md:py-7 px-8 md:px-12 shadow-2xl hover:shadow-primary/50 transition-all touch-manipulation"
+            >
+              <Icon name="Wrench" size={20} className="mr-2" />
+              Заказать стабилизацию
+            </Button>
+          </div>
         </div>
       </section>
 
