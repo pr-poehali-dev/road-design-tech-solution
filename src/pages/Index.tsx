@@ -24,6 +24,16 @@ const Index = () => {
     name: '',
     phone: ''
   });
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const isPhoneValid = (phone: string) => {
     const digitsOnly = phone.replace(/\D/g, '');
@@ -315,6 +325,11 @@ const Index = () => {
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/80" />
         </div>
         <div className="absolute inset-0 bg-grid-pattern opacity-20 z-[1]" />
+        <div className="car-light" style={{ top: '30%' }} />
+        <div className="car-light" style={{ top: '60%', animationDelay: '4s' }} />
+        <div className="light-sweep" style={{ animationDelay: '1s' }} />
+        <div className="road-stripes" style={{ left: '45%' }} />
+        <div className="road-stripes" style={{ left: '55%', animationDelay: '0.5s' }} />
         <div className="container mx-auto relative z-10">
           <div className="max-w-5xl mx-auto text-center">
             <Badge className="mb-6 bg-primary/10 text-primary border-primary/30 px-4 py-2 text-sm font-semibold animate-fade-in">
@@ -374,7 +389,10 @@ const Index = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mt-12 sm:mt-20 max-w-6xl mx-auto px-4 sm:px-0">
-            <Card className="glow-card">
+            <Card 
+              className="glow-card parallax-slow" 
+              style={{ transform: `translateY(${scrollY * 0.05}px)` }}
+            >
               <CardHeader className="p-4 sm:p-6">
                 <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-3 sm:mb-4 animate-float">
                   <Icon name="TrendingDown" size={24} className="text-primary sm:w-8 sm:h-8" />
@@ -383,7 +401,10 @@ const Index = () => {
                 <CardDescription className="text-sm sm:text-base">экономии на строительстве</CardDescription>
               </CardHeader>
             </Card>
-            <Card className="glow-card">
+            <Card 
+              className="glow-card parallax-medium" 
+              style={{ transform: `translateY(${scrollY * 0.08}px)` }}
+            >
               <CardHeader className="p-4 sm:p-6">
                 <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-3 sm:mb-4 animate-float" style={{ animationDelay: '0.2s' }}>
                   <Icon name="CheckCircle" size={24} className="text-primary sm:w-8 sm:h-8" />
@@ -392,7 +413,10 @@ const Index = () => {
                 <CardDescription className="text-sm sm:text-base">прохождение экспертизы</CardDescription>
               </CardHeader>
             </Card>
-            <Card className="glow-card sm:col-span-2 md:col-span-1">
+            <Card 
+              className="glow-card sm:col-span-2 md:col-span-1 parallax-fast" 
+              style={{ transform: `translateY(${scrollY * 0.1}px)` }}
+            >
               <CardHeader className="p-4 sm:p-6">
                 <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-3 sm:mb-4 animate-float" style={{ animationDelay: '0.4s' }}>
                   <Icon name="Calendar" size={24} className="text-primary sm:w-8 sm:h-8" />
@@ -420,11 +444,14 @@ const Index = () => {
             {challenges.map((challenge, index) => (
               <Card 
                 key={challenge.id}
-                className={`glow-card cursor-pointer transition-all duration-300 ${
+                className={`glow-card cursor-pointer transition-all duration-300 parallax-medium ${
                   activeChallenge === challenge.id ? 'ring-2 ring-primary' : ''
                 }`}
                 onClick={() => setActiveChallenge(activeChallenge === challenge.id ? null : challenge.id)}
-                style={{ animationDelay: `${index * 0.1}s` }}
+                style={{ 
+                  animationDelay: `${index * 0.1}s`,
+                  transform: `translateY(${scrollY * (0.03 + index * 0.01)}px)`
+                }}
               >
                 <CardHeader>
                   <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
