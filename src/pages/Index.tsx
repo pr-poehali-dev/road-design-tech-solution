@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import InputMask from 'react-input-mask';
 
 const Index = () => {
   const [activeChallenge, setActiveChallenge] = useState<string | null>(null);
@@ -1017,14 +1018,21 @@ const Index = () => {
                     required
                     className="text-lg py-6"
                   />
-                  <Input
-                    type="tel"
-                    placeholder="Телефон"
+                  <InputMask
+                    mask="+7 (999) 999-99-99"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    required
-                    className="text-lg py-6"
-                  />
+                  >
+                    {(inputProps: any) => (
+                      <Input
+                        {...inputProps}
+                        type="tel"
+                        placeholder="+7 (___) ___-__-__"
+                        required
+                        className="text-lg py-6"
+                      />
+                    )}
+                  </InputMask>
                   <Button type="submit" size="lg" className="w-full bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base py-6 px-4 touch-manipulation">
                     <Icon name="Send" size={16} className="mr-2" />
                     <span className="truncate">Отправить запрос</span>
@@ -1199,12 +1207,19 @@ const Index = () => {
                   value={chatData.name}
                   onChange={(e) => setChatData({...chatData, name: e.target.value})}
                 />
-                <Input
-                  type="tel"
-                  placeholder="Телефон"
+                <InputMask 
+                  mask="+7 (999) 999-99-99"
                   value={chatData.phone}
                   onChange={(e) => setChatData({...chatData, phone: e.target.value})}
-                />
+                >
+                  {(inputProps: any) => (
+                    <Input
+                      {...inputProps}
+                      type="tel"
+                      placeholder="+7 (___) ___-__-__"
+                    />
+                  )}
+                </InputMask>
                 <Button
                   onClick={handleChatNext}
                   className="w-full bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm py-2 px-3 touch-manipulation"
@@ -1254,12 +1269,17 @@ const Index = () => {
                   placeholder="Ваше имя"
                   required
                 />
-                <Input
-                  type="tel"
-                  name="phone"
-                  placeholder="Телефон"
-                  required
-                />
+                <InputMask mask="+7 (999) 999-99-99">
+                  {(inputProps: any) => (
+                    <Input
+                      {...inputProps}
+                      type="tel"
+                      name="phone"
+                      placeholder="+7 (___) ___-__-__"
+                      required
+                    />
+                  )}
+                </InputMask>
                 <div className="flex gap-3">
                   <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm py-2 px-3">
                     <Icon name="Download" size={16} className="mr-2" />
@@ -1300,12 +1320,17 @@ const Index = () => {
                   placeholder="Ваше имя"
                   required
                 />
-                <Input
-                  type="tel"
-                  name="phone"
-                  placeholder="Телефон"
-                  required
-                />
+                <InputMask mask="+7 (999) 999-99-99">
+                  {(inputProps: any) => (
+                    <Input
+                      {...inputProps}
+                      type="tel"
+                      name="phone"
+                      placeholder="+7 (___) ___-__-__"
+                      required
+                    />
+                  )}
+                </InputMask>
                 <div className="flex gap-3">
                   <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm py-2 px-3 touch-manipulation">
                     <Icon name="CheckCircle2" size={16} className="mr-2" />
