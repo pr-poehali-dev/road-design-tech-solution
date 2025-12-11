@@ -66,13 +66,13 @@ const CRM = () => {
   });
 
   const statusStages = [
-    { id: 'new', label: 'Новый лид', color: '#E8EBED', textColor: '#333' },
-    { id: 'first-contact', label: 'Первый контакт', color: '#D5E8F7', textColor: '#1F5F8B' },
-    { id: 'evaluation', label: 'Квалификация', color: '#FFF4E6', textColor: '#8B5A00' },
-    { id: 'proposal', label: 'Коммерческое предложение', color: '#FFF0F0', textColor: '#8B2500' },
-    { id: 'negotiation', label: 'Переговоры', color: '#F0E6FF', textColor: '#5A008B' },
-    { id: 'closed-won', label: 'Успешно реализовано', color: '#E6F7ED', textColor: '#0F5132' },
-    { id: 'closed-lost', label: 'Закрыто и не реализовано', color: '#FCE4E4', textColor: '#8B0000' }
+    { id: 'new', label: 'Новый лид', color: '#374151', textColor: '#FFFFFF' },
+    { id: 'first-contact', label: 'Первый контакт', color: '#1E40AF', textColor: '#FFFFFF' },
+    { id: 'evaluation', label: 'Квалификация', color: '#CA8A04', textColor: '#FFFFFF' },
+    { id: 'proposal', label: 'Коммерческое предложение', color: '#DC2626', textColor: '#FFFFFF' },
+    { id: 'negotiation', label: 'Переговоры', color: '#7C3AED', textColor: '#FFFFFF' },
+    { id: 'closed-won', label: 'Успешно реализовано', color: '#16A34A', textColor: '#FFFFFF' },
+    { id: 'closed-lost', label: 'Закрыто и не реализовано', color: '#991B1B', textColor: '#FFFFFF' }
   ];
 
   useEffect(() => {
