@@ -468,6 +468,141 @@ const Index = () => {
         </div>
       </section>
 
+      <section className="py-24 px-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-primary/10" />
+        <div className="container mx-auto relative z-10">
+          <div className="text-center mb-16 animate-fade-in">
+            <Badge className="mb-6 bg-primary/10 text-primary border-primary/30 px-4 py-2 text-sm font-semibold">
+              Универсальные решения
+            </Badge>
+            <h2 className="font-heading font-bold text-4xl md:text-6xl mb-6">
+              От федеральной трассы{' '}
+              <span className="text-gradient block mt-2">
+                до городского проезда
+              </span>
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Полный спектр проектных работ. Проектируем дороги всех типов и категорий.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+            {[
+              { icon: 'Highway', title: 'Федеральные трассы', desc: 'I-II категории, магистрали с высокой интенсивностью движения' },
+              { icon: 'Route', title: 'Региональные дороги', desc: 'III категория, межмуниципальные и региональные трассы' },
+              { icon: 'MapPin', title: 'Местные дороги', desc: 'IV-V категории, подъезды к населенным пунктам' },
+              { icon: 'Building', title: 'Городские проезды', desc: 'Улицы, проезды, парковки, дворовые территории' }
+            ].map((type, index) => (
+              <Card 
+                key={index}
+                className="glow-card group parallax-slow hover:scale-105 transition-all duration-300"
+                style={{ 
+                  animationDelay: `${index * 0.1}s`,
+                  transform: `translateY(${scrollY * (0.02 + index * 0.005)}px)`
+                }}
+              >
+                <CardHeader className="text-center">
+                  <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                    <Icon name={type.icon as any} size={36} className="text-primary" />
+                  </div>
+                  <CardTitle className="font-heading text-xl mb-3">{type.title}</CardTitle>
+                  <CardDescription className="text-sm leading-relaxed">
+                    {type.desc}
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-24 px-4 bg-gradient-to-b from-secondary/20 to-background relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-pattern opacity-10" />
+        <div className="container mx-auto max-w-7xl relative z-10">
+          <div className="text-center mb-20 animate-fade-in">
+            <Badge className="mb-6 bg-primary/10 text-primary border-primary/30 px-4 py-2 text-sm font-semibold">
+              Работаем по стандартам
+            </Badge>
+            <h2 className="font-heading font-bold text-4xl md:text-6xl mb-6">
+              Наш полный цикл{' '}
+              <span className="text-gradient block mt-2">
+                проектирования
+              </span>
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Сопровождаем проект от предпроектных изысканий до получения положительного заключения экспертизы
+            </p>
+          </div>
+          
+          <div className="relative">
+            <div className="absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent hidden lg:block" style={{ transform: 'translateY(-50%)' }} />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-4">
+              {[
+                { 
+                  step: '01', 
+                  icon: 'Search', 
+                  title: 'Изыскания', 
+                  desc: 'Инженерно-геологические и геодезические изыскания',
+                  color: 'from-blue-500/20 to-blue-600/10'
+                },
+                { 
+                  step: '02', 
+                  icon: 'PenTool', 
+                  title: 'Проектирование', 
+                  desc: 'Разработка проектной и рабочей документации с BIM',
+                  color: 'from-cyan-500/20 to-cyan-600/10'
+                },
+                { 
+                  step: '03', 
+                  icon: 'Layers', 
+                  title: 'Стабилизация', 
+                  desc: 'Расчет составов и технологий укрепления грунтов',
+                  color: 'from-primary/20 to-primary/10'
+                },
+                { 
+                  step: '04', 
+                  icon: 'FileCheck', 
+                  title: 'Экспертиза', 
+                  desc: 'Сопровождение прохождения государственной экспертизы',
+                  color: 'from-indigo-500/20 to-indigo-600/10'
+                },
+                { 
+                  step: '05', 
+                  icon: 'CheckCircle2', 
+                  title: 'Авторский надзор', 
+                  desc: 'Контроль соблюдения проектных решений при строительстве',
+                  color: 'from-violet-500/20 to-violet-600/10'
+                }
+              ].map((stage, index) => (
+                <Card 
+                  key={index}
+                  className="glow-card group relative parallax-medium hover:scale-105 transition-all duration-300"
+                  style={{ 
+                    animationDelay: `${index * 0.15}s`,
+                    transform: `translateY(${scrollY * (0.02 + index * 0.003)}px)`
+                  }}
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-br ${stage.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg`} />
+                  <CardHeader className="relative text-center p-6">
+                    <div className="text-6xl font-black text-primary/10 group-hover:text-primary/20 transition-colors duration-300 mb-2">
+                      {stage.step}
+                    </div>
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/5 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                      <Icon name={stage.icon as any} size={28} className="text-primary" />
+                    </div>
+                    <CardTitle className="font-heading text-lg mb-3">{stage.title}</CardTitle>
+                    <CardDescription className="text-sm leading-relaxed">
+                      {stage.desc}
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="technologies" className="py-24 px-4">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16 animate-fade-in">
