@@ -96,19 +96,22 @@ const Index = () => {
       id: 'weak-soil',
       icon: 'Mountain',
       problem: 'Болотистая местность или вечная мерзлота',
-      solution: 'Проектируем стабилизацию in-situ, а не дорогостоящую замену грунта'
+      solution: 'Проектируем стабилизацию in-situ, а не дорогостоящую замену грунта',
+      image: 'https://cdn.poehali.dev/files/болотистая.jpg'
     },
     {
       id: 'materials',
       icon: 'TruckIcon',
       problem: 'Дефицит и дороговизна щебня в регионе',
-      solution: 'Проектируем укрепление местных грунтов вяжущими, сокращая импорт материалов'
+      solution: 'Проектируем укрепление местных грунтов вяжущими, сокращая импорт материалов',
+      image: 'https://cdn.poehali.dev/files/вяжущие.jpg'
     },
     {
       id: 'reconstruction',
       icon: 'Construction',
       problem: 'Реконструкция без остановки движения',
-      solution: 'Проектируем ресайклинг и армирование существующего полотна'
+      solution: 'Проектируем ресайклинг и армирование существующего полотна',
+      image: 'https://cdn.poehali.dev/files/230713212132.jpg'
     }
   ];
 
@@ -468,21 +471,29 @@ const Index = () => {
             {challenges.map((challenge, index) => (
               <Card 
                 key={challenge.id}
-                className={`glow-card cursor-pointer transition-all duration-300 parallax-medium ${
+                className={`glow-card cursor-pointer transition-all duration-300 overflow-hidden group ${
                   activeChallenge === challenge.id ? 'ring-2 ring-primary' : ''
                 }`}
                 onClick={() => setActiveChallenge(activeChallenge === challenge.id ? null : challenge.id)}
                 style={{ 
-                  animationDelay: `${index * 0.1}s`,
-                  transform: `translateY(${scrollY * (0.03 + index * 0.01)}px)`
+                  animationDelay: `${index * 0.1}s`
                 }}
               >
-                <CardHeader>
-                  <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
-                    <Icon name={challenge.icon as any} size={28} className="text-primary" />
+                <div className="relative h-40 sm:h-48 overflow-hidden">
+                  <img 
+                    src={challenge.image} 
+                    alt={challenge.problem}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    style={{ opacity: 0.85 }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                  <div className="absolute bottom-3 left-3 w-12 h-12 sm:w-14 sm:h-14 bg-primary/90 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                    <Icon name={challenge.icon as any} size={24} className="text-white sm:w-7 sm:h-7" />
                   </div>
-                  <CardTitle className="font-heading text-2xl mb-3">{challenge.problem}</CardTitle>
-                  <CardDescription className="text-base leading-relaxed">
+                </div>
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="font-heading text-xl sm:text-2xl mb-3">{challenge.problem}</CardTitle>
+                  <CardDescription className="text-sm sm:text-base leading-relaxed">
                     {challenge.solution}
                   </CardDescription>
                 </CardHeader>
