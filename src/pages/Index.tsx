@@ -488,23 +488,52 @@ const Index = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
             {[
-              { icon: 'Highway', title: 'Федеральные трассы', desc: 'I-II категории, магистрали с высокой интенсивностью движения' },
-              { icon: 'Route', title: 'Региональные дороги', desc: 'III категория, межмуниципальные и региональные трассы' },
-              { icon: 'MapPin', title: 'Местные дороги', desc: 'IV-V категории, подъезды к населенным пунктам' },
-              { icon: 'Building', title: 'Городские проезды', desc: 'Улицы, проезды, парковки, дворовые территории' }
+              { 
+                icon: 'Highway', 
+                title: 'Федеральные трассы', 
+                desc: 'I-II категории, магистрали с высокой интенсивностью движения',
+                image: 'https://cdn.poehali.dev/files/фед.дорога.jpg'
+              },
+              { 
+                icon: 'Route', 
+                title: 'Региональные дороги', 
+                desc: 'III категория, межмуниципальные и региональные трассы',
+                image: 'https://cdn.poehali.dev/files/Дороги.png'
+              },
+              { 
+                icon: 'MapPin', 
+                title: 'Местные дороги', 
+                desc: 'IV-V категории, подъезды к населенным пунктам',
+                image: 'https://cdn.poehali.dev/files/д4.jpeg'
+              },
+              { 
+                icon: 'Building', 
+                title: 'Городские проезды', 
+                desc: 'Улицы, проезды, парковки, дворовые территории',
+                image: 'https://cdn.poehali.dev/files/город.дорога.jpg'
+              }
             ].map((type, index) => (
               <Card 
                 key={index}
-                className="glow-card group parallax-slow hover:scale-105 transition-all duration-300"
+                className="glow-card group parallax-slow hover:scale-105 transition-all duration-300 overflow-hidden"
                 style={{ 
                   animationDelay: `${index * 0.1}s`,
                   transform: `translateY(${scrollY * (0.02 + index * 0.005)}px)`
                 }}
               >
-                <CardHeader className="text-center">
-                  <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                    <Icon name={type.icon as any} size={36} className="text-primary" />
+                <div className="relative h-48 overflow-hidden">
+                  <img 
+                    src={type.image} 
+                    alt={type.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    style={{ opacity: 0.9 }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+                  <div className="absolute bottom-4 left-4 w-16 h-16 bg-gradient-to-br from-primary/90 to-primary/70 rounded-xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 backdrop-blur-sm">
+                    <Icon name={type.icon as any} size={32} className="text-white" />
                   </div>
+                </div>
+                <CardHeader className="text-center">
                   <CardTitle className="font-heading text-xl mb-3">{type.title}</CardTitle>
                   <CardDescription className="text-sm leading-relaxed">
                     {type.desc}
