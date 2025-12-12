@@ -390,37 +390,64 @@ const Index = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mt-12 sm:mt-20 max-w-6xl mx-auto px-4 sm:px-0">
             <Card 
-              className="glow-card parallax-slow" 
+              className="glow-card parallax-slow overflow-hidden group" 
               style={{ transform: `translateY(${scrollY * 0.05}px)` }}
             >
-              <CardHeader className="p-4 sm:p-6">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-3 sm:mb-4 animate-float">
-                  <Icon name="TrendingDown" size={24} className="text-primary sm:w-8 sm:h-8" />
+              <div className="relative h-48 overflow-hidden">
+                <img 
+                  src="https://cdn.poehali.dev/files/economica-i-finansy-800x533.jpg" 
+                  alt="Экономия на строительстве"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  style={{ opacity: 0.85 }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                <div className="absolute bottom-4 left-4 w-14 h-14 bg-primary/90 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <Icon name="TrendingDown" size={28} className="text-white" />
                 </div>
+              </div>
+              <CardHeader className="p-4 sm:p-6">
                 <CardTitle className="font-heading text-2xl sm:text-3xl">до 30%</CardTitle>
                 <CardDescription className="text-sm sm:text-base">экономии на строительстве</CardDescription>
               </CardHeader>
             </Card>
             <Card 
-              className="glow-card parallax-medium" 
+              className="glow-card parallax-medium overflow-hidden group" 
               style={{ transform: `translateY(${scrollY * 0.08}px)` }}
             >
-              <CardHeader className="p-4 sm:p-6">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-3 sm:mb-4 animate-float" style={{ animationDelay: '0.2s' }}>
-                  <Icon name="CheckCircle" size={24} className="text-primary sm:w-8 sm:h-8" />
+              <div className="relative h-48 overflow-hidden">
+                <img 
+                  src="https://cdn.poehali.dev/files/экспертиза.png" 
+                  alt="Прохождение экспертизы"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  style={{ opacity: 0.85 }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                <div className="absolute bottom-4 left-4 w-14 h-14 bg-primary/90 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <Icon name="CheckCircle" size={28} className="text-white" />
                 </div>
+              </div>
+              <CardHeader className="p-4 sm:p-6">
                 <CardTitle className="font-heading text-2xl sm:text-3xl">100%</CardTitle>
                 <CardDescription className="text-sm sm:text-base">прохождение экспертизы</CardDescription>
               </CardHeader>
             </Card>
             <Card 
-              className="glow-card sm:col-span-2 md:col-span-1 parallax-fast" 
+              className="glow-card sm:col-span-2 md:col-span-1 parallax-fast overflow-hidden group" 
               style={{ transform: `translateY(${scrollY * 0.1}px)` }}
             >
-              <CardHeader className="p-4 sm:p-6">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-3 sm:mb-4 animate-float" style={{ animationDelay: '0.4s' }}>
-                  <Icon name="Calendar" size={24} className="text-primary sm:w-8 sm:h-8" />
+              <div className="relative h-48 overflow-hidden">
+                <img 
+                  src="https://cdn.poehali.dev/files/230713212132.jpg" 
+                  alt="Быстрая разработка проекта"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  style={{ opacity: 0.85 }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                <div className="absolute bottom-4 left-4 w-14 h-14 bg-primary/90 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <Icon name="Calendar" size={28} className="text-white" />
                 </div>
+              </div>
+              <CardHeader className="p-4 sm:p-6">
                 <CardTitle className="font-heading text-2xl sm:text-3xl">от 2 недель</CardTitle>
                 <CardDescription className="text-sm sm:text-base">срок разработки проекта</CardDescription>
               </CardHeader>
