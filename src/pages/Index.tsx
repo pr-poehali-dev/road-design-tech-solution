@@ -388,12 +388,11 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mt-12 sm:mt-20 max-w-6xl mx-auto px-4 sm:px-0">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mt-12 sm:mt-20 max-w-6xl mx-auto px-4 sm:px-0">
             <Card 
-              className="glow-card parallax-slow overflow-hidden group" 
-              style={{ transform: `translateY(${scrollY * 0.05}px)` }}
+              className="glow-card overflow-hidden group md:hover:scale-105 transition-all duration-300" 
             >
-              <div className="relative h-48 overflow-hidden">
+              <div className="relative h-40 sm:h-48 overflow-hidden">
                 <img 
                   src="https://cdn.poehali.dev/files/economica-i-finansy-800x533.jpg" 
                   alt="Экономия на строительстве"
@@ -401,8 +400,8 @@ const Index = () => {
                   style={{ opacity: 0.85 }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                <div className="absolute bottom-4 left-4 w-14 h-14 bg-primary/90 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                  <Icon name="TrendingDown" size={28} className="text-white" />
+                <div className="absolute bottom-3 left-3 w-12 h-12 sm:w-14 sm:h-14 bg-primary/90 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <Icon name="TrendingDown" size={24} className="text-white sm:w-7 sm:h-7" />
                 </div>
               </div>
               <CardHeader className="p-4 sm:p-6">
@@ -411,10 +410,9 @@ const Index = () => {
               </CardHeader>
             </Card>
             <Card 
-              className="glow-card parallax-medium overflow-hidden group" 
-              style={{ transform: `translateY(${scrollY * 0.08}px)` }}
+              className="glow-card overflow-hidden group md:hover:scale-105 transition-all duration-300" 
             >
-              <div className="relative h-48 overflow-hidden">
+              <div className="relative h-40 sm:h-48 overflow-hidden">
                 <img 
                   src="https://cdn.poehali.dev/files/экспертиза.png" 
                   alt="Прохождение экспертизы"
@@ -422,8 +420,8 @@ const Index = () => {
                   style={{ opacity: 0.85 }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                <div className="absolute bottom-4 left-4 w-14 h-14 bg-primary/90 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                  <Icon name="CheckCircle" size={28} className="text-white" />
+                <div className="absolute bottom-3 left-3 w-12 h-12 sm:w-14 sm:h-14 bg-primary/90 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <Icon name="CheckCircle" size={24} className="text-white sm:w-7 sm:h-7" />
                 </div>
               </div>
               <CardHeader className="p-4 sm:p-6">
@@ -432,10 +430,9 @@ const Index = () => {
               </CardHeader>
             </Card>
             <Card 
-              className="glow-card sm:col-span-2 md:col-span-1 parallax-fast overflow-hidden group" 
-              style={{ transform: `translateY(${scrollY * 0.1}px)` }}
+              className="glow-card overflow-hidden group md:hover:scale-105 transition-all duration-300" 
             >
-              <div className="relative h-48 overflow-hidden">
+              <div className="relative h-40 sm:h-48 overflow-hidden">
                 <img 
                   src="https://cdn.poehali.dev/files/230713212132.jpg" 
                   alt="Быстрая разработка проекта"
@@ -443,8 +440,8 @@ const Index = () => {
                   style={{ opacity: 0.85 }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                <div className="absolute bottom-4 left-4 w-14 h-14 bg-primary/90 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                  <Icon name="Calendar" size={28} className="text-white" />
+                <div className="absolute bottom-3 left-3 w-12 h-12 sm:w-14 sm:h-14 bg-primary/90 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <Icon name="Calendar" size={24} className="text-white sm:w-7 sm:h-7" />
                 </div>
               </div>
               <CardHeader className="p-4 sm:p-6">
