@@ -533,7 +533,7 @@ const Index = () => {
                 icon: 'Route', 
                 title: 'Региональные дороги', 
                 desc: 'III категория, межмуниципальные и региональные трассы',
-                image: 'https://cdn.poehali.dev/files/Дороги.png'
+                image: 'https://cdn.poehali.dev/projects/5adabe83-9a88-49bb-ba7c-144288d55800/files/50169ed0-01a1-414c-84d9-add85b850444.jpg'
               },
               { 
                 icon: 'MapPin', 
@@ -545,7 +545,7 @@ const Index = () => {
                 icon: 'Building', 
                 title: 'Городские проезды', 
                 desc: 'Улицы, проезды, парковки, дворовые территории',
-                image: 'https://cdn.poehali.dev/files/город.дорога.jpg'
+                image: 'https://cdn.poehali.dev/projects/5adabe83-9a88-49bb-ba7c-144288d55800/files/c424783e-c3f0-44cc-a7cc-4e4e7566a24a.jpg'
               }
             ].map((type, index) => (
               <Card 
