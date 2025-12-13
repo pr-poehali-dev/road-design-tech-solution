@@ -111,7 +111,7 @@ const Index = () => {
       icon: 'Construction',
       problem: 'Реконструкция без остановки движения',
       solution: 'Проектируем ресайклинг и армирование существующего полотна',
-      image: 'https://cdn.poehali.dev/files/230713212132.jpg'
+      image: 'https://cdn.poehali.dev/files/Армирование.jpg'
     }
   ];
 
