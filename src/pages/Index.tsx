@@ -192,7 +192,7 @@ const Index = () => {
         reduction: '50%',
         time: '1 месяц'
       },
-      image: 'https://cdn.poehali.dev/files/город.дорога.jpg'
+      image: 'https://cdn.poehali.dev/files/m-7-volga.jpg'
     },
     {
       title: 'Подъезд к промзоне',
