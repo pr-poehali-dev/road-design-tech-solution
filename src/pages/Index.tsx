@@ -897,9 +897,17 @@ const Index = () => {
               <h3 className="font-heading font-semibold mb-4">Навигация</h3>
               <div className="space-y-2 text-sm">
                 <a href="#technologies" className="block hover:text-primary transition-colors">Технологии</a>
-                <a href="#calculator" className="block hover:text-primary transition-colors">Калькулятор</a>
                 <a href="#projects" className="block hover:text-primary transition-colors">Проекты</a>
                 <a href="#contact" className="block hover:text-primary transition-colors">Контакты</a>
+                <Button 
+                  onClick={() => window.open('/crm', '_blank')}
+                  variant="outline"
+                  size="sm"
+                  className="mt-4"
+                >
+                  <Icon name="Users" className="mr-2" size={16} />
+                  CRM Система
+                </Button>
               </div>
             </div>
           </div>
