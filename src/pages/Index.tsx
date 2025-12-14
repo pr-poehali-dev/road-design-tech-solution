@@ -20,6 +20,11 @@ const Index = () => {
     roadCategory: ''
   });
   const [showCalcResult, setShowCalcResult] = useState(false);
+  const [showQuoteForm, setShowQuoteForm] = useState(false);
+  const [quoteFormData, setQuoteFormData] = useState({
+    name: '',
+    phone: ''
+  });
   const [formData, setFormData] = useState({
     name: '',
     phone: ''
@@ -353,12 +358,10 @@ const Index = () => {
                 <Button 
                   size="lg" 
                   className="w-full sm:w-auto bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 group touch-manipulation glow-button"
-                  onClick={() => {
-                    document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
+                  onClick={() => setShowQuoteForm(true)}
                 >
-                  <Icon name="Calculator" className="mr-2 group-hover:scale-110 transition-transform" size={16} />
-                  <span className="truncate">Рассчитать экономию</span>
+                  <Icon name="FileText" className="mr-2 group-hover:scale-110 transition-transform" size={16} />
+                  <span className="truncate">Рассчитать стоимость</span>
                 </Button>
                 <Button 
                   size="lg" 
@@ -601,7 +604,7 @@ const Index = () => {
           <div className="relative">
             <div className="absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent hidden lg:block" style={{ transform: 'translateY(-50%)' }} />
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-4">
+            <div className="flex gap-4 overflow-x-auto pb-4">
               {[
                 { 
                   step: '01', 
@@ -641,22 +644,21 @@ const Index = () => {
               ].map((stage, index) => (
                 <Card 
                   key={index}
-                  className="glow-card group relative parallax-medium hover:scale-105 transition-all duration-300"
+                  className="glow-card group relative hover:scale-105 transition-all duration-300 flex-shrink-0 w-56 animate-fade-in"
                   style={{ 
-                    animationDelay: `${index * 0.15}s`,
-                    transform: `translateY(${scrollY * (0.02 + index * 0.003)}px)`
+                    animationDelay: `${index * 0.15}s`
                   }}
                 >
                   <div className={`absolute inset-0 bg-gradient-to-br ${stage.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg`} />
-                  <CardHeader className="relative text-center p-6">
-                    <div className="text-6xl font-black text-primary/10 group-hover:text-primary/20 transition-colors duration-300 mb-2">
+                  <CardHeader className="relative text-center p-4">
+                    <div className="text-4xl font-black text-primary/10 group-hover:text-primary/20 transition-colors duration-300 mb-2">
                       {stage.step}
                     </div>
-                    <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/5 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                      <Icon name={stage.icon as any} size={28} className="text-primary" />
+                    <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/5 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                      <Icon name={stage.icon as any} size={22} className="text-primary" />
                     </div>
-                    <CardTitle className="font-heading text-lg mb-3">{stage.title}</CardTitle>
-                    <CardDescription className="text-sm leading-relaxed">
+                    <CardTitle className="font-heading text-base mb-2">{stage.title}</CardTitle>
+                    <CardDescription className="text-xs leading-relaxed">
                       {stage.desc}
                     </CardDescription>
                   </CardHeader>
@@ -725,124 +727,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="calculator" className="py-24 px-4 bg-gradient-to-b from-secondary/20 to-background">
-        <div className="container mx-auto max-w-4xl">
-          <div className="text-center mb-16 animate-fade-in">
-            <h2 className="font-heading font-bold text-4xl md:text-6xl mb-6">
-              Калькулятор экономии
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              Оцените потенциальную экономию на вашем проекте
-            </p>
-          </div>
-          
-          <Card className="glow-card">
-            <CardHeader>
-              <CardTitle className="font-heading text-2xl">Параметры проекта</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium mb-2">Тип объекта</label>
-                <Select value={calcData.objectType} onValueChange={(value) => setCalcData({...calcData, objectType: value})}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Выберите тип" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="federal">Федеральная трасса</SelectItem>
-                    <SelectItem value="regional">Региональная дорога</SelectItem>
-                    <SelectItem value="local">Местная дорога</SelectItem>
-                    <SelectItem value="industrial">Промышленная дорога</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Протяженность участка: {calcData.length[0]} км
-                </label>
-                <Slider 
-                  value={calcData.length} 
-                  onValueChange={(value) => setCalcData({...calcData, length: value})}
-                  min={1}
-                  max={50}
-                  step={1}
-                  className="py-4"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-2">Тип грунта</label>
-                <Select value={calcData.soilType} onValueChange={(value) => setCalcData({...calcData, soilType: value})}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Выберите тип грунта" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="clay">Глинистые</SelectItem>
-                    <SelectItem value="sand">Песчаные</SelectItem>
-                    <SelectItem value="swamp">Болотистые</SelectItem>
-                    <SelectItem value="permafrost">Вечная мерзлота</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-2">Категория дороги</label>
-                <Select value={calcData.roadCategory} onValueChange={(value) => setCalcData({...calcData, roadCategory: value})}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Выберите категорию" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">I категория</SelectItem>
-                    <SelectItem value="2">II категория</SelectItem>
-                    <SelectItem value="3">III категория</SelectItem>
-                    <SelectItem value="4">IV категория</SelectItem>
-                    <SelectItem value="5">V категория</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <Button 
-                onClick={handleCalculate} 
-                className="w-full glow-button"
-                size="lg"
-                disabled={!calcData.objectType || !calcData.soilType || !calcData.roadCategory}
-              >
-                <Icon name="Calculator" className="mr-2" />
-                Рассчитать экономию
-              </Button>
-              
-              {showCalcResult && (
-                <div className="mt-8 p-6 bg-primary/10 border-2 border-primary rounded-lg animate-scale-in">
-                  <h3 className="font-heading text-2xl mb-4 text-primary">Оценка экономии</h3>
-                  <div className="grid sm:grid-cols-3 gap-4">
-                    <div>
-                      <div className="text-3xl font-bold text-primary">
-                        {(calcData.length[0] * 15).toFixed(0)} млн ₽
-                      </div>
-                      <div className="text-sm text-muted-foreground">Экономия на материалах</div>
-                    </div>
-                    <div>
-                      <div className="text-3xl font-bold text-primary">
-                        {Math.min(25 + calcData.length[0] * 2, 35)}%
-                      </div>
-                      <div className="text-sm text-muted-foreground">Снижение стоимости</div>
-                    </div>
-                    <div>
-                      <div className="text-3xl font-bold text-primary">
-                        {Math.max(2, Math.ceil(calcData.length[0] / 3))} нед
-                      </div>
-                      <div className="text-sm text-muted-foreground">Экономия времени</div>
-                    </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-4">
-                    * Оценка предварительная, для точного расчета требуется анализ проектных данных
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </section>
+
 
       <section id="projects" className="py-24 px-4">
         <div className="container mx-auto">
@@ -1212,6 +1097,73 @@ const Index = () => {
                   disabled={!isTimePopupValid((document.querySelector('input[name="name"]') as HTMLInputElement)?.value || '')}
                 >
                   Заказать звонок
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {showQuoteForm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+          <Card className="w-full max-w-md glow-card">
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-2xl">Оставьте заявку</CardTitle>
+                <Button variant="ghost" size="icon" onClick={() => setShowQuoteForm(false)}>
+                  <Icon name="X" />
+                </Button>
+              </div>
+              <CardDescription>
+                Подготовим КП в течение нескольких часов. На любые виды дорожного проектирования!
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                saveLead({
+                  name: quoteFormData.name,
+                  email: '',
+                  phone: quoteFormData.phone,
+                  type: 'Заявка на расчет стоимости',
+                  source: 'Форма расчета стоимости'
+                });
+                setShowQuoteForm(false);
+                setQuoteFormData({ name: '', phone: '' });
+                alert('Спасибо! Мы свяжемся с вами в течение нескольких часов.');
+              }} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Ваше имя</label>
+                  <Input 
+                    value={quoteFormData.name}
+                    onChange={(e) => setQuoteFormData({...quoteFormData, name: e.target.value})}
+                    placeholder="Иван Иванов" 
+                    required 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Ваш телефон</label>
+                  <InputMask
+                    mask="+7 (999) 999-99-99"
+                    value={quoteFormData.phone}
+                    onChange={(e) => setQuoteFormData({...quoteFormData, phone: e.target.value})}
+                  >
+                    {(inputProps: any) => (
+                      <Input 
+                        {...inputProps}
+                        type="tel"
+                        placeholder="+7 (___) ___-__-__"
+                        required
+                      />
+                    )}
+                  </InputMask>
+                </div>
+                <Button 
+                  type="submit" 
+                  className="w-full glow-button"
+                  disabled={!quoteFormData.name.trim() || !isPhoneValid(quoteFormData.phone)}
+                >
+                  Отправить заявку
                 </Button>
               </form>
             </CardContent>
