@@ -1,0 +1,99 @@
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import Icon from '@/components/ui/icon';
+import { useNavigate } from 'react-router-dom';
+
+interface CRMHeaderProps {
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  onCreateLead: () => void;
+  onToggleColorPicker: () => void;
+  onLogout: () => void;
+  totalLeads: number;
+  activeLeads: number;
+  conversionRate: string;
+  totalBudget: number;
+}
+
+export const CRMHeader = ({
+  searchQuery,
+  setSearchQuery,
+  onCreateLead,
+  onToggleColorPicker,
+  onLogout,
+  totalLeads,
+  activeLeads,
+  conversionRate,
+  totalBudget
+}: CRMHeaderProps) => {
+  const navigate = useNavigate();
+
+  return (
+    <>
+      <header className="border-b border-cyan-500/30 bg-slate-800/80 backdrop-blur-lg sticky top-0 z-40 shadow-[0_0_20px_rgba(6,182,212,0.2)]">
+        <div className="px-4 py-3">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
+              <h1 className="font-semibold text-lg sm:text-xl bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">DEOD CRM</h1>
+              <Button 
+                onClick={onCreateLead}
+                size="sm"
+                className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 h-8 text-xs ml-auto sm:ml-0 touch-manipulation shadow-[0_0_15px_rgba(6,182,212,0.3)]"
+              >
+                <Icon name="Plus" size={14} className="mr-1" />
+                <span className="hidden sm:inline">Новая сделка</span>
+                <span className="sm:hidden">Создать</span>
+              </Button>
+              <Button 
+                onClick={onToggleColorPicker}
+                size="sm"
+                variant="outline"
+                className="h-8 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 touch-manipulation"
+              >
+                <Icon name="Palette" size={14} />
+              </Button>
+            </div>
+            <div className="flex gap-2 items-center w-full sm:w-auto">
+              <div className="relative flex-1 sm:flex-initial">
+                <Icon name="Search" size={16} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Input
+                  placeholder="Поиск..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 w-full sm:w-48 h-8 text-sm bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                />
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="h-8 w-8 p-0 touch-manipulation text-cyan-400 hover:bg-cyan-500/10">
+                <Icon name="Home" size={16} />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={onLogout} className="h-8 w-8 p-0 touch-manipulation text-cyan-400 hover:bg-cyan-500/10">
+                <Icon name="LogOut" size={16} />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="bg-slate-800/50 border-b border-cyan-500/20 px-4 py-4 overflow-x-auto backdrop-blur-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 min-w-max sm:min-w-0">
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg p-2 sm:p-3 border border-cyan-500/20 min-w-[120px] shadow-[0_0_15px_rgba(6,182,212,0.1)]">
+            <div className="text-xs text-cyan-400 mb-1">Всего сделок</div>
+            <div className="text-xl sm:text-2xl font-semibold text-white">{totalLeads}</div>
+          </div>
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg p-2 sm:p-3 border border-cyan-500/20 min-w-[120px] shadow-[0_0_15px_rgba(6,182,212,0.1)]">
+            <div className="text-xs text-cyan-400 mb-1">В работе</div>
+            <div className="text-xl sm:text-2xl font-semibold text-white">{activeLeads}</div>
+          </div>
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg p-2 sm:p-3 border border-cyan-500/20 min-w-[120px] shadow-[0_0_15px_rgba(6,182,212,0.1)]">
+            <div className="text-xs text-cyan-400 mb-1">Конверсия</div>
+            <div className="text-xl sm:text-2xl font-semibold text-emerald-400">{conversionRate}%</div>
+          </div>
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg p-2 sm:p-3 border border-cyan-500/20 min-w-[120px] shadow-[0_0_15px_rgba(6,182,212,0.1)]">
+            <div className="text-xs text-cyan-400 mb-1">Бюджет</div>
+            <div className="text-xl sm:text-2xl font-semibold text-white">{(totalBudget / 1000000).toFixed(1)}M ₽</div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
