@@ -667,8 +667,16 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="technologies" className="py-24 px-4">
-        <div className="container mx-auto max-w-6xl">
+      <section id="technologies" className="py-24 px-4 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-80 z-0">
+          <img 
+            src="https://cdn.poehali.dev/files/стабил.jpg" 
+            alt="Стабилизация грунтов"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-background/70" />
+        </div>
+        <div className="container mx-auto max-w-6xl relative z-10">
           <div className="text-center mb-16 animate-fade-in">
             <h2 className="font-heading font-bold text-4xl md:text-6xl mb-6">
               Технологии стабилизации
