@@ -102,7 +102,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             telegram_token = os.environ.get('TELEGRAM_BOT_TOKEN', '')
             telegram_chat_id = os.environ.get('TELEGRAM_CHAT_ID', '')
             
-            print(f"Telegram credentials check - Token: {'present' if telegram_token else 'missing'}, Chat ID: {telegram_chat_id}")
+            print(f"[DEBUG] Telegram config - Token exists: {bool(telegram_token)}, Chat ID: {telegram_chat_id}")
             
             if telegram_token and telegram_chat_id:
                 telegram_message = f"""🔔 Новая заявка #{lead_id}
