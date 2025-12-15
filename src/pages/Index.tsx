@@ -310,7 +310,8 @@ const Index = () => {
               saveLead({
                 type: 'Консультация',
                 name: 'Не указано',
-                email: 'Не указано',
+                phone: '',
+                email: '',
                 message: 'Клик на кнопку "Консультация" в header',
                 source: 'Header кнопка'
               });
@@ -377,11 +378,11 @@ const Index = () => {
               </div>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 text-white/90 text-sm sm:text-base">
                 <a 
-                  href="tel:+79011478767" 
+                  href="tel:+79955556231" 
                   className="flex items-center gap-2 hover:text-primary transition-colors group"
                 >
                   <Icon name="Phone" size={18} className="group-hover:scale-110 transition-transform" />
-                  <span>+7 (901) 147-87-67</span>
+                  <span>+7 (995) 555-62-31</span>
                 </a>
                 <a 
                   href="mailto:infosppi.ooo@mail.ru" 
@@ -1130,10 +1131,11 @@ const Index = () => {
               <form onSubmit={(e) => {
                 e.preventDefault();
                 saveLead({
-                  name: quoteFormData.name,
-                  email: '',
-                  phone: quoteFormData.phone,
                   type: 'Заявка на расчет стоимости',
+                  name: quoteFormData.name,
+                  phone: quoteFormData.phone,
+                  email: '',
+                  message: 'Запрос коммерческого предложения',
                   source: 'Форма расчета стоимости'
                 });
                 setShowQuoteForm(false);
