@@ -61,16 +61,35 @@ const Index = () => {
   const [exitPopupPhone, setExitPopupPhone] = useState('');
   const [timePopupPhone, setTimePopupPhone] = useState('');
 
-  const saveLead = (leadData: any) => {
-    const leads = JSON.parse(localStorage.getItem('crm_leads') || '[]');
-    const newLead = {
-      id: Date.now().toString(),
-      ...leadData,
-      createdAt: new Date().toISOString(),
-      status: 'new'
-    };
-    leads.push(newLead);
-    localStorage.setItem('crm_leads', JSON.stringify(leads));
+  const saveLead = async (leadData: any) => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/2c86d047-a46f-48f8-86f6-21557b41ca9b', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(leadData)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to save lead');
+      }
+      
+      const result = await response.json();
+      console.log('Lead saved:', result);
+    } catch (error) {
+      console.error('Error saving lead:', error);
+      // Fallback: сохраняем локально если backend недоступен
+      const leads = JSON.parse(localStorage.getItem('crm_leads') || '[]');
+      const newLead = {
+        id: Date.now().toString(),
+        ...leadData,
+        createdAt: new Date().toISOString(),
+        status: 'new'
+      };
+      leads.push(newLead);
+      localStorage.setItem('crm_leads', JSON.stringify(leads));
+    }
   };
   
   useEffect(() => {

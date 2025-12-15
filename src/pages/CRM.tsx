@@ -58,12 +58,26 @@ const CRM = () => {
     }
   }, []);
 
-  const loadData = () => {
-    const savedLeads = localStorage.getItem('crm_leads');
+  const loadData = async () => {
+    try {
+      // Загружаем заявки из backend
+      const response = await fetch('https://functions.poehali.dev/2c86d047-a46f-48f8-86f6-21557b41ca9b');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.leads) {
+          setLeads(data.leads);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading leads from backend:', error);
+      // Fallback: загружаем из localStorage
+      const savedLeads = localStorage.getItem('crm_leads');
+      if (savedLeads) setLeads(JSON.parse(savedLeads));
+    }
+    
+    // Задачи и активности пока остаются в localStorage
     const savedTasks = localStorage.getItem('crm_tasks');
     const savedActivities = localStorage.getItem('crm_activities');
-    
-    if (savedLeads) setLeads(JSON.parse(savedLeads));
     if (savedTasks) setTasks(JSON.parse(savedTasks));
     if (savedActivities) setActivities(JSON.parse(savedActivities));
   };

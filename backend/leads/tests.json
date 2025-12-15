@@ -1,0 +1,42 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS request for CORS",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedHeaders": {
+        "Access-Control-Allow-Origin": "*"
+      }
+    },
+    {
+      "name": "GET all leads",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "leads": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "POST new lead",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "type": "Тестовая заявка",
+        "name": "Иван Тестов",
+        "phone": "+7 (999) 999-99-99",
+        "email": "test@example.com",
+        "message": "Тестовое сообщение",
+        "source": "Test"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "leadId": "number"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
