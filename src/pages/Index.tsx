@@ -60,6 +60,7 @@ const Index = () => {
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
   const [exitPopupPhone, setExitPopupPhone] = useState('');
   const [timePopupPhone, setTimePopupPhone] = useState('');
+  const [showThankYou, setShowThankYou] = useState(false);
 
   const saveLead = async (leadData: any) => {
     try {
@@ -249,8 +250,9 @@ const Index = () => {
       message: '',
       source: 'Форма обратной связи'
     });
-    alert('Спасибо! Ваша заявка отправлена. Мы свяжемся с вами в течение 24 часов.');
     setFormData({ name: '', phone: '' });
+    setShowThankYou(true);
+    setTimeout(() => setShowThankYou(false), 5000);
   };
   
   const handleChatNext = () => {
@@ -267,6 +269,9 @@ const Index = () => {
       });
       setShowChatbot(false);
       setChatStep(0);
+      setChatData({ projectType: '', timeline: '', name: '', phone: '' });
+      setShowThankYou(true);
+      setTimeout(() => setShowThankYou(false), 5000);
     }
   };
   
@@ -281,9 +286,10 @@ const Index = () => {
       message: 'Запрос презентации технологий стабилизации',
       source: 'Exit popup'
     });
-    alert('Презентация отправлена на вашу почту!');
     setShowExitPopup(false);
     setExitPopupPhone('');
+    setShowThankYou(true);
+    setTimeout(() => setShowThankYou(false), 5000);
   };
   
   const handleTimePopupSubmit = (e: React.FormEvent) => {
@@ -297,9 +303,10 @@ const Index = () => {
       message: 'Запрос на бесплатную консультацию',
       source: 'Time popup'
     });
-    alert('Спасибо! Мы свяжемся с вами в ближайшее время.');
     setShowTimePopup(false);
     setTimePopupPhone('');
+    setShowThankYou(true);
+    setTimeout(() => setShowThankYou(false), 5000);
   };
   
   const isFormValid = formData.name.trim() !== '' && isPhoneValid(formData.phone);
@@ -1159,7 +1166,8 @@ const Index = () => {
                 });
                 setShowQuoteForm(false);
                 setQuoteFormData({ name: '', phone: '' });
-                alert('Спасибо! Мы свяжемся с вами в течение нескольких часов.');
+                setShowThankYou(true);
+                setTimeout(() => setShowThankYou(false), 5000);
               }} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">Ваше имя</label>
@@ -1195,6 +1203,28 @@ const Index = () => {
                   Отправить заявку
                 </Button>
               </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {showThankYou && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+          <Card className="w-full max-w-md glow-card text-center">
+            <CardContent className="pt-12 pb-12">
+              <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Icon name="CheckCircle2" size={48} className="text-green-500" />
+              </div>
+              <h2 className="font-heading font-bold text-3xl mb-4">Спасибо!</h2>
+              <p className="text-lg text-muted-foreground mb-2">Ваша заявка успешно отправлена</p>
+              <p className="text-sm text-muted-foreground">Мы свяжемся с вами в ближайшее время</p>
+              <Button 
+                onClick={() => setShowThankYou(false)}
+                className="mt-8 glow-button"
+                size="lg"
+              >
+                Закрыть
+              </Button>
             </CardContent>
           </Card>
         </div>
