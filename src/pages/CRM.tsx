@@ -156,7 +156,7 @@ const CRM = () => {
     setShowCreateLead(false);
   };
 
-  const updateLeadStatus = (id: string, newStatus: Lead['status']) => {
+  const updateLeadStatus = async (id: string, newStatus: Lead['status']) => {
     const updatedLeads = leads.map(lead => 
       lead.id === id ? { ...lead, status: newStatus } : lead
     );
@@ -174,12 +174,23 @@ const CRM = () => {
     
     saveData(updatedLeads, tasks, updatedActivities);
     
+    // Синхронизируем с backend
+    try {
+      await fetch('https://functions.poehali.dev/2c86d047-a46f-48f8-86f6-21557b41ca9b', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: newStatus })
+      });
+    } catch (error) {
+      console.error('Failed to update lead status:', error);
+    }
+    
     if (selectedLead?.id === id) {
       setSelectedLead({ ...selectedLead, status: newStatus });
     }
   };
 
-  const deleteLead = (id: string) => {
+  const deleteLead = async (id: string) => {
     if (!confirm('Удалить этот лид?')) return;
     
     const updatedLeads = leads.filter(lead => lead.id !== id);
@@ -190,6 +201,15 @@ const CRM = () => {
     setTasks(updatedTasks);
     setActivities(updatedActivities);
     saveData(updatedLeads, updatedTasks, updatedActivities);
+    
+    // Удаляем из backend
+    try {
+      await fetch(`https://functions.poehali.dev/2c86d047-a46f-48f8-86f6-21557b41ca9b?id=${id}`, {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      console.error('Failed to delete lead:', error);
+    }
     
     if (selectedLead?.id === id) {
       setShowLeadCard(false);
