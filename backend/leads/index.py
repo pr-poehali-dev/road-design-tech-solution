@@ -102,6 +102,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             telegram_token = os.environ.get('TELEGRAM_BOT_TOKEN', '')
             telegram_chat_id = os.environ.get('TELEGRAM_CHAT_ID', '')
             
+            print(f"Telegram credentials check - Token: {'present' if telegram_token else 'missing'}, Chat ID: {telegram_chat_id}")
+            
             if telegram_token and telegram_chat_id:
                 telegram_message = f"""🔔 Новая заявка #{lead_id}
 
@@ -124,9 +126,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     }).encode('utf-8')
                     
                     req = urllib.request.Request(telegram_url, data=telegram_data)
-                    urllib.request.urlopen(req)
+                    response = urllib.request.urlopen(req)
+                    response_data = response.read().decode('utf-8')
+                    print(f"Telegram send success to chat {telegram_chat_id}: {response_data}")
                 except Exception as e:
-                    print(f"Telegram error: {str(e)}")
+                    print(f"Telegram error for chat {telegram_chat_id}: {str(e)}")
             
             return {
                 'statusCode': 200,
