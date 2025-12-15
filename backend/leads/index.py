@@ -105,32 +105,36 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             print(f"[DEBUG] Telegram config - Token exists: {bool(telegram_token)}, Chat ID: {telegram_chat_id}")
             
             if telegram_token and telegram_chat_id:
-                telegram_message = f"""🔔 Новая заявка #{lead_id}
+                telegram_message = f"""Новая заявка #{lead_id}
 
-📋 Тип: {lead_type}
-👤 Имя: {name}
-📞 Телефон: {phone}
-✉️ Email: {email}
-🏢 Компания: {company}
-💬 Сообщение: {message}
-📍 Источник: {source}
+Тип: {lead_type}
+Имя: {name}
+Телефон: {phone}
+Email: {email}
+Компания: {company}
+Сообщение: {message}
+Источник: {source}
 
-⏰ {datetime.now().strftime('%d.%m.%Y %H:%M')}"""
+Время: {datetime.now().strftime('%d.%m.%Y %H:%M')}"""
                 
                 try:
                     telegram_url = f"https://api.telegram.org/bot{telegram_token}/sendMessage"
                     telegram_data = urllib.parse.urlencode({
                         'chat_id': telegram_chat_id,
-                        'text': telegram_message,
-                        'parse_mode': 'HTML'
+                        'text': telegram_message
                     }).encode('utf-8')
+                    
+                    print(f"[DEBUG] Sending to Telegram: {telegram_url[:50]}... with chat_id={telegram_chat_id}")
                     
                     req = urllib.request.Request(telegram_url, data=telegram_data)
                     response = urllib.request.urlopen(req)
                     response_data = response.read().decode('utf-8')
-                    print(f"Telegram send success to chat {telegram_chat_id}: {response_data}")
+                    print(f"[SUCCESS] Telegram send success: {response_data}")
+                except urllib.error.HTTPError as e:
+                    error_body = e.read().decode('utf-8')
+                    print(f"[ERROR] Telegram HTTP {e.code}: {error_body}")
                 except Exception as e:
-                    print(f"Telegram error for chat {telegram_chat_id}: {str(e)}")
+                    print(f"[ERROR] Telegram exception: {type(e).__name__}: {str(e)}")
             
             return {
                 'statusCode': 200,
