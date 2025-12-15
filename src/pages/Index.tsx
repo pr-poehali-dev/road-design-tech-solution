@@ -849,9 +849,9 @@ const Index = () => {
               <div className="mt-8 pt-8 border-t border-border text-center space-y-4">
                 <p className="text-sm text-muted-foreground">Или свяжитесь с нами напрямую:</p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <a href="tel:+79011478767" className="flex items-center gap-2 text-primary hover:underline">
+                  <a href="tel:+79955556231" className="flex items-center gap-2 text-primary hover:underline">
                     <Icon name="Phone" size={18} />
-                    +7 (901) 147-87-67
+                    +7 (995) 555-62-31
                   </a>
                   <a href="mailto:infosppi.ooo@mail.ru" className="flex items-center gap-2 text-primary hover:underline">
                     <Icon name="Mail" size={18} />
@@ -882,9 +882,9 @@ const Index = () => {
             <div>
               <h3 className="font-heading font-semibold mb-4">Контакты</h3>
               <div className="space-y-2 text-sm">
-                <a href="tel:+79011478767" className="flex items-center gap-2 hover:text-primary transition-colors">
+                <a href="tel:+79955556231" className="flex items-center gap-2 hover:text-primary transition-colors">
                   <Icon name="Phone" size={16} />
-                  +7 (901) 147-87-67
+                  +7 (995) 555-62-31
                 </a>
                 <a href="mailto:infosppi.ooo@mail.ru" className="flex items-center gap-2 hover:text-primary transition-colors">
                   <Icon name="Mail" size={16} />
