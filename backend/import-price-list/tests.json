@@ -1,0 +1,16 @@
+{
+  "tests": [
+    {
+      "name": "Импорт прайс-листа",
+      "method": "POST",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "message": "string",
+        "inserted": "number",
+        "total": "number"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
