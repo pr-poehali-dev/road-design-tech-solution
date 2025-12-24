@@ -10,6 +10,35 @@ import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import InputMask from 'react-input-mask';
 
+const AdminLink = () => {
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+        setShow(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, []);
+
+  if (!show) return null;
+
+  return (
+    <div className="fixed bottom-4 right-4 z-50">
+      <Button
+        onClick={() => window.location.href = '/admin'}
+        variant="outline"
+        className="shadow-lg"
+      >
+        <Icon name="Settings" size={16} className="mr-2" />
+        Админ-панель
+      </Button>
+    </div>
+  );
+};
+
 const Index = () => {
   const [activeChallenge, setActiveChallenge] = useState<string | null>(null);
   const [activeTech, setActiveTech] = useState('cement');
@@ -1229,6 +1258,7 @@ const Index = () => {
           </Card>
         </div>
       )}
+      <AdminLink />
     </div>
   );
 };
