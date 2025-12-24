@@ -62,8 +62,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             price_list_text += f"  Минимальная сумма заказа: {min_order_sum:,} руб.\n"
         price_list_text += "\n"
     
-    # Генерируем ТЗ и КП через OpenAI
-    client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
+    # Генерируем ТЗ и КП через OpenRouter
+    client = OpenAI(
+        api_key=os.environ['OPENROUTER_API_KEY'],
+        base_url='https://openrouter.ai/api/v1'
+    )
     
     prompt = f"""Ты - менеджер студии DEAD SPACE. Клиент оставил заявку на проект.
 
@@ -94,7 +97,7 @@ Email: {email or 'Не указан'}
 - Все цены в рублях"""
 
     response = client.chat.completions.create(
-        model='gpt-4o-mini',
+        model='openai/gpt-4o-mini',
         messages=[{'role': 'user', 'content': prompt}],
         temperature=0.7,
         response_format={"type": "json_object"}
