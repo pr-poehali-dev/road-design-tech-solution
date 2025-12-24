@@ -2,7 +2,7 @@ import json
 import os
 from typing import Dict, Any
 import psycopg2
-from openai import OpenAI
+import requests
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
@@ -62,12 +62,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             price_list_text += f"  Минимальная сумма заказа: {min_order_sum:,} руб.\n"
         price_list_text += "\n"
     
-    # Генерируем ТЗ и КП через OpenRouter
-    client = OpenAI(
-        api_key=os.environ['OPENROUTER_API_KEY'],
-        base_url='https://openrouter.ai/api/v1'
-    )
-    
+    # Генерируем ТЗ и КП через YandexGPT
     prompt = f"""Ты - менеджер студии DEAD SPACE. Клиент оставил заявку на проект.
 
 Имя клиента: {client_name or 'Не указано'}
@@ -96,14 +91,40 @@ Email: {email or 'Не указан'}
 - КП должно быть профессиональным и понятным
 - Все цены в рублях"""
 
-    response = client.chat.completions.create(
-        model='openai/gpt-4o-mini',
-        messages=[{'role': 'user', 'content': prompt}],
-        temperature=0.7,
-        response_format={"type": "json_object"}
+    headers = {
+        'Authorization': f'Api-Key {os.environ["YANDEXGPT_API_KEY"]}',
+        'Content-Type': 'application/json'
+    }
+    
+    payload = {
+        'modelUri': 'gpt://b1gqscctbvd0n1f99m02/yandexgpt-lite',
+        'completionOptions': {
+            'stream': False,
+            'temperature': 0.7,
+            'maxTokens': 4000
+        },
+        'messages': [
+            {'role': 'user', 'text': prompt}
+        ]
+    }
+    
+    response = requests.post(
+        'https://llm.api.cloud.yandex.net/foundationModels/v1/completion',
+        headers=headers,
+        json=payload
     )
     
-    result = json.loads(response.choices[0].message.content)
+    response.raise_for_status()
+    yandex_result = response.json()
+    result_text = yandex_result['result']['alternatives'][0]['message']['text']
+    
+    # Парсим JSON из ответа (может быть обёрнут в markdown ```json)
+    if '```json' in result_text:
+        result_text = result_text.split('```json')[1].split('```')[0].strip()
+    elif '```' in result_text:
+        result_text = result_text.split('```')[1].split('```')[0].strip()
+    
+    result = json.loads(result_text)
     
     return {
         'statusCode': 200,
