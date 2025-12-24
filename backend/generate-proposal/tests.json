@@ -1,7 +1,7 @@
 {
   "tests": [
     {
-      "name": "Генерация ТЗ и КП",
+      "name": "Генерация ТЗ и КП через YandexGPT",
       "method": "POST",
       "path": "/",
       "body": {

@@ -4,12 +4,9 @@ from typing import Dict, Any
 import psycopg2
 import requests
 
+
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
-    '''
-    Генерирует ТЗ и КП на основе описания проекта от клиента
-    Args: event - dict с httpMethod, body (client_name, project_description, email, phone)
-    Returns: HTTP response с ТЗ и КП
-    '''
+    '''Генерирует ТЗ и КП на основе описания проекта клиента через YandexGPT'''
     method: str = event.get('httpMethod', 'POST')
     
     if method == 'OPTIONS':
@@ -21,14 +18,16 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'Access-Control-Allow-Headers': 'Content-Type',
                 'Access-Control-Max-Age': '86400'
             },
-            'body': ''
+            'body': '',
+            'isBase64Encoded': False
         }
     
     if method != 'POST':
         return {
             'statusCode': 405,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': 'Method not allowed'})
+            'body': json.dumps({'error': 'Method not allowed'}),
+            'isBase64Encoded': False
         }
     
     body_data = json.loads(event.get('body', '{}'))
@@ -41,7 +40,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         return {
             'statusCode': 400,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': 'Описание проекта обязательно'})
+            'body': json.dumps({'error': 'Описание проекта обязательно'}),
+            'isBase64Encoded': False
         }
     
     # Получаем прайс-лист из БД
@@ -96,8 +96,9 @@ Email: {email or 'Не указан'}
         'Content-Type': 'application/json'
     }
     
+    folder_id = os.environ['YANDEX_FOLDER_ID']
     payload = {
-        'modelUri': 'gpt://b1gqscctbvd0n1f99m02/yandexgpt-lite',
+        'modelUri': f'gpt://{folder_id}/yandexgpt-lite',
         'completionOptions': {
             'stream': False,
             'temperature': 0.7,
@@ -132,5 +133,6 @@ Email: {email or 'Не указан'}
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*'
         },
-        'body': json.dumps(result, ensure_ascii=False)
+        'body': json.dumps(result, ensure_ascii=False),
+        'isBase64Encoded': False
     }
