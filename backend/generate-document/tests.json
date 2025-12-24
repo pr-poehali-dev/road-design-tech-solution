@@ -1,0 +1,51 @@
+{
+  "tests": [
+    {
+      "name": "Генерация раздела ПЗ",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "projectData": {
+          "name": "Жилой дом",
+          "address": "г. Москва",
+          "objectType": "Многоквартирный жилой дом",
+          "area": "5000",
+          "floors": "10",
+          "sections": "2",
+          "groundType": "Суглинок",
+          "seismicity": "6"
+        },
+        "section": "ПЗ",
+        "sectionName": "Пояснительная записка"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "content": "string",
+        "section": "ПЗ"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Генерация раздела КР",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "projectData": {
+          "name": "Офисное здание",
+          "objectType": "Административное здание",
+          "floors": "5",
+          "groundType": "Песок",
+          "seismicity": "7"
+        },
+        "section": "КР",
+        "sectionName": "Конструктивные решения"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "content": "string",
+        "section": "КР"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
