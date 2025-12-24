@@ -1,0 +1,23 @@
+{
+  "tests": [
+    {
+      "name": "Генерация ТЗ и КП",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "client_name": "Тестовый клиент",
+        "project_description": "Нужен лендинг для IT-компании с формой обратной связи",
+        "email": "test@example.com",
+        "phone": "+7 999 999-99-99"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "technical_specification": "string",
+        "proposal": "string",
+        "total_price_min": "number",
+        "total_price_max": "number"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
