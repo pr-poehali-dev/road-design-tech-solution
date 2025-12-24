@@ -9,10 +9,10 @@ import Icon from '@/components/ui/icon';
 import { Lead } from './CRMKanban';
 
 interface LeadsTableProps {
-  onGenerateProposal: (lead: Lead) => void;
+  onOpenProject: (lead: Lead) => void;
 }
 
-export const LeadsTable = ({ onGenerateProposal }: LeadsTableProps) => {
+export const LeadsTable = ({ onOpenProject }: LeadsTableProps) => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -159,11 +159,11 @@ export const LeadsTable = ({ onGenerateProposal }: LeadsTableProps) => {
                     <TableCell className="text-right">
                       <Button
                         size="sm"
-                        onClick={() => onGenerateProposal(lead)}
+                        onClick={() => onOpenProject(lead)}
                         disabled={lead.status === 'closed-won' || lead.status === 'closed-lost'}
                       >
-                        <Icon name="FileText" size={14} className="mr-1" />
-                        ТЗ/КП
+                        <Icon name="Folder" size={14} className="mr-1" />
+                        Открыть
                       </Button>
                     </TableCell>
                   </TableRow>

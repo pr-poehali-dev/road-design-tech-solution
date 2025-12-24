@@ -6,15 +6,17 @@ import Icon from '@/components/ui/icon';
 import { Dashboard } from '@/components/crm/Dashboard';
 import { LeadsTable } from '@/components/crm/LeadsTable';
 import { PriceListUpload } from '@/components/crm/PriceListUpload';
-import { ProposalGenerator } from '@/components/crm/ProposalGenerator';
+import { ProjectCard } from '@/components/crm/ProjectCard';
 import { Lead } from '@/components/crm/CRMKanban';
+import { useToast } from '@/hooks/use-toast';
 
 const Admin = () => {
+  const { toast } = useToast();
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem('crm_auth') === 'authenticated';
   });
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [showProposalModal, setShowProposalModal] = useState(false);
+  const [showProjectCard, setShowProjectCard] = useState(false);
 
   const handleLogin = () => {
     localStorage.setItem('crm_auth', 'authenticated');
@@ -26,9 +28,25 @@ const Admin = () => {
     setIsAuthenticated(false);
   };
 
-  const handleGenerateProposal = (lead: Lead) => {
+  const handleOpenProject = (lead: Lead) => {
     setSelectedLead(lead);
-    setShowProposalModal(true);
+    setShowProjectCard(true);
+  };
+
+  const handleGenerateSpec = async (data: any) => {
+    toast({
+      title: 'Генерация ТЗ...',
+      description: 'YandexGPT создаёт техническое задание'
+    });
+    // TODO: Вызов backend для генерации ТЗ
+  };
+
+  const handleGenerateProposal = async (data: any) => {
+    toast({
+      title: 'Генерация КП...',
+      description: 'YandexGPT создаёт коммерческое предложение'
+    });
+    // TODO: Вызов backend для генерации КП
   };
 
   if (!isAuthenticated) {
@@ -85,7 +103,7 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="leads" className="space-y-6">
-            <LeadsTable onGenerateProposal={handleGenerateProposal} />
+            <LeadsTable onOpenProject={handleOpenProject} />
           </TabsContent>
 
           <TabsContent value="price" className="space-y-6">
@@ -94,13 +112,15 @@ const Admin = () => {
         </Tabs>
       </main>
 
-      <ProposalGenerator
+      <ProjectCard
         lead={selectedLead}
-        open={showProposalModal}
+        open={showProjectCard}
         onClose={() => {
-          setShowProposalModal(false);
+          setShowProjectCard(false);
           setSelectedLead(null);
         }}
+        onGenerateSpec={handleGenerateSpec}
+        onGenerateProposal={handleGenerateProposal}
       />
     </div>
   );

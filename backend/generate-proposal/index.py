@@ -31,16 +31,38 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
     
     body_data = json.loads(event.get('body', '{}'))
+    
+    # Базовые данные клиента
     client_name = body_data.get('client_name', '')
-    project_description = body_data.get('project_description', '')
     email = body_data.get('email', '')
     phone = body_data.get('phone', '')
     
-    if not project_description:
+    # Данные для ТЗ
+    spec_data = body_data.get('spec_data', {})
+    object_type = spec_data.get('objectType', '')
+    address = spec_data.get('address', '')
+    area = spec_data.get('area', '')
+    floors = spec_data.get('floors', '')
+    purpose = spec_data.get('purpose', '')
+    soil_type = spec_data.get('soilType', '')
+    seismicity = spec_data.get('seismicity', '')
+    climate = spec_data.get('climate', '')
+    requirements = spec_data.get('requirements', '')
+    
+    # Данные для КП
+    proposal_data = body_data.get('proposal_data', {})
+    project_name = proposal_data.get('projectName', '')
+    sections = proposal_data.get('sections', [])
+    timeline = proposal_data.get('timeline', '')
+    
+    # Для обратной совместимости
+    project_description = body_data.get('project_description', '')
+    
+    if not (object_type or project_description):
         return {
             'statusCode': 400,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': 'Описание проекта обязательно'}),
+            'body': json.dumps({'error': 'Укажите тип объекта или описание проекта'}),
             'isBase64Encoded': False
         }
     
@@ -62,34 +84,58 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             price_list_text += f"  Минимальная сумма заказа: {min_order_sum:,} руб.\n"
         price_list_text += "\n"
     
+    # Формируем детальное описание объекта
+    object_description = ''
+    if object_type or address:
+        object_description = f"""
+**ДАННЫЕ ОБЪЕКТА:**
+- Тип объекта: {object_type or 'Не указан'}
+- Адрес строительства: {address or 'Не указан'}
+- Общая площадь: {area + ' м²' if area else 'Не указана'}
+- Этажность: {floors or 'Не указана'}
+- Назначение: {purpose or 'Не указано'}
+- Тип грунта: {soil_type or 'Не указан'}
+- Сейсмичность: {seismicity + ' баллов' if seismicity else 'Не указана'}
+- Климатический район: {climate or 'Не указан'}
+- Особые требования: {requirements or 'Нет'}
+"""
+    elif project_description:
+        object_description = f"Описание проекта: {project_description}"
+    
     # Генерируем ТЗ и КП через YandexGPT
-    prompt = f"""Ты - менеджер студии DEAD SPACE. Клиент оставил заявку на проект.
+    prompt = f"""Ты - главный инженер проектного института DEAD SPACE. Клиент оставил заявку на проектирование.
 
-Имя клиента: {client_name or 'Не указано'}
+**ДАННЫЕ ЗАКАЗЧИКА:**
+Компания/ФИО: {client_name or 'Не указано'}
 Email: {email or 'Не указан'}
 Телефон: {phone or 'Не указан'}
-Описание проекта: {project_description}
 
+{object_description}
+
+**ПРАЙС-ЛИСТ УСЛУГ:**
 {price_list_text}
 
-Твоя задача:
-1. Создать детальное ТЕХНИЧЕСКОЕ ЗАДАНИЕ на основе описания клиента
-2. Создать КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ с расчётом стоимости
+**ТВОЯ ЗАДАЧА:**
+1. Создать ТЕХНИЧЕСКОЕ ЗАДАНИЕ на проектирование объекта строительства согласно ГОСТ Р 21.1101-2013
+2. Создать КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ с детальной сметой по разделам проектной документации
 
-ФОРМАТ ОТВЕТА (строго JSON):
+**ФОРМАТ ОТВЕТА (строго JSON):**
 {{
-  "technical_specification": "Детальное ТЗ в формате markdown с разделами: Цель проекта, Функциональные требования, Дизайн, Технические требования",
-  "proposal": "КП в формате markdown с разделами: О проекте, Этапы работ, Стоимость (таблица с услугами и ценами), Сроки",
+  "technical_specification": "ТЗ в markdown с разделами:\n1. Общие сведения об объекте\n2. Исходные данные (площадь, этажность, назначение, адрес)\n3. Инженерно-геологические условия\n4. Требования к проектной документации\n5. Состав разделов проектной документации\n6. Требования к инженерным системам\n7. Требования по энергоэффективности и экологии\n8. Сроки проектирования",
+  "proposal": "КП в markdown с разделами:\n## Коммерческое предложение\n### О компании DEAD SPACE\n### Объект проектирования\n### Состав проектной документации\n(Таблица: Раздел | Стоимость | Срок)\n### Общая стоимость\n### Этапы работ и оплата\n### Гарантии\n### Контакты",
   "total_price_min": число (минимальная стоимость в рублях),
-  "total_price_max": число (максимальная стоимость в рублях)
+  "total_price_max": число (максимальная стоимость в рублях),
+  "sections": ["ПЗ", "ПЗУ", "АР", "КР", "..."] (массив разделов проектной документации)
 }}
 
-Важно:
-- Используй только услуги из прайс-листа
-- Указывай реалистичные цены на основе прайса
-- ТЗ должно быть конкретным и детальным
-- КП должно быть профессиональным и понятным
-- Все цены в рублях"""
+**ВАЖНЫЕ ТРЕБОВАНИЯ:**
+- Используй только разделы и услуги из прайс-листа
+- Указывай реалистичные сроки (ПЗ - 5 дней, АР - 15 дней, КР - 20 дней и т.д.)
+- В ТЗ обязательно укажи нормативные документы (ГОСТ, СП, СанПиН)
+- В КП детально распиши каждый раздел проектной документации
+- Все цены в рублях
+- ТЗ должно быть конкретным, с техническими параметрами
+- КП должно быть профессиональным, с обоснованием цен"""
 
     headers = {
         'Authorization': f'Api-Key {os.environ["YANDEXGPT_API_KEY"]}',
