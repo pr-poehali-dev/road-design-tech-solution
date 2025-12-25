@@ -21,6 +21,7 @@ const Admin = () => {
   });
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showProjectCard, setShowProjectCard] = useState(false);
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   const handleLogin = () => {
     localStorage.setItem('crm_auth', 'authenticated');
@@ -35,6 +36,11 @@ const Admin = () => {
   const handleOpenProject = (lead: Lead) => {
     setSelectedLead(lead);
     setShowProjectCard(true);
+  };
+
+  const handleSelectLeadForWork = (lead: Lead) => {
+    setSelectedLead(lead);
+    setActiveTab('production');
   };
 
   const handleGenerateSpec = async (data: any) => {
@@ -58,25 +64,33 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
+      <header className="border-b border-cyan-500/30 bg-slate-900/80 backdrop-blur-lg shadow-[0_0_30px_rgba(6,182,212,0.3)]">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                <Icon name="Rocket" size={24} className="text-primary-foreground" />
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.5)] animate-pulse">
+                <Icon name="Rocket" size={24} className="text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold">DEAD SPACE</h1>
-                <p className="text-sm text-muted-foreground">Админ-панель</p>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">DEAD SPACE</h1>
+                <p className="text-sm text-cyan-400/70">Админ-панель</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => window.location.href = '/crm'}>
+              <Button 
+                variant="outline" 
+                onClick={() => window.location.hash = 'crm'}
+                className="border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-400 transition-all"
+              >
                 <Icon name="Kanban" size={16} className="mr-2" />
                 Канбан
               </Button>
-              <Button variant="outline" onClick={handleLogout}>
+              <Button 
+                variant="outline" 
+                onClick={handleLogout}
+                className="border-pink-500/50 text-pink-400 hover:bg-pink-500/10 hover:border-pink-400 transition-all"
+              >
                 <Icon name="LogOut" size={16} className="mr-2" />
                 Выйти
               </Button>
@@ -86,33 +100,33 @@ const Admin = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7 lg:w-auto">
-            <TabsTrigger value="dashboard">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-7 lg:w-auto bg-slate-900/50 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+            <TabsTrigger value="dashboard" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.5)]">
               <Icon name="LayoutDashboard" size={16} className="mr-2" />
               Дашборд
             </TabsTrigger>
-            <TabsTrigger value="leads">
+            <TabsTrigger value="leads" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.5)]">
               <Icon name="Users" size={16} className="mr-2" />
               Заявки
             </TabsTrigger>
-            <TabsTrigger value="production">
+            <TabsTrigger value="production" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.5)]">
               <Icon name="FileText" size={16} className="mr-2" />
               Производство
             </TabsTrigger>
-            <TabsTrigger value="client">
+            <TabsTrigger value="client" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.5)]">
               <Icon name="MessageSquare" size={16} className="mr-2" />
               Клиенты
             </TabsTrigger>
-            <TabsTrigger value="partners">
+            <TabsTrigger value="partners" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.5)]">
               <Icon name="Handshake" size={16} className="mr-2" />
               Партнёры
             </TabsTrigger>
-            <TabsTrigger value="analytics">
+            <TabsTrigger value="analytics" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.5)]">
               <Icon name="BarChart3" size={16} className="mr-2" />
               Аналитика
             </TabsTrigger>
-            <TabsTrigger value="price">
+            <TabsTrigger value="price" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.5)]">
               <Icon name="DollarSign" size={16} className="mr-2" />
               Прайс
             </TabsTrigger>
@@ -123,7 +137,7 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="leads" className="space-y-6">
-            <LeadsTable onOpenProject={handleOpenProject} />
+            <LeadsTable onOpenProject={handleSelectLeadForWork} />
           </TabsContent>
 
           <TabsContent value="production" className="space-y-6">

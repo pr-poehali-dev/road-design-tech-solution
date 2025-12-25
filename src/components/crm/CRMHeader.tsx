@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
-import { useNavigate } from 'react-router-dom';
 
 interface CRMHeaderProps {
   searchQuery: string;
@@ -26,7 +25,9 @@ export const CRMHeader = ({
   conversionRate,
   totalBudget
 }: CRMHeaderProps) => {
-  const navigate = useNavigate();
+  const goHome = () => {
+    window.location.hash = '';
+  };
 
   return (
     <>
@@ -63,7 +64,15 @@ export const CRMHeader = ({
                   className="pl-8 w-full sm:w-48 h-8 text-sm bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
                 />
               </div>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="h-8 w-8 p-0 touch-manipulation text-cyan-400 hover:bg-cyan-500/10">
+              <Button 
+                onClick={() => window.location.hash = 'admin'}
+                size="sm"
+                className="h-8 bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 hover:from-purple-700 hover:via-pink-700 hover:to-cyan-600 text-white font-bold shadow-[0_0_20px_rgba(168,85,247,0.6)] hover:shadow-[0_0_30px_rgba(168,85,247,0.8)] transition-all duration-300 animate-pulse border-0"
+              >
+                <Icon name="Rocket" size={14} className="mr-1" />
+                DEAD SPACE
+              </Button>
+              <Button variant="ghost" size="sm" onClick={goHome} className="h-8 w-8 p-0 touch-manipulation text-cyan-400 hover:bg-cyan-500/10">
                 <Icon name="Home" size={16} />
               </Button>
               <Button variant="ghost" size="sm" onClick={onLogout} className="h-8 w-8 p-0 touch-manipulation text-cyan-400 hover:bg-cyan-500/10">

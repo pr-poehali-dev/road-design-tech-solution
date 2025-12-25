@@ -160,7 +160,6 @@ export const LeadsTable = ({ onOpenProject }: LeadsTableProps) => {
                       <Button
                         size="sm"
                         onClick={() => onOpenProject(lead)}
-                        disabled={lead.status === 'closed-won' || lead.status === 'closed-lost'}
                       >
                         <Icon name="Folder" size={14} className="mr-1" />
                         Открыть
