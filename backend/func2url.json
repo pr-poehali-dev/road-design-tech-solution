@@ -1,4 +1,5 @@
 {
+  "send-document": "https://functions.poehali.dev/4a138136-298f-4120-b457-f15714479d6b",
   "generate-document": "https://functions.poehali.dev/c8a36558-765a-4876-a143-62697345f8d7",
   "generate-proposal": "https://functions.poehali.dev/aab955ed-3240-40e6-ad71-9f607dd47dd8",
   "import-price-list": "https://functions.poehali.dev/a4bb63b0-ad90-4bc0-bbf6-2769f1f1f2f7",

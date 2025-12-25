@@ -120,8 +120,8 @@ export const ProductionModule = ({ lead }: ProductionModuleProps) => {
     });
   };
 
-  const handleApproveDocument = () => {
-    if (!selectedDoc) return;
+  const handleApproveDocument = async () => {
+    if (!selectedDoc || !lead) return;
 
     setDocuments(
       documents.map((doc) =>
@@ -135,6 +135,35 @@ export const ProductionModule = ({ lead }: ProductionModuleProps) => {
       title: 'Документ утверждён',
       description: `${selectedDoc.sectionCode} готов к передаче клиенту`,
     });
+
+    try {
+      const response = await fetch('https://functions.poehali.dev/4a138136-298f-4120-b457-f15714479d6b', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientEmail: lead.email,
+          clientName: lead.name,
+          projectName: lead.title,
+          document: {
+            section: selectedDoc.section,
+            sectionCode: selectedDoc.sectionCode,
+            version: selectedDoc.version,
+            status: 'approved',
+            content: selectedDoc.content,
+            createdAt: new Date().toISOString().split('T')[0],
+          },
+        }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'PDF отправлен клиенту',
+          description: `Документ отправлен на ${lead.email}`,
+        });
+      }
+    } catch (error) {
+      console.error('Ошибка отправки PDF:', error);
+    }
   };
 
   const getStatusColor = (status: Document['status']) => {

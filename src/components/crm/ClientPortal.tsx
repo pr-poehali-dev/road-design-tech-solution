@@ -61,10 +61,13 @@ export const ClientPortal = ({ lead }: ClientPortalProps) => {
     pending: 4,
   };
 
-  const handleApprove = (docId: string) => {
+  const handleApprove = async (docId: string) => {
+    const doc = documents.find((d) => d.id === docId);
+    if (!doc) return;
+
     setDocuments(
-      documents.map((doc) =>
-        doc.id === docId ? { ...doc, status: 'approved' } : doc
+      documents.map((d) =>
+        d.id === docId ? { ...d, status: 'approved' } : d
       )
     );
 
@@ -75,6 +78,33 @@ export const ClientPortal = ({ lead }: ClientPortalProps) => {
 
     if (selectedDoc?.id === docId) {
       setSelectedDoc({ ...selectedDoc, status: 'approved' });
+    }
+
+    try {
+      await fetch('https://functions.poehali.dev/4a138136-298f-4120-b457-f15714479d6b', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientEmail: lead?.email,
+          clientName: lead?.name,
+          projectName: lead?.title,
+          document: {
+            section: doc.section,
+            sectionCode: doc.sectionCode,
+            version: 1,
+            status: 'approved',
+            content: `Документ согласован клиентом ${lead?.name}\n\nДата: ${new Date().toLocaleDateString('ru-RU')}\nПроект: ${lead?.title}`,
+            createdAt: new Date().toISOString().split('T')[0],
+          },
+        }),
+      });
+
+      toast({
+        title: 'PDF отправлен',
+        description: `Документ отправлен на ${lead?.email}`,
+      });
+    } catch (error) {
+      console.error('Ошибка отправки PDF:', error);
     }
   };
 
