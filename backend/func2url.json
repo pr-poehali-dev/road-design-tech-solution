@@ -1,4 +1,6 @@
 {
+  "warehouse-pdf": "https://functions.poehali.dev/5cb05a8f-d328-4897-a175-eed9664e4d06",
+  "warehouse-estimate": "https://functions.poehali.dev/48f6b4e5-56bd-455f-8903-d5fe4c62ffc2",
   "send-document": "https://functions.poehali.dev/4a138136-298f-4120-b457-f15714479d6b",
   "generate-document": "https://functions.poehali.dev/c8a36558-765a-4876-a143-62697345f8d7",
   "generate-proposal": "https://functions.poehali.dev/aab955ed-3240-40e6-ad71-9f607dd47dd8",

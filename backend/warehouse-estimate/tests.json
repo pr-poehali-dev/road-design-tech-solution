@@ -1,0 +1,51 @@
+{
+  "tests": [
+    {
+      "name": "Расчёт сметы для малого склада",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "params": {
+          "length": 24,
+          "width": 12,
+          "height": 6,
+          "constructionType": "steel",
+          "wallMaterial": "sandwich",
+          "gatesCount": 1,
+          "windowsCount": 2
+        },
+        "volume": 1728
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "total": "number",
+        "items": "array",
+        "volume": 1728
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Расчёт сметы для среднего склада",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "params": {
+          "length": 48,
+          "width": 24,
+          "height": 8,
+          "constructionType": "steel",
+          "wallMaterial": "sandwich",
+          "gatesCount": 2,
+          "windowsCount": 4
+        },
+        "volume": 9216
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "total": "number",
+        "items": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
