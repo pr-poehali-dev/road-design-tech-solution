@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,8 @@ import {
 } from '@/components/ui/select';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
-import { WarehouseViewer } from './WarehouseViewer';
+
+const WarehouseViewer = lazy(() => import('./WarehouseViewer').then(m => ({ default: m.WarehouseViewer })));
 
 interface WarehouseParams {
   length: number;
@@ -363,7 +364,16 @@ export const WarehouseDesigner = () => {
         </div>
         
         {showViewer ? (
-          <WarehouseViewer params={params} />
+          <Suspense fallback={
+            <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center">
+              <div className="text-center text-cyan-400">
+                <div className="animate-spin h-8 w-8 border-4 border-cyan-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                <p>Загрузка 3D...</p>
+              </div>
+            </div>
+          }>
+            <WarehouseViewer params={params} />
+          </Suspense>
         ) : (
           <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center">
             <div className="text-center text-slate-500">
