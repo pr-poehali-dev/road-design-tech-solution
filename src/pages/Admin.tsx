@@ -81,7 +81,7 @@ const Admin = () => {
             <div className="flex items-center gap-2">
               <Button 
                 variant="outline" 
-                onClick={() => window.location.hash = 'crm'}
+                onClick={() => window.location.href = '/crm'}
                 className="border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-400 transition-all"
               >
                 <Icon name="Kanban" size={16} className="mr-2" />

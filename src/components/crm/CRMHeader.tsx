@@ -65,7 +65,7 @@ export const CRMHeader = ({
                 />
               </div>
               <Button 
-                onClick={() => window.location.hash = 'admin'}
+                onClick={() => window.location.href = '/admin'}
                 size="sm"
                 className="h-8 bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 hover:from-purple-700 hover:via-pink-700 hover:to-cyan-600 text-white font-bold shadow-[0_0_20px_rgba(168,85,247,0.6)] hover:shadow-[0_0_30px_rgba(168,85,247,0.8)] transition-all duration-300 animate-pulse border-0"
               >
