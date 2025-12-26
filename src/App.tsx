@@ -8,7 +8,6 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import CRM from "./pages/CRM";
 import Admin from "./pages/Admin";
-import Warehouses from "./pages/Warehouses";
 
 const queryClient = new QueryClient();
 
@@ -22,7 +21,6 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/crm" element={<CRM />} />
           <Route path="/admin" element={<Admin />} />
-          <Route path="/warehouses" element={<Warehouses />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

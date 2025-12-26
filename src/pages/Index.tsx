@@ -357,15 +357,6 @@ const Index = () => {
             <a href="#calculator" className="hover:text-primary transition-colors">Калькулятор</a>
             <a href="#projects" className="hover:text-primary transition-colors">Кейсы</a>
             <a href="#contact" className="hover:text-primary transition-colors">Контакты</a>
-            <Button 
-              variant="outline"
-              size="sm"
-              className="border-primary/50 text-primary hover:bg-primary/10"
-              onClick={() => window.location.href = '/warehouses'}
-            >
-              <Icon name="Warehouse" size={16} className="mr-2" />
-              Склады
-            </Button>
           </div>
           <Button 
             size="lg" 
