@@ -352,7 +352,7 @@ const Index = () => {
             </div>
             <span className="font-heading font-bold text-xl md:text-2xl">DEOD</span>
           </div>
-          <div className="hidden md:flex gap-6 text-sm font-medium items-center">
+          <div className="hidden md:flex gap-6 text-sm font-medium">
             <a href="#technologies" className="hover:text-primary transition-colors">Технологии</a>
             <a href="#calculator" className="hover:text-primary transition-colors">Калькулятор</a>
             <a href="#projects" className="hover:text-primary transition-colors">Кейсы</a>
