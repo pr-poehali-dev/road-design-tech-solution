@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import InputMask from 'react-input-mask';
+import { WarehouseDesigner } from '@/components/crm/WarehouseDesigner';
 
 const AdminLink = () => {
   const [show, setShow] = useState(false);
@@ -745,7 +746,7 @@ const Index = () => {
           </div>
           
           <Tabs value={activeTech} onValueChange={setActiveTech} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-8 h-auto p-1">
+            <TabsList className="grid w-full grid-cols-4 mb-8 h-auto p-1">
               <TabsTrigger value="cement" className="text-xs sm:text-sm md:text-base py-2 sm:py-3">
                 <Icon name="Droplet" size={16} className="mr-2 hidden sm:inline" />
                 Вяжущие
@@ -757,6 +758,10 @@ const Index = () => {
               <TabsTrigger value="mechanical" className="text-xs sm:text-sm md:text-base py-2 sm:py-3">
                 <Icon name="Grid3x3" size={16} className="mr-2 hidden sm:inline" />
                 Армирование
+              </TabsTrigger>
+              <TabsTrigger value="warehouses" className="text-xs sm:text-sm md:text-base py-2 sm:py-3">
+                <Icon name="Warehouse" size={16} className="mr-2 hidden sm:inline" />
+                Склады
               </TabsTrigger>
             </TabsList>
             
@@ -779,6 +784,10 @@ const Index = () => {
                 </Card>
               </TabsContent>
             ))}
+            
+            <TabsContent value="warehouses" className="animate-fade-in">
+              <WarehouseDesigner />
+            </TabsContent>
           </Tabs>
         </div>
       </section>

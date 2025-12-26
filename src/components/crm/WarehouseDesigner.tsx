@@ -81,22 +81,23 @@ export const WarehouseDesigner = () => {
       
       setEstimate(data);
 
+      setIsGenerating(false);
+      
       toast({
         title: '✅ Проект склада готов',
         description: `Расчётная стоимость: ${data.total.toLocaleString('ru-RU')} ₽`,
       });
       
-      setShowViewer(true);
+      setTimeout(() => setShowViewer(true), 100);
     } catch (error: any) {
       console.error('Generation error:', error);
+      setIsGenerating(false);
+      setShowViewer(false);
       toast({
         title: '❌ Ошибка генерации',
         description: error.message || 'Не удалось сгенерировать проект склада',
         variant: 'destructive',
       });
-      setShowViewer(false);
-    } finally {
-      setIsGenerating(false);
     }
   };
 
