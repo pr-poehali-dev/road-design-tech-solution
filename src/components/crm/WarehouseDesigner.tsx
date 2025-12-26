@@ -59,6 +59,8 @@ export const WarehouseDesigner = () => {
 
   const handleGenerate = async () => {
     setIsGenerating(true);
+    setShowViewer(false);
+    
     try {
       const volume = params.length * params.width * params.height;
       
@@ -68,22 +70,31 @@ export const WarehouseDesigner = () => {
         body: JSON.stringify({ params, volume }),
       });
 
-      if (!response.ok) throw new Error('Ошибка расчёта сметы');
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Backend error:', errorText);
+        throw new Error(`Ошибка ${response.status}: ${errorText}`);
+      }
 
       const data = await response.json();
+      console.log('Estimate received:', data);
+      
       setEstimate(data);
-      setShowViewer(true);
 
       toast({
         title: '✅ Проект склада готов',
         description: `Расчётная стоимость: ${data.total.toLocaleString('ru-RU')} ₽`,
       });
-    } catch (error) {
+      
+      setShowViewer(true);
+    } catch (error: any) {
+      console.error('Generation error:', error);
       toast({
         title: '❌ Ошибка генерации',
-        description: 'Не удалось сгенерировать проект склада',
+        description: error.message || 'Не удалось сгенерировать проект склада',
         variant: 'destructive',
       });
+      setShowViewer(false);
     } finally {
       setIsGenerating(false);
     }
@@ -363,12 +374,20 @@ export const WarehouseDesigner = () => {
           </div>
         </div>
         
-        {showViewer ? (
+        {isGenerating ? (
+          <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center">
+            <div className="text-center text-cyan-400">
+              <div className="animate-spin h-12 w-12 border-4 border-cyan-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="font-bold text-lg">Генерация проекта...</p>
+              <p className="text-sm text-cyan-400/70 mt-2">Расчёт сметы и создание 3D-модели</p>
+            </div>
+          </div>
+        ) : showViewer && estimate ? (
           <Suspense fallback={
             <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center">
               <div className="text-center text-cyan-400">
                 <div className="animate-spin h-8 w-8 border-4 border-cyan-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                <p>Загрузка 3D...</p>
+                <p>Загрузка 3D-библиотеки...</p>
               </div>
             </div>
           }>
