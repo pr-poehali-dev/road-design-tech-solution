@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import InputMask from 'react-input-mask';
-import { WarehouseDesigner } from '@/components/crm/WarehouseDesigner';
 
 const AdminLink = () => {
   const [show, setShow] = useState(false);
@@ -353,11 +352,20 @@ const Index = () => {
             </div>
             <span className="font-heading font-bold text-xl md:text-2xl">DEOD</span>
           </div>
-          <div className="hidden md:flex gap-6 text-sm font-medium">
+          <div className="hidden md:flex gap-6 text-sm font-medium items-center">
             <a href="#technologies" className="hover:text-primary transition-colors">Технологии</a>
             <a href="#calculator" className="hover:text-primary transition-colors">Калькулятор</a>
             <a href="#projects" className="hover:text-primary transition-colors">Кейсы</a>
             <a href="#contact" className="hover:text-primary transition-colors">Контакты</a>
+            <Button 
+              variant="outline"
+              size="sm"
+              className="border-primary/50 text-primary hover:bg-primary/10"
+              onClick={() => window.location.href = '/warehouses'}
+            >
+              <Icon name="Warehouse" size={16} className="mr-2" />
+              Склады
+            </Button>
           </div>
           <Button 
             size="lg" 
@@ -746,7 +754,7 @@ const Index = () => {
           </div>
           
           <Tabs value={activeTech} onValueChange={setActiveTech} className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-8 h-auto p-1">
+            <TabsList className="grid w-full grid-cols-3 mb-8 h-auto p-1">
               <TabsTrigger value="cement" className="text-xs sm:text-sm md:text-base py-2 sm:py-3">
                 <Icon name="Droplet" size={16} className="mr-2 hidden sm:inline" />
                 Вяжущие
@@ -758,10 +766,6 @@ const Index = () => {
               <TabsTrigger value="mechanical" className="text-xs sm:text-sm md:text-base py-2 sm:py-3">
                 <Icon name="Grid3x3" size={16} className="mr-2 hidden sm:inline" />
                 Армирование
-              </TabsTrigger>
-              <TabsTrigger value="warehouses" className="text-xs sm:text-sm md:text-base py-2 sm:py-3">
-                <Icon name="Warehouse" size={16} className="mr-2 hidden sm:inline" />
-                Склады
               </TabsTrigger>
             </TabsList>
             
@@ -784,10 +788,6 @@ const Index = () => {
                 </Card>
               </TabsContent>
             ))}
-            
-            <TabsContent value="warehouses" className="animate-fade-in">
-              <WarehouseDesigner />
-            </TabsContent>
           </Tabs>
         </div>
       </section>

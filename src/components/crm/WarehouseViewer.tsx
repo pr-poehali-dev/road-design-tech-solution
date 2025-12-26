@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Grid, Box, Cylinder } from '@react-three/drei';
 
@@ -102,43 +101,34 @@ const WarehouseModel = ({ params }: WarehouseViewerProps) => {
 export const WarehouseViewer = ({ params }: WarehouseViewerProps) => {
   return (
     <div className="w-full aspect-video bg-slate-950 rounded-lg overflow-hidden">
-      <Suspense fallback={
-        <div className="w-full h-full flex items-center justify-center text-cyan-400">
-          <div className="text-center">
-            <div className="animate-spin h-8 w-8 border-4 border-cyan-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-            <p>Загрузка 3D-модели...</p>
-          </div>
-        </div>
-      }>
-        <Canvas camera={{ position: [params.length * 1.5, params.height * 1.5, params.width * 1.5], fov: 50 }}>
-          <ambientLight intensity={0.5} />
-          <directionalLight position={[10, 20, 10]} intensity={1} castShadow />
-          <directionalLight position={[-10, 20, -10]} intensity={0.5} />
-          
-          <WarehouseModel params={params} />
-          
-          <Grid
-            args={[100, 100]}
-            position={[0, -0.1, 0]}
-            cellSize={1}
-            cellThickness={0.5}
-            cellColor="#00ffff"
-            sectionSize={5}
-            sectionThickness={1}
-            sectionColor="#0088ff"
-            fadeDistance={80}
-            fadeStrength={1}
-          />
-          
-          <OrbitControls
-            enablePan={true}
-            enableZoom={true}
-            enableRotate={true}
-            minDistance={params.length * 0.5}
-            maxDistance={params.length * 3}
-          />
-        </Canvas>
-      </Suspense>
+      <Canvas camera={{ position: [params.length * 1.5, params.height * 1.5, params.width * 1.5], fov: 50 }}>
+        <ambientLight intensity={0.5} />
+        <directionalLight position={[10, 20, 10]} intensity={1} castShadow />
+        <directionalLight position={[-10, 20, -10]} intensity={0.5} />
+        
+        <WarehouseModel params={params} />
+        
+        <Grid
+          args={[100, 100]}
+          position={[0, -0.1, 0]}
+          cellSize={1}
+          cellThickness={0.5}
+          cellColor="#00ffff"
+          sectionSize={5}
+          sectionThickness={1}
+          sectionColor="#0088ff"
+          fadeDistance={80}
+          fadeStrength={1}
+        />
+        
+        <OrbitControls
+          enablePan={true}
+          enableZoom={true}
+          enableRotate={true}
+          minDistance={params.length * 0.5}
+          maxDistance={params.length * 3}
+        />
+      </Canvas>
     </div>
   );
 };
