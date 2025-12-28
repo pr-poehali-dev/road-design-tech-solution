@@ -1,4 +1,3 @@
-import { WarehouseDesigner } from '@/components/crm/WarehouseDesigner';
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -27,7 +26,10 @@ const Warehouses = () => {
           </div>
         </div>
 
-        <WarehouseDesigner />
+        <div className="text-white text-center py-20">
+          <h2 className="text-2xl mb-4">Страница складов загружена</h2>
+          <p>Если видишь этот текст — роутинг работает</p>
+        </div>
       </div>
     </div>
   );
