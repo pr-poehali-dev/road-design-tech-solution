@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, Suspense, lazy } from 'react';
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+
+const WarehouseViewer = lazy(() => import('@/components/crm/WarehouseViewer').then(module => ({ 
+  default: module.WarehouseViewer 
+})));
 
 interface WarehouseParams {
   length: number;
@@ -274,13 +278,26 @@ const Warehouses = () => {
               </div>
             </div>
             
-            <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center">
-              <div className="text-center text-slate-400">
-                <Icon name="Building2" size={64} className="mx-auto mb-4 opacity-30" />
-                <p className="text-lg mb-2">3D-визуализация временно недоступна</p>
-                <p className="text-sm">Используйте кнопку "Сгенерировать проект" для расчёта сметы</p>
+            {estimate ? (
+              <Suspense fallback={
+                <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center">
+                  <div className="text-center text-cyan-400">
+                    <div className="animate-spin h-8 w-8 border-4 border-cyan-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                    <p>Загрузка 3D-модели...</p>
+                  </div>
+                </div>
+              }>
+                <WarehouseViewer params={params} />
+              </Suspense>
+            ) : (
+              <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center">
+                <div className="text-center text-slate-400">
+                  <Icon name="Building2" size={64} className="mx-auto mb-4 opacity-30" />
+                  <p className="text-lg mb-2">Нажмите "Сгенерировать проект"</p>
+                  <p className="text-sm">для создания 3D-модели склада</p>
+                </div>
               </div>
-            </div>
+            )}
 
             {estimate && (
               <div className="mt-6 space-y-3">
