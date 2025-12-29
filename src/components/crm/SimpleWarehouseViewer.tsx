@@ -45,6 +45,49 @@ export const SimpleWarehouseViewer = ({ params }: SimpleWarehouseViewerProps) =>
   const h = height * scale;
   const d = length * scale;
 
+  // === ИНЖЕНЕРНЫЕ РАСЧЕТЫ КРЫШИ ===
+  const roofCalculations = React.useMemo(() => {
+    const angleRad = (roofAngle * Math.PI) / 180;
+    
+    if (roofType === 'double') {
+      // Двускатная крыша
+      const ridgeHeight = (w / 2) * Math.tan(angleRad); // Высота конька
+      const rafterLength = (w / 2) / Math.cos(angleRad); // Длина стропила
+      const overhang = 8; // Свес крыши
+      
+      return {
+        type: 'double',
+        ridgeHeight,
+        rafterLength: rafterLength + overhang,
+        totalHeight: h + ridgeHeight,
+        angle: roofAngle,
+      };
+    } else if (roofType === 'single') {
+      // Односкатная крыша
+      const heightDiff = w * Math.tan(angleRad); // Разница высот
+      const rafterLength = w / Math.cos(angleRad); // Длина ската
+      const overhang = 8;
+      
+      return {
+        type: 'single',
+        heightDiff,
+        rafterLength: rafterLength + overhang,
+        totalHeight: h + heightDiff,
+        angle: roofAngle,
+      };
+    } else {
+      // Арочная крыша
+      const archHeight = w / 2; // Высота арки = половина ширины
+      
+      return {
+        type: 'arch',
+        archHeight,
+        totalHeight: h + archHeight,
+        radius: w / 2,
+      };
+    }
+  }, [w, h, roofType, roofAngle]);
+
   // Цвета стен в зависимости от материала
   const wallStyles = {
     sandwich: {
@@ -205,7 +248,6 @@ export const SimpleWarehouseViewer = ({ params }: SimpleWarehouseViewerProps) =>
             {constructionType !== 'frameless' && Array.from({ length: columnsPerSide }).map((_, i) => {
               const columnPos = (d / (columnsPerSide - 1)) * i;
               const columnWidth = 8;
-              const columnDepth = 8;
               return (
                 <React.Fragment key={`column-${i}`}>
                   {/* Левая колонна */}
@@ -399,140 +441,145 @@ export const SimpleWarehouseViewer = ({ params }: SimpleWarehouseViewerProps) =>
               })}
             </div>
 
-            {/* Крыша - СВЕРХУ стен */}
-            {showRoof && (
+            {/* === КРЫША С ИНЖЕНЕРНЫМИ РАСЧЕТАМИ === */}
+            {showRoof && roofCalculations.type === 'double' && (
               <>
-                {roofType === 'double' ? (
-                  <>
-                    {/* Двускатная крыша - левый скат */}
-                    <div
-                      className={`absolute bg-gradient-to-br ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
-                      style={{
-                        width: `${w / 2 + 5}px`,
-                        height: `${d}px`,
-                        left: '0px',
-                        top: '0px',
-                        transformOrigin: 'right top',
-                        transform: `rotateZ(${-roofAngle}deg)`,
-                        boxShadow: '0 -8px 30px rgba(59,130,246,0.4), inset 0 3px 15px rgba(255,255,255,0.2)',
-                      }}
-                    >
-                      <div className="absolute inset-0 opacity-40 bg-[repeating-linear-gradient(90deg,transparent_0px,transparent_48px,rgba(255,255,255,0.3)_48px,rgba(255,255,255,0.3)_50px)]" />
-                    </div>
-                    {/* Двускатная крыша - правый скат */}
-                    <div
-                      className={`absolute bg-gradient-to-br ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
-                      style={{
-                        width: `${w / 2 + 5}px`,
-                        height: `${d}px`,
-                        left: `${w / 2}px`,
-                        top: '0px',
-                        transformOrigin: 'left top',
-                        transform: `rotateZ(${roofAngle}deg)`,
-                        boxShadow: '0 -8px 30px rgba(59,130,246,0.4), inset 0 3px 15px rgba(255,255,255,0.2)',
-                      }}
-                    >
-                      <div className="absolute inset-0 opacity-40 bg-[repeating-linear-gradient(90deg,transparent_0px,transparent_48px,rgba(255,255,255,0.3)_48px,rgba(255,255,255,0.3)_50px)]" />
-                    </div>
-                    {/* Конёк крыши */}
-                    <div
-                      className={`absolute ${currentConstruction.frame} border-2 border-gray-900`}
-                      style={{
-                        width: `${d}px`,
-                        height: '10px',
-                        left: `${w / 2}px`,
-                        top: `${-(w / 2) * Math.tan((roofAngle * Math.PI) / 180)}px`,
-                        transform: `rotateY(90deg)`,
-                        transformOrigin: 'left',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.8)',
-                      }}
-                    />
-                  </>
-                ) : roofType === 'single' ? (
-                  <div
-                    className={`absolute bg-gradient-to-br ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
-                    style={{
-                      width: `${w}px`,
-                      height: `${d}px`,
-                      left: '0px',
-                      top: '0px',
-                      transformOrigin: 'left top',
-                      transform: `rotateZ(${-roofAngle / 2}deg)`,
-                      boxShadow: '0 -8px 30px rgba(59,130,246,0.4), inset 0 3px 15px rgba(255,255,255,0.2)',
-                    }}
-                  >
-                    <div className="absolute inset-0 opacity-40 bg-[repeating-linear-gradient(90deg,transparent_0px,transparent_48px,rgba(255,255,255,0.3)_48px,rgba(255,255,255,0.3)_50px)]" />
-                  </div>
-                ) : (
-                  <>
-                    {/* Арочная крыша - верхняя часть */}
-                    <div
-                      className={`absolute bg-gradient-to-b ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
-                      style={{
-                        width: `${w}px`,
-                        height: `${w / 2}px`,
-                        left: '0px',
-                        top: `${-w / 2}px`,
-                        borderRadius: '50% 50% 0 0',
-                        boxShadow: '0 -8px 30px rgba(59,130,246,0.4), inset 0 3px 15px rgba(255,255,255,0.2)',
-                      }}
-                    >
-                      <div className="absolute inset-0 opacity-40 bg-[repeating-linear-gradient(0deg,transparent_0px,transparent_28px,rgba(255,255,255,0.3)_28px,rgba(255,255,255,0.3)_30px)]" />
-                    </div>
-                    {/* Арочная крыша - задняя часть */}
-                    <div
-                      className={`absolute bg-gradient-to-b ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
-                      style={{
-                        width: `${w}px`,
-                        height: `${w / 2}px`,
-                        left: '0px',
-                        top: `${-w / 2}px`,
-                        borderRadius: '50% 50% 0 0',
-                        transform: `translateZ(-${d}px)`,
-                        boxShadow: '0 -8px 30px rgba(59,130,246,0.3), inset 0 3px 15px rgba(255,255,255,0.15)',
-                      }}
-                    >
-                      <div className="absolute inset-0 opacity-30 bg-[repeating-linear-gradient(0deg,transparent_0px,transparent_28px,rgba(255,255,255,0.2)_28px,rgba(255,255,255,0.2)_30px)]" />
-                    </div>
-                    {/* Арочная крыша - левая боковина */}
-                    <div
-                      className={`absolute bg-gradient-to-br ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
-                      style={{
-                        width: `${d}px`,
-                        height: `${w / 2}px`,
-                        left: '0px',
-                        top: `${-w / 2}px`,
-                        borderRadius: '50% 50% 0 0',
-                        transform: `rotateY(90deg)`,
-                        transformOrigin: 'top left',
-                        boxShadow: 'inset -3px 0 15px rgba(0,0,0,0.4)',
-                      }}
-                    >
-                      <div className="absolute inset-0 opacity-35 bg-[repeating-linear-gradient(90deg,transparent_0px,transparent_38px,rgba(255,255,255,0.2)_38px,rgba(255,255,255,0.2)_40px)]" />
-                    </div>
-                    {/* Арочная крыша - правая боковина */}
-                    <div
-                      className={`absolute bg-gradient-to-br ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
-                      style={{
-                        width: `${d}px`,
-                        height: `${w / 2}px`,
-                        left: `${w}px`,
-                        top: `${-w / 2}px`,
-                        borderRadius: '50% 50% 0 0',
-                        transform: `rotateY(90deg)`,
-                        transformOrigin: 'top left',
-                        boxShadow: 'inset 3px 0 15px rgba(0,0,0,0.3)',
-                      }}
-                    >
-                      <div className="absolute inset-0 opacity-35 bg-[repeating-linear-gradient(90deg,transparent_0px,transparent_38px,rgba(255,255,255,0.2)_38px,rgba(255,255,255,0.2)_40px)]" />
-                    </div>
-                  </>
-                )}
+                {/* ДВУСКАТНАЯ КРЫША */}
+                {/* Левый скат */}
+                <div
+                  className={`absolute bg-gradient-to-br ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
+                  style={{
+                    width: `${roofCalculations.rafterLength}px`,
+                    height: `${d}px`,
+                    left: `${w / 2}px`,
+                    top: `${-roofCalculations.ridgeHeight}px`,
+                    transformOrigin: 'right bottom',
+                    transform: `rotateZ(${-roofAngle}deg)`,
+                    boxShadow: '0 -8px 30px rgba(59,130,246,0.4), inset 0 3px 15px rgba(255,255,255,0.2)',
+                  }}
+                >
+                  <div className="absolute inset-0 opacity-40 bg-[repeating-linear-gradient(90deg,transparent_0px,transparent_48px,rgba(255,255,255,0.3)_48px,rgba(255,255,255,0.3)_50px)]" />
+                </div>
+                {/* Правый скат */}
+                <div
+                  className={`absolute bg-gradient-to-br ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
+                  style={{
+                    width: `${roofCalculations.rafterLength}px`,
+                    height: `${d}px`,
+                    left: `${w / 2}px`,
+                    top: `${-roofCalculations.ridgeHeight}px`,
+                    transformOrigin: 'left bottom',
+                    transform: `rotateZ(${roofAngle}deg)`,
+                    boxShadow: '0 -8px 30px rgba(59,130,246,0.4), inset 0 3px 15px rgba(255,255,255,0.2)',
+                  }}
+                >
+                  <div className="absolute inset-0 opacity-40 bg-[repeating-linear-gradient(90deg,transparent_0px,transparent_48px,rgba(255,255,255,0.3)_48px,rgba(255,255,255,0.3)_50px)]" />
+                </div>
+                {/* Конёк крыши */}
+                <div
+                  className={`absolute ${currentConstruction.frame} border-2 border-gray-900`}
+                  style={{
+                    width: `${d}px`,
+                    height: '12px',
+                    left: `${w / 2 - 6}px`,
+                    top: `${-roofCalculations.ridgeHeight - 6}px`,
+                    transform: `rotateY(90deg)`,
+                    transformOrigin: 'left',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.8)',
+                  }}
+                />
+              </>
+            )}
+
+            {showRoof && roofCalculations.type === 'single' && (
+              <>
+                {/* ОДНОСКАТНАЯ КРЫША */}
+                <div
+                  className={`absolute bg-gradient-to-br ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
+                  style={{
+                    width: `${roofCalculations.rafterLength}px`,
+                    height: `${d}px`,
+                    left: '0px',
+                    top: '0px',
+                    transformOrigin: 'left top',
+                    transform: `rotateZ(${-roofAngle}deg)`,
+                    boxShadow: '0 -8px 30px rgba(59,130,246,0.4), inset 0 3px 15px rgba(255,255,255,0.2)',
+                  }}
+                >
+                  <div className="absolute inset-0 opacity-40 bg-[repeating-linear-gradient(90deg,transparent_0px,transparent_48px,rgba(255,255,255,0.3)_48px,rgba(255,255,255,0.3)_50px)]" />
+                </div>
+              </>
+            )}
+
+            {showRoof && roofCalculations.type === 'arch' && (
+              <>
+                {/* АРОЧНАЯ КРЫША */}
+                {/* Передняя арка */}
+                <div
+                  className={`absolute bg-gradient-to-b ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
+                  style={{
+                    width: `${w}px`,
+                    height: `${roofCalculations.archHeight}px`,
+                    left: '0px',
+                    top: `${-roofCalculations.archHeight}px`,
+                    borderRadius: '50% 50% 0 0',
+                    boxShadow: '0 -8px 30px rgba(59,130,246,0.4), inset 0 3px 15px rgba(255,255,255,0.2)',
+                  }}
+                >
+                  <div className="absolute inset-0 opacity-40 bg-[repeating-linear-gradient(0deg,transparent_0px,transparent_28px,rgba(255,255,255,0.3)_28px,rgba(255,255,255,0.3)_30px)]" />
+                </div>
+                {/* Задняя арка */}
+                <div
+                  className={`absolute bg-gradient-to-b ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
+                  style={{
+                    width: `${w}px`,
+                    height: `${roofCalculations.archHeight}px`,
+                    left: '0px',
+                    top: `${-roofCalculations.archHeight}px`,
+                    borderRadius: '50% 50% 0 0',
+                    transform: `translateZ(-${d}px)`,
+                    boxShadow: '0 -8px 30px rgba(59,130,246,0.3), inset 0 3px 15px rgba(255,255,255,0.15)',
+                  }}
+                >
+                  <div className="absolute inset-0 opacity-30 bg-[repeating-linear-gradient(0deg,transparent_0px,transparent_28px,rgba(255,255,255,0.2)_28px,rgba(255,255,255,0.2)_30px)]" />
+                </div>
+                {/* Левая боковина арки */}
+                <div
+                  className={`absolute bg-gradient-to-br ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
+                  style={{
+                    width: `${d}px`,
+                    height: `${roofCalculations.archHeight}px`,
+                    left: '0px',
+                    top: `${-roofCalculations.archHeight}px`,
+                    borderRadius: '50% 50% 0 0',
+                    transform: `rotateY(90deg)`,
+                    transformOrigin: 'top left',
+                    boxShadow: 'inset -3px 0 15px rgba(0,0,0,0.4)',
+                  }}
+                >
+                  <div className="absolute inset-0 opacity-35 bg-[repeating-linear-gradient(90deg,transparent_0px,transparent_38px,rgba(255,255,255,0.2)_38px,rgba(255,255,255,0.2)_40px)]" />
+                </div>
+                {/* Правая боковина арки */}
+                <div
+                  className={`absolute bg-gradient-to-br ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
+                  style={{
+                    width: `${d}px`,
+                    height: `${roofCalculations.archHeight}px`,
+                    left: `${w}px`,
+                    top: `${-roofCalculations.archHeight}px`,
+                    borderRadius: '50% 50% 0 0',
+                    transform: `rotateY(90deg)`,
+                    transformOrigin: 'top left',
+                    boxShadow: 'inset 3px 0 15px rgba(0,0,0,0.3)',
+                  }}
+                >
+                  <div className="absolute inset-0 opacity-35 bg-[repeating-linear-gradient(90deg,transparent_0px,transparent_38px,rgba(255,255,255,0.2)_38px,rgba(255,255,255,0.2)_40px)]" />
+                </div>
               </>
             )}
           </div>
 
-          {/* Информация */}
+          {/* Информация с инженерными данными */}
           <div className="mt-12 text-center space-y-3">
             <div className="text-cyan-400 text-lg font-bold font-mono tracking-wider drop-shadow-[0_2px_8px_rgba(6,182,212,0.5)]">
               {length}м × {width}м × {height}м
@@ -557,8 +604,8 @@ export const SimpleWarehouseViewer = ({ params }: SimpleWarehouseViewerProps) =>
               <div className="flex items-center gap-1.5">
                 <span className="text-blue-400">▲</span>
                 <span>
-                  {roofType === 'double' && 'Двускатная'}
-                  {roofType === 'single' && 'Односкатная'}
+                  {roofType === 'double' && `Двускатная ${roofAngle}°`}
+                  {roofType === 'single' && `Односкатная ${roofAngle}°`}
                   {roofType === 'arch' && 'Арочная'}
                 </span>
               </div>
@@ -571,6 +618,20 @@ export const SimpleWarehouseViewer = ({ params }: SimpleWarehouseViewerProps) =>
                 <span>Шаг: {columnStep}м</span>
               </div>
             </div>
+            {/* Инженерные данные крыши */}
+            {showRoof && (
+              <div className="text-xs text-gray-500 italic mt-2">
+                {roofCalculations.type === 'double' && (
+                  <span>Высота конька: {(roofCalculations.ridgeHeight / scale).toFixed(1)}м | Длина ската: {(roofCalculations.rafterLength / scale).toFixed(1)}м</span>
+                )}
+                {roofCalculations.type === 'single' && (
+                  <span>Перепад высот: {(roofCalculations.heightDiff / scale).toFixed(1)}м | Длина ската: {(roofCalculations.rafterLength / scale).toFixed(1)}м</span>
+                )}
+                {roofCalculations.type === 'arch' && (
+                  <span>Высота арки: {(roofCalculations.archHeight / scale).toFixed(1)}м | Радиус: {(roofCalculations.radius / scale).toFixed(1)}м</span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
