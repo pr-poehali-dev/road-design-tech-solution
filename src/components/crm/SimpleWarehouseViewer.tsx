@@ -404,27 +404,27 @@ export const SimpleWarehouseViewer = ({ params }: SimpleWarehouseViewerProps) =>
               <>
                 {roofType === 'double' ? (
                   <>
-                    {/* Двускатная - левая */}
+                    {/* Двускатная крыша - левый скат */}
                     <div
                       className={`absolute bg-gradient-to-br ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
                       style={{
-                        width: `${w / 2 + 10}px`,
+                        width: `${w / 2 + 5}px`,
                         height: `${d}px`,
-                        transformOrigin: 'left top',
-                        transform: `rotateX(${90 - roofAngle}deg) translateZ(0px)`,
+                        transformOrigin: 'bottom left',
+                        transform: `translateY(0px) rotateZ(${roofAngle}deg)`,
                         boxShadow: '0 -8px 30px rgba(59,130,246,0.4), inset 0 3px 15px rgba(255,255,255,0.2)',
                       }}
                     >
                       <div className="absolute inset-0 opacity-40 bg-[repeating-linear-gradient(90deg,transparent_0px,transparent_48px,rgba(255,255,255,0.3)_48px,rgba(255,255,255,0.3)_50px)]" />
                     </div>
-                    {/* Двускатная - правая */}
+                    {/* Двускатная крыша - правый скат */}
                     <div
                       className={`absolute bg-gradient-to-br ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
                       style={{
-                        width: `${w / 2 + 10}px`,
+                        width: `${w / 2 + 5}px`,
                         height: `${d}px`,
-                        transformOrigin: 'right top',
-                        transform: `translateX(${w}px) rotateX(${90 + roofAngle}deg) translateZ(0px)`,
+                        transformOrigin: 'bottom right',
+                        transform: `translateX(${w}px) rotateZ(${-roofAngle}deg)`,
                         boxShadow: '0 -8px 30px rgba(59,130,246,0.4), inset 0 3px 15px rgba(255,255,255,0.2)',
                       }}
                     >
@@ -435,8 +435,10 @@ export const SimpleWarehouseViewer = ({ params }: SimpleWarehouseViewerProps) =>
                       className={`absolute ${currentConstruction.frame} border-2 border-gray-900`}
                       style={{
                         width: `${d}px`,
-                        height: '12px',
-                        transform: `translateX(${w / 2}px) translateY(-6px) rotateY(90deg)`,
+                        height: '10px',
+                        left: `${w / 2 - 5}px`,
+                        top: `${-(w / 2) * Math.tan((roofAngle * Math.PI) / 180)}px`,
+                        transform: `rotateY(90deg)`,
                         transformOrigin: 'left',
                         boxShadow: '0 4px 12px rgba(0,0,0,0.8)',
                       }}
@@ -446,29 +448,59 @@ export const SimpleWarehouseViewer = ({ params }: SimpleWarehouseViewerProps) =>
                   <div
                     className={`absolute bg-gradient-to-br ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
                     style={{
-                      width: `${w}px`,
+                      width: `${w + 10}px`,
                       height: `${d}px`,
-                      transformOrigin: 'left top',
-                      transform: `rotateX(${90 - roofAngle / 2}deg) translateZ(0px)`,
+                      transformOrigin: 'bottom left',
+                      transform: `rotateZ(${roofAngle / 2}deg)`,
                       boxShadow: '0 -8px 30px rgba(59,130,246,0.4), inset 0 3px 15px rgba(255,255,255,0.2)',
                     }}
                   >
                     <div className="absolute inset-0 opacity-40 bg-[repeating-linear-gradient(90deg,transparent_0px,transparent_48px,rgba(255,255,255,0.3)_48px,rgba(255,255,255,0.3)_50px)]" />
                   </div>
                 ) : (
-                  <div
-                    className={`absolute bg-gradient-to-br ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
-                    style={{
-                      width: `${w}px`,
-                      height: `${d + 40}px`,
-                      borderRadius: '50% / 25%',
-                      transform: `rotateX(90deg) translateZ(-20px)`,
-                      transformOrigin: 'center',
-                      boxShadow: '0 -8px 30px rgba(59,130,246,0.4), inset 0 3px 15px rgba(255,255,255,0.2)',
-                    }}
-                  >
-                    <div className="absolute inset-0 opacity-40 bg-[repeating-linear-gradient(0deg,transparent_0px,transparent_28px,rgba(255,255,255,0.3)_28px,rgba(255,255,255,0.3)_30px)]" />
-                  </div>
+                  <>
+                    {/* Арочная крыша - основная дуга */}
+                    <div
+                      className={`absolute bg-gradient-to-b ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
+                      style={{
+                        width: `${w}px`,
+                        height: `${w / 2}px`,
+                        borderRadius: '0 0 100% 100% / 0 0 100% 100%',
+                        top: `${-w / 2}px`,
+                        left: '0px',
+                        boxShadow: '0 -8px 30px rgba(59,130,246,0.4), inset 0 3px 15px rgba(255,255,255,0.2)',
+                      }}
+                    >
+                      <div className="absolute inset-0 opacity-40 bg-[repeating-linear-gradient(0deg,transparent_0px,transparent_28px,rgba(255,255,255,0.3)_28px,rgba(255,255,255,0.3)_30px)]" />
+                    </div>
+                    {/* Арочная крыша - боковые стороны */}
+                    <div
+                      className={`absolute bg-gradient-to-br ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
+                      style={{
+                        width: `${d}px`,
+                        height: `${w / 2}px`,
+                        borderRadius: '100% 0 0 0 / 100% 0 0 0',
+                        top: `${-w / 2}px`,
+                        left: '0px',
+                        transform: `rotateY(90deg)`,
+                        transformOrigin: 'top left',
+                        boxShadow: 'inset -3px 0 15px rgba(0,0,0,0.4)',
+                      }}
+                    />
+                    <div
+                      className={`absolute bg-gradient-to-br ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
+                      style={{
+                        width: `${d}px`,
+                        height: `${w / 2}px`,
+                        borderRadius: '0 100% 0 0 / 0 100% 0 0',
+                        top: `${-w / 2}px`,
+                        left: `${w}px`,
+                        transform: `rotateY(90deg)`,
+                        transformOrigin: 'top left',
+                        boxShadow: 'inset 3px 0 15px rgba(0,0,0,0.3)',
+                      }}
+                    />
+                  </>
                 )}
               </>
             )}
