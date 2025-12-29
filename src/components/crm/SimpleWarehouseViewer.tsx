@@ -33,16 +33,17 @@ export const SimpleWarehouseViewer = ({ params }: SimpleWarehouseViewerProps) =>
         >
           {/* Пол */}
           <div
-            className="absolute bg-gradient-to-br from-gray-800 via-gray-700 to-gray-800 border-2 border-gray-600 shadow-2xl"
+            className="absolute bg-gradient-to-br from-gray-800 via-gray-700 to-gray-800 border-2 border-gray-600"
             style={{
               width: `${w}px`,
               height: `${d}px`,
               transform: `rotateX(90deg) translateZ(-${h}px)`,
               transformOrigin: 'top',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+              boxShadow: '0 10px 50px rgba(0,0,0,0.9)',
             }}
           >
-            <div className="absolute inset-0 opacity-20 bg-[linear-gradient(90deg,transparent_0%,transparent_49%,#666_49%,#666_51%,transparent_51%,transparent_100%)] bg-[length:40px_40px]" />
+            <div className="absolute inset-0 opacity-20 bg-[repeating-linear-gradient(90deg,transparent_0px,transparent_38px,#555_38px,#555_40px)]" />
+            <div className="absolute inset-0 opacity-20 bg-[repeating-linear-gradient(0deg,transparent_0px,transparent_38px,#555_38px,#555_40px)]" />
           </div>
 
           {/* Передняя стена с воротами */}
@@ -54,8 +55,7 @@ export const SimpleWarehouseViewer = ({ params }: SimpleWarehouseViewerProps) =>
               boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)',
             }}
           >
-            {/* Панели стены */}
-            <div className="absolute inset-0 opacity-30 bg-[linear-gradient(180deg,transparent_0%,transparent_48%,#555_48%,#555_52%,transparent_52%,transparent_100%)] bg-[length:100%_30px]" />
+            <div className="absolute inset-0 opacity-30 bg-[repeating-linear-gradient(0deg,transparent_0px,transparent_28px,#555_28px,#555_30px)]" />
             
             {/* Ворота */}
             {Array.from({ length: Math.min(gatesCount, 5) }).map((_, i) => {
@@ -70,10 +70,10 @@ export const SimpleWarehouseViewer = ({ params }: SimpleWarehouseViewerProps) =>
                     height: `${gateHeight}px`,
                     bottom: 0,
                     left: `${((i + 1) * w) / (Math.min(gatesCount, 5) + 1) - gateWidth / 2}px`,
-                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3), 0 4px 8px rgba(0,0,0,0.3)',
+                    boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.4), 0 6px 14px rgba(0,0,0,0.5)',
                   }}
                 >
-                  <div className="absolute inset-0 opacity-40 bg-[repeating-linear-gradient(0deg,#000_0px,#000_2px,transparent_2px,transparent_12px)]" />
+                  <div className="absolute inset-0 opacity-50 bg-[repeating-linear-gradient(0deg,#000_0px,#000_2px,transparent_2px,transparent_10px)]" />
                 </div>
               );
             })}
@@ -104,8 +104,8 @@ export const SimpleWarehouseViewer = ({ params }: SimpleWarehouseViewerProps) =>
                     height: `${windowHeight}px`,
                     top: `${h * 0.25}px`,
                     left: `${((i + 1) * w) / (Math.min(windowsCount, 8) + 1) - windowWidth / 2}px`,
-                    boxShadow: 'inset 0 2px 6px rgba(255,255,255,0.4), 0 2px 8px rgba(6,182,212,0.5)',
-                    opacity: 0.85,
+                    boxShadow: 'inset 0 2px 8px rgba(255,255,255,0.5), 0 3px 12px rgba(6,182,212,0.6)',
+                    opacity: 0.9,
                   }}
                 >
                   <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_48%,rgba(255,255,255,0.3)_48%,rgba(255,255,255,0.3)_52%,transparent_52%)]" />
@@ -126,7 +126,7 @@ export const SimpleWarehouseViewer = ({ params }: SimpleWarehouseViewerProps) =>
               boxShadow: 'inset -2px 0 10px rgba(0,0,0,0.3)',
             }}
           >
-            <div className="absolute inset-0 opacity-20 bg-[linear-gradient(180deg,transparent_0%,transparent_48%,#333_48%,#333_52%,transparent_52%,transparent_100%)] bg-[length:100%_30px]" />
+            <div className="absolute inset-0 opacity-25 bg-[repeating-linear-gradient(0deg,transparent_0px,transparent_28px,#333_28px,#333_30px)]" />
           </div>
 
           {/* Правая стена */}
@@ -137,33 +137,39 @@ export const SimpleWarehouseViewer = ({ params }: SimpleWarehouseViewerProps) =>
               height: `${h}px`,
               transform: `rotateY(90deg) translateZ(${w}px)`,
               transformOrigin: 'left',
-              boxShadow: 'inset 2px 0 10px rgba(0,0,0,0.2)',
+              boxShadow: 'inset 3px 0 15px rgba(0,0,0,0.3)',
             }}
           >
-            <div className="absolute inset-0 opacity-25 bg-[linear-gradient(180deg,transparent_0%,transparent_48%,#555_48%,#555_52%,transparent_52%,transparent_100%)] bg-[length:100%_30px]" />
+            <div className="absolute inset-0 opacity-30 bg-[repeating-linear-gradient(0deg,transparent_0px,transparent_28px,#555_28px,#555_30px)]" />
           </div>
 
-          {/* Крыша */}
+          {/* Крыша - ЦЕЛЬНАЯ С КАРКАСОМ */}
           <div
-            className="absolute bg-gradient-to-br from-blue-400 via-blue-500 to-blue-700 border-2 border-blue-800 shadow-2xl"
+            className="absolute"
             style={{
               width: `${w}px`,
               height: `${d}px`,
               transform: `rotateX(90deg) translateZ(0px)`,
               transformOrigin: 'top',
-              boxShadow: '0 -4px 20px rgba(59,130,246,0.4), inset 0 2px 10px rgba(255,255,255,0.2)',
             }}
           >
-            <div className="absolute inset-0 opacity-30 bg-[repeating-linear-gradient(90deg,transparent_0px,transparent_30px,rgba(255,255,255,0.2)_30px,rgba(255,255,255,0.2)_32px)]" />
+            <div
+              className="absolute inset-0 bg-gradient-to-br from-blue-400 via-blue-500 to-blue-700 border-2 border-blue-800"
+              style={{
+                boxShadow: '0 -8px 30px rgba(59,130,246,0.5), inset 0 3px 15px rgba(255,255,255,0.25)',
+              }}
+            >
+              <div className="absolute inset-0 opacity-35 bg-[repeating-linear-gradient(90deg,transparent_0px,transparent_38px,rgba(255,255,255,0.3)_38px,rgba(255,255,255,0.3)_40px)]" />
+            </div>
           </div>
         </div>
 
         {/* Информация */}
-        <div className="mt-12 text-center space-y-2">
-          <div className="text-cyan-400 text-lg font-bold font-mono tracking-wider">
+        <div className="mt-12 text-center space-y-3">
+          <div className="text-cyan-400 text-lg font-bold font-mono tracking-wider drop-shadow-[0_2px_8px_rgba(6,182,212,0.5)]">
             {length}м × {width}м × {height}м
           </div>
-          <div className="text-gray-400 text-sm flex items-center justify-center gap-2">
+          <div className="text-gray-300 text-sm flex items-center justify-center gap-2">
             {constructionType === 'steel' && (
               <>
                 <span className="text-2xl">🏗️</span>
@@ -183,13 +189,13 @@ export const SimpleWarehouseViewer = ({ params }: SimpleWarehouseViewerProps) =>
               </>
             )}
           </div>
-          <div className="flex gap-4 justify-center text-xs text-gray-500">
-            <div className="flex items-center gap-1">
-              <span className="text-orange-400">■</span>
+          <div className="flex gap-6 justify-center text-xs text-gray-400">
+            <div className="flex items-center gap-1.5">
+              <span className="text-orange-400 text-lg">■</span>
               <span>Ворот: {gatesCount}</span>
             </div>
-            <div className="flex items-center gap-1">
-              <span className="text-cyan-400">■</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-cyan-400 text-lg">■</span>
               <span>Окон: {windowsCount}</span>
             </div>
           </div>
@@ -198,12 +204,12 @@ export const SimpleWarehouseViewer = ({ params }: SimpleWarehouseViewerProps) =>
 
       <style>{`
         .warehouse-3d {
-          animation: rotateWarehouse 20s infinite linear;
-          transition: transform 0.3s ease;
+          animation: rotateWarehouse 25s infinite linear;
+          transition: transform 0.4s ease;
         }
         .warehouse-3d:hover {
           animation-play-state: paused;
-          transform: rotateX(-25deg) rotateY(-35deg) scale(1.05) !important;
+          transform: rotateX(-25deg) rotateY(-35deg) scale(1.08) !important;
         }
         @keyframes rotateWarehouse {
           0% { transform: rotateX(-25deg) rotateY(-35deg); }

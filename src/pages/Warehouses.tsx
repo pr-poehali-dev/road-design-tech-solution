@@ -38,7 +38,7 @@ const Warehouses = () => {
     height: 8,
     constructionType: 'steel',
     roofType: 'double',
-    roofAngle: 10,
+    roofAngle: 15,
     columnStep: 6,
     wallMaterial: 'sandwich',
     wallThickness: 150,
@@ -191,9 +191,91 @@ const Warehouses = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="steel">Стальной каркас</SelectItem>
-                    <SelectItem value="concrete">Железобетонный каркас</SelectItem>
-                    <SelectItem value="frameless">Бескаркасный ангар</SelectItem>
+                    <SelectItem value="steel">🏗️ Стальной каркас</SelectItem>
+                    <SelectItem value="concrete">🧱 Железобетонный каркас</SelectItem>
+                    <SelectItem value="frameless">🏛️ Бескаркасный ангар</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-white">Тип кровли</Label>
+                <Select value={params.roofType} onValueChange={(v: any) => setParams({ ...params, roofType: v })}>
+                  <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="single">Односкатная</SelectItem>
+                    <SelectItem value="double">Двускатная</SelectItem>
+                    <SelectItem value="arch">Арочная</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-white">Угол кровли (°)</Label>
+                  <Input
+                    type="number"
+                    value={params.roofAngle}
+                    onChange={(e) => setParams({ ...params, roofAngle: Number(e.target.value) })}
+                    min={5}
+                    max={30}
+                    className="bg-slate-800 border-slate-700 text-white"
+                  />
+                </div>
+                <div>
+                  <Label className="text-white">Шаг колонн (м)</Label>
+                  <Input
+                    type="number"
+                    value={params.columnStep}
+                    onChange={(e) => setParams({ ...params, columnStep: Number(e.target.value) })}
+                    min={3}
+                    max={12}
+                    step={3}
+                    className="bg-slate-800 border-slate-700 text-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-white">Материал стен</Label>
+                <Select value={params.wallMaterial} onValueChange={(v: any) => setParams({ ...params, wallMaterial: v })}>
+                  <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sandwich">Сэндвич-панели</SelectItem>
+                    <SelectItem value="proflist">Профлист</SelectItem>
+                    <SelectItem value="concrete">Бетонные панели</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-white">Толщина стен (мм)</Label>
+                <Input
+                  type="number"
+                  value={params.wallThickness}
+                  onChange={(e) => setParams({ ...params, wallThickness: Number(e.target.value) })}
+                  min={50}
+                  max={300}
+                  step={50}
+                  className="bg-slate-800 border-slate-700 text-white"
+                />
+              </div>
+
+              <div>
+                <Label className="text-white">Тип ворот</Label>
+                <Select value={params.gatesType} onValueChange={(v: any) => setParams({ ...params, gatesType: v })}>
+                  <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sectional">Секционные</SelectItem>
+                    <SelectItem value="sliding">Откатные</SelectItem>
+                    <SelectItem value="swing">Распашные</SelectItem>
+                    <SelectItem value="dock">Докшелтер</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -221,6 +303,40 @@ const Warehouses = () => {
                     className="bg-slate-800 border-slate-700 text-white"
                   />
                 </div>
+              </div>
+
+              <div>
+                <Label className="text-white">Регион строительства</Label>
+                <Select value={params.region} onValueChange={(v) => setParams({ ...params, region: v })}>
+                  <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Московская область">Московская область</SelectItem>
+                    <SelectItem value="Санкт-Петербург">Санкт-Петербург</SelectItem>
+                    <SelectItem value="Краснодарский край">Краснодарский край</SelectItem>
+                    <SelectItem value="Свердловская область">Свердловская область</SelectItem>
+                    <SelectItem value="Татарстан">Татарстан</SelectItem>
+                    <SelectItem value="Другой регион">Другой регион</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-white">Назначение склада</Label>
+                <Select value={params.purpose} onValueChange={(v) => setParams({ ...params, purpose: v })}>
+                  <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Хранение общих грузов">Хранение общих грузов</SelectItem>
+                    <SelectItem value="Холодильный склад">Холодильный склад</SelectItem>
+                    <SelectItem value="Производство">Производство</SelectItem>
+                    <SelectItem value="Логистический центр">Логистический центр</SelectItem>
+                    <SelectItem value="Автосервис">Автосервис</SelectItem>
+                    <SelectItem value="Сельхозпродукция">Сельхозпродукция</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="pt-4 space-y-3">

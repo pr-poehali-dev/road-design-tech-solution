@@ -352,11 +352,20 @@ const Index = () => {
             </div>
             <span className="font-heading font-bold text-xl md:text-2xl">DEOD</span>
           </div>
-          <div className="hidden md:flex gap-6 text-sm font-medium">
+          <div className="hidden md:flex gap-6 text-sm font-medium items-center">
             <a href="#technologies" className="hover:text-primary transition-colors">Технологии</a>
             <a href="#calculator" className="hover:text-primary transition-colors">Калькулятор</a>
             <a href="#projects" className="hover:text-primary transition-colors">Кейсы</a>
             <a href="#contact" className="hover:text-primary transition-colors">Контакты</a>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.location.href = '/warehouses'}
+              className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-300"
+            >
+              <Icon name="Warehouse" size={14} className="mr-2" />
+              Конструктор складов
+            </Button>
           </div>
           <Button 
             size="lg" 
