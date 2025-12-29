@@ -391,15 +391,11 @@ const Warehouses = () => {
               </div>
             </div>
             
-            {estimate ? (
-              <SimpleWarehouseViewer params={params} />
-            ) : (
-              <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center">
-                <div className="text-center text-slate-400">
-                  <Icon name="Building2" size={64} className="mx-auto mb-4 opacity-30" />
-                  <p className="text-lg mb-2">Нажмите "Сгенерировать проект"</p>
-                  <p className="text-sm">для создания 3D-модели склада</p>
-                </div>
+            <SimpleWarehouseViewer params={params} />
+            
+            {!estimate && (
+              <div className="mt-4 text-center text-sm text-gray-500 italic">
+                Измените параметры для просмотра конструкции
               </div>
             )}
 
