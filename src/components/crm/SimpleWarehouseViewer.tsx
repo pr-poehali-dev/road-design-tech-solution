@@ -193,9 +193,9 @@ export const SimpleWarehouseViewer = ({ params }: SimpleWarehouseViewerProps) =>
               style={{
                 width: `${w}px`,
                 height: `${d}px`,
-                transform: `rotateX(90deg) translateZ(-${h}px)`,
-                transformOrigin: 'top',
-                boxShadow: '0 10px 50px rgba(0,0,0,0.9)',
+                transform: `translateY(${h}px) rotateX(-90deg)`,
+                transformOrigin: 'top left',
+                boxShadow: 'inset 0 10px 30px rgba(0,0,0,0.5)',
               }}
             >
               {currentFloorStyle.pattern}
@@ -408,10 +408,10 @@ export const SimpleWarehouseViewer = ({ params }: SimpleWarehouseViewerProps) =>
                     <div
                       className={`absolute bg-gradient-to-br ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
                       style={{
-                        width: `${Math.sqrt((w / 2) ** 2 + (h * Math.tan((roofAngle * Math.PI) / 180)) ** 2)}px`,
+                        width: `${w / 2 + 10}px`,
                         height: `${d}px`,
-                        transformOrigin: 'left bottom',
-                        transform: `rotateX(90deg) rotateY(${-roofAngle}deg) translateY(-${h * Math.tan((roofAngle * Math.PI) / 180)}px)`,
+                        transformOrigin: 'left top',
+                        transform: `rotateX(${90 - roofAngle}deg) translateZ(0px)`,
                         boxShadow: '0 -8px 30px rgba(59,130,246,0.4), inset 0 3px 15px rgba(255,255,255,0.2)',
                       }}
                     >
@@ -421,10 +421,10 @@ export const SimpleWarehouseViewer = ({ params }: SimpleWarehouseViewerProps) =>
                     <div
                       className={`absolute bg-gradient-to-br ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
                       style={{
-                        width: `${Math.sqrt((w / 2) ** 2 + (h * Math.tan((roofAngle * Math.PI) / 180)) ** 2)}px`,
+                        width: `${w / 2 + 10}px`,
                         height: `${d}px`,
-                        transformOrigin: 'right bottom',
-                        transform: `rotateX(90deg) rotateY(${roofAngle}deg) translateX(${w}px) translateY(-${h * Math.tan((roofAngle * Math.PI) / 180)}px)`,
+                        transformOrigin: 'right top',
+                        transform: `translateX(${w}px) rotateX(${90 + roofAngle}deg) translateZ(0px)`,
                         boxShadow: '0 -8px 30px rgba(59,130,246,0.4), inset 0 3px 15px rgba(255,255,255,0.2)',
                       }}
                     >
@@ -436,7 +436,7 @@ export const SimpleWarehouseViewer = ({ params }: SimpleWarehouseViewerProps) =>
                       style={{
                         width: `${d}px`,
                         height: '12px',
-                        transform: `translateX(${w / 2}px) translateY(-${h * Math.tan((roofAngle * Math.PI) / 180)}px) rotateY(90deg)`,
+                        transform: `translateX(${w / 2}px) translateY(-6px) rotateY(90deg)`,
                         transformOrigin: 'left',
                         boxShadow: '0 4px 12px rgba(0,0,0,0.8)',
                       }}
@@ -446,10 +446,10 @@ export const SimpleWarehouseViewer = ({ params }: SimpleWarehouseViewerProps) =>
                   <div
                     className={`absolute bg-gradient-to-br ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
                     style={{
-                      width: `${Math.sqrt(w ** 2 + (h * Math.tan((roofAngle * Math.PI) / 180)) ** 2)}px`,
+                      width: `${w}px`,
                       height: `${d}px`,
-                      transformOrigin: 'left bottom',
-                      transform: `rotateX(90deg) rotateY(${-roofAngle / 2}deg) translateY(-${h * Math.tan((roofAngle * Math.PI) / 360)}px)`,
+                      transformOrigin: 'left top',
+                      transform: `rotateX(${90 - roofAngle / 2}deg) translateZ(0px)`,
                       boxShadow: '0 -8px 30px rgba(59,130,246,0.4), inset 0 3px 15px rgba(255,255,255,0.2)',
                     }}
                   >
@@ -460,9 +460,9 @@ export const SimpleWarehouseViewer = ({ params }: SimpleWarehouseViewerProps) =>
                     className={`absolute bg-gradient-to-br ${currentConstruction.roof} border-2 ${currentConstruction.color.replace('text-', 'border-')}`}
                     style={{
                       width: `${w}px`,
-                      height: `${d}px`,
-                      borderRadius: '50% / 20%',
-                      transform: `rotateX(90deg) translateZ(${-h * 0.15}px)`,
+                      height: `${d + 40}px`,
+                      borderRadius: '50% / 25%',
+                      transform: `rotateX(90deg) translateZ(-20px)`,
                       transformOrigin: 'center',
                       boxShadow: '0 -8px 30px rgba(59,130,246,0.4), inset 0 3px 15px rgba(255,255,255,0.2)',
                     }}
