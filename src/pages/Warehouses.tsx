@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { SimpleWarehouseViewer } from '@/components/crm/SimpleWarehouseViewer';
+// import { SimpleWarehouseViewer } from '@/components/crm/SimpleWarehouseViewer';
 
 interface WarehouseParams {
   length: number;
@@ -391,11 +391,15 @@ const Warehouses = () => {
               </div>
             </div>
             
-            <SimpleWarehouseViewer params={params} />
+            {/* <SimpleWarehouseViewer params={params} /> */}
+            <div className="py-20 text-center">
+              <div className="text-gray-400 mb-2">🏗️</div>
+              <p className="text-gray-500 text-sm">3D визуализация временно недоступна</p>
+            </div>
             
             {!estimate && (
               <div className="mt-4 text-center text-sm text-gray-500 italic">
-                Измените параметры для просмотра конструкции
+                Измените параметры для расчета сметы
               </div>
             )}
 
