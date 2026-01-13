@@ -317,8 +317,46 @@ _____________/______/           _____________/______/
               <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 bg-clip-text text-transparent mb-3">
                 Коммерческое предложение
               </h1>
-              <p className="text-lg md:text-2xl text-gray-700 font-medium">Торговый центр в г. Лахденпохья</p>
-              <p className="text-sm md:text-base text-gray-500 mt-2">Республика Карелия | Площадь до 1500 м² | Участок до 1 га</p>
+              <p className="text-lg md:text-2xl text-gray-700 font-medium mb-6">Торговый центр в г. Лахденпохья</p>
+              
+              {/* Простая CSS-анимация здания ТЦ */}
+              <div className="relative w-64 h-48 mx-auto md:mx-0">
+                <style>{`
+                  @keyframes rotate3d {
+                    0% { transform: perspective(600px) rotateY(0deg); }
+                    100% { transform: perspective(600px) rotateY(360deg); }
+                  }
+                  .building-3d {
+                    animation: rotate3d 8s linear infinite;
+                    transform-style: preserve-3d;
+                  }
+                `}</style>
+                
+                <div className="building-3d relative w-full h-full flex items-center justify-center">
+                  {/* Основное здание */}
+                  <div className="relative w-40 h-32 bg-gradient-to-br from-blue-200 to-blue-300 rounded-lg shadow-2xl border-4 border-blue-400">
+                    {/* Крыша */}
+                    <div className="absolute -top-3 left-0 right-0 h-6 bg-gradient-to-r from-blue-500 to-blue-600 rounded-t-lg shadow-lg"></div>
+                    
+                    {/* Вывеска с текстом ТЦ */}
+                    <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-black text-3xl px-6 py-2 rounded-lg shadow-xl border-2 border-white">
+                      ТЦ
+                    </div>
+                    
+                    {/* Окна */}
+                    <div className="absolute bottom-4 left-4 right-4 grid grid-cols-3 gap-2">
+                      {[...Array(6)].map((_, i) => (
+                        <div key={i} className="w-8 h-10 bg-cyan-100 rounded border-2 border-blue-400 opacity-70"></div>
+                      ))}
+                    </div>
+                    
+                    {/* Вход */}
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-16 bg-blue-400 rounded-t-lg border-2 border-blue-500"></div>
+                  </div>
+                </div>
+              </div>
+              
+              <p className="text-sm md:text-base text-gray-500 mt-6">Республика Карелия | Площадь до 1500 м² | Участок до 1 га</p>
             </div>
             <div className="text-left md:text-right">
               <div className="text-xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent mb-2">
