@@ -4,8 +4,6 @@ import { Card } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Box, Plane } from '@react-three/drei';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import ExcelJS from 'exceljs';
@@ -51,42 +49,6 @@ const workItems = [
   { name: 'Сопровождение экспертизы', unit: 'компл.', volume: 1, price: 200000, total: 200000 },
   { name: 'Авторский надзор', unit: 'месяц', volume: 6, price: 100000, total: 600000 },
 ];
-
-function Building3D() {
-  return (
-    <>
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 5]} intensity={1} />
-      
-      <Box args={[4, 1.5, 6]} position={[0, 0.75, 0]}>
-        <meshStandardMaterial color="#cbd5e1" />
-      </Box>
-      
-      <Box args={[3.8, 0.3, 5.8]} position={[0, 1.65, 0]}>
-        <meshStandardMaterial color="#06b6d4" />
-      </Box>
-      
-      <Box args={[0.3, 1.5, 0.3]} position={[-1.5, 0.75, -2.5]}>
-        <meshStandardMaterial color="#64748b" />
-      </Box>
-      <Box args={[0.3, 1.5, 0.3]} position={[1.5, 0.75, -2.5]}>
-        <meshStandardMaterial color="#64748b" />
-      </Box>
-      <Box args={[0.3, 1.5, 0.3]} position={[-1.5, 0.75, 2.5]}>
-        <meshStandardMaterial color="#64748b" />
-      </Box>
-      <Box args={[0.3, 1.5, 0.3]} position={[1.5, 0.75, 2.5]}>
-        <meshStandardMaterial color="#64748b" />
-      </Box>
-      
-      <Plane args={[8, 10]} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-        <meshStandardMaterial color="#475569" />
-      </Plane>
-      
-      <OrbitControls enableZoom={true} enablePan={false} />
-    </>
-  );
-}
 
 export default function CommercialProposal() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -301,11 +263,10 @@ _____________ / __________ /                    _____________ / __________ /
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 bg-slate-800/50">
+          <TabsList className="grid w-full grid-cols-3 bg-slate-800/50">
             <TabsTrigger value="overview">Обзор</TabsTrigger>
             <TabsTrigger value="budget">Смета</TabsTrigger>
             <TabsTrigger value="roadmap">Дорожная карта</TabsTrigger>
-            <TabsTrigger value="3d">3D Прототип</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -503,7 +464,6 @@ _____________ / __________ /                    _____________ / __________ /
               <div className="space-y-6">
                 {['Этап 0', 'Этап 1', 'Этап 2', 'Этап 3', 'Этап 4', 'Этап 5'].map((phase, phaseIdx) => {
                   const phaseTasks = detailedTasks.filter(t => t.phase === phase);
-                  const phaseData = roadmapData[phaseIdx];
                   const phaseTitle = [
                     'Предпроектная подготовка и старт (недели 1-4)',
                     'Изыскания и эскизное проектирование (недели 3-12)',
@@ -532,41 +492,6 @@ _____________ / __________ /                    _____________ / __________ /
                     </div>
                   );
                 })}
-              </div>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="3d" className="space-y-6">
-            <Card className="p-6 bg-slate-900/50 border-cyan-500/30">
-              <h3 className="text-xl font-bold text-white mb-4">3D-прототип торгового центра</h3>
-              <p className="text-sm text-gray-400 mb-6">Концептуальная модель здания. Используйте мышь для вращения и масштабирования.</p>
-              <div className="w-full h-[500px] bg-slate-950 rounded-lg overflow-hidden border-2 border-cyan-500/30">
-                <Canvas camera={{ position: [8, 5, 8], fov: 50 }}>
-                  <Building3D />
-                </Canvas>
-              </div>
-
-              <div className="grid md:grid-cols-4 gap-4 mt-6">
-                <div className="p-4 rounded-lg bg-slate-800/50 text-center">
-                  <Icon name="Maximize2" size={24} className="text-cyan-400 mx-auto mb-2" />
-                  <div className="text-white font-semibold">1500 м²</div>
-                  <div className="text-xs text-gray-400">Площадь</div>
-                </div>
-                <div className="p-4 rounded-lg bg-slate-800/50 text-center">
-                  <Icon name="ArrowUpDown" size={24} className="text-cyan-400 mx-auto mb-2" />
-                  <div className="text-white font-semibold">7 м</div>
-                  <div className="text-xs text-gray-400">Высота</div>
-                </div>
-                <div className="p-4 rounded-lg bg-slate-800/50 text-center">
-                  <Icon name="Box" size={24} className="text-cyan-400 mx-auto mb-2" />
-                  <div className="text-white font-semibold">10 500 м³</div>
-                  <div className="text-xs text-gray-400">Объем</div>
-                </div>
-                <div className="p-4 rounded-lg bg-slate-800/50 text-center">
-                  <Icon name="Car" size={24} className="text-cyan-400 mx-auto mb-2" />
-                  <div className="text-white font-semibold">20 мест</div>
-                  <div className="text-xs text-gray-400">Парковка</div>
-                </div>
               </div>
             </Card>
           </TabsContent>

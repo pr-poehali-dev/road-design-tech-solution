@@ -430,6 +430,15 @@ const Index = () => {
                   <Icon name="Presentation" className="mr-2 group-hover:scale-110 transition-transform" size={16} />
                   <span className="truncate">Технологические решения</span>
                 </Button>
+                <Button 
+                  size="lg" 
+                  variant="secondary" 
+                  className="w-full sm:w-auto font-semibold text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 group touch-manipulation"
+                  onClick={() => window.location.href = '/kp'}
+                >
+                  <Icon name="Briefcase" className="mr-2 group-hover:scale-110 transition-transform" size={16} />
+                  <span className="truncate">Коммерческое предложение</span>
+                </Button>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 text-white/90 text-sm sm:text-base">
                 <a 
