@@ -10,6 +10,7 @@ import CRM from "./pages/CRM";
 import Admin from "./pages/Admin";
 
 const Warehouses = lazy(() => import("./pages/Warehouses"));
+const CommercialProposal = lazy(() => import("./pages/CommercialProposal"));
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,11 @@ const App = () => (
           <Route path="/warehouses" element={
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
               <Warehouses />
+            </Suspense>
+          } />
+          <Route path="/kp" element={
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
+              <CommercialProposal />
             </Suspense>
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
