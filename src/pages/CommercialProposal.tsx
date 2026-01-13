@@ -158,6 +158,7 @@ export default function CommercialProposal() {
     worksheet.columns = [
       { header: 'ID', key: 'id', width: 10 },
       { header: 'Задача', key: 'task', width: 50 },
+      { header: 'Описание', key: 'desc', width: 60 },
       { header: 'Неделя начала', key: 'start', width: 15 },
       { header: 'Длительность (нед.)', key: 'duration', width: 20 },
       { header: 'Этап', key: 'phase', width: 15 },
@@ -249,7 +250,7 @@ _________________________________________________, именуемое в дал�
 2. СТОИМОСТЬ РАБОТ И ПОРЯДОК РАСЧЕТОВ
 
 2.1. Общая стоимость работ по настоящему Договору составляет: 
-11 905 000 (Одиннадцать миллионов девятьсот пять тысяч) рублей 00 копеек, в том числе НДС 20%.
+11 905 000 (Одиннадцать миллионов девятьсот пять тысяч) рублей 00 копеек без НДС.
 
 2.2. Оплата производится в следующем порядке:
 - 50% (5 952 500 руб.) - предоплата в течение 5 банковских дней с даты подписания Договора;
@@ -363,22 +364,22 @@ _____________/______/           _____________/______/
                 {totalCost.toLocaleString('ru-RU')} ₽
               </div>
               <div className="text-sm md:text-base text-gray-600">Проектирование "под ключ"</div>
-              <div className="text-xs md:text-sm text-gray-500 mt-1">НДС 20% включён</div>
+              <div className="text-xs md:text-sm text-gray-500 mt-1">Без НДС</div>
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <Button onClick={exportToExcel} className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-lg">
               <Icon name="FileSpreadsheet" size={18} className="mr-2" />
-              <span className="text-sm md:text-base">Скачать Excel</span>
+              <span className="text-sm md:text-base">Скачать График работ (Excel)</span>
             </Button>
             <Button onClick={exportToPDF} className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white shadow-lg">
               <Icon name="FileText" size={18} className="mr-2" />
-              <span className="text-sm md:text-base">Скачать PDF</span>
+              <span className="text-sm md:text-base">Скачать КП (PDF)</span>
             </Button>
             <Button onClick={exportContract} className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg">
               <Icon name="FileSignature" size={18} className="mr-2" />
-              <span className="text-sm md:text-base">Скачать Договор</span>
+              <span className="text-sm md:text-base">Скачать Договор (Word)</span>
             </Button>
           </div>
         </div>
