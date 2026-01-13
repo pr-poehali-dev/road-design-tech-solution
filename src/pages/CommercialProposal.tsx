@@ -320,39 +320,22 @@ _____________/______/           _____________/______/
               </h1>
               <p className="text-lg md:text-2xl text-gray-700 font-medium mb-6">Торговый центр в г. Лахденпохья</p>
               
-              {/* Простая CSS-анимация здания ТЦ */}
-              <div className="relative w-64 h-48 mx-auto md:mx-0">
+              {/* Вращающиеся буквы ТЦ */}
+              <div className="relative w-full h-32 mx-auto md:mx-0 flex items-center justify-center md:justify-start my-8">
                 <style>{`
-                  @keyframes rotate3d {
-                    0% { transform: perspective(600px) rotateY(0deg); }
-                    100% { transform: perspective(600px) rotateY(360deg); }
+                  @keyframes rotateY {
+                    0% { transform: rotateY(0deg); }
+                    100% { transform: rotateY(360deg); }
                   }
-                  .building-3d {
-                    animation: rotate3d 8s linear infinite;
+                  .rotating-text {
+                    animation: rotateY 4s linear infinite;
                     transform-style: preserve-3d;
                   }
                 `}</style>
                 
-                <div className="building-3d relative w-full h-full flex items-center justify-center">
-                  {/* Основное здание */}
-                  <div className="relative w-40 h-32 bg-gradient-to-br from-blue-200 to-blue-300 rounded-lg shadow-2xl border-4 border-blue-400">
-                    {/* Крыша */}
-                    <div className="absolute -top-3 left-0 right-0 h-6 bg-gradient-to-r from-blue-500 to-blue-600 rounded-t-lg shadow-lg"></div>
-                    
-                    {/* Вывеска с текстом ТЦ */}
-                    <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-black text-3xl px-6 py-2 rounded-lg shadow-xl border-2 border-white">
-                      ТЦ
-                    </div>
-                    
-                    {/* Окна */}
-                    <div className="absolute bottom-4 left-4 right-4 grid grid-cols-3 gap-2">
-                      {[...Array(6)].map((_, i) => (
-                        <div key={i} className="w-8 h-10 bg-cyan-100 rounded border-2 border-blue-400 opacity-70"></div>
-                      ))}
-                    </div>
-                    
-                    {/* Вход */}
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-16 bg-blue-400 rounded-t-lg border-2 border-blue-500"></div>
+                <div className="rotating-text">
+                  <div className="text-8xl md:text-9xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 bg-clip-text text-transparent">
+                    ТЦ
                   </div>
                 </div>
               </div>
