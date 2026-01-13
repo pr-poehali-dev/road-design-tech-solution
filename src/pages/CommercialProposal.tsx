@@ -6,6 +6,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import ExcelJS from 'exceljs';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { Box, OrbitControls, Text } from '@react-three/drei';
 
 const budgetData = [
   { name: 'Проектирование ОКС', value: 10500000, percentage: 88.2 },
@@ -300,6 +302,77 @@ _____________/______/           _____________/______/
 
   const totalCost = workItemsDetailed.reduce((sum, item) => sum + item.total, 0);
 
+  function Building3D() {
+    const meshRef = useRef<any>();
+
+    useFrame(() => {
+      if (meshRef.current) {
+        meshRef.current.rotation.y += 0.005;
+      }
+    });
+
+    return (
+      <group ref={meshRef}>
+        {/* Основание здания */}
+        <Box args={[4, 0.3, 6]} position={[0, 0.15, 0]}>
+          <meshStandardMaterial color="#e0e7ff" />
+        </Box>
+        
+        {/* Стены */}
+        <Box args={[3.8, 1.5, 5.8]} position={[0, 1.05, 0]}>
+          <meshStandardMaterial color="#dbeafe" />
+        </Box>
+        
+        {/* Крыша */}
+        <Box args={[4.2, 0.2, 6.2]} position={[0, 1.9, 0]}>
+          <meshStandardMaterial color="#3b82f6" />
+        </Box>
+        
+        {/* Входная группа */}
+        <Box args={[1.5, 1.5, 0.3]} position={[0, 1.05, 3]}>
+          <meshStandardMaterial color="#60a5fa" />
+        </Box>
+        
+        {/* Вывеска "ТЦ" на фасаде */}
+        <mesh position={[0, 1.5, 3.01]}>
+          <planeGeometry args={[1.2, 0.6]} />
+          <meshStandardMaterial color="#1e40af" />
+        </mesh>
+        
+        {/* Окна */}
+        {[-1.5, 0, 1.5].map((x, i) => (
+          <group key={i}>
+            <Box args={[0.6, 0.8, 0.05]} position={[x, 1.2, 2.92]}>
+              <meshStandardMaterial color="#93c5fd" transparent opacity={0.7} />
+            </Box>
+          </group>
+        ))}
+        
+        {/* Колонны */}
+        {[
+          [-1.8, 2.8], [1.8, 2.8], 
+          [-1.8, -2.8], [1.8, -2.8]
+        ].map(([x, z], i) => (
+          <Box key={i} args={[0.3, 1.5, 0.3]} position={[x, 1.05, z]}>
+            <meshStandardMaterial color="#60a5fa" />
+          </Box>
+        ))}
+        
+        {/* Текст "ТЦ" на вывеске */}
+        <Text
+          position={[0, 1.5, 3.02]}
+          fontSize={0.4}
+          color="#ffffff"
+          anchorX="center"
+          anchorY="middle"
+          font="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff"
+        >
+          ТЦ
+        </Text>
+      </group>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="container mx-auto px-4 py-6 md:py-12" ref={contentRef}>
@@ -317,8 +390,20 @@ _____________/______/           _____________/______/
               <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 bg-clip-text text-transparent mb-3">
                 Коммерческое предложение
               </h1>
-              <p className="text-lg md:text-2xl text-gray-700 font-medium">Торговый центр в г. Лахденпохья</p>
-              <p className="text-sm md:text-base text-gray-500 mt-2">Республика Карелия | Площадь до 1500 м² | Участок до 1 га</p>
+              <p className="text-lg md:text-2xl text-gray-700 font-medium mb-6">Торговый центр в г. Лахденпохья</p>
+              
+              {/* 3D модель ТЦ */}
+              <div className="w-full max-w-md h-64 rounded-2xl overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 shadow-xl border-2 border-blue-200">
+                <Canvas camera={{ position: [8, 5, 8], fov: 50 }}>
+                  <ambientLight intensity={0.6} />
+                  <directionalLight position={[10, 10, 5]} intensity={0.8} />
+                  <pointLight position={[-10, -10, -5]} intensity={0.3} />
+                  <Building3D />
+                  <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={1} />
+                </Canvas>
+              </div>
+              
+              <p className="text-sm md:text-base text-gray-500 mt-4">Республика Карелия | Площадь до 1500 м² | Участок до 1 га</p>
             </div>
             <div className="text-left md:text-right">
               <div className="text-xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent mb-2">
