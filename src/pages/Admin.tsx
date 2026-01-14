@@ -17,9 +17,7 @@ import { WarehouseDesigner } from '@/components/crm/WarehouseDesigner';
 
 const Admin = () => {
   const { toast } = useToast();
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('crm_auth') === 'authenticated';
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showProjectCard, setShowProjectCard] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -60,9 +58,7 @@ const Admin = () => {
     // TODO: Вызов backend для генерации КП
   };
 
-  if (!isAuthenticated) {
-    return <CRMAuth onLogin={handleLogin} />;
-  }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
