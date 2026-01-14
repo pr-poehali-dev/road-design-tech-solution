@@ -13,6 +13,8 @@ const budgetData = [
   { name: 'Благоустройство', value: 100000, percentage: 1.7 },
 ];
 
+// ИТОГО: 3540000 + 2360000 + 50000 + 150000 + 55000 + 100000 = 6255000
+
 const COLORS = ['#3b82f6', '#06b6d4', '#8b5cf6', '#f59e0b', '#10b981'];
 
 const roadmapData = [
@@ -47,19 +49,19 @@ const detailedTasks = [
 
 const workItemsDetailed = [
   { 
-    name: 'Проектная документация (ПД) стадии "П" (60% от общей суммы)', 
+    name: 'Проектная документация (ПД) стадии "П" (60%)', 
     unit: 'комплект', 
     volume: 1, 
-    price: 3540000, 
-    total: 3540000,
+    price: 3327000, 
+    total: 3327000,
     description: 'Полный комплект проектной документации по всем разделам для 2-этажного торгового центра высотой 10 м'
   },
   { 
-    name: 'Рабочая документация (РД) стадии "Д" (40% от общей суммы)', 
+    name: 'Рабочая документация (РД) стадии "Д" (40%)', 
     unit: 'комплект', 
     volume: 1, 
-    price: 2360000, 
-    total: 2360000,
+    price: 2218000, 
+    total: 2218000,
     description: 'Детальные рабочие чертежи для производства строительно-монтажных работ'
   },
   { 
@@ -359,10 +361,10 @@ _____________/______/           _____________/______/
                 <div className="space-y-3">
                   {[
                     { label: 'Общая площадь здания', value: 'до 1500 м²' },
-                    { label: 'Строительный объём', value: '~10 500 м³' },
+                    { label: 'Строительный объём', value: '~15 000 м³' },
                     { label: 'Площадь земельного участка', value: 'до 1 га (10 000 м²)' },
-                    { label: 'Средняя высота здания', value: '~7 метров' },
-                    { label: 'Количество этажей', value: '1 этаж' },
+                    { label: 'Высота здания', value: '10 метров' },
+                    { label: 'Количество этажей', value: '2 этажа' },
                     { label: 'Парковка', value: '~20 машиномест' },
                     { label: 'Категория здания', value: 'Общественное (торговля)' },
                   ].map((item, idx) => (
@@ -381,12 +383,10 @@ _____________/______/           _____________/______/
                 </h3>
                 <div className="space-y-3">
                   {[
-                    { name: 'Проектная документация (ПД)', desc: 'Все разделы по ПП РФ №87' },
-                    { name: 'Рабочая документация (РД)', desc: 'Детальные чертежи для стройки' },
-                    { name: 'Инженерные изыскания', desc: 'Геодезия + экология' },
-                    { name: 'Проект благоустройства', desc: 'Дорожки, озеленение, МАФ' },
-                    { name: 'Государственная экспертиза', desc: 'Сопровождение и устранение замечаний' },
-                    { name: 'Авторский надзор', desc: '6 месяцев контроля строительства' }
+                    { name: 'Проектная документация (ПД)', desc: 'Стадия "П" - 60% от стоимости' },
+                    { name: 'Рабочая документация (РД)', desc: 'Стадия "Д" - 40% от стоимости' },
+                    { name: 'Инженерные изыскания', desc: 'Геодезия + геология + экология' },
+                    { name: 'Проект благоустройства', desc: 'Дорожки, озеленение, МАФ, парковка' }
                   ].map((item, idx) => (
                     <div key={idx} className="flex items-start gap-3 p-3 rounded-lg bg-gradient-to-r from-emerald-50 to-cyan-50 hover:from-emerald-100 hover:to-cyan-100 transition-colors">
                       <Icon name="Check" size={20} className="text-emerald-600 mt-0.5 flex-shrink-0" />
@@ -410,13 +410,13 @@ _____________/______/           _____________/______/
         >
           <Card className="p-6 bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-xl hover:scale-105 transition-transform">
             <Icon name="Clock" size={40} className="mb-4" />
-            <div className="text-4xl md:text-5xl font-bold mb-2">12 мес.</div>
+            <div className="text-4xl md:text-5xl font-bold mb-2">30 недель</div>
             <div className="text-cyan-100">Срок реализации проекта</div>
           </Card>
 
           <Card className="p-6 bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-xl hover:scale-105 transition-transform">
             <Icon name="FileCheck" size={40} className="mb-4" />
-            <div className="text-4xl md:text-5xl font-bold mb-2">6 этапов</div>
+            <div className="text-4xl md:text-5xl font-bold mb-2">4 этапа</div>
             <div className="text-emerald-100">Структурированная работа</div>
           </Card>
 
@@ -535,11 +535,11 @@ _____________/______/           _____________/______/
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white flex items-center justify-center font-bold text-xl flex-shrink-0">
-                      50%
+                      30%
                     </div>
                     <div>
                       <div className="font-semibold text-gray-800">Предоплата</div>
-                      <div className="text-sm text-gray-600">{(totalCost * 0.5).toLocaleString('ru-RU')} ₽</div>
+                      <div className="text-sm text-gray-600">{(totalCost * 0.3).toLocaleString('ru-RU')} ₽</div>
                       <div className="text-xs text-gray-500">При подписании договора</div>
                     </div>
                   </div>
@@ -548,19 +548,19 @@ _____________/______/           _____________/______/
                       30%
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-800">После ПД + экспертиза</div>
+                      <div className="font-semibold text-gray-800">После сдачи ПД</div>
                       <div className="text-sm text-gray-600">{(totalCost * 0.3).toLocaleString('ru-RU')} ₽</div>
-                      <div className="text-xs text-gray-500">При получении положительного заключения</div>
+                      <div className="text-xs text-gray-500">При передаче проектной документации</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 text-white flex items-center justify-center font-bold text-xl flex-shrink-0">
-                      20%
+                      40%
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-800">Финальный платёж</div>
-                      <div className="text-sm text-gray-600">{(totalCost * 0.2).toLocaleString('ru-RU')} ₽</div>
-                      <div className="text-xs text-gray-500">По факту выполнения всех работ</div>
+                      <div className="font-semibold text-gray-800">При подписании акта</div>
+                      <div className="text-sm text-gray-600">{(totalCost * 0.4).toLocaleString('ru-RU')} ₽</div>
+                      <div className="text-xs text-gray-500">По сдаче РД и подписании Акта приемки работ</div>
                     </div>
                   </div>
                 </div>
@@ -573,13 +573,13 @@ _____________/______/           _____________/______/
                 </h3>
                 <div className="space-y-2">
                   {[
-                    'Полный комплект ПД и РД',
-                    'Прохождение экспертизы с первого раза',
-                    'Все изыскания и согласования',
-                    '6 месяцев авторского надзора',
+                    'Полный комплект ПД (60%) и РД (40%)',
+                    'Все изыскания (геодезия, геология, экология)',
+                    'Проект благоустройства территории',
                     'Бесплатные консультации после сдачи',
                     'Корректировки по замечаниям',
                     'Электронная версия проекта',
+                    'Гарантия качества и сроков',
                   ].map((item, idx) => (
                     <div key={idx} className="flex items-center gap-2 text-sm md:text-base">
                       <Icon name="CheckCircle" size={18} className="text-emerald-600 flex-shrink-0" />
