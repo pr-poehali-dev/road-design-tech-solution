@@ -638,15 +638,13 @@ _____________/______/           _____________/______/
               Детализированный план работ
             </h2>
             <div className="space-y-6">
-              {['Этап 0', 'Этап 1', 'Этап 2', 'Этап 3', 'Этап 4', 'Этап 5'].map((phase, phaseIdx) => {
+              {['Этап 0', 'Этап 1', 'Этап 2', 'Этап 3'].map((phase, phaseIdx) => {
                 const phaseTasks = detailedTasks.filter(t => t.phase === phase);
                 const phaseDescriptions = [
                   { title: 'Предпроектная подготовка', subtitle: 'Недели 1-4', color: 'from-blue-500 to-cyan-500' },
-                  { title: 'Изыскания и эскизный проект', subtitle: 'Недели 3-13', color: 'from-emerald-500 to-green-500' },
-                  { title: 'Разработка проектной документации', subtitle: 'Недели 10-27', color: 'from-purple-500 to-pink-500' },
-                  { title: 'Государственная экспертиза', subtitle: 'Недели 27-44', color: 'from-orange-500 to-red-500' },
-                  { title: 'Разработка рабочей документации', subtitle: 'Недели 32-49', color: 'from-indigo-500 to-blue-500' },
-                  { title: 'Авторский надзор за строительством', subtitle: 'Недели 49-72 (6 мес.)', color: 'from-teal-500 to-cyan-500' },
+                  { title: 'Изыскания и эскизный проект', subtitle: 'Недели 4-14', color: 'from-emerald-500 to-green-500' },
+                  { title: 'Разработка проектной документации', subtitle: 'Недели 14-18', color: 'from-purple-500 to-pink-500' },
+                  { title: 'Разработка рабочей документации', subtitle: 'Недели 19-30', color: 'from-indigo-500 to-blue-500' },
                 ][phaseIdx];
 
                 return (
