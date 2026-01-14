@@ -47,11 +47,8 @@ const CRM = () => {
   ];
 
   useEffect(() => {
-    const auth = localStorage.getItem('crm_auth');
-    if (auth === 'authenticated') {
-      setIsAuthenticated(true);
-      loadData();
-    }
+    setIsAuthenticated(true);
+    loadData();
     const savedColors = localStorage.getItem('crm_colors');
     if (savedColors) {
       setCustomColors(JSON.parse(savedColors));
