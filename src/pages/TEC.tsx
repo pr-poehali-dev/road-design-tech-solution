@@ -3,56 +3,71 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
-import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar
-} from 'recharts';
 
 const vacanciesData = [
-  { name: 'Помощник бурильщика', count: 5, salary: 180000, category: 'Рабочие' },
-  { name: 'Машинист буровой', count: 3, salary: 220000, category: 'Рабочие' },
-  { name: 'Водитель КМУ', count: 2, salary: 190000, category: 'Рабочие' },
-  { name: 'Мастер участка', count: 2, salary: 250000, category: 'Руководители' },
-  { name: 'Инженер по ТБ', count: 1, salary: 235000, category: 'Специалисты' },
-  { name: 'Инженер-геодезист', count: 1, salary: 210000, category: 'Специалисты' }
-];
-
-const categoryData = [
-  { name: 'Рабочие', value: 10, color: '#06b6d4' },
-  { name: 'Руководители', value: 2, color: '#8b5cf6' },
-  { name: 'Специалисты', value: 2, color: '#ec4899' }
-];
-
-const requirementsData = [
-  { subject: 'Опыт работы', value: 90 },
-  { subject: 'Образование', value: 75 },
-  { subject: 'Здоровье', value: 100 },
-  { subject: 'Навыки', value: 85 },
-  { subject: 'Документы', value: 80 }
-];
-
-const timelineData = [
-  { month: 'Янв 2026', openPositions: 14, filled: 0 },
-  { month: 'Фев 2026', openPositions: 14, filled: 4 },
-  { month: 'Мар 2026', openPositions: 10, filled: 8 },
-  { month: 'Апр 2026', openPositions: 6, filled: 12 },
-  { month: 'Май 2026', openPositions: 2, filled: 14 }
+  {
+    name: 'Помощник бурильщика',
+    salary: 'Обсуждается по факту',
+    category: 'Рабочие',
+    functions: 'Выполнение работ по бурению под руководством бурильщика, обслуживание и текущий ремонт бурового оборудования, ведение документации. Точный перечень обязанностей будет предоставлен руководителем отдела.',
+    age: '25-45',
+    education: 'Среднее профессиональное (по профилю)',
+    experience: 'От 3 лет',
+    requirements: 'Опыт работы на буровых. Навыки обслуживания ДВС и техники. Права категории В, С (желательно).'
+  },
+  {
+    name: 'Машинист буровой установки',
+    salary: 'Обсуждается по факту',
+    category: 'Рабочие',
+    functions: 'Управление буровой установкой, проведение буровых работ, техническое обслуживание и диагностика оборудования, руководство помощником бурильщика.',
+    age: '30-55',
+    education: 'Среднее профессиональное (по профилю)',
+    experience: 'От 3 лет',
+    requirements: 'Опыт работы на буровых установках в разных регионах. Навыки ТО и ремонта. Права категории В, С.'
+  },
+  {
+    name: 'Водитель автомобиля с КМУ',
+    salary: 'Обсуждается по факту',
+    category: 'Рабочие',
+    functions: 'Управление автомобилем с КМУ, выполнение погрузочно-разгрузочных и такелажных работ на объекте, техническое обслуживание транспортного средства и кранового оборудования.',
+    age: '25-45',
+    education: 'Среднее профессиональное',
+    experience: 'От 3 лет',
+    requirements: 'Водительские права категории В, С. Действующее удостоверение крановщика (машиниста крана). Опыт работы с КМУ.'
+  },
+  {
+    name: 'Мастер участка бурения',
+    salary: 'Обсуждается по факту',
+    category: 'Руководители',
+    functions: 'Организация и контроль буровых работ на участке, ведение производственной документации и сменных отчетов, планирование работ, управление персоналом (до 15 чел.), взаимодействие со смежными службами.',
+    age: '35-60',
+    education: 'Высшее (предпочтительно) или среднее профессиональное',
+    experience: 'От 5 лет',
+    requirements: 'Опыт руководства бригадой/участком. Уверенный ПК (Word, Excel, электронная почта). Права категории В (кат. С – желательно). Навыки работы с геодезическим оборудованием (нивелир).'
+  },
+  {
+    name: 'Инженер по технике безопасности (ТБ)',
+    salary: '220 000 – 250 000 ₽',
+    salaryDetails: 'Оклад: 50 000 ₽ + Премиальная часть: 170 000 – 200 000 ₽',
+    category: 'Специалисты',
+    functions: 'Контроль за соблюдением норм и правил охраны труда и промышленной безопасности на объектах бурения, проведение инструктажей, расследование инцидентов, ведение документации по ТБ.',
+    special: 'Командировочный график: выезд на объект по требованию на 1-2 недели с последующим возвращением к месту постоянного проживания.',
+    age: '35-60',
+    education: 'Высшее (техническое, по ТБ)',
+    experience: 'От 5 лет',
+    requirements: 'Действующий диплом/сертификат специалиста по ОТ и ПБ. Опыт в строительстве/бурении. Права категории В.'
+  },
+  {
+    name: 'Инженер-геодезист',
+    salary: '200 000 – 220 000 ₽',
+    salaryDetails: 'Оклад: 50 000 ₽ + Премиальная часть: 150 000 – 170 000 ₽',
+    category: 'Специалисты',
+    functions: 'Геодезическое сопровождение буровых работ, выполнение съемок, разбивочные работы, обработка данных, подготовка исполнительной документации.',
+    age: '25-45',
+    education: 'Высшее (геодезия, прикладная геодезия)',
+    experience: 'От 5 лет',
+    requirements: 'Опыт геодезического сопровождения строительства/бурения. Навык работы с современным геодезическим оборудованием и ПО. Права категории В.'
+  }
 ];
 
 const TEC = () => {
@@ -74,9 +89,9 @@ const TEC = () => {
               </div>
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                  Южно-Якутская ТЭС
+                  Заявка на подбор персонала
                 </h1>
-                <p className="text-cyan-400/80 text-sm mt-1">Подбор персонала • Январь 2026</p>
+                <p className="text-cyan-400/80 text-sm mt-1">Дата составления: 19.01.2026</p>
               </div>
             </div>
             <Button
@@ -92,162 +107,166 @@ const TEC = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {[
-            { icon: 'Users', label: 'Всего вакансий', value: '14', color: 'cyan' },
-            { icon: 'MapPin', label: 'Локация', value: 'Чульман', color: 'purple' },
-            { icon: 'Calendar', label: 'График', value: '2/1 вахта', color: 'pink' },
-            { icon: 'TrendingUp', label: 'Средняя ЗП', value: '₽215k', color: 'blue' }
-          ].map((stat, idx) => (
-            <Card
-              key={idx}
-              className={`bg-slate-900/50 border-${stat.color}-500/30 shadow-[0_0_20px_rgba(6,182,212,0.2)] transition-all duration-500 hover:shadow-[0_0_30px_rgba(6,182,212,0.4)] ${
-                animateCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}
-              style={{ transitionDelay: `${idx * 100}ms` }}
-            >
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-slate-400 text-sm">{stat.label}</p>
-                    <p className={`text-3xl font-bold bg-gradient-to-r from-${stat.color}-400 to-${stat.color}-600 bg-clip-text text-transparent mt-1`}>
-                      {stat.value}
+        <Card className="bg-slate-900/50 border-cyan-500/30">
+          <CardHeader>
+            <CardTitle className="text-cyan-400 text-xl">Причина возникновения вакансии</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-slate-300 text-lg">Расширение фронта работ, формирование новой вахты.</p>
+          </CardContent>
+        </Card>
+
+        <Tabs defaultValue="info" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 bg-slate-900/50 border border-cyan-500/30">
+            <TabsTrigger value="info">Общая информация</TabsTrigger>
+            <TabsTrigger value="vacancies">Вакансии</TabsTrigger>
+            <TabsTrigger value="requirements">Требования к кандидатам</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="info" className="space-y-6">
+            <Card className="bg-slate-900/50 border-cyan-500/30">
+              <CardHeader>
+                <CardTitle className="text-cyan-400">1. Общая информация</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="p-4 rounded-lg bg-cyan-500/5 border border-cyan-500/20">
+                    <p className="text-cyan-400 font-semibold mb-2 flex items-center gap-2">
+                      <Icon name="MapPin" size={18} />
+                      Локация проекта / Адрес места работы
+                    </p>
+                    <p className="text-slate-300 text-sm">
+                      Республика Саха (Якутия), Нерюнгринский район, г. Чульман, площадка Южно-Якутской ТЭС. 
+                      В дальнейшем – возможны командировки на другие объекты проекта.
                     </p>
                   </div>
-                  <div className={`w-12 h-12 rounded-lg bg-gradient-to-br from-${stat.color}-500/20 to-${stat.color}-600/20 flex items-center justify-center`}>
-                    <Icon name={stat.icon as any} size={24} className={`text-${stat.color}-400`} />
+
+                  <div className="p-4 rounded-lg bg-purple-500/5 border border-purple-500/20">
+                    <p className="text-purple-400 font-semibold mb-2 flex items-center gap-2">
+                      <Icon name="Building" size={18} />
+                      Отдел
+                    </p>
+                    <p className="text-slate-300 text-sm">Бурение</p>
+                  </div>
+
+                  <div className="p-4 rounded-lg bg-pink-500/5 border border-pink-500/20">
+                    <p className="text-pink-400 font-semibold mb-2 flex items-center gap-2">
+                      <Icon name="User" size={18} />
+                      Руководитель (непосредственное подчинение)
+                    </p>
+                    <p className="text-slate-300 text-sm">Швалагин Иван Иванович</p>
+                  </div>
+
+                  <div className="p-4 rounded-lg bg-cyan-500/5 border border-cyan-500/20">
+                    <p className="text-cyan-400 font-semibold mb-2 flex items-center gap-2">
+                      <Icon name="Calendar" size={18} />
+                      График работы
+                    </p>
+                    <p className="text-slate-300 text-sm">
+                      Вахтовый метод. Режим: 2 месяца на объекте / 1 месяц отдых.
+                    </p>
+                  </div>
+
+                  <div className="p-4 rounded-lg bg-purple-500/5 border border-purple-500/20">
+                    <p className="text-purple-400 font-semibold mb-2 flex items-center gap-2">
+                      <Icon name="Clock" size={18} />
+                      Испытательный срок
+                    </p>
+                    <p className="text-slate-300 text-sm">3 месяца</p>
+                  </div>
+
+                  <div className="p-4 rounded-lg bg-pink-500/5 border border-pink-500/20">
+                    <p className="text-pink-400 font-semibold mb-2 flex items-center gap-2">
+                      <Icon name="Plane" size={18} />
+                      Командировки
+                    </p>
+                    <p className="text-slate-300 text-sm">
+                      Возможны периодические командировки на другие объекты проекта по требованию руководства.
+                    </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
-
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-slate-900/50 border border-cyan-500/30">
-            <TabsTrigger value="overview">Обзор</TabsTrigger>
-            <TabsTrigger value="vacancies">Вакансии</TabsTrigger>
-            <TabsTrigger value="requirements">Требования</TabsTrigger>
-            <TabsTrigger value="analytics">Аналитика</TabsTrigger>
-            <TabsTrigger value="info">Информация</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="bg-slate-900/50 border-cyan-500/30">
-                <CardHeader>
-                  <CardTitle className="text-cyan-400">Распределение по категориям</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={categoryData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={100}
-                        fill="#8884d8"
-                        dataKey="value"
-                        animationDuration={1000}
-                      >
-                        {categoryData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                          border: '1px solid rgba(6, 182, 212, 0.3)',
-                          borderRadius: '8px',
-                          color: '#fff'
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-slate-900/50 border-cyan-500/30">
-                <CardHeader>
-                  <CardTitle className="text-cyan-400">Уровень зарплат по вакансиям</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={vacanciesData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(6, 182, 212, 0.1)" />
-                      <XAxis
-                        dataKey="name"
-                        tick={{ fill: '#94a3b8', fontSize: 10 }}
-                        angle={-45}
-                        textAnchor="end"
-                        height={100}
-                      />
-                      <YAxis tick={{ fill: '#94a3b8' }} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                          border: '1px solid rgba(6, 182, 212, 0.3)',
-                          borderRadius: '8px'
-                        }}
-                        formatter={(value: number) => [`₽${value.toLocaleString()}`, 'Зарплата']}
-                      />
-                      <Bar dataKey="salary" fill="url(#colorGradient)" animationDuration={1000} />
-                      <defs>
-                        <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#06b6d4" stopOpacity={0.8} />
-                          <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.8} />
-                        </linearGradient>
-                      </defs>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
 
             <Card className="bg-slate-900/50 border-cyan-500/30">
               <CardHeader>
-                <CardTitle className="text-cyan-400">Прогноз закрытия вакансий</CardTitle>
-                <CardDescription className="text-slate-400">Планируемая динамика подбора персонала</CardDescription>
+                <CardTitle className="text-cyan-400">4. Перспективы и дополнительная информация</CardTitle>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={timelineData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(6, 182, 212, 0.1)" />
-                    <XAxis dataKey="month" tick={{ fill: '#94a3b8' }} />
-                    <YAxis tick={{ fill: '#94a3b8' }} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                        border: '1px solid rgba(6, 182, 212, 0.3)',
-                        borderRadius: '8px'
-                      }}
-                    />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="openPositions"
-                      stroke="#ec4899"
-                      strokeWidth={3}
-                      name="Открытые вакансии"
-                      animationDuration={1500}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="filled"
-                      stroke="#06b6d4"
-                      strokeWidth={3}
-                      name="Закрытые вакансии"
-                      animationDuration={1500}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+              <CardContent className="space-y-4">
+                <div className="p-4 rounded-lg bg-cyan-500/5 border border-cyan-500/20">
+                  <div className="flex items-start gap-3">
+                    <Icon name="Users" size={20} className="text-cyan-400 mt-1 flex-shrink-0" />
+                    <div>
+                      <p className="text-cyan-400 font-semibold mb-1">Источники кандидатов</p>
+                      <p className="text-slate-300 text-sm">
+                        Приветствуются кандидаты из крупных строительных и буровых компаний.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-lg bg-purple-500/5 border border-purple-500/20">
+                  <div className="flex items-start gap-3">
+                    <Icon name="TrendingUp" size={20} className="text-purple-400 mt-1 flex-shrink-0" />
+                    <div>
+                      <p className="text-purple-400 font-semibold mb-1">Перспективы роста</p>
+                      <p className="text-slate-300 text-sm">
+                        Возможность повышения квалификации и карьерного роста в рамках проекта и компании 
+                        (например, переход на позиции старшего мастера, ведущего инженера).
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-lg bg-pink-500/5 border border-pink-500/20">
+                  <div className="flex items-start gap-3">
+                    <Icon name="Package" size={20} className="text-pink-400 mt-1 flex-shrink-0" />
+                    <div>
+                      <p className="text-pink-400 font-semibold mb-1">Оборудование/рабочее место</p>
+                      <p className="text-slate-300 text-sm">
+                        Обеспечивается компанией на месте работы.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-lg bg-cyan-500/5 border border-cyan-500/20">
+                  <div className="flex items-start gap-3">
+                    <Icon name="Info" size={20} className="text-cyan-400 mt-1 flex-shrink-0" />
+                    <div>
+                      <p className="text-cyan-400 font-semibold mb-1">Комментарий для рекрутера</p>
+                      <p className="text-slate-300 text-sm">
+                        Точные должностные инструкции по каждой позиции необходимо запросить у руководителя отдела – 
+                        Ивана Ивановича Швалагина.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-cyan-500/20 pt-6 flex items-center justify-between">
+                  <div>
+                    <p className="text-slate-400 text-sm">Составил</p>
+                    <p className="text-cyan-400 font-semibold">Козлов Евгений Владимирович</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-slate-400 text-sm">Согласовано (Руководитель заказчика)</p>
+                    <p className="text-purple-400 font-semibold">Швалагин И.И.</p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="vacancies" className="space-y-4">
+            <Card className="bg-slate-900/50 border-cyan-500/30">
+              <CardHeader>
+                <CardTitle className="text-cyan-400">2. Перечень вакансий и ключевые условия</CardTitle>
+                <CardDescription className="text-slate-400">
+                  Для всех вакансий выплата премиальной части зависит от выполнения производственных планов, показателей участка и личной эффективности сотрудника.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
             {vacanciesData.map((vacancy, idx) => (
               <Card
                 key={idx}
@@ -263,34 +282,55 @@ const TEC = () => {
                         <Icon name="Briefcase" size={24} className="text-cyan-400" />
                       </div>
                       <div>
-                        <CardTitle className="text-cyan-400">{vacancy.name}</CardTitle>
+                        <CardTitle className="text-cyan-400">Вакансия {idx + 1}: {vacancy.name}</CardTitle>
                         <CardDescription className="text-slate-400">{vacancy.category}</CardDescription>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-purple-400">₽{vacancy.salary.toLocaleString()}</p>
-                      <p className="text-sm text-slate-400">{vacancy.count} {vacancy.count === 1 ? 'позиция' : 'позиций'}</p>
+                      <p className="text-xl font-bold text-purple-400">{vacancy.salary}</p>
+                      {vacancy.salaryDetails && (
+                        <p className="text-xs text-slate-400 mt-1">{vacancy.salaryDetails}</p>
+                      )}
                     </div>
                   </div>
                 </CardHeader>
                 {selectedVacancy === idx && (
-                  <CardContent className="border-t border-cyan-500/20 pt-4 space-y-3">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                  <CardContent className="border-t border-cyan-500/20 pt-4 space-y-4">
+                    <div>
+                      <p className="text-cyan-400 font-semibold mb-2">Функции:</p>
+                      <p className="text-slate-300 text-sm">{vacancy.functions}</p>
+                    </div>
+                    
+                    {vacancy.special && (
+                      <div className="p-3 rounded-lg bg-pink-500/5 border border-pink-500/20">
+                        <p className="text-pink-400 font-semibold mb-1">Особые условия:</p>
+                        <p className="text-slate-300 text-sm">{vacancy.special}</p>
+                      </div>
+                    )}
+
+                    <div className="p-3 rounded-lg bg-purple-500/5 border border-purple-500/20">
+                      <p className="text-purple-400 font-semibold mb-1">Премия:</p>
+                      <p className="text-slate-300 text-sm">
+                        Зависит от выполнения производственных планов и показателей участка.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 text-sm pt-3 border-t border-cyan-500/10">
                       <div>
-                        <p className="text-slate-400">График работы:</p>
-                        <p className="text-cyan-400">Вахта 2/1 (2 месяца работа / 1 месяц отдых)</p>
+                        <p className="text-slate-400">Возраст:</p>
+                        <p className="text-cyan-400">{vacancy.age}</p>
                       </div>
                       <div>
-                        <p className="text-slate-400">Испытательный срок:</p>
-                        <p className="text-cyan-400">3 месяца</p>
+                        <p className="text-slate-400">Опыт работы:</p>
+                        <p className="text-cyan-400">{vacancy.experience}</p>
                       </div>
-                      <div>
-                        <p className="text-slate-400">Локация:</p>
-                        <p className="text-cyan-400">г. Чульман, Якутия</p>
+                      <div className="col-span-2">
+                        <p className="text-slate-400">Образование:</p>
+                        <p className="text-cyan-400">{vacancy.education}</p>
                       </div>
-                      <div>
-                        <p className="text-slate-400">Премия:</p>
-                        <p className="text-cyan-400">По результатам работы</p>
+                      <div className="col-span-2">
+                        <p className="text-slate-400">Обязательные навыки и документы:</p>
+                        <p className="text-cyan-400">{vacancy.requirements}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -302,311 +342,87 @@ const TEC = () => {
           <TabsContent value="requirements" className="space-y-6">
             <Card className="bg-slate-900/50 border-cyan-500/30">
               <CardHeader>
-                <CardTitle className="text-cyan-400">Критерии отбора кандидатов</CardTitle>
-                <CardDescription className="text-slate-400">Ключевые требования к соискателям</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={400}>
-                  <RadarChart data={requirementsData}>
-                    <PolarGrid stroke="rgba(6, 182, 212, 0.2)" />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8' }} />
-                    <PolarRadiusAxis tick={{ fill: '#94a3b8' }} />
-                    <Radar
-                      name="Требования"
-                      dataKey="value"
-                      stroke="#06b6d4"
-                      fill="#06b6d4"
-                      fillOpacity={0.6}
-                      animationDuration={1500}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                        border: '1px solid rgba(6, 182, 212, 0.3)',
-                        borderRadius: '8px'
-                      }}
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="bg-slate-900/50 border-cyan-500/30">
-                <CardHeader>
-                  <CardTitle className="text-cyan-400 flex items-center gap-2">
-                    <Icon name="CheckCircle2" size={20} />
-                    Обязательные требования
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {[
-                    'Трезвый образ жизни',
-                    'Крепкое здоровье для Крайнего Севера',
-                    'Отсутствие судимостей',
-                    'Прохождение медкомиссии',
-                    'Опыт работы от 3-5 лет',
-                    'Профильное образование'
-                  ].map((req, idx) => (
-                    <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-cyan-500/5 border border-cyan-500/20">
-                      <Icon name="Check" size={16} className="text-cyan-400 flex-shrink-0" />
-                      <p className="text-slate-300">{req}</p>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-
-              <Card className="bg-slate-900/50 border-purple-500/30">
-                <CardHeader>
-                  <CardTitle className="text-purple-400 flex items-center gap-2">
-                    <Icon name="Star" size={20} />
-                    Желательные качества
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {[
-                    'Опыт работы на Севере/Дальнем Востоке',
-                    'Водительские права категории С',
-                    'Навыки работы с ДВС и техникой',
-                    'Уверенное владение ПК',
-                    'Коммуникабельность',
-                    'Стрессоустойчивость'
-                  ].map((req, idx) => (
-                    <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-purple-500/5 border border-purple-500/20">
-                      <Icon name="Star" size={16} className="text-purple-400 flex-shrink-0" />
-                      <p className="text-slate-300">{req}</p>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="analytics" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="bg-slate-900/50 border-cyan-500/30">
-                <CardHeader>
-                  <CardTitle className="text-cyan-400 text-lg">Общий бюджет ФОТ</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                    ₽3.01М
-                  </p>
-                  <p className="text-slate-400 text-sm mt-2">в месяц на всех сотрудников</p>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-slate-900/50 border-purple-500/30">
-                <CardHeader>
-                  <CardTitle className="text-purple-400 text-lg">Средний возраст</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                    35-45
-                  </p>
-                  <p className="text-slate-400 text-sm mt-2">лет (целевой диапазон)</p>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-slate-900/50 border-pink-500/30">
-                <CardHeader>
-                  <CardTitle className="text-pink-400 text-lg">Срок закрытия</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-4xl font-bold bg-gradient-to-r from-pink-400 to-cyan-400 bg-clip-text text-transparent">
-                    3-4
-                  </p>
-                  <p className="text-slate-400 text-sm mt-2">месяца (прогноз)</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card className="bg-slate-900/50 border-cyan-500/30">
-              <CardHeader>
-                <CardTitle className="text-cyan-400">Ключевые метрики проекта</CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-slate-400">Прогресс подбора</span>
-                      <span className="text-cyan-400">28%</span>
-                    </div>
-                    <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full animate-pulse" style={{ width: '28%' }} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-slate-400">Рабочие позиции</span>
-                      <span className="text-purple-400">71%</span>
-                    </div>
-                    <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500" style={{ width: '71%' }} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-slate-400">Инженеры/Специалисты</span>
-                      <span className="text-pink-400">29%</span>
-                    </div>
-                    <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-pink-500 to-cyan-500" style={{ width: '29%' }} />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {[
-                    { label: 'Заявок на рассмотрении', value: '47', icon: 'FileText' },
-                    { label: 'Прошли первичный отбор', value: '23', icon: 'CheckCircle' },
-                    { label: 'Назначены собеседования', value: '12', icon: 'Calendar' },
-                    { label: 'Оформлены', value: '4', icon: 'UserCheck' }
-                  ].map((stat, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 border border-cyan-500/20">
-                      <div className="flex items-center gap-3">
-                        <Icon name={stat.icon as any} size={20} className="text-cyan-400" />
-                        <span className="text-slate-300">{stat.label}</span>
-                      </div>
-                      <span className="text-xl font-bold text-cyan-400">{stat.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="info" className="space-y-6">
-            <Card className="bg-slate-900/50 border-cyan-500/30">
-              <CardHeader>
-                <CardTitle className="text-cyan-400">Общая информация о проекте</CardTitle>
-                <CardDescription className="text-slate-400">Заявка от 19.01.2026</CardDescription>
+                <CardTitle className="text-cyan-400">3. Требования к кандидатам</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-cyan-400 mb-4">Общие для всех вакансий требования:</h3>
+                  
                   <div className="space-y-4">
                     <div className="p-4 rounded-lg bg-cyan-500/5 border border-cyan-500/20">
                       <p className="text-cyan-400 font-semibold mb-2 flex items-center gap-2">
-                        <Icon name="MapPin" size={18} />
-                        Локация проекта
+                        <Icon name="Heart" size={18} />
+                        Личностные качества
                       </p>
                       <p className="text-slate-300 text-sm">
-                        Республика Саха (Якутия), Нерюнгринский район, г. Чульман, площадка Южно-Якутской ТЭС
+                        Ответственность, исполнительность, коммуникабельность, стрессоустойчивость, умение работать в команде. 
+                        <span className="text-cyan-400 font-semibold"> Обязательное условие – трезвый образ жизни.</span>
                       </p>
                     </div>
 
                     <div className="p-4 rounded-lg bg-purple-500/5 border border-purple-500/20">
                       <p className="text-purple-400 font-semibold mb-2 flex items-center gap-2">
-                        <Icon name="Building" size={18} />
-                        Отдел
+                        <Icon name="Activity" size={18} />
+                        Здоровье
                       </p>
-                      <p className="text-slate-300 text-sm">Бурение</p>
+                      <p className="text-slate-300 text-sm">
+                        Кандидаты должны обладать крепким здоровьем, пригодным для работы в условиях Крайнего Севера. 
+                        Все кандидаты проходят обязательную предварительную медицинскую комиссию под нашим контролем, 
+                        включая освидетельствование у нарколога, психиатра, проверку на отсутствие гипертонической болезни.
+                      </p>
                     </div>
 
                     <div className="p-4 rounded-lg bg-pink-500/5 border border-pink-500/20">
                       <p className="text-pink-400 font-semibold mb-2 flex items-center gap-2">
-                        <Icon name="User" size={18} />
-                        Руководитель
+                        <Icon name="Shield" size={18} />
+                        Безопасность
                       </p>
-                      <p className="text-slate-300 text-sm">Швалагин Иван Иванович</p>
+                      <p className="text-slate-300 text-sm">
+                        Отсутствие неснятых или непогашенных судимостей. 
+                        <span className="text-pink-400 font-semibold"> Внимание:</span> не рассматриваем кандидатов с опытом работы 
+                        на "новых территориях" (в соответствии с требованиями законодательства и политики компании).
+                      </p>
                     </div>
-                  </div>
 
-                  <div className="space-y-4">
                     <div className="p-4 rounded-lg bg-cyan-500/5 border border-cyan-500/20">
                       <p className="text-cyan-400 font-semibold mb-2 flex items-center gap-2">
-                        <Icon name="Calendar" size={18} />
-                        График работы
+                        <Icon name="Star" size={18} />
+                        Желательный опыт
                       </p>
                       <p className="text-slate-300 text-sm">
-                        Вахтовый метод: 2 месяца на объекте / 1 месяц отдых
-                      </p>
-                    </div>
-
-                    <div className="p-4 rounded-lg bg-purple-500/5 border border-purple-500/20">
-                      <p className="text-purple-400 font-semibold mb-2 flex items-center gap-2">
-                        <Icon name="Clock" size={18} />
-                        Испытательный срок
-                      </p>
-                      <p className="text-slate-300 text-sm">3 месяца</p>
-                    </div>
-
-                    <div className="p-4 rounded-lg bg-pink-500/5 border border-pink-500/20">
-                      <p className="text-pink-400 font-semibold mb-2 flex items-center gap-2">
-                        <Icon name="Plane" size={18} />
-                        Командировки
-                      </p>
-                      <p className="text-slate-300 text-sm">
-                        Возможны на другие объекты проекта
+                        Опыт работы в регионах Крайнего Севера, Дальнего Востока или на других сложных, 
+                        удаленных объектах промышленного строительства.
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-6 rounded-lg bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30">
-                  <p className="text-cyan-400 font-semibold mb-3 flex items-center gap-2">
-                    <Icon name="AlertCircle" size={20} />
-                    Причина подбора
-                  </p>
-                  <p className="text-slate-300">
-                    Расширение фронта работ, формирование новой вахты
-                  </p>
-                </div>
-
-                <div className="border-t border-cyan-500/20 pt-6 flex items-center justify-between">
-                  <div>
-                    <p className="text-slate-400 text-sm">Составил</p>
-                    <p className="text-cyan-400 font-semibold">Козлов Евгений Владимирович</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-slate-400 text-sm">Согласовано</p>
-                    <p className="text-purple-400 font-semibold">Швалагин И.И.</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-slate-900/50 border-cyan-500/30">
-              <CardHeader>
-                <CardTitle className="text-cyan-400">Перспективы и развитие</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="p-4 rounded-lg bg-cyan-500/5 border border-cyan-500/20">
-                  <div className="flex items-start gap-3">
-                    <Icon name="TrendingUp" size={20} className="text-cyan-400 mt-1" />
-                    <div>
-                      <p className="text-cyan-400 font-semibold mb-1">Карьерный рост</p>
-                      <p className="text-slate-300 text-sm">
-                        Возможность повышения квалификации и карьерного роста в рамках проекта и компании
-                        (старший мастер, ведущий инженер)
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-lg bg-purple-500/5 border border-purple-500/20">
-                  <div className="flex items-start gap-3">
-                    <Icon name="Users" size={20} className="text-purple-400 mt-1" />
-                    <div>
-                      <p className="text-purple-400 font-semibold mb-1">Источники кандидатов</p>
-                      <p className="text-slate-300 text-sm">
-                        Приветствуются кандидаты из крупных строительных и буровых компаний
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-lg bg-pink-500/5 border border-pink-500/20">
-                  <div className="flex items-start gap-3">
-                    <Icon name="Package" size={20} className="text-pink-400 mt-1" />
-                    <div>
-                      <p className="text-pink-400 font-semibold mb-1">Обеспечение</p>
-                      <p className="text-slate-300 text-sm">
-                        Все необходимое оборудование и рабочие места обеспечиваются компанией на месте работы
-                      </p>
-                    </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-purple-400 mb-4">Специфические требования по вакансиям:</h3>
+                  
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-cyan-500/20">
+                          <th className="text-left p-3 text-cyan-400">Должность</th>
+                          <th className="text-left p-3 text-cyan-400">Возраст</th>
+                          <th className="text-left p-3 text-cyan-400">Образование</th>
+                          <th className="text-left p-3 text-cyan-400">Опыт работы</th>
+                          <th className="text-left p-3 text-cyan-400">Обязательные навыки и документы</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {vacanciesData.map((vacancy, idx) => (
+                          <tr key={idx} className="border-b border-slate-700/50 hover:bg-cyan-500/5">
+                            <td className="p-3 text-slate-300">{vacancy.name}</td>
+                            <td className="p-3 text-slate-300">{vacancy.age}</td>
+                            <td className="p-3 text-slate-300">{vacancy.education}</td>
+                            <td className="p-3 text-slate-300">{vacancy.experience}</td>
+                            <td className="p-3 text-slate-300">{vacancy.requirements}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </CardContent>
@@ -618,7 +434,7 @@ const TEC = () => {
       <footer className="border-t border-cyan-500/30 bg-slate-900/80 backdrop-blur-lg mt-16">
         <div className="container mx-auto px-4 py-8 text-center text-slate-400">
           <p className="text-sm">
-            © 2026 Южно-Якутская ТЭС • Подбор персонала • Конфиденциально
+            Заявка на подбор персонала • Южно-Якутская ТЭС • 19.01.2026
           </p>
         </div>
       </footer>
