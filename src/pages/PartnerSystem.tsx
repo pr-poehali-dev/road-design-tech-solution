@@ -145,33 +145,34 @@ const PartnerSystem = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
       <header className="border-b border-purple-500/30 bg-slate-900/80 backdrop-blur-lg shadow-[0_0_30px_rgba(139,92,246,0.3)] sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-[0_0_25px_rgba(139,92,246,0.6)] animate-pulse">
-                <Icon name="TrendingUp" size={32} className="text-white" />
+        <div className="container mx-auto px-4 py-4 md:py-6">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 md:gap-4">
+              <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-[0_0_25px_rgba(139,92,246,0.6)] animate-pulse">
+                <Icon name="TrendingUp" size={20} className="text-white md:w-8 md:h-8" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
+                <h1 className="text-lg md:text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
                   Партнёрская система DEOD
                 </h1>
-                <p className="text-purple-400/80 text-sm mt-1">Система грейдов и мотивации партнёров</p>
+                <p className="text-purple-400/80 text-xs md:text-sm mt-0.5 md:mt-1 hidden sm:block">Система грейдов и мотивации партнёров</p>
               </div>
             </div>
             <Button
               onClick={() => window.location.href = '/'}
               variant="outline"
-              className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
+              size="sm"
+              className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10 text-xs md:text-sm px-2 md:px-4"
             >
-              <Icon name="Home" size={16} className="mr-2" />
-              На главную
+              <Icon name="Home" size={14} className="md:mr-2" />
+              <span className="hidden md:inline">На главную</span>
             </Button>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
           {[
             { icon: 'Award', label: 'Грейдов', value: '5', color: 'purple' },
             { icon: 'Percent', label: 'Макс. ставка', value: '18%', color: 'pink' },
@@ -182,14 +183,14 @@ const PartnerSystem = () => {
               key={idx}
               className="bg-slate-900/50 border-purple-500/30 hover:shadow-[0_0_30px_rgba(139,92,246,0.4)] transition-all duration-300"
             >
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-lg bg-gradient-to-br from-${stat.color}-500/20 to-${stat.color}-600/20 flex items-center justify-center`}>
-                    <Icon name={stat.icon as any} size={24} className={`text-${stat.color}-400`} />
+              <CardContent className="pt-4 md:pt-6">
+                <div className="flex flex-col md:flex-row items-center md:gap-4 text-center md:text-left">
+                  <div className={`w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-${stat.color}-500/20 to-${stat.color}-600/20 flex items-center justify-center mb-2 md:mb-0`}>
+                    <Icon name={stat.icon as any} size={20} className={`text-${stat.color}-400 md:w-6 md:h-6`} />
                   </div>
                   <div>
-                    <p className="text-slate-400 text-sm">{stat.label}</p>
-                    <p className="text-2xl font-bold text-purple-400">{stat.value}</p>
+                    <p className="text-slate-400 text-xs md:text-sm">{stat.label}</p>
+                    <p className="text-xl md:text-2xl font-bold text-purple-400">{stat.value}</p>
                   </div>
                 </div>
               </CardContent>
@@ -198,12 +199,12 @@ const PartnerSystem = () => {
         </div>
 
         <Tabs defaultValue="grades" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-slate-900/50 border border-purple-500/30">
-            <TabsTrigger value="grades">Грейды</TabsTrigger>
-            <TabsTrigger value="mechanics">Механики</TabsTrigger>
-            <TabsTrigger value="comparison">Сравнение</TabsTrigger>
-            <TabsTrigger value="calculator">Калькулятор</TabsTrigger>
-            <TabsTrigger value="growth">Рост дохода</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-slate-900/50 border border-purple-500/30 gap-1 md:gap-0">
+            <TabsTrigger value="grades" className="text-xs md:text-sm">Грейды</TabsTrigger>
+            <TabsTrigger value="mechanics" className="text-xs md:text-sm">Механики</TabsTrigger>
+            <TabsTrigger value="comparison" className="text-xs md:text-sm">Сравнение</TabsTrigger>
+            <TabsTrigger value="calculator" className="text-xs md:text-sm">Калькулятор</TabsTrigger>
+            <TabsTrigger value="growth" className="text-xs md:text-sm col-span-2 md:col-span-1">Рост дохода</TabsTrigger>
           </TabsList>
 
           <TabsContent value="grades" className="space-y-4">
@@ -240,49 +241,49 @@ const PartnerSystem = () => {
                 }`}
                 onClick={() => setSelectedGrade(selectedGrade === idx ? null : idx)}
               >
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
+                <CardHeader className="pb-3 md:pb-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 md:gap-4">
                       <div 
-                        className="w-16 h-16 rounded-xl flex items-center justify-center font-bold text-white text-2xl shadow-lg"
+                        className="w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center font-bold text-white text-xl md:text-2xl shadow-lg flex-shrink-0"
                         style={{ backgroundColor: grade.color }}
                       >
                         {grade.id}
                       </div>
                       <div>
-                        <CardTitle className="text-purple-400">{grade.name}</CardTitle>
-                        <CardDescription className="text-slate-400">{grade.nameEn}</CardDescription>
+                        <CardTitle className="text-purple-400 text-base md:text-lg">{grade.name}</CardTitle>
+                        <CardDescription className="text-slate-400 text-xs md:text-sm">{grade.nameEn}</CardDescription>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-3xl font-bold text-pink-400">{grade.personalSales}%</p>
+                    <div className="text-left sm:text-right ml-auto sm:ml-0">
+                      <p className="text-2xl md:text-3xl font-bold text-pink-400">{grade.personalSales}%</p>
                       <p className="text-xs text-slate-400 mt-1">базовая ставка</p>
                     </div>
                   </div>
                 </CardHeader>
                 {selectedGrade === idx && (
-                  <CardContent className="border-t border-purple-500/20 pt-4 space-y-4">
+                  <CardContent className="border-t border-purple-500/20 pt-3 md:pt-4 space-y-3 md:space-y-4">
                     {grade.entry && (
                       <div>
-                        <p className="text-purple-400 font-semibold mb-2 flex items-center gap-2">
-                          <Icon name="LogIn" size={18} />
+                        <p className="text-purple-400 font-semibold mb-2 flex items-center gap-2 text-sm md:text-base">
+                          <Icon name="LogIn" size={16} className="md:w-[18px] md:h-[18px]" />
                           Условия входа:
                         </p>
-                        <p className="text-slate-300 text-sm">{grade.entry}</p>
+                        <p className="text-slate-300 text-xs md:text-sm">{grade.entry}</p>
                       </div>
                     )}
 
                     {grade.requirements.length > 0 && (
                       <div>
-                        <p className="text-pink-400 font-semibold mb-2 flex items-center gap-2">
-                          <Icon name="CheckCircle2" size={18} />
+                        <p className="text-pink-400 font-semibold mb-2 flex items-center gap-2 text-sm md:text-base">
+                          <Icon name="CheckCircle2" size={16} className="md:w-[18px] md:h-[18px]" />
                           Требования:
                         </p>
-                        <ul className="text-slate-300 text-sm space-y-1">
+                        <ul className="text-slate-300 text-xs md:text-sm space-y-1">
                           {grade.requirements.map((req, i) => (
-                            <li key={i} className="flex items-center gap-2">
-                              <span className="w-1.5 h-1.5 rounded-full bg-pink-400"></span>
-                              {req}
+                            <li key={i} className="flex items-start gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-pink-400 mt-1.5 flex-shrink-0"></span>
+                              <span>{req}</span>
                             </li>
                           ))}
                         </ul>
@@ -290,40 +291,40 @@ const PartnerSystem = () => {
                     )}
 
                     {grade.bonus && (
-                      <div className="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/30">
-                        <p className="text-cyan-400 font-semibold mb-1 flex items-center gap-2">
-                          <Icon name="Zap" size={18} />
+                      <div className="p-2 md:p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/30">
+                        <p className="text-cyan-400 font-semibold mb-1 flex items-center gap-2 text-sm md:text-base">
+                          <Icon name="Zap" size={16} className="md:w-[18px] md:h-[18px]" />
                           Бонус:
                         </p>
-                        <p className="text-slate-300 text-sm">{grade.bonus}</p>
+                        <p className="text-slate-300 text-xs md:text-sm">{grade.bonus}</p>
                       </div>
                     )}
 
                     {grade.privileges && (
-                      <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/30">
-                        <p className="text-purple-400 font-semibold mb-1 flex items-center gap-2">
-                          <Icon name="Star" size={18} />
+                      <div className="p-2 md:p-3 rounded-lg bg-purple-500/10 border border-purple-500/30">
+                        <p className="text-purple-400 font-semibold mb-1 flex items-center gap-2 text-sm md:text-base">
+                          <Icon name="Star" size={16} className="md:w-[18px] md:h-[18px]" />
                           Привилегии:
                         </p>
-                        <p className="text-slate-300 text-sm">{grade.privileges}</p>
+                        <p className="text-slate-300 text-xs md:text-sm">{grade.privileges}</p>
                       </div>
                     )}
 
-                    <div className="grid grid-cols-3 gap-3 pt-3 border-t border-purple-500/10">
-                      <div className="text-center p-3 rounded-lg bg-purple-500/5">
-                        <p className="text-3xl font-bold text-purple-400">{grade.personalSales}%</p>
-                        <p className="text-xs text-slate-400 mt-1">Личные продажи</p>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3 pt-3 border-t border-purple-500/10">
+                      <div className="text-center p-2 md:p-3 rounded-lg bg-purple-500/5">
+                        <p className="text-2xl md:text-3xl font-bold text-purple-400">{grade.personalSales}%</p>
+                        <p className="text-[10px] md:text-xs text-slate-400 mt-1">Личные продажи</p>
                       </div>
                       {grade.teamBonus > 0 && (
-                        <div className="text-center p-3 rounded-lg bg-pink-500/5">
-                          <p className="text-3xl font-bold text-pink-400">{grade.teamBonus}%</p>
-                          <p className="text-xs text-slate-400 mt-1">Команда</p>
+                        <div className="text-center p-2 md:p-3 rounded-lg bg-pink-500/5">
+                          <p className="text-2xl md:text-3xl font-bold text-pink-400">{grade.teamBonus}%</p>
+                          <p className="text-[10px] md:text-xs text-slate-400 mt-1">Команда</p>
                         </div>
                       )}
                       {grade.additionalBonus && (
-                        <div className="text-center p-3 rounded-lg bg-cyan-500/5">
-                          <p className="text-3xl font-bold text-cyan-400">+{grade.additionalBonus}%</p>
-                          <p className="text-xs text-slate-400 mt-1">Доп. бонус</p>
+                        <div className="text-center p-2 md:p-3 rounded-lg bg-cyan-500/5 col-span-2 md:col-span-1">
+                          <p className="text-2xl md:text-3xl font-bold text-cyan-400">+{grade.additionalBonus}%</p>
+                          <p className="text-[10px] md:text-xs text-slate-400 mt-1">Доп. бонус</p>
                         </div>
                       )}
                     </div>
@@ -357,12 +358,12 @@ const PartnerSystem = () => {
                   </BarChart>
                 </ResponsiveContainer>
 
-                <div className="mt-6 p-4 rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30">
-                  <p className="text-purple-400 font-semibold mb-3 flex items-center gap-2">
-                    <Icon name="Calculator" size={20} />
+                <div className="mt-4 md:mt-6 p-3 md:p-4 rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30">
+                  <p className="text-purple-400 font-semibold mb-2 md:mb-3 flex items-center gap-2 text-sm md:text-base">
+                    <Icon name="Calculator" size={18} className="md:w-5 md:h-5" />
                     Примеры расчёта:
                   </p>
-                  <div className="space-y-2 text-sm text-slate-300">
+                  <div className="space-y-2 text-xs md:text-sm text-slate-300">
                     <p>📊 КП: 10 млн → Факт: 12 млн → Переплата: 2 млн → Партнёр: <span className="text-purple-400 font-bold">1 млн</span></p>
                     <p>📊 КП: 15 млн → Факт: 18 млн → Переплата: 3 млн → Партнёр: <span className="text-purple-400 font-bold">1.5 млн</span></p>
                     <p>📊 КП: 20 млн → Факт: 25 млн → Переплата: 5 млн → Партнёр: <span className="text-purple-400 font-bold">2.5 млн</span></p>
@@ -394,19 +395,19 @@ const PartnerSystem = () => {
                   </BarChart>
                 </ResponsiveContainer>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mt-4 md:mt-6">
                   {prepaymentBonusData.map((item, idx) => (
                     <div
                       key={idx}
-                      className="p-4 rounded-lg border"
+                      className="p-3 md:p-4 rounded-lg border"
                       style={{ backgroundColor: `${item.color}15`, borderColor: `${item.color}40` }}
                     >
-                      <p className="text-2xl font-bold mb-2" style={{ color: item.color }}>
+                      <p className="text-xl md:text-2xl font-bold mb-2" style={{ color: item.color }}>
                         {item.range}
                       </p>
-                      <p className="text-slate-300 text-sm">Предоплата</p>
-                      <div className="mt-3 pt-3 border-t border-slate-700">
-                        <p className="text-3xl font-bold" style={{ color: item.color }}>
+                      <p className="text-slate-300 text-xs md:text-sm">Предоплата</p>
+                      <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-slate-700">
+                        <p className="text-2xl md:text-3xl font-bold" style={{ color: item.color }}>
                           +{item.bonus}%
                         </p>
                         <p className="text-slate-400 text-xs mt-1">к базовой ставке</p>
@@ -421,13 +422,13 @@ const PartnerSystem = () => {
               <CardHeader>
                 <CardTitle className="text-purple-400">Ключевые правила</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/30">
-                  <div className="flex items-start gap-3">
-                    <Icon name="AlertCircle" size={20} className="text-purple-400 mt-1 flex-shrink-0" />
+              <CardContent className="space-y-3 md:space-y-4">
+                <div className="p-3 md:p-4 rounded-lg bg-purple-500/10 border border-purple-500/30">
+                  <div className="flex items-start gap-2 md:gap-3">
+                    <Icon name="AlertCircle" size={18} className="text-purple-400 mt-1 flex-shrink-0 md:w-5 md:h-5" />
                     <div>
-                      <p className="text-purple-400 font-semibold mb-1">Лимит выплат</p>
-                      <p className="text-slate-300 text-sm">
+                      <p className="text-purple-400 font-semibold mb-1 text-sm md:text-base">Лимит выплат</p>
+                      <p className="text-slate-300 text-xs md:text-sm">
                         Максимальный процент с расчётной суммы КП для партнёра — <span className="text-purple-400 font-bold">20%</span> 
                         (уровень Амбассадора). Дополнительные 5% Амбассадора — это доля с оборота сети, а не с конкретной сделки.
                       </p>
@@ -435,12 +436,12 @@ const PartnerSystem = () => {
                   </div>
                 </div>
 
-                <div className="p-4 rounded-lg bg-pink-500/10 border border-pink-500/30">
-                  <div className="flex items-start gap-3">
-                    <Icon name="Calendar" size={20} className="text-pink-400 mt-1 flex-shrink-0" />
+                <div className="p-3 md:p-4 rounded-lg bg-pink-500/10 border border-pink-500/30">
+                  <div className="flex items-start gap-2 md:gap-3">
+                    <Icon name="Calendar" size={18} className="text-pink-400 mt-1 flex-shrink-0 md:w-5 md:h-5" />
                     <div>
-                      <p className="text-pink-400 font-semibold mb-1">Скользящий квартал</p>
-                      <p className="text-slate-300 text-sm">
+                      <p className="text-pink-400 font-semibold mb-1 text-sm md:text-base">Скользящий квартал</p>
+                      <p className="text-slate-300 text-xs md:text-sm">
                         Условия грейда проверяются за последние 3 месяца, а не за календарный квартал. 
                         Это позволяет партнёру расти быстрее без привязки к датам.
                       </p>
@@ -448,12 +449,12 @@ const PartnerSystem = () => {
                   </div>
                 </div>
 
-                <div className="p-4 rounded-lg bg-cyan-500/10 border border-cyan-500/30">
-                  <div className="flex items-start gap-3">
-                    <Icon name="Zap" size={20} className="text-cyan-400 mt-1 flex-shrink-0" />
+                <div className="p-3 md:p-4 rounded-lg bg-cyan-500/10 border border-cyan-500/30">
+                  <div className="flex items-start gap-2 md:gap-3">
+                    <Icon name="Zap" size={18} className="text-cyan-400 mt-1 flex-shrink-0 md:w-5 md:h-5" />
                     <div>
-                      <p className="text-cyan-400 font-semibold mb-1">Ускоренный старт</p>
-                      <p className="text-slate-300 text-sm">
+                      <p className="text-cyan-400 font-semibold mb-1 text-sm md:text-base">Ускоренный старт</p>
+                      <p className="text-slate-300 text-xs md:text-sm">
                         Если первая сделка Агента оплачена клиентом в первый месяц, комиссия удваивается: 
                         <span className="text-cyan-400 font-bold"> 5% × 2 = 10%</span>. После сделки — автоматический переход в Партнёры.
                       </p>
@@ -473,7 +474,9 @@ const PartnerSystem = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={400}>
+                <div className="overflow-x-auto">
+                  <div style={{ minWidth: '500px' }}>
+                    <ResponsiveContainer width="100%" height={300} className="md:h-[400px]">
                   <LineChart data={incomeComparisonData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis dataKey="deal" stroke="#9ca3af" />
@@ -491,28 +494,30 @@ const PartnerSystem = () => {
                     <Line type="monotone" dataKey="ambassador" name="Амбассадор" stroke="#10b981" strokeWidth={3} />
                   </LineChart>
                 </ResponsiveContainer>
+                  </div>
+                </div>
 
-                <div className="overflow-x-auto mt-6">
-                  <table className="w-full text-sm">
+                <div className="overflow-x-auto mt-4 md:mt-6">
+                  <table className="w-full text-xs md:text-sm">
                     <thead>
                       <tr className="border-b border-purple-500/20">
-                        <th className="text-left p-3 text-purple-400">Сумма сделки</th>
-                        <th className="text-right p-3 text-cyan-400">Агент (5%)</th>
-                        <th className="text-right p-3 text-purple-400">Партнёр (10%)</th>
-                        <th className="text-right p-3 text-pink-400">Старший (13%)</th>
-                        <th className="text-right p-3 text-orange-400">Генеральный (16%)</th>
-                        <th className="text-right p-3 text-green-400">Амбассадор (18%)</th>
+                        <th className="text-left p-2 md:p-3 text-purple-400 whitespace-nowrap">Сумма сделки</th>
+                        <th className="text-right p-2 md:p-3 text-cyan-400 whitespace-nowrap">Агент (5%)</th>
+                        <th className="text-right p-2 md:p-3 text-purple-400 whitespace-nowrap">Партнёр (10%)</th>
+                        <th className="text-right p-2 md:p-3 text-pink-400 whitespace-nowrap">Старший (13%)</th>
+                        <th className="text-right p-2 md:p-3 text-orange-400 whitespace-nowrap">Генеральный (16%)</th>
+                        <th className="text-right p-2 md:p-3 text-green-400 whitespace-nowrap">Амбассадор (18%)</th>
                       </tr>
                     </thead>
                     <tbody>
                       {incomeComparisonData.map((row, idx) => (
                         <tr key={idx} className="border-b border-slate-700/50 hover:bg-purple-500/5">
-                          <td className="p-3 text-slate-300 font-semibold">{row.deal}</td>
-                          <td className="p-3 text-right text-cyan-400">{(row.agent / 1000000).toFixed(1)} млн</td>
-                          <td className="p-3 text-right text-purple-400">{(row.partner / 1000000).toFixed(1)} млн</td>
-                          <td className="p-3 text-right text-pink-400">{(row.senior / 1000000).toFixed(1)} млн</td>
-                          <td className="p-3 text-right text-orange-400">{(row.general / 1000000).toFixed(1)} млн</td>
-                          <td className="p-3 text-right text-green-400 font-bold">{(row.ambassador / 1000000).toFixed(1)} млн</td>
+                          <td className="p-2 md:p-3 text-slate-300 font-semibold whitespace-nowrap">{row.deal}</td>
+                          <td className="p-2 md:p-3 text-right text-cyan-400 whitespace-nowrap">{(row.agent / 1000000).toFixed(1)} млн</td>
+                          <td className="p-2 md:p-3 text-right text-purple-400 whitespace-nowrap">{(row.partner / 1000000).toFixed(1)} млн</td>
+                          <td className="p-2 md:p-3 text-right text-pink-400 whitespace-nowrap">{(row.senior / 1000000).toFixed(1)} млн</td>
+                          <td className="p-2 md:p-3 text-right text-orange-400 whitespace-nowrap">{(row.general / 1000000).toFixed(1)} млн</td>
+                          <td className="p-2 md:p-3 text-right text-green-400 font-bold whitespace-nowrap">{(row.ambassador / 1000000).toFixed(1)} млн</td>
                         </tr>
                       ))}
                     </tbody>
@@ -530,26 +535,26 @@ const PartnerSystem = () => {
                   Рассчитайте ваш доход в зависимости от условий сделки
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <CardContent className="space-y-4 md:space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6">
                   <div>
-                    <label className="text-sm text-slate-400 mb-2 block">Сумма сделки (₽)</label>
+                    <label className="text-xs md:text-sm text-slate-400 mb-2 block">Сумма сделки (₽)</label>
                     <input
                       type="number"
                       value={calculatorDeal}
                       onChange={(e) => setCalculatorDeal(Number(e.target.value))}
-                      className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-purple-500/30 text-white"
+                      className="w-full px-3 py-2 md:px-4 md:py-3 rounded-lg bg-slate-800 border border-purple-500/30 text-white text-sm md:text-base"
                       min={0}
                       step={1000000}
                     />
                   </div>
 
                   <div>
-                    <label className="text-sm text-slate-400 mb-2 block">Ваш грейд</label>
+                    <label className="text-xs md:text-sm text-slate-400 mb-2 block">Ваш грейд</label>
                     <select
                       value={calculatorGrade}
                       onChange={(e) => setCalculatorGrade(Number(e.target.value))}
-                      className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-purple-500/30 text-white"
+                      className="w-full px-3 py-2 md:px-4 md:py-3 rounded-lg bg-slate-800 border border-purple-500/30 text-white text-sm md:text-base"
                     >
                       {gradeData.map((grade) => (
                         <option key={grade.id} value={grade.id}>
@@ -560,43 +565,43 @@ const PartnerSystem = () => {
                   </div>
 
                   <div>
-                    <label className="text-sm text-slate-400 mb-2 block">Предоплата (%)</label>
+                    <label className="text-xs md:text-sm text-slate-400 mb-2 block">Предоплата (%)</label>
                     <input
                       type="number"
                       value={calculatorPrepayment}
                       onChange={(e) => setCalculatorPrepayment(Number(e.target.value))}
-                      className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-purple-500/30 text-white"
+                      className="w-full px-3 py-2 md:px-4 md:py-3 rounded-lg bg-slate-800 border border-purple-500/30 text-white text-sm md:text-base"
                       min={0}
                       max={100}
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-6 rounded-lg bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/30">
-                    <p className="text-slate-400 text-sm mb-2">Базовый доход</p>
-                    <p className="text-3xl font-bold text-purple-400">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                  <div className="p-4 md:p-6 rounded-lg bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/30">
+                    <p className="text-slate-400 text-xs md:text-sm mb-1 md:mb-2">Базовый доход</p>
+                    <p className="text-2xl md:text-3xl font-bold text-purple-400">
                       {(income.base / 1000000).toFixed(2)} млн ₽
                     </p>
                   </div>
 
-                  <div className="p-6 rounded-lg bg-gradient-to-br from-pink-500/20 to-pink-600/10 border border-pink-500/30">
-                    <p className="text-slate-400 text-sm mb-2">Бонус за предоплату</p>
-                    <p className="text-3xl font-bold text-pink-400">
+                  <div className="p-4 md:p-6 rounded-lg bg-gradient-to-br from-pink-500/20 to-pink-600/10 border border-pink-500/30">
+                    <p className="text-slate-400 text-xs md:text-sm mb-1 md:mb-2">Бонус за предоплату</p>
+                    <p className="text-2xl md:text-3xl font-bold text-pink-400">
                       {(income.prepayment / 1000000).toFixed(2)} млн ₽
                     </p>
                   </div>
 
-                  <div className="p-6 rounded-lg bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30">
-                    <p className="text-slate-400 text-sm mb-2">Итого доход</p>
-                    <p className="text-4xl font-bold text-cyan-400">
+                  <div className="p-4 md:p-6 rounded-lg bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30">
+                    <p className="text-slate-400 text-xs md:text-sm mb-1 md:mb-2">Итого доход</p>
+                    <p className="text-3xl md:text-4xl font-bold text-cyan-400">
                       {(income.total / 1000000).toFixed(2)} млн ₽
                     </p>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-lg bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-cyan-500/10 border border-purple-500/30">
-                  <p className="text-slate-300 text-sm">
+                <div className="p-3 md:p-4 rounded-lg bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-cyan-500/10 border border-purple-500/30">
+                  <p className="text-slate-300 text-xs md:text-sm">
                     <span className="text-purple-400 font-semibold">Расчёт:</span> Базовая ставка {gradeData[calculatorGrade - 1].personalSales}% 
                     {calculatorPrepayment >= 30 && calculatorPrepayment <= 50 && ' + 1% за предоплату 30-50%'}
                     {calculatorPrepayment >= 51 && calculatorPrepayment <= 70 && ' + 2% за предоплату 51-70%'}
@@ -616,7 +621,9 @@ const PartnerSystem = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={350}>
+                <div className="overflow-x-auto">
+                  <div style={{ minWidth: '400px' }}>
+                    <ResponsiveContainer width="100%" height={300} className="md:h-[350px]">
                   <AreaChart data={growthScenarioData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis dataKey="month" stroke="#9ca3af" />
@@ -631,21 +638,23 @@ const PartnerSystem = () => {
                     <Area type="monotone" dataKey="team" stackId="1" name="Доход с команды" stroke="#ec4899" fill="#ec4899" />
                   </AreaChart>
                 </ResponsiveContainer>
+                  </div>
+                </div>
 
-                <div className="mt-6 space-y-3">
+                <div className="mt-4 md:mt-6 space-y-2 md:space-y-3">
                   {[
                     { month: 'Месяц 1-2', status: 'Агент → Партнёр', desc: 'Первые сделки, удвоение комиссии за быстрый старт', icon: 'Rocket' },
                     { month: 'Месяц 3', status: 'Партнёр → Старший', desc: 'Привлечение первого менеджера, начало строительства команды', icon: 'Users' },
                     { month: 'Месяц 4-5', status: 'Старший партнёр', desc: 'Рост оборота команды, закрепление региона', icon: 'TrendingUp' },
                     { month: 'Месяц 6', status: 'Генеральный партнёр', desc: '3 активных менеджера, участие в обучении новичков', icon: 'Award' }
                   ].map((step, idx) => (
-                    <div key={idx} className="p-4 rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center flex-shrink-0">
-                        <Icon name={step.icon as any} size={20} className="text-white" />
+                    <div key={idx} className="p-3 md:p-4 rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 flex items-start gap-3 md:gap-4">
+                      <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center flex-shrink-0">
+                        <Icon name={step.icon as any} size={16} className="text-white md:w-5 md:h-5" />
                       </div>
                       <div>
-                        <p className="text-purple-400 font-semibold">{step.month}: {step.status}</p>
-                        <p className="text-slate-300 text-sm mt-1">{step.desc}</p>
+                        <p className="text-purple-400 font-semibold text-sm md:text-base">{step.month}: {step.status}</p>
+                        <p className="text-slate-300 text-xs md:text-sm mt-1">{step.desc}</p>
                       </div>
                     </div>
                   ))}
@@ -658,40 +667,40 @@ const PartnerSystem = () => {
                 <CardTitle className="text-purple-400">Максимальный потенциал</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="p-6 rounded-lg bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/30">
-                    <Icon name="Target" size={32} className="text-purple-400 mb-4" />
-                    <p className="text-2xl font-bold text-purple-400 mb-2">Личные продажи</p>
-                    <p className="text-slate-300 text-sm mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                  <div className="p-4 md:p-6 rounded-lg bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/30">
+                    <Icon name="Target" size={28} className="text-purple-400 mb-3 md:mb-4 md:w-8 md:h-8" />
+                    <p className="text-xl md:text-2xl font-bold text-purple-400 mb-2">Личные продажи</p>
+                    <p className="text-slate-300 text-xs md:text-sm mb-3 md:mb-4">
                       Амбассадор с личными продажами 50 млн руб./квартал
                     </p>
-                    <p className="text-4xl font-bold text-purple-400">
+                    <p className="text-3xl md:text-4xl font-bold text-purple-400">
                       9 млн ₽
                     </p>
                     <p className="text-slate-400 text-xs mt-2">18% от оборота</p>
                   </div>
 
-                  <div className="p-6 rounded-lg bg-gradient-to-br from-pink-500/20 to-pink-600/10 border border-pink-500/30">
-                    <Icon name="Network" size={32} className="text-pink-400 mb-4" />
-                    <p className="text-2xl font-bold text-pink-400 mb-2">Команда + Сеть</p>
-                    <p className="text-slate-300 text-sm mb-4">
+                  <div className="p-4 md:p-6 rounded-lg bg-gradient-to-br from-pink-500/20 to-pink-600/10 border border-pink-500/30">
+                    <Icon name="Network" size={28} className="text-pink-400 mb-3 md:mb-4 md:w-8 md:h-8" />
+                    <p className="text-xl md:text-2xl font-bold text-pink-400 mb-2">Команда + Сеть</p>
+                    <p className="text-slate-300 text-xs md:text-sm mb-3 md:mb-4">
                       Сеть 150 млн руб./квартал + личные 50 млн
                     </p>
-                    <p className="text-4xl font-bold text-pink-400">
+                    <p className="text-3xl md:text-4xl font-bold text-pink-400">
                       16.5 млн ₽
                     </p>
                     <p className="text-slate-400 text-xs mt-2">9 млн личные + 7.5 млн сеть (5%)</p>
                   </div>
                 </div>
 
-                <div className="mt-6 p-6 rounded-lg bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-cyan-500/10 border border-purple-500/30">
-                  <div className="flex items-start gap-4">
-                    <Icon name="Crown" size={40} className="text-yellow-400 flex-shrink-0" />
+                <div className="mt-4 md:mt-6 p-4 md:p-6 rounded-lg bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-cyan-500/10 border border-purple-500/30">
+                  <div className="flex items-start gap-3 md:gap-4">
+                    <Icon name="Crown" size={32} className="text-yellow-400 flex-shrink-0 md:w-10 md:h-10" />
                     <div>
-                      <p className="text-2xl font-bold text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text mb-2">
+                      <p className="text-xl md:text-2xl font-bold text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text mb-2">
                         Статус Амбассадора
                       </p>
-                      <p className="text-slate-300 text-sm">
+                      <p className="text-slate-300 text-xs md:text-sm">
                         Кроме комиссий, Амбассадор получает долю в годовой прибыли DEOD и становится стратегическим советником компании. 
                         Это не просто доход — это партнёрство на уровне собственника бизнеса.
                       </p>
