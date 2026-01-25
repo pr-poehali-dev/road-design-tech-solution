@@ -423,6 +423,15 @@ const Index = () => {
                   size="lg" 
                   variant="outline" 
                   className="w-full sm:w-auto border-2 font-semibold text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 group touch-manipulation glow-button"
+                  onClick={() => window.location.href = '/partner-system'}
+                >
+                  <Icon name="TrendingUp" className="mr-2 group-hover:scale-110 transition-transform" size={16} />
+                  <span className="truncate">Партнёрская система</span>
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="w-full sm:w-auto border-2 font-semibold text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 group touch-manipulation glow-button"
                   onClick={() => {
                     document.getElementById('technologies')?.scrollIntoView({ behavior: 'smooth' });
                   }}
