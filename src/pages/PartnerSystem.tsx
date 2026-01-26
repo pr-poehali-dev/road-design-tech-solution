@@ -12,8 +12,8 @@ const PartnerSystem = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   
   const texts = [
-    'Первая в России экосистема, где партнёр зарабатывает от 1 млрд ₽ в год.',
-    'Превращайте ваши связи в строительстве и проектировании в капитал, влияние и статус.',
+    'Приводите строительные проекты — получайте 18% с каждой сделки.',
+    'Собирайте команду партнёров — зарабатывайте на их продажах дополнительно.',
   ];
 
   const [calculatorData, setCalculatorData] = useState({
@@ -136,7 +136,7 @@ const PartnerSystem = () => {
         <div className="container mx-auto px-4 md:px-6 relative z-10 text-center">
           <div className="mb-4 md:mb-6">
             <span className="inline-block px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs md:text-sm font-semibold backdrop-blur-sm">
-              Закрытый клуб будущих лидеров рынка
+              Партнёрская программа для строительного рынка
             </span>
           </div>
           
@@ -145,7 +145,7 @@ const PartnerSystem = () => {
               DEOD
             </span>
             <span className="text-2xl md:text-4xl lg:text-5xl text-slate-200 block mt-2">
-              Экосистема Миллиард
+              Партнёрская программа
             </span>
           </h1>
           
@@ -155,8 +155,8 @@ const PartnerSystem = () => {
               <span className="inline-block w-0.5 md:w-1 h-4 md:h-8 bg-cyan-400 ml-1 animate-pulse" />
             </p>
           </div>
-          <p className="text-base md:text-2xl text-cyan-400 font-semibold mb-6 md:mb-8 px-4">
-            Станьте миллиардером вместе с DEOD.
+          <p className="text-base md:text-2xl text-slate-300 mb-6 md:mb-8 px-4">
+            Для тех, кто знает рынок строительства и проектирования
           </p>
           
           <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center px-4">
@@ -188,35 +188,33 @@ const PartnerSystem = () => {
         <div className="container mx-auto px-4 md:px-6">
           <h2 className="text-2xl md:text-5xl lg:text-6xl font-bold text-center mb-8 md:mb-20 px-4">
             <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
-              DEOD меняет правила.
+              Как это работает
             </span>
-            <br />
-            <span className="text-cyan-400">Навсегда.</span>
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             {[
               {
-                icon: 'Wallet',
-                title: 'Деньги',
-                subtitle: 'До 18% с каждой сделки + процент с сети',
-                description: 'Превращайте каждое введённое вами в экосистему тендерное или коммерческое предложение в стабильный капитал.',
+                icon: 'Building2',
+                title: '1. Вы приводите проект',
+                subtitle: 'Строительство, проектирование, инжиниринг',
+                description: 'Любой проект от 100 млн ₽: жилые комплексы, торговые центры, промышленные объекты, инфраструктура.',
                 gradient: 'from-cyan-500 to-blue-600',
                 glow: 'shadow-cyan-500/30',
               },
               {
-                icon: 'Crown',
-                title: 'Власть',
-                subtitle: 'Закрепите регион. Постройте команду.',
-                description: 'Вы не продавец — вы полевой командир и стратег. Вы определяете правила игры на своей территории.',
+                icon: 'Users',
+                title: '2. Мы делаем проект',
+                subtitle: 'Полный цикл: от проектирования до сдачи',
+                description: 'Наша команда берёт проект в работу — вам не нужно ничего делать. Архитектура, конструктив, инженерия, строительство.',
                 gradient: 'from-blue-500 to-purple-600',
                 glow: 'shadow-blue-500/30',
               },
               {
-                icon: 'Sparkles',
-                title: 'Известность',
-                subtitle: 'Ваше имя станет брендом',
-                description: 'Выступайте на наших закрытых билдер-саммитах. Ваши кейсы — в основе наших материалов. Вы — лицо изменений в отрасли.',
+                icon: 'Wallet',
+                title: '3. Вы получаете доход',
+                subtitle: 'До 18% от стоимости проекта',
+                description: 'Деньги перечисляются поэтапно по ходу реализации проекта. Плюс 5% с продаж вашей команды партнёров.',
                 gradient: 'from-purple-600 to-pink-600',
                 glow: 'shadow-purple-500/30',
               },
@@ -245,10 +243,10 @@ const PartnerSystem = () => {
         
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <h2 className="text-2xl md:text-5xl lg:text-6xl font-bold text-center mb-4 md:mb-6 text-cyan-400 px-4">
-            Вы приводите клиента.
+            Пример проекта
           </h2>
           <p className="text-base md:text-3xl text-slate-300 text-center mb-12 md:mb-16 font-light px-4">
-            Экосистема делает всё остальное.
+            Жилой комплекс за 500 млн ₽
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 relative">
@@ -258,23 +256,23 @@ const PartnerSystem = () => {
             {[
               {
                 step: '01',
-                title: 'ВЫ — ЛОКОМОТИВ',
-                description: 'Вы находите проект (стройка, реконструкция, изыскания). Используете наш банк решений и методики.',
-                icon: 'Rocket',
+                title: 'Вы находите проект',
+                description: 'Застройщик ищет подрядчика на строительство ЖК. Вы передаёте нам контакты и ТЗ.',
+                icon: 'Search',
                 color: 'from-cyan-500 to-cyan-600',
               },
               {
                 step: '02',
-                title: 'ЭКОСИСТЕМА — ДВИГАТЕЛЬ',
-                description: 'Наша фабрика проектов (эксперты, ИИ, юристы, сметчики) мгновенно формирует победное КП «под ключ».',
-                icon: 'Zap',
+                title: 'Мы ведём проект',
+                description: 'Наши архитекторы, конструкторы, сметчики готовят проектную документацию. Строители реализуют.',
+                icon: 'FileText',
                 color: 'from-blue-500 to-blue-600',
               },
               {
                 step: '03',
-                title: 'ВЫ — СОБСТВЕННИК',
-                description: 'Контракт заключён. Вы получаете высокий процент. Экосистема выполняет работу. Вы строите свою сеть партнёров и умножаете доход.',
-                icon: 'Trophy',
+                title: 'Вы получаете 90 млн',
+                description: '18% от 500 млн = 90 млн ₽ вам. Выплаты поэтапно по ходу строительства.',
+                icon: 'Wallet',
                 color: 'from-purple-500 to-purple-600',
               },
             ].map((step, idx) => (
@@ -302,17 +300,17 @@ const PartnerSystem = () => {
         <div className="container mx-auto px-4 md:px-6">
           <h2 className="text-2xl md:text-5xl lg:text-6xl font-bold text-center mb-4 md:mb-6 px-4">
             <span className="bg-gradient-to-r from-cyan-400 to-purple-600 bg-clip-text text-transparent">
-              Математика, которая не врёт
+              Потенциал программы
             </span>
           </h2>
           <p className="text-base md:text-2xl text-slate-300 text-center mb-12 md:mb-16 px-4">
-            Мы спроектировали систему, где ваш рост — инженерный расчёт
+            Реальные цифры из проектов
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
             <Card className="bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-blue-600/10 border-cyan-500/30 hover:border-cyan-400 transition-all shadow-xl shadow-cyan-500/20">
               <CardContent className="p-6 md:p-12 text-center">
-                <p className="text-xs md:text-base text-slate-400 mb-3 md:mb-4">Потенциал оборота экосистемы через 24 месяца</p>
+                <p className="text-xs md:text-base text-slate-400 mb-3 md:mb-4">Общий объем проектов за 2 года</p>
                 <p className="text-3xl md:text-7xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent mb-2 animate-pulse">
                   50 млрд ₽
                 </p>
@@ -322,7 +320,7 @@ const PartnerSystem = () => {
 
             <Card className="bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-pink-600/10 border-purple-500/30 hover:border-purple-400 transition-all shadow-xl shadow-purple-500/20">
               <CardContent className="p-6 md:p-12 text-center">
-                <p className="text-xs md:text-base text-slate-400 mb-3 md:mb-4">Максимальный годовой доход амбассадора в системе</p>
+                <p className="text-xs md:text-base text-slate-400 mb-3 md:mb-4">Доход топ-партнёра за год</p>
                 <p className="text-3xl md:text-7xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent mb-2 animate-pulse">
                   1.5 млрд ₽
                 </p>
@@ -332,26 +330,26 @@ const PartnerSystem = () => {
           </div>
 
           <h3 className="text-xl md:text-4xl font-bold text-center mb-8 md:mb-12 text-cyan-400 px-4">
-            Профили успеха
+            Примеры партнёров
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {[
               {
-                title: 'Бывший руководитель тендерного отдела',
-                time: '24 месяца в системе',
-                network: 'Личная сеть: 15 партнёров',
-                income: '1.2 млрд ₽',
-                period: 'годовой доход',
+                title: 'Начальник отдела тендеров',
+                time: '5 проектов по 200 млн',
+                network: 'Работает один, без команды',
+                income: '180 млн ₽',
+                period: 'годовой доход (18%)',
                 gradient: 'from-cyan-500/20 to-blue-600/20',
                 border: 'border-cyan-500/30',
               },
               {
-                title: 'Инженер с наработанными контактами',
-                time: '18 месяцев в системе',
-                network: 'Специализация: госзаказ + команда',
-                income: '850 млн ₽',
-                period: 'годовой доход',
+                title: 'Главный инженер стройки',
+                time: '10 проектов по 300 млн',
+                network: 'Собрал команду 10 партнёров',
+                income: '1.04 млрд ₽',
+                period: 'год (540млн + 500млн от команды)',
                 gradient: 'from-purple-500/20 to-pink-600/20',
                 border: 'border-purple-500/30',
               },
@@ -385,10 +383,10 @@ const PartnerSystem = () => {
         
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <h2 className="text-2xl md:text-5xl lg:text-6xl font-bold text-center mb-4 md:mb-6 text-cyan-400 px-4">
-            Ваша карьерная траектория спроектирована
+            Как расти в программе
           </h2>
           <p className="text-base md:text-xl text-slate-300 text-center mb-12 md:mb-16 px-4">
-            От партнёра до амбассадора
+            4 уровня партнёрства
           </p>
           
           <div className="relative">
@@ -399,33 +397,33 @@ const PartnerSystem = () => {
               {[
                 {
                   title: 'Партнёр',
-                  period: '0-6 мес.',
-                  focus: 'Первые крупные сделки от 50 млн. Фокус: личные продажи.',
-                  income: '50-200 млн/год',
+                  period: 'Уровень 1',
+                  focus: '1-3 проекта в год от 100 млн. Работаете самостоятельно.',
+                  income: 'До 180 млн/год',
                   color: 'from-cyan-500 to-cyan-600',
-                  icon: 'Target',
+                  icon: 'Building2',
                 },
                 {
-                  title: 'Стратегический партнёр',
-                  period: '6-12 мес.',
-                  focus: 'Создание ядра команды (3-5 партнёров). Проекты от 100 млн.',
-                  income: '200-500 млн/год',
+                  title: 'Старший партнёр',
+                  period: 'Уровень 2',
+                  focus: '5-7 проектов в год. Привлекаете 2-3 партнёров.',
+                  income: 'До 500 млн/год',
                   color: 'from-blue-500 to-blue-600',
                   icon: 'Users',
                 },
                 {
-                  title: 'Генеральный партнёр',
-                  period: '12-18 мес.',
-                  focus: 'Управление структурой 10+ партнёров. Проекты от 200 млн.',
-                  income: '500 млн - 1 млрд/год',
+                  title: 'Региональный',
+                  period: 'Уровень 3',
+                  focus: '10+ проектов. Команда 10 партнёров. Закреплён регион.',
+                  income: 'До 1 млрд/год',
                   color: 'from-purple-500 to-purple-600',
-                  icon: 'Network',
+                  icon: 'MapPin',
                 },
                 {
-                  title: 'Амбассадор',
-                  period: '18+ мес.',
-                  focus: 'Совладелец экосистемы. Сеть 15+ партнёров. Проекты от 500 млн.',
-                  income: '1+ млрд/год',
+                  title: 'Топ-партнёр',
+                  period: 'Уровень 4',
+                  focus: 'Многоуровневая сеть 20+ партнёров. Крупные проекты 500+ млн.',
+                  income: '1.5+ млрд/год',
                   color: 'from-purple-600 to-pink-600',
                   icon: 'Crown',
                 },
@@ -538,15 +536,13 @@ const PartnerSystem = () => {
 
                 <div className="pt-8 md:pt-10 border-t-2 border-cyan-500/30">
                   <p className="text-base md:text-xl text-slate-300 mb-3 md:mb-4 text-center">
-                    Ваш расчётный годовой потенциал в экосистеме DEOD:
+                    Ваш годовой доход:
                   </p>
                   <p className="text-5xl md:text-8xl font-bold text-center bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-2 md:mb-3 animate-gradient bg-300%">
                     {calculateIncome()}
                   </p>
                   <p className="text-xl md:text-3xl text-center text-slate-400 mb-3 md:mb-4">млрд рублей</p>
-                  <p className="text-sm md:text-lg text-cyan-400 text-center mb-6 md:mb-8">
-                    🚀 {parseFloat(calculateIncome()) >= 1 ? 'Вы достигаете статуса миллиардера!' : 'Увеличьте параметры для выхода на миллиард'}
-                  </p>
+
                   <p className="text-xs md:text-sm text-slate-500 text-center mb-6 md:mb-8">
                     Расчёт: личные продажи (18%) + доход от сети партнёров (5%)
                   </p>
@@ -554,7 +550,7 @@ const PartnerSystem = () => {
                     onClick={() => document.getElementById('join')?.scrollIntoView({ behavior: 'smooth' })}
                     className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-sm md:text-xl py-5 md:py-7 shadow-2xl shadow-cyan-500/50 hover:scale-105 transition-all"
                   >
-                    Зафиксировать свою позицию в следующем наборе
+Подать заявку
                     <Icon name="ArrowRight" className="ml-2" size={24} />
                   </Button>
                 </div>
@@ -570,22 +566,14 @@ const PartnerSystem = () => {
         
         <div className="container mx-auto px-4 md:px-6 max-w-3xl relative z-10">
           <div className="text-center mb-12">
-            <div className="inline-block px-6 py-3 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-sm font-semibold mb-6">
-              Ограниченное предложение
-            </div>
+
             <h2 className="text-2xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 px-4">
-              <span className="text-cyan-400">Следующий набор —</span>
-              <span className="bg-gradient-to-r from-cyan-400 to-purple-600 bg-clip-text text-transparent block">
-                25 мест
+              <span className="bg-gradient-to-r from-cyan-400 to-purple-600 bg-clip-text text-transparent">
+                Стать партнёром
               </span>
             </h2>
-            <p className="text-sm md:text-xl text-slate-300 mb-3 md:mb-4 px-4">
-              Проверьте, ваше ли это сообщество
-            </p>
-            <p className="text-base md:text-2xl text-slate-400 italic leading-relaxed px-4">
-              «Мы ищем не всех. Мы ищем <span className="text-cyan-400 font-semibold">своих</span>: 
-              амбициозных, с глубоким пониманием рынка или безупречными связями, 
-              готовых строить не просто доход, а <span className="text-purple-400 font-semibold">наследие</span>.»
+            <p className="text-base md:text-2xl text-slate-300 leading-relaxed px-4">
+              Заполните заявку ниже, мы свяжемся в течение 1 рабочего дня
             </p>
           </div>
 
@@ -680,8 +668,8 @@ const PartnerSystem = () => {
           <p className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-3 md:mb-4 animate-gradient bg-300%">
             DEOD
           </p>
-          <p className="text-base md:text-xl text-slate-400 font-light">
-            Капитализируйте вашу экспертизу
+          <p className="text-base md:text-xl text-slate-300 font-light">
+            Партнёрская программа для строительного рынка
           </p>
         </div>
       </footer>
