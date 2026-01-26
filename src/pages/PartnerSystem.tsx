@@ -1,725 +1,702 @@
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import Icon from '@/components/ui/icon';
+import { useState, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
-  Area,
-  AreaChart
-} from 'recharts';
-
-const gradeData = [
-  {
-    id: 1,
-    name: 'Агент',
-    nameEn: 'Agent',
-    baseRate: 5,
-    color: '#06b6d4',
-    entry: 'Подписание агентского соглашения',
-    bonus: 'Ускоренный старт: первая сделка = 10%',
-    personalSales: 5,
-    teamBonus: 0,
-    requirements: []
-  },
-  {
-    id: 2,
-    name: 'Партнёр',
-    nameEn: 'Partner',
-    baseRate: 10,
-    color: '#8b5cf6',
-    entry: 'Успешное выполнение первой сделки',
-    privileges: 'Полный доступ к CRM, ИИ для КП, базы',
-    personalSales: 10,
-    teamBonus: 0,
-    requirements: ['Первая сделка закрыта']
-  },
-  {
-    id: 3,
-    name: 'Старший партнёр',
-    nameEn: 'Senior Partner',
-    baseRate: 13,
-    color: '#ec4899',
-    personalSales: 13,
-    teamBonus: 3,
-    requirements: ['30 млн руб. за квартал', '1 менеджер с закрытой сделкой'],
-    privileges: 'Приоритетное право на закрепление региона'
-  },
-  {
-    id: 4,
-    name: 'Генеральный партнёр',
-    nameEn: 'General Partner',
-    baseRate: 16,
-    color: '#f59e0b',
-    personalSales: 16,
-    teamBonus: 5,
-    additionalBonus: 2,
-    requirements: ['3 активных менеджера', '60 млн руб. структурный оборот'],
-    privileges: 'Участие в обучающих вебинарах как эксперт'
-  },
-  {
-    id: 5,
-    name: 'Амбассадор',
-    nameEn: 'Ambassador',
-    baseRate: 18,
-    color: '#10b981',
-    personalSales: 18,
-    teamBonus: 5,
-    additionalBonus: 5,
-    requirements: ['2 Генеральных партнёра в сети', '150 млн руб. оборот сети'],
-    privileges: 'Доля в годовой прибыли DEOD, статус стратегического советника'
-  }
-];
-
-const incomeComparisonData = [
-  { deal: '10 млн', agent: 500000, partner: 1000000, senior: 1300000, general: 1600000, ambassador: 1800000 },
-  { deal: '20 млн', agent: 1000000, partner: 2000000, senior: 2600000, general: 3200000, ambassador: 3600000 },
-  { deal: '30 млн', agent: 1500000, partner: 3000000, senior: 3900000, general: 4800000, ambassador: 5400000 },
-  { deal: '50 млн', agent: 2500000, partner: 5000000, senior: 6500000, general: 8000000, ambassador: 9000000 }
-];
-
-const prepaymentBonusData = [
-  { range: '30-50%', bonus: 1, total: 11, color: '#06b6d4' },
-  { range: '51-70%', bonus: 2, total: 12, color: '#8b5cf6' },
-  { range: '>70%', bonus: 3, total: 13, color: '#ec4899' }
-];
-
-const growthScenarioData = [
-  { month: 'Месяц 1', agent: 500000, team: 0 },
-  { month: 'Месяц 2', agent: 1000000, team: 0 },
-  { month: 'Месяц 3', agent: 1300000, team: 300000 },
-  { month: 'Месяц 4', agent: 1600000, team: 800000 },
-  { month: 'Месяц 5', agent: 1600000, team: 1500000 },
-  { month: 'Месяц 6', agent: 1800000, team: 2500000 }
-];
-
-const profitSharingData = [
-  { scenario: 'КП: 10 млн\nФакт: 12 млн', kpPrice: 10, actualPrice: 12, extra: 2, partnerShare: 1, deodShare: 1 },
-  { scenario: 'КП: 15 млн\nФакт: 18 млн', kpPrice: 15, actualPrice: 18, extra: 3, partnerShare: 1.5, deodShare: 1.5 },
-  { scenario: 'КП: 20 млн\nФакт: 25 млн', kpPrice: 20, actualPrice: 25, extra: 5, partnerShare: 2.5, deodShare: 2.5 }
-];
+import { Input } from '@/components/ui/input';
+import Icon from '@/components/ui/icon';
+import { Link } from 'react-router-dom';
 
 const PartnerSystem = () => {
-  const [selectedGrade, setSelectedGrade] = useState<number | null>(null);
-  const [calculatorDeal, setCalculatorDeal] = useState(10000000);
-  const [calculatorGrade, setCalculatorGrade] = useState(2);
-  const [calculatorPrepayment, setCalculatorPrepayment] = useState(50);
+  const [scrollY, setScrollY] = useState(0);
+  const [calculatorData, setCalculatorData] = useState({
+    projects: 3,
+    avgBudget: 25,
+    buildTeam: false,
+  });
+
+  const [formData, setFormData] = useState({
+    name: '',
+    contact: '',
+    asset: '',
+    expectedIncome: 50,
+  });
+
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const calculateIncome = () => {
-    const grade = gradeData[calculatorGrade - 1];
-    const baseIncome = (calculatorDeal * grade.personalSales) / 100;
-    
-    let prepaymentBonus = 0;
-    if (calculatorPrepayment >= 30 && calculatorPrepayment <= 50) prepaymentBonus = 1;
-    else if (calculatorPrepayment >= 51 && calculatorPrepayment <= 70) prepaymentBonus = 2;
-    else if (calculatorPrepayment > 70) prepaymentBonus = 3;
-    
-    const prepaymentIncome = (calculatorDeal * prepaymentBonus) / 100;
-    
-    return {
-      base: baseIncome,
-      prepayment: prepaymentIncome,
-      total: baseIncome + prepaymentIncome
-    };
+    const baseRate = 0.10;
+    const teamBonus = calculatorData.buildTeam ? 0.03 : 0;
+    const totalRate = baseRate + teamBonus;
+    const yearlyIncome = calculatorData.projects * calculatorData.avgBudget * totalRate * 1000000;
+    return (yearlyIncome / 1000000).toFixed(1);
   };
 
-  const income = calculateIncome();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    alert('Спасибо! Мы свяжемся с вами в ближайшее время.');
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
-      <header className="border-b border-purple-500/30 bg-slate-900/80 backdrop-blur-lg shadow-[0_0_30px_rgba(139,92,246,0.3)] sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 md:py-6">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 md:gap-4">
-              <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-[0_0_25px_rgba(139,92,246,0.6)] animate-pulse">
-                <Icon name="TrendingUp" size={20} className="text-white md:w-8 md:h-8" />
-              </div>
-              <div>
-                <h1 className="text-lg md:text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
-                  Партнёрская система DEOD
-                </h1>
-                <p className="text-purple-400/80 text-xs md:text-sm mt-0.5 md:mt-1 hidden sm:block">Система грейдов и мотивации партнёров</p>
-              </div>
-            </div>
-            <Button
-              onClick={() => window.location.href = '/'}
-              variant="outline"
-              size="sm"
-              className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10 text-xs md:text-sm px-2 md:px-4"
+    <div className="min-h-screen bg-slate-950 text-white overflow-hidden">
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-xl border-b border-cyan-500/20">
+        <div className="container mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
+          <Link to="/" className="text-xl md:text-2xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent animate-gradient">
+            DEOD
+          </Link>
+          <div className="flex items-center gap-2 md:gap-4">
+            <a href="#calculator" className="text-xs md:text-sm text-slate-300 hover:text-cyan-400 transition hidden sm:block">
+              Калькулятор
+            </a>
+            <Button 
+              onClick={() => document.getElementById('join')?.scrollIntoView({ behavior: 'smooth' })}
+              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-xs md:text-sm px-3 py-2 md:px-4 md:py-2 shadow-lg shadow-cyan-500/30"
             >
-              <Icon name="Home" size={14} className="md:mr-2" />
-              <span className="hidden md:inline">На главную</span>
+              Получить приглашение
             </Button>
           </div>
         </div>
-      </header>
+      </nav>
 
-      <main className="container mx-auto px-4 py-8 space-y-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
-          {[
-            { icon: 'Award', label: 'Грейдов', value: '5', color: 'purple' },
-            { icon: 'Percent', label: 'Макс. ставка', value: '18%', color: 'pink' },
-            { icon: 'TrendingUp', label: 'Лимит', value: '20%', color: 'cyan' },
-            { icon: 'Users', label: 'Уровней сети', value: '∞', color: 'blue' }
-          ].map((stat, idx) => (
-            <Card
-              key={idx}
-              className="bg-slate-900/50 border-purple-500/30 hover:shadow-[0_0_30px_rgba(139,92,246,0.4)] transition-all duration-300"
-            >
-              <CardContent className="pt-4 md:pt-6">
-                <div className="flex flex-col md:flex-row items-center md:gap-4 text-center md:text-left">
-                  <div className={`w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-${stat.color}-500/20 to-${stat.color}-600/20 flex items-center justify-center mb-2 md:mb-0`}>
-                    <Icon name={stat.icon as any} size={20} className={`text-${stat.color}-400 md:w-6 md:h-6`} />
-                  </div>
-                  <div>
-                    <p className="text-slate-400 text-xs md:text-sm">{stat.label}</p>
-                    <p className="text-xl md:text-2xl font-bold text-purple-400">{stat.value}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 md:pt-0">
+        {/* Animated Background */}
+        <div
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: `radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.2) 0%, transparent 70%)`,
+            transform: `translateY(${scrollY * 0.3}px) scale(${1 + scrollY * 0.0005})`,
+          }}
+        />
+        
+        {/* Floating particles */}
+        <div className="absolute inset-0">
+          {[...Array(30)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute rounded-full bg-gradient-to-br from-cyan-400/20 via-blue-500/20 to-purple-600/20 blur-sm"
+              style={{
+                width: Math.random() * 150 + 50 + 'px',
+                height: Math.random() * 150 + 50 + 'px',
+                left: Math.random() * 100 + '%',
+                top: Math.random() * 100 + '%',
+                animation: `float ${Math.random() * 15 + 10}s ease-in-out infinite`,
+                animationDelay: `${Math.random() * 5}s`,
+              }}
+            />
           ))}
         </div>
 
-        <Tabs defaultValue="grades" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-slate-900/50 border border-purple-500/30 gap-1 md:gap-0">
-            <TabsTrigger value="grades" className="text-xs md:text-sm">Грейды</TabsTrigger>
-            <TabsTrigger value="mechanics" className="text-xs md:text-sm">Механики</TabsTrigger>
-            <TabsTrigger value="comparison" className="text-xs md:text-sm">Сравнение</TabsTrigger>
-            <TabsTrigger value="calculator" className="text-xs md:text-sm">Калькулятор</TabsTrigger>
-            <TabsTrigger value="growth" className="text-xs md:text-sm col-span-2 md:col-span-1">Рост дохода</TabsTrigger>
-          </TabsList>
+        {/* Grid overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.03)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
 
-          <TabsContent value="grades" className="space-y-4">
-            <Card className="bg-slate-900/50 border-purple-500/30">
-              <CardHeader>
-                <CardTitle className="text-purple-400">Структура грейдов</CardTitle>
-                <CardDescription className="text-slate-400">
-                  5 уровней партнёрства с растущими привилегиями и доходом
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={gradeData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="nameEn" stroke="#9ca3af" />
-                    <YAxis stroke="#9ca3af" />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #a855f7' }}
-                      labelStyle={{ color: '#a855f7' }}
-                    />
-                    <Legend />
-                    <Bar dataKey="personalSales" name="Личные продажи %" fill="#8b5cf6" />
-                    <Bar dataKey="teamBonus" name="Команда %" fill="#ec4899" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+        <div className="container mx-auto px-4 md:px-6 relative z-10 text-center">
+          <div className="mb-4 md:mb-6">
+            <span className="inline-block px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs md:text-sm font-semibold backdrop-blur-sm">
+              Закрытый клуб будущих лидеров рынка
+            </span>
+          </div>
+          
+          <h1 className="text-4xl md:text-6xl lg:text-8xl font-bold mb-4 md:mb-6 leading-tight">
+            <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent animate-gradient bg-300% block">
+              DEOD
+            </span>
+            <span className="text-2xl md:text-4xl lg:text-5xl text-slate-200 block mt-2">
+              Ваш капитал — в масштабе
+            </span>
+          </h1>
+          
+          <p className="text-base md:text-xl lg:text-2xl text-slate-300 mb-8 md:mb-12 max-w-4xl mx-auto px-4 leading-relaxed">
+            Первая экосистема, которая превращает ваши связи в строительстве и проектировании 
+            в <span className="text-cyan-400 font-bold">деньги</span>, 
+            <span className="text-blue-400 font-bold"> власть</span> и 
+            <span className="text-purple-400 font-bold"> известность</span>.
+            <br />
+            <span className="text-lg md:text-xl text-cyan-400 font-semibold mt-2 block">
+              Станьте совладельцем рынка.
+            </span>
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button
+              onClick={() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' })}
+              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-base md:text-lg px-8 md:px-10 py-5 md:py-7 w-full sm:w-auto shadow-2xl shadow-cyan-500/50 hover:shadow-cyan-500/70 transition-all transform hover:scale-105"
+            >
+              Рассчитать свой потенциал
+              <Icon name="Calculator" className="ml-2" size={20} />
+            </Button>
+            <Button
+              onClick={() => document.getElementById('join')?.scrollIntoView({ behavior: 'smooth' })}
+              variant="outline"
+              className="border-2 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 text-base md:text-lg px-8 md:px-10 py-5 md:py-7 w-full sm:w-auto backdrop-blur-sm hover:border-cyan-400 transition-all"
+            >
+              Получить приглашение в закрытый клуб
+              <Icon name="ArrowRight" className="ml-2" size={20} />
+            </Button>
+          </div>
+        </div>
 
-            {gradeData.map((grade, idx) => (
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+          <Icon name="ChevronDown" size={36} className="text-cyan-400 opacity-70" />
+        </div>
+      </section>
+
+      {/* Three Pillars */}
+      <section className="py-16 md:py-24 relative">
+        <div className="container mx-auto px-4 md:px-6">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-center mb-12 md:mb-20">
+            <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
+              DEOD меняет правила.
+            </span>
+            <br />
+            <span className="text-cyan-400">Навсегда.</span>
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+            {[
+              {
+                icon: 'Wallet',
+                title: 'Деньги',
+                subtitle: 'До 18% с каждой сделки + процент с сети',
+                description: 'Превращайте каждое введённое вами в экосистему тендерное или коммерческое предложение в стабильный капитал.',
+                gradient: 'from-cyan-500 to-blue-600',
+                glow: 'shadow-cyan-500/30',
+              },
+              {
+                icon: 'Crown',
+                title: 'Власть',
+                subtitle: 'Закрепите регион. Постройте команду.',
+                description: 'Вы не продавец — вы полевой командир и стратег. Вы определяете правила игры на своей территории.',
+                gradient: 'from-blue-500 to-purple-600',
+                glow: 'shadow-blue-500/30',
+              },
+              {
+                icon: 'Sparkles',
+                title: 'Известность',
+                subtitle: 'Ваше имя станет брендом',
+                description: 'Выступайте на наших закрытых билдер-саммитах. Ваши кейсы — в основе наших материалов. Вы — лицо изменений в отрасли.',
+                gradient: 'from-purple-600 to-pink-600',
+                glow: 'shadow-purple-500/30',
+              },
+            ].map((pillar, idx) => (
               <Card
                 key={idx}
-                className={`bg-slate-900/50 border-purple-500/30 cursor-pointer transition-all duration-300 hover:shadow-[0_0_30px_rgba(139,92,246,0.4)] ${
-                  selectedGrade === idx ? 'ring-2 ring-purple-500' : ''
-                }`}
-                onClick={() => setSelectedGrade(selectedGrade === idx ? null : idx)}
+                className="bg-slate-900/70 border-slate-800 hover:border-cyan-500/50 transition-all duration-500 group hover:scale-105 backdrop-blur-sm"
               >
-                <CardHeader className="pb-3 md:pb-6">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 md:gap-4">
-                      <div 
-                        className="w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center font-bold text-white text-xl md:text-2xl shadow-lg flex-shrink-0"
-                        style={{ backgroundColor: grade.color }}
-                      >
-                        {grade.id}
-                      </div>
-                      <div>
-                        <CardTitle className="text-purple-400 text-base md:text-lg">{grade.name}</CardTitle>
-                        <CardDescription className="text-slate-400 text-xs md:text-sm">{grade.nameEn}</CardDescription>
-                      </div>
-                    </div>
-                    <div className="text-left sm:text-right ml-auto sm:ml-0">
-                      <p className="text-2xl md:text-3xl font-bold text-pink-400">{grade.personalSales}%</p>
-                      <p className="text-xs text-slate-400 mt-1">базовая ставка</p>
-                    </div>
+                <CardContent className="p-6 md:p-8">
+                  <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br ${pillar.gradient} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-xl ${pillar.glow}`}>
+                    <Icon name={pillar.icon as any} size={32} className="text-white md:w-10 md:h-10" />
                   </div>
-                </CardHeader>
-                {selectedGrade === idx && (
-                  <CardContent className="border-t border-purple-500/20 pt-3 md:pt-4 space-y-3 md:space-y-4">
-                    {grade.entry && (
-                      <div>
-                        <p className="text-purple-400 font-semibold mb-2 flex items-center gap-2 text-sm md:text-base">
-                          <Icon name="LogIn" size={16} className="md:w-[18px] md:h-[18px]" />
-                          Условия входа:
-                        </p>
-                        <p className="text-slate-300 text-xs md:text-sm">{grade.entry}</p>
-                      </div>
-                    )}
-
-                    {grade.requirements.length > 0 && (
-                      <div>
-                        <p className="text-pink-400 font-semibold mb-2 flex items-center gap-2 text-sm md:text-base">
-                          <Icon name="CheckCircle2" size={16} className="md:w-[18px] md:h-[18px]" />
-                          Требования:
-                        </p>
-                        <ul className="text-slate-300 text-xs md:text-sm space-y-1">
-                          {grade.requirements.map((req, i) => (
-                            <li key={i} className="flex items-start gap-2">
-                              <span className="w-1.5 h-1.5 rounded-full bg-pink-400 mt-1.5 flex-shrink-0"></span>
-                              <span>{req}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {grade.bonus && (
-                      <div className="p-2 md:p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/30">
-                        <p className="text-cyan-400 font-semibold mb-1 flex items-center gap-2 text-sm md:text-base">
-                          <Icon name="Zap" size={16} className="md:w-[18px] md:h-[18px]" />
-                          Бонус:
-                        </p>
-                        <p className="text-slate-300 text-xs md:text-sm">{grade.bonus}</p>
-                      </div>
-                    )}
-
-                    {grade.privileges && (
-                      <div className="p-2 md:p-3 rounded-lg bg-purple-500/10 border border-purple-500/30">
-                        <p className="text-purple-400 font-semibold mb-1 flex items-center gap-2 text-sm md:text-base">
-                          <Icon name="Star" size={16} className="md:w-[18px] md:h-[18px]" />
-                          Привилегии:
-                        </p>
-                        <p className="text-slate-300 text-xs md:text-sm">{grade.privileges}</p>
-                      </div>
-                    )}
-
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3 pt-3 border-t border-purple-500/10">
-                      <div className="text-center p-2 md:p-3 rounded-lg bg-purple-500/5">
-                        <p className="text-2xl md:text-3xl font-bold text-purple-400">{grade.personalSales}%</p>
-                        <p className="text-[10px] md:text-xs text-slate-400 mt-1">Личные продажи</p>
-                      </div>
-                      {grade.teamBonus > 0 && (
-                        <div className="text-center p-2 md:p-3 rounded-lg bg-pink-500/5">
-                          <p className="text-2xl md:text-3xl font-bold text-pink-400">{grade.teamBonus}%</p>
-                          <p className="text-[10px] md:text-xs text-slate-400 mt-1">Команда</p>
-                        </div>
-                      )}
-                      {grade.additionalBonus && (
-                        <div className="text-center p-2 md:p-3 rounded-lg bg-cyan-500/5 col-span-2 md:col-span-1">
-                          <p className="text-2xl md:text-3xl font-bold text-cyan-400">+{grade.additionalBonus}%</p>
-                          <p className="text-[10px] md:text-xs text-slate-400 mt-1">Доп. бонус</p>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                )}
+                  <h3 className="text-2xl md:text-3xl font-bold mb-3 text-cyan-400">{pillar.title}</h3>
+                  <p className="text-base md:text-lg font-semibold text-white mb-4">{pillar.subtitle}</p>
+                  <p className="text-sm md:text-base text-slate-400 leading-relaxed">{pillar.description}</p>
+                </CardContent>
               </Card>
             ))}
-          </TabsContent>
+          </div>
+        </div>
+      </section>
 
-          <TabsContent value="mechanics" className="space-y-6">
-            <Card className="bg-slate-900/50 border-purple-500/30">
-              <CardHeader>
-                <CardTitle className="text-purple-400">Премия за эффективную продажу (50/50)</CardTitle>
-                <CardDescription className="text-slate-400">
-                  Если финальная цена контракта выше расчётной в КП, дополнительная прибыль делится поровну
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={profitSharingData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="scenario" stroke="#9ca3af" style={{ fontSize: '12px' }} />
-                    <YAxis stroke="#9ca3af" />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #a855f7' }}
-                      labelStyle={{ color: '#a855f7' }}
-                    />
-                    <Legend />
-                    <Bar dataKey="partnerShare" name="Доля партнёра (млн ₽)" fill="#8b5cf6" />
-                    <Bar dataKey="deodShare" name="Доля DEOD (млн ₽)" fill="#ec4899" />
-                  </BarChart>
-                </ResponsiveContainer>
+      {/* How It Works */}
+      <section className="py-16 md:py-24 bg-slate-900/50 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
+        
+        <div className="container mx-auto px-4 md:px-6 relative z-10">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-center mb-6 text-cyan-400">
+            Вы приводите клиента.
+          </h2>
+          <p className="text-xl md:text-3xl text-slate-300 text-center mb-16 font-light">
+            Экосистема делает всё остальное.
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 relative">
+            {/* Connection lines */}
+            <div className="hidden md:block absolute top-1/3 left-[16.6%] right-[16.6%] h-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500" />
+            
+            {[
+              {
+                step: '01',
+                title: 'ВЫ — ЛОКОМОТИВ',
+                description: 'Вы находите проект (стройка, реконструкция, изыскания). Используете наш банк решений и методики.',
+                icon: 'Rocket',
+                color: 'from-cyan-500 to-cyan-600',
+              },
+              {
+                step: '02',
+                title: 'ЭКОСИСТЕМА — ДВИГАТЕЛЬ',
+                description: 'Наша фабрика проектов (эксперты, ИИ, юристы, сметчики) мгновенно формирует победное КП «под ключ».',
+                icon: 'Zap',
+                color: 'from-blue-500 to-blue-600',
+              },
+              {
+                step: '03',
+                title: 'ВЫ — СОБСТВЕННИК',
+                description: 'Контракт заключён. Вы получаете высокий процент. Экосистема выполняет работу. Вы строите свою сеть партнёров и умножаете доход.',
+                icon: 'Trophy',
+                color: 'from-purple-500 to-purple-600',
+              },
+            ].map((step, idx) => (
+              <div key={idx} className="relative z-10">
+                <Card className="bg-slate-900/90 border-cyan-500/30 h-full hover:border-cyan-400 transition-all backdrop-blur-sm shadow-xl hover:shadow-cyan-500/30">
+                  <CardContent className="p-8">
+                    <div className="flex flex-col items-center text-center">
+                      <div className={`w-20 h-20 rounded-full bg-gradient-to-r ${step.color} flex items-center justify-center mb-6 shadow-2xl`}>
+                        <Icon name={step.icon as any} size={32} className="text-white" />
+                      </div>
+                      <span className="text-6xl font-bold text-cyan-500/20 mb-4">{step.step}</span>
+                      <h3 className="text-xl md:text-2xl font-bold mb-4 text-cyan-400">{step.title}</h3>
+                      <p className="text-sm md:text-base text-slate-300 leading-relaxed">{step.description}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-                <div className="mt-4 md:mt-6 p-3 md:p-4 rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30">
-                  <p className="text-purple-400 font-semibold mb-2 md:mb-3 flex items-center gap-2 text-sm md:text-base">
-                    <Icon name="Calculator" size={18} className="md:w-5 md:h-5" />
-                    Примеры расчёта:
-                  </p>
-                  <div className="space-y-2 text-xs md:text-sm text-slate-300">
-                    <p>📊 КП: 10 млн → Факт: 12 млн → Переплата: 2 млн → Партнёр: <span className="text-purple-400 font-bold">1 млн</span></p>
-                    <p>📊 КП: 15 млн → Факт: 18 млн → Переплата: 3 млн → Партнёр: <span className="text-purple-400 font-bold">1.5 млн</span></p>
-                    <p>📊 КП: 20 млн → Факт: 25 млн → Переплата: 5 млн → Партнёр: <span className="text-purple-400 font-bold">2.5 млн</span></p>
-                  </div>
-                </div>
+      {/* Statistics */}
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4 md:px-6">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-center mb-6">
+            <span className="bg-gradient-to-r from-cyan-400 to-purple-600 bg-clip-text text-transparent">
+              Математика, которая не врёт
+            </span>
+          </h2>
+          <p className="text-lg md:text-2xl text-slate-300 text-center mb-16">
+            Мы спроектировали систему, где ваш рост — инженерный расчёт
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+            <Card className="bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-blue-600/10 border-cyan-500/30 hover:border-cyan-400 transition-all shadow-xl shadow-cyan-500/20">
+              <CardContent className="p-8 md:p-12 text-center">
+                <p className="text-sm md:text-base text-slate-400 mb-4">Потенциал оборота экосистемы через 24 месяца</p>
+                <p className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent mb-2 animate-pulse">
+                  9 млрд ₽
+                </p>
+                <div className="w-full h-1 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full mt-4" />
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-900/50 border-purple-500/30">
-              <CardHeader>
-                <CardTitle className="text-purple-400">Бонус «Кэш-драйв» за предоплату</CardTitle>
-                <CardDescription className="text-slate-400">
-                  Чем выше аванс от клиента, тем выше процент партнёра
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={prepaymentBonusData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="range" stroke="#9ca3af" />
-                    <YAxis stroke="#9ca3af" />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #a855f7' }}
-                      labelStyle={{ color: '#a855f7' }}
-                    />
-                    <Legend />
-                    <Bar dataKey="bonus" name="Доп. бонус %" fill="#06b6d4" />
-                    <Bar dataKey="total" name="Итого с бонусом %" fill="#8b5cf6" />
-                  </BarChart>
-                </ResponsiveContainer>
+            <Card className="bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-pink-600/10 border-purple-500/30 hover:border-purple-400 transition-all shadow-xl shadow-purple-500/20">
+              <CardContent className="p-8 md:p-12 text-center">
+                <p className="text-sm md:text-base text-slate-400 mb-4">Максимальный квартальный доход партнёра в системе</p>
+                <p className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent mb-2 animate-pulse">
+                  108 млн ₽
+                </p>
+                <div className="w-full h-1 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full mt-4" />
+              </CardContent>
+            </Card>
+          </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mt-4 md:mt-6">
-                  {prepaymentBonusData.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3 md:p-4 rounded-lg border"
-                      style={{ backgroundColor: `${item.color}15`, borderColor: `${item.color}40` }}
-                    >
-                      <p className="text-xl md:text-2xl font-bold mb-2" style={{ color: item.color }}>
-                        {item.range}
-                      </p>
-                      <p className="text-slate-300 text-xs md:text-sm">Предоплата</p>
-                      <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-slate-700">
-                        <p className="text-2xl md:text-3xl font-bold" style={{ color: item.color }}>
-                          +{item.bonus}%
+          <h3 className="text-2xl md:text-4xl font-bold text-center mb-12 text-cyan-400">
+            Профили успеха
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {[
+              {
+                title: 'Бывший руководитель тендерного отдела',
+                time: '14 месяцев в системе',
+                network: 'Личная сеть: 11 партнёров',
+                income: '42 млн ₽',
+                period: 'квартальный чек',
+                gradient: 'from-cyan-500/20 to-blue-600/20',
+                border: 'border-cyan-500/30',
+              },
+              {
+                title: 'Инженер с наработанными контактами',
+                time: '8 месяцев в системе',
+                network: 'Специализация: госзаказ',
+                income: '27 млн ₽',
+                period: 'доход с 3-х проектов',
+                gradient: 'from-purple-500/20 to-pink-600/20',
+                border: 'border-purple-500/30',
+              },
+            ].map((profile, idx) => (
+              <Card key={idx} className={`bg-gradient-to-br ${profile.gradient} ${profile.border} hover:scale-105 transition-all backdrop-blur-sm`}>
+                <CardContent className="p-8">
+                  <div className="flex items-start gap-6">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-r from-cyan-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-xl">
+                      <Icon name="User" size={32} className="text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg md:text-xl font-bold text-white mb-2">{profile.title}</h3>
+                      <p className="text-sm text-slate-400 mb-1">{profile.time}</p>
+                      <p className="text-sm text-cyan-400 font-semibold mb-6">{profile.network}</p>
+                      <div className="border-t border-slate-700 pt-4">
+                        <p className="text-3xl md:text-4xl font-bold text-cyan-400 mb-1">{profile.income}</p>
+                        <p className="text-xs text-slate-500">{profile.period}</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Roadmap */}
+      <section className="py-16 md:py-24 bg-slate-900/50 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.1)_0%,transparent_70%)]" />
+        
+        <div className="container mx-auto px-4 md:px-6 relative z-10">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-center mb-6 text-cyan-400">
+            Ваша карьерная траектория спроектирована
+          </h2>
+          <p className="text-lg md:text-xl text-slate-300 text-center mb-16">
+            От партнёра до амбассадора
+          </p>
+          
+          <div className="relative">
+            {/* Progress line */}
+            <div className="hidden md:block absolute top-20 left-0 right-0 h-2 bg-gradient-to-r from-cyan-500 via-blue-500 via-purple-500 to-pink-600 rounded-full" />
+            
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+              {[
+                {
+                  title: 'Партнёр',
+                  period: '0-3 мес.',
+                  focus: 'Первые 1-2 сделки. Фокус: личные продажи.',
+                  income: '1-5 млн/кв.',
+                  color: 'from-cyan-500 to-cyan-600',
+                  icon: 'Target',
+                },
+                {
+                  title: 'Стратег',
+                  period: '3-9 мес.',
+                  focus: 'Создание ядра команды (1-я линия).',
+                  income: '5-15 млн/кв.',
+                  color: 'from-blue-500 to-blue-600',
+                  icon: 'Users',
+                },
+                {
+                  title: 'Директор сети',
+                  period: '9-18 мес.',
+                  focus: 'Управление растущей структурой. Выход на глубинные проценты.',
+                  income: '15-40 млн/кв.',
+                  color: 'from-purple-500 to-purple-600',
+                  icon: 'Network',
+                },
+                {
+                  title: 'Амбассадор',
+                  period: '18+ мес.',
+                  focus: 'Совладелец экосистемы. Доход от оборота всей сети + доля.',
+                  income: '40+ млн/кв.',
+                  color: 'from-purple-600 to-pink-600',
+                  icon: 'Crown',
+                },
+              ].map((stage, idx) => (
+                <div key={idx} className="relative z-10">
+                  <Card className="bg-slate-900/90 border-cyan-500/30 hover:border-cyan-400 transition-all h-full backdrop-blur-sm hover:scale-105 shadow-xl">
+                    <CardContent className="p-6 md:p-8">
+                      <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${stage.color} mx-auto mb-6 flex items-center justify-center shadow-2xl`}>
+                        <Icon name={stage.icon as any} size={28} className="text-white" />
+                      </div>
+                      <h3 className="text-xl md:text-2xl font-bold text-center mb-2 text-cyan-400">{stage.title}</h3>
+                      <p className="text-sm text-slate-500 text-center mb-6">{stage.period}</p>
+                      <p className="text-sm text-slate-300 mb-8 min-h-[80px]">{stage.focus}</p>
+                      <div className="text-center pt-6 border-t border-slate-700">
+                        <p className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
+                          {stage.income}
                         </p>
-                        <p className="text-slate-400 text-xs mt-1">к базовой ставке</p>
                       </div>
-                    </div>
-                  ))}
+                    </CardContent>
+                  </Card>
                 </div>
-              </CardContent>
-            </Card>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
-            <Card className="bg-slate-900/50 border-purple-500/30">
-              <CardHeader>
-                <CardTitle className="text-purple-400">Ключевые правила</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 md:space-y-4">
-                <div className="p-3 md:p-4 rounded-lg bg-purple-500/10 border border-purple-500/30">
-                  <div className="flex items-start gap-2 md:gap-3">
-                    <Icon name="AlertCircle" size={18} className="text-purple-400 mt-1 flex-shrink-0 md:w-5 md:h-5" />
-                    <div>
-                      <p className="text-purple-400 font-semibold mb-1 text-sm md:text-base">Лимит выплат</p>
-                      <p className="text-slate-300 text-xs md:text-sm">
-                        Максимальный процент с расчётной суммы КП для партнёра — <span className="text-purple-400 font-bold">20%</span> 
-                        (уровень Амбассадора). Дополнительные 5% Амбассадора — это доля с оборота сети, а не с конкретной сделки.
-                      </p>
-                    </div>
+      {/* Calculator */}
+      <section id="calculator" className="py-16 md:py-24">
+        <div className="container mx-auto px-4 md:px-6 max-w-4xl">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-center mb-6">
+            <span className="bg-gradient-to-r from-cyan-400 to-purple-600 bg-clip-text text-transparent">
+              Спроектируйте свой доход
+            </span>
+          </h2>
+          <p className="text-lg md:text-xl text-slate-300 text-center mb-12">
+            Минималистичный инженерный калькулятор
+          </p>
+
+          <Card className="bg-slate-900/90 border-cyan-500/30 shadow-2xl shadow-cyan-500/20 backdrop-blur-sm">
+            <CardContent className="p-8 md:p-12">
+              <div className="space-y-10">
+                <div>
+                  <label className="text-base md:text-lg text-slate-200 mb-4 block font-semibold">
+                    Сколько крупных проектов (от 10 млн) вы можете приводить в год?
+                  </label>
+                  <Input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={calculatorData.projects}
+                    onChange={(e) => setCalculatorData({ ...calculatorData, projects: Number(e.target.value) })}
+                    className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <div className="flex justify-between mt-3 text-sm text-slate-500">
+                    <span>1</span>
+                    <span className="text-cyan-400 font-bold text-2xl">{calculatorData.projects}</span>
+                    <span>10</span>
                   </div>
                 </div>
 
-                <div className="p-3 md:p-4 rounded-lg bg-pink-500/10 border border-pink-500/30">
-                  <div className="flex items-start gap-2 md:gap-3">
-                    <Icon name="Calendar" size={18} className="text-pink-400 mt-1 flex-shrink-0 md:w-5 md:h-5" />
-                    <div>
-                      <p className="text-pink-400 font-semibold mb-1 text-sm md:text-base">Скользящий квартал</p>
-                      <p className="text-slate-300 text-xs md:text-sm">
-                        Условия грейда проверяются за последние 3 месяца, а не за календарный квартал. 
-                        Это позволяет партнёру расти быстрее без привязки к датам.
-                      </p>
-                    </div>
+                <div>
+                  <label className="text-base md:text-lg text-slate-200 mb-4 block font-semibold">
+                    Какой средний бюджет ваших проектов?
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                    {[10, 25, 50, 100, 150].map((budget) => (
+                      <Button
+                        key={budget}
+                        onClick={() => setCalculatorData({ ...calculatorData, avgBudget: budget })}
+                        className={`text-sm md:text-base py-6 ${
+                          calculatorData.avgBudget === budget
+                            ? 'bg-gradient-to-r from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/50'
+                            : 'bg-slate-800 border border-slate-700 text-slate-400 hover:border-cyan-500'
+                        }`}
+                      >
+                        {budget} млн
+                      </Button>
+                    ))}
                   </div>
                 </div>
 
-                <div className="p-3 md:p-4 rounded-lg bg-cyan-500/10 border border-cyan-500/30">
-                  <div className="flex items-start gap-2 md:gap-3">
-                    <Icon name="Zap" size={18} className="text-cyan-400 mt-1 flex-shrink-0 md:w-5 md:h-5" />
-                    <div>
-                      <p className="text-cyan-400 font-semibold mb-1 text-sm md:text-base">Ускоренный старт</p>
-                      <p className="text-slate-300 text-xs md:text-sm">
-                        Если первая сделка Агента оплачена клиентом в первый месяц, комиссия удваивается: 
-                        <span className="text-cyan-400 font-bold"> 5% × 2 = 10%</span>. После сделки — автоматический переход в Партнёры.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="comparison" className="space-y-6">
-            <Card className="bg-slate-900/50 border-purple-500/30">
-              <CardHeader>
-                <CardTitle className="text-purple-400">Сравнение дохода по грейдам</CardTitle>
-                <CardDescription className="text-slate-400">
-                  Доход с личных продаж в зависимости от суммы сделки
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <div style={{ minWidth: '500px' }}>
-                    <ResponsiveContainer width="100%" height={300} className="md:h-[400px]">
-                  <LineChart data={incomeComparisonData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="deal" stroke="#9ca3af" />
-                    <YAxis stroke="#9ca3af" />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #a855f7' }}
-                      labelStyle={{ color: '#a855f7' }}
-                      formatter={(value: number) => `${(value / 1000000).toFixed(1)} млн ₽`}
-                    />
-                    <Legend />
-                    <Line type="monotone" dataKey="agent" name="Агент" stroke="#06b6d4" strokeWidth={2} />
-                    <Line type="monotone" dataKey="partner" name="Партнёр" stroke="#8b5cf6" strokeWidth={2} />
-                    <Line type="monotone" dataKey="senior" name="Старший" stroke="#ec4899" strokeWidth={2} />
-                    <Line type="monotone" dataKey="general" name="Генеральный" stroke="#f59e0b" strokeWidth={2} />
-                    <Line type="monotone" dataKey="ambassador" name="Амбассадор" stroke="#10b981" strokeWidth={3} />
-                  </LineChart>
-                </ResponsiveContainer>
-                  </div>
-                </div>
-
-                <div className="overflow-x-auto mt-4 md:mt-6">
-                  <table className="w-full text-xs md:text-sm">
-                    <thead>
-                      <tr className="border-b border-purple-500/20">
-                        <th className="text-left p-2 md:p-3 text-purple-400 whitespace-nowrap">Сумма сделки</th>
-                        <th className="text-right p-2 md:p-3 text-cyan-400 whitespace-nowrap">Агент (5%)</th>
-                        <th className="text-right p-2 md:p-3 text-purple-400 whitespace-nowrap">Партнёр (10%)</th>
-                        <th className="text-right p-2 md:p-3 text-pink-400 whitespace-nowrap">Старший (13%)</th>
-                        <th className="text-right p-2 md:p-3 text-orange-400 whitespace-nowrap">Генеральный (16%)</th>
-                        <th className="text-right p-2 md:p-3 text-green-400 whitespace-nowrap">Амбассадор (18%)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {incomeComparisonData.map((row, idx) => (
-                        <tr key={idx} className="border-b border-slate-700/50 hover:bg-purple-500/5">
-                          <td className="p-2 md:p-3 text-slate-300 font-semibold whitespace-nowrap">{row.deal}</td>
-                          <td className="p-2 md:p-3 text-right text-cyan-400 whitespace-nowrap">{(row.agent / 1000000).toFixed(1)} млн</td>
-                          <td className="p-2 md:p-3 text-right text-purple-400 whitespace-nowrap">{(row.partner / 1000000).toFixed(1)} млн</td>
-                          <td className="p-2 md:p-3 text-right text-pink-400 whitespace-nowrap">{(row.senior / 1000000).toFixed(1)} млн</td>
-                          <td className="p-2 md:p-3 text-right text-orange-400 whitespace-nowrap">{(row.general / 1000000).toFixed(1)} млн</td>
-                          <td className="p-2 md:p-3 text-right text-green-400 font-bold whitespace-nowrap">{(row.ambassador / 1000000).toFixed(1)} млн</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="calculator" className="space-y-6">
-            <Card className="bg-slate-900/50 border-purple-500/30">
-              <CardHeader>
-                <CardTitle className="text-purple-400">Калькулятор дохода партнёра</CardTitle>
-                <CardDescription className="text-slate-400">
-                  Рассчитайте ваш доход в зависимости от условий сделки
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4 md:space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6">
-                  <div>
-                    <label className="text-xs md:text-sm text-slate-400 mb-2 block">Сумма сделки (₽)</label>
-                    <input
-                      type="number"
-                      value={calculatorDeal}
-                      onChange={(e) => setCalculatorDeal(Number(e.target.value))}
-                      className="w-full px-3 py-2 md:px-4 md:py-3 rounded-lg bg-slate-800 border border-purple-500/30 text-white text-sm md:text-base"
-                      min={0}
-                      step={1000000}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs md:text-sm text-slate-400 mb-2 block">Ваш грейд</label>
-                    <select
-                      value={calculatorGrade}
-                      onChange={(e) => setCalculatorGrade(Number(e.target.value))}
-                      className="w-full px-3 py-2 md:px-4 md:py-3 rounded-lg bg-slate-800 border border-purple-500/30 text-white text-sm md:text-base"
+                <div>
+                  <label className="text-base md:text-lg text-slate-200 mb-4 block font-semibold">
+                    Будете ли вы строить команду партнёров?
+                  </label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Button
+                      onClick={() => setCalculatorData({ ...calculatorData, buildTeam: true })}
+                      className={`text-base md:text-lg py-6 ${
+                        calculatorData.buildTeam
+                          ? 'bg-gradient-to-r from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/50'
+                          : 'bg-slate-800 border border-slate-700 text-slate-400 hover:border-cyan-500'
+                      }`}
                     >
-                      {gradeData.map((grade) => (
-                        <option key={grade.id} value={grade.id}>
-                          {grade.name} ({grade.personalSales}%)
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-xs md:text-sm text-slate-400 mb-2 block">Предоплата (%)</label>
-                    <input
-                      type="number"
-                      value={calculatorPrepayment}
-                      onChange={(e) => setCalculatorPrepayment(Number(e.target.value))}
-                      className="w-full px-3 py-2 md:px-4 md:py-3 rounded-lg bg-slate-800 border border-purple-500/30 text-white text-sm md:text-base"
-                      min={0}
-                      max={100}
-                    />
+                      Да
+                    </Button>
+                    <Button
+                      onClick={() => setCalculatorData({ ...calculatorData, buildTeam: false })}
+                      className={`text-base md:text-lg py-6 ${
+                        !calculatorData.buildTeam
+                          ? 'bg-gradient-to-r from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/50'
+                          : 'bg-slate-800 border border-slate-700 text-slate-400 hover:border-cyan-500'
+                      }`}
+                    >
+                      Пока нет
+                    </Button>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-                  <div className="p-4 md:p-6 rounded-lg bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/30">
-                    <p className="text-slate-400 text-xs md:text-sm mb-1 md:mb-2">Базовый доход</p>
-                    <p className="text-2xl md:text-3xl font-bold text-purple-400">
-                      {(income.base / 1000000).toFixed(2)} млн ₽
-                    </p>
-                  </div>
-
-                  <div className="p-4 md:p-6 rounded-lg bg-gradient-to-br from-pink-500/20 to-pink-600/10 border border-pink-500/30">
-                    <p className="text-slate-400 text-xs md:text-sm mb-1 md:mb-2">Бонус за предоплату</p>
-                    <p className="text-2xl md:text-3xl font-bold text-pink-400">
-                      {(income.prepayment / 1000000).toFixed(2)} млн ₽
-                    </p>
-                  </div>
-
-                  <div className="p-4 md:p-6 rounded-lg bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30">
-                    <p className="text-slate-400 text-xs md:text-sm mb-1 md:mb-2">Итого доход</p>
-                    <p className="text-3xl md:text-4xl font-bold text-cyan-400">
-                      {(income.total / 1000000).toFixed(2)} млн ₽
-                    </p>
-                  </div>
-                </div>
-
-                <div className="p-3 md:p-4 rounded-lg bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-cyan-500/10 border border-purple-500/30">
-                  <p className="text-slate-300 text-xs md:text-sm">
-                    <span className="text-purple-400 font-semibold">Расчёт:</span> Базовая ставка {gradeData[calculatorGrade - 1].personalSales}% 
-                    {calculatorPrepayment >= 30 && calculatorPrepayment <= 50 && ' + 1% за предоплату 30-50%'}
-                    {calculatorPrepayment >= 51 && calculatorPrepayment <= 70 && ' + 2% за предоплату 51-70%'}
-                    {calculatorPrepayment > 70 && ' + 3% за предоплату >70%'}
+                <div className="pt-10 border-t-2 border-cyan-500/30">
+                  <p className="text-lg md:text-xl text-slate-300 mb-4 text-center">
+                    Ваш расчётный годовой потенциал в экосистеме DEOD:
                   </p>
+                  <p className="text-6xl md:text-8xl font-bold text-center bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-3 animate-gradient bg-300%">
+                    {calculateIncome()}
+                  </p>
+                  <p className="text-2xl md:text-3xl text-center text-slate-400 mb-10">млн рублей</p>
+                  <p className="text-sm text-slate-500 text-center mb-8">
+                    На основе введённых данных и модели грейдов
+                  </p>
+                  <Button
+                    onClick={() => document.getElementById('join')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-lg md:text-xl py-7 shadow-2xl shadow-cyan-500/50 hover:scale-105 transition-all"
+                  >
+                    Зафиксировать свою позицию в следующем наборе
+                    <Icon name="ArrowRight" className="ml-2" size={24} />
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
 
-          <TabsContent value="growth" className="space-y-6">
-            <Card className="bg-slate-900/50 border-purple-500/30">
-              <CardHeader>
-                <CardTitle className="text-purple-400">Сценарий роста дохода</CardTitle>
-                <CardDescription className="text-slate-400">
-                  Пример развития от Агента до Генерального партнёра за 6 месяцев
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <div style={{ minWidth: '400px' }}>
-                    <ResponsiveContainer width="100%" height={300} className="md:h-[350px]">
-                  <AreaChart data={growthScenarioData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="month" stroke="#9ca3af" />
-                    <YAxis stroke="#9ca3af" />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #a855f7' }}
-                      labelStyle={{ color: '#a855f7' }}
-                      formatter={(value: number) => `${(value / 1000000).toFixed(1)} млн ₽`}
-                    />
-                    <Legend />
-                    <Area type="monotone" dataKey="agent" stackId="1" name="Личные продажи" stroke="#8b5cf6" fill="#8b5cf6" />
-                    <Area type="monotone" dataKey="team" stackId="1" name="Доход с команды" stroke="#ec4899" fill="#ec4899" />
-                  </AreaChart>
-                </ResponsiveContainer>
+      {/* Join Form */}
+      <section id="join" className="py-16 md:py-24 bg-slate-900/50 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.15)_0%,transparent_70%)]" />
+        
+        <div className="container mx-auto px-4 md:px-6 max-w-3xl relative z-10">
+          <div className="text-center mb-12">
+            <div className="inline-block px-6 py-3 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-sm font-semibold mb-6">
+              Ограниченное предложение
+            </div>
+            <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-6">
+              <span className="text-cyan-400">Следующий набор —</span>
+              <span className="bg-gradient-to-r from-cyan-400 to-purple-600 bg-clip-text text-transparent block">
+                25 мест
+              </span>
+            </h2>
+            <p className="text-base md:text-xl text-slate-300 mb-4">
+              Проверьте, ваше ли это сообщество
+            </p>
+            <p className="text-lg md:text-2xl text-slate-400 italic leading-relaxed px-4">
+              «Мы ищем не всех. Мы ищем <span className="text-cyan-400 font-semibold">своих</span>: 
+              амбициозных, с глубоким пониманием рынка или безупречными связями, 
+              готовых строить не просто доход, а <span className="text-purple-400 font-semibold">наследие</span>.»
+            </p>
+          </div>
+
+          <Card className="bg-slate-900/90 border-cyan-500/30 shadow-2xl shadow-cyan-500/20 backdrop-blur-sm">
+            <CardContent className="p-8 md:p-12">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label className="text-base md:text-lg text-slate-200 mb-3 block font-semibold">
+                    Имя
+                  </label>
+                  <Input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="bg-slate-800 border-slate-700 text-white focus:border-cyan-500 text-base md:text-lg py-6"
+                    placeholder="Ваше имя"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-base md:text-lg text-slate-200 mb-3 block font-semibold">
+                    Телефон / Telegram
+                  </label>
+                  <Input
+                    type="text"
+                    required
+                    value={formData.contact}
+                    onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
+                    className="bg-slate-800 border-slate-700 text-white focus:border-cyan-500 text-base md:text-lg py-6"
+                    placeholder="+7 (___) ___-__-__ или @username"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-base md:text-lg text-slate-200 mb-3 block font-semibold">
+                    Главный профессиональный актив
+                  </label>
+                  <select
+                    required
+                    value={formData.asset}
+                    onChange={(e) => setFormData({ ...formData, asset: e.target.value })}
+                    className="w-full px-4 py-4 rounded-lg bg-slate-800 border border-slate-700 text-white focus:border-cyan-500 text-base md:text-lg"
+                  >
+                    <option value="">Выберите вариант</option>
+                    <option value="connections">Глубокие отраслевые связи</option>
+                    <option value="tenders">Опыт в госзакупках/тендерах</option>
+                    <option value="expertise">Экспертиза в строительстве/проектировании</option>
+                    <option value="team">Управляю командой продаж</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-base md:text-lg text-slate-200 mb-4 block font-semibold">
+                    Ожидаемый личный годовой доход через 2 года
+                  </label>
+                  <Input
+                    type="range"
+                    min="20"
+                    max="1000"
+                    step="10"
+                    value={formData.expectedIncome}
+                    onChange={(e) => setFormData({ ...formData, expectedIncome: Number(e.target.value) })}
+                    className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <div className="flex justify-between mt-3 text-sm text-slate-500">
+                    <span>20 млн</span>
+                    <span className="text-cyan-400 font-bold text-xl">
+                      {formData.expectedIncome >= 1000 ? '1+ млрд' : `${formData.expectedIncome}+ млн`} ₽
+                    </span>
+                    <span>1 млрд</span>
                   </div>
                 </div>
 
-                <div className="mt-4 md:mt-6 space-y-2 md:space-y-3">
-                  {[
-                    { month: 'Месяц 1-2', status: 'Агент → Партнёр', desc: 'Первые сделки, удвоение комиссии за быстрый старт', icon: 'Rocket' },
-                    { month: 'Месяц 3', status: 'Партнёр → Старший', desc: 'Привлечение первого менеджера, начало строительства команды', icon: 'Users' },
-                    { month: 'Месяц 4-5', status: 'Старший партнёр', desc: 'Рост оборота команды, закрепление региона', icon: 'TrendingUp' },
-                    { month: 'Месяц 6', status: 'Генеральный партнёр', desc: '3 активных менеджера, участие в обучении новичков', icon: 'Award' }
-                  ].map((step, idx) => (
-                    <div key={idx} className="p-3 md:p-4 rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 flex items-start gap-3 md:gap-4">
-                      <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center flex-shrink-0">
-                        <Icon name={step.icon as any} size={16} className="text-white md:w-5 md:h-5" />
-                      </div>
-                      <div>
-                        <p className="text-purple-400 font-semibold text-sm md:text-base">{step.month}: {step.status}</p>
-                        <p className="text-slate-300 text-xs md:text-sm mt-1">{step.desc}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-lg md:text-xl py-7 mt-8 shadow-2xl shadow-cyan-500/50 hover:scale-105 transition-all"
+                >
+                  Отправить заявку
+                  <Icon name="Send" className="ml-2" size={24} />
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
 
-            <Card className="bg-slate-900/50 border-purple-500/30">
-              <CardHeader>
-                <CardTitle className="text-purple-400">Максимальный потенциал</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                  <div className="p-4 md:p-6 rounded-lg bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/30">
-                    <Icon name="Target" size={28} className="text-purple-400 mb-3 md:mb-4 md:w-8 md:h-8" />
-                    <p className="text-xl md:text-2xl font-bold text-purple-400 mb-2">Личные продажи</p>
-                    <p className="text-slate-300 text-xs md:text-sm mb-3 md:mb-4">
-                      Амбассадор с личными продажами 50 млн руб./квартал
-                    </p>
-                    <p className="text-3xl md:text-4xl font-bold text-purple-400">
-                      9 млн ₽
-                    </p>
-                    <p className="text-slate-400 text-xs mt-2">18% от оборота</p>
-                  </div>
-
-                  <div className="p-4 md:p-6 rounded-lg bg-gradient-to-br from-pink-500/20 to-pink-600/10 border border-pink-500/30">
-                    <Icon name="Network" size={28} className="text-pink-400 mb-3 md:mb-4 md:w-8 md:h-8" />
-                    <p className="text-xl md:text-2xl font-bold text-pink-400 mb-2">Команда + Сеть</p>
-                    <p className="text-slate-300 text-xs md:text-sm mb-3 md:mb-4">
-                      Сеть 150 млн руб./квартал + личные 50 млн
-                    </p>
-                    <p className="text-3xl md:text-4xl font-bold text-pink-400">
-                      16.5 млн ₽
-                    </p>
-                    <p className="text-slate-400 text-xs mt-2">9 млн личные + 7.5 млн сеть (5%)</p>
-                  </div>
-                </div>
-
-                <div className="mt-4 md:mt-6 p-4 md:p-6 rounded-lg bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-cyan-500/10 border border-purple-500/30">
-                  <div className="flex items-start gap-3 md:gap-4">
-                    <Icon name="Crown" size={32} className="text-yellow-400 flex-shrink-0 md:w-10 md:h-10" />
-                    <div>
-                      <p className="text-xl md:text-2xl font-bold text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text mb-2">
-                        Статус Амбассадора
-                      </p>
-                      <p className="text-slate-300 text-xs md:text-sm">
-                        Кроме комиссий, Амбассадор получает долю в годовой прибыли DEOD и становится стратегическим советником компании. 
-                        Это не просто доход — это партнёрство на уровне собственника бизнеса.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </main>
-
-      <footer className="border-t border-purple-500/30 bg-slate-900/80 backdrop-blur-lg mt-16">
-        <div className="container mx-auto px-4 py-8 text-center text-slate-400">
-          <p className="text-sm">
-            Партнёрская система DEOD • Система грейдов и мотивации • 2026
+      {/* Footer */}
+      <footer className="py-12 border-t border-slate-800 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/5 to-transparent" />
+        <div className="container mx-auto px-4 md:px-6 text-center relative z-10">
+          <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-4 animate-gradient bg-300%">
+            DEOD
+          </p>
+          <p className="text-lg md:text-xl text-slate-400 font-light">
+            Капитализируйте вашу экспертизу
           </p>
         </div>
       </footer>
+
+      <style>{`
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0) translateX(0) scale(1);
+            opacity: 0.15;
+          }
+          33% {
+            transform: translateY(-30px) translateX(20px) scale(1.1);
+            opacity: 0.25;
+          }
+          66% {
+            transform: translateY(-15px) translateX(-20px) scale(0.95);
+            opacity: 0.2;
+          }
+        }
+        
+        @keyframes gradient {
+          0%, 100% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+        }
+        
+        .animate-gradient {
+          animation: gradient 8s ease infinite;
+        }
+        
+        .bg-300% {
+          background-size: 300% 300%;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+          appearance: none;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #06b6d4, #3b82f6);
+          cursor: pointer;
+          box-shadow: 0 0 15px rgba(6, 182, 212, 0.7);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #06b6d4, #3b82f6);
+          cursor: pointer;
+          box-shadow: 0 0 15px rgba(6, 182, 212, 0.7);
+          border: none;
+        }
+      `}</style>
     </div>
   );
 };
