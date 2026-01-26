@@ -8,9 +8,9 @@ import { Link } from 'react-router-dom';
 const PartnerSystem = () => {
   const [scrollY, setScrollY] = useState(0);
   const [calculatorData, setCalculatorData] = useState({
-    projects: 3,
-    avgBudget: 25,
-    buildTeam: false,
+    projects: 5,
+    avgBudget: 500,
+    buildTeam: true,
   });
 
   const [formData, setFormData] = useState({
@@ -27,11 +27,15 @@ const PartnerSystem = () => {
   }, []);
 
   const calculateIncome = () => {
-    const baseRate = 0.10;
-    const teamBonus = calculatorData.buildTeam ? 0.03 : 0;
-    const totalRate = baseRate + teamBonus;
-    const yearlyIncome = calculatorData.projects * calculatorData.avgBudget * totalRate * 1000000;
-    return (yearlyIncome / 1000000).toFixed(1);
+    // Базовая ставка 18% для амбассадора
+    const baseRate = 0.18;
+    // Бонус от команды: 10 партнёров x 5 проектов x 200 млн x 5% = 500 млн
+    const teamBonus = calculatorData.buildTeam ? 500 : 0;
+    // Личный доход
+    const personalIncome = calculatorData.projects * calculatorData.avgBudget * baseRate;
+    // Итого в млн
+    const yearlyIncome = personalIncome + teamBonus;
+    return (yearlyIncome / 1000).toFixed(2);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -105,18 +109,20 @@ const PartnerSystem = () => {
               DEOD
             </span>
             <span className="text-2xl md:text-4xl lg:text-5xl text-slate-200 block mt-2">
-              Ваш капитал — в масштабе
+              Экосистема Миллиард
             </span>
           </h1>
           
           <p className="text-base md:text-xl lg:text-2xl text-slate-300 mb-8 md:mb-12 max-w-4xl mx-auto px-4 leading-relaxed">
-            Первая экосистема, которая превращает ваши связи в строительстве и проектировании 
-            в <span className="text-cyan-400 font-bold">деньги</span>, 
-            <span className="text-blue-400 font-bold"> власть</span> и 
-            <span className="text-purple-400 font-bold"> известность</span>.
+            Первая в России экосистема, где партнёр зарабатывает от <span className="text-cyan-400 font-bold text-2xl md:text-3xl">1 млрд ₽ в год</span>.
             <br />
-            <span className="text-lg md:text-xl text-cyan-400 font-semibold mt-2 block">
-              Станьте совладельцем рынка.
+            Превращайте ваши связи в строительстве и проектировании в 
+            <span className="text-cyan-400 font-bold"> капитал</span>, 
+            <span className="text-blue-400 font-bold"> влияние</span> и 
+            <span className="text-purple-400 font-bold"> статус</span>.
+            <br />
+            <span className="text-lg md:text-2xl text-cyan-400 font-semibold mt-4 block">
+              Станьте миллиардером вместе с DEOD.
             </span>
           </p>
           
@@ -275,7 +281,7 @@ const PartnerSystem = () => {
               <CardContent className="p-8 md:p-12 text-center">
                 <p className="text-sm md:text-base text-slate-400 mb-4">Потенциал оборота экосистемы через 24 месяца</p>
                 <p className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent mb-2 animate-pulse">
-                  9 млрд ₽
+                  50 млрд ₽
                 </p>
                 <div className="w-full h-1 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full mt-4" />
               </CardContent>
@@ -283,9 +289,9 @@ const PartnerSystem = () => {
 
             <Card className="bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-pink-600/10 border-purple-500/30 hover:border-purple-400 transition-all shadow-xl shadow-purple-500/20">
               <CardContent className="p-8 md:p-12 text-center">
-                <p className="text-sm md:text-base text-slate-400 mb-4">Максимальный квартальный доход партнёра в системе</p>
+                <p className="text-sm md:text-base text-slate-400 mb-4">Максимальный годовой доход амбассадора в системе</p>
                 <p className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent mb-2 animate-pulse">
-                  108 млн ₽
+                  1.5 млрд ₽
                 </p>
                 <div className="w-full h-1 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full mt-4" />
               </CardContent>
@@ -300,19 +306,19 @@ const PartnerSystem = () => {
             {[
               {
                 title: 'Бывший руководитель тендерного отдела',
-                time: '14 месяцев в системе',
-                network: 'Личная сеть: 11 партнёров',
-                income: '42 млн ₽',
-                period: 'квартальный чек',
+                time: '24 месяца в системе',
+                network: 'Личная сеть: 15 партнёров',
+                income: '1.2 млрд ₽',
+                period: 'годовой доход',
                 gradient: 'from-cyan-500/20 to-blue-600/20',
                 border: 'border-cyan-500/30',
               },
               {
                 title: 'Инженер с наработанными контактами',
-                time: '8 месяцев в системе',
-                network: 'Специализация: госзаказ',
-                income: '27 млн ₽',
-                period: 'доход с 3-х проектов',
+                time: '18 месяцев в системе',
+                network: 'Специализация: госзаказ + команда',
+                income: '850 млн ₽',
+                period: 'годовой доход',
                 gradient: 'from-purple-500/20 to-pink-600/20',
                 border: 'border-purple-500/30',
               },
@@ -360,33 +366,33 @@ const PartnerSystem = () => {
               {[
                 {
                   title: 'Партнёр',
-                  period: '0-3 мес.',
-                  focus: 'Первые 1-2 сделки. Фокус: личные продажи.',
-                  income: '1-5 млн/кв.',
+                  period: '0-6 мес.',
+                  focus: 'Первые крупные сделки от 50 млн. Фокус: личные продажи.',
+                  income: '50-200 млн/год',
                   color: 'from-cyan-500 to-cyan-600',
                   icon: 'Target',
                 },
                 {
                   title: 'Стратег',
-                  period: '3-9 мес.',
-                  focus: 'Создание ядра команды (1-я линия).',
-                  income: '5-15 млн/кв.',
+                  period: '6-12 мес.',
+                  focus: 'Создание ядра команды (3-5 партнёров). Проекты от 100 млн.',
+                  income: '200-500 млн/год',
                   color: 'from-blue-500 to-blue-600',
                   icon: 'Users',
                 },
                 {
                   title: 'Директор сети',
-                  period: '9-18 мес.',
-                  focus: 'Управление растущей структурой. Выход на глубинные проценты.',
-                  income: '15-40 млн/кв.',
+                  period: '12-18 мес.',
+                  focus: 'Управление структурой 10+ партнёров. Проекты от 200 млн.',
+                  income: '500 млн - 1 млрд/год',
                   color: 'from-purple-500 to-purple-600',
                   icon: 'Network',
                 },
                 {
                   title: 'Амбассадор',
                   period: '18+ мес.',
-                  focus: 'Совладелец экосистемы. Доход от оборота всей сети + доля.',
-                  income: '40+ млн/кв.',
+                  focus: 'Совладелец экосистемы. Сеть 15+ партнёров. Проекты от 500 млн.',
+                  income: '1+ млрд/год',
                   color: 'from-purple-600 to-pink-600',
                   icon: 'Crown',
                 },
@@ -431,20 +437,20 @@ const PartnerSystem = () => {
               <div className="space-y-10">
                 <div>
                   <label className="text-base md:text-lg text-slate-200 mb-4 block font-semibold">
-                    Сколько крупных проектов (от 10 млн) вы можете приводить в год?
+                    Сколько крупных проектов (от 100 млн) вы можете приводить в год?
                   </label>
                   <Input
                     type="range"
-                    min="1"
-                    max="10"
+                    min="2"
+                    max="20"
                     value={calculatorData.projects}
                     onChange={(e) => setCalculatorData({ ...calculatorData, projects: Number(e.target.value) })}
                     className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer"
                   />
                   <div className="flex justify-between mt-3 text-sm text-slate-500">
-                    <span>1</span>
+                    <span>2</span>
                     <span className="text-cyan-400 font-bold text-2xl">{calculatorData.projects}</span>
-                    <span>10</span>
+                    <span>20</span>
                   </div>
                 </div>
 
@@ -453,7 +459,7 @@ const PartnerSystem = () => {
                     Какой средний бюджет ваших проектов?
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                    {[10, 25, 50, 100, 150].map((budget) => (
+                    {[100, 250, 500, 750, 1000].map((budget) => (
                       <Button
                         key={budget}
                         onClick={() => setCalculatorData({ ...calculatorData, avgBudget: budget })}
@@ -471,7 +477,7 @@ const PartnerSystem = () => {
 
                 <div>
                   <label className="text-base md:text-lg text-slate-200 mb-4 block font-semibold">
-                    Будете ли вы строить команду партнёров?
+                    Будете ли строить команду из 10+ партнёров?
                   </label>
                   <div className="grid grid-cols-2 gap-4">
                     <Button
@@ -482,7 +488,7 @@ const PartnerSystem = () => {
                           : 'bg-slate-800 border border-slate-700 text-slate-400 hover:border-cyan-500'
                       }`}
                     >
-                      Да
+                      Да (+500 млн от сети)
                     </Button>
                     <Button
                       onClick={() => setCalculatorData({ ...calculatorData, buildTeam: false })}
@@ -492,7 +498,7 @@ const PartnerSystem = () => {
                           : 'bg-slate-800 border border-slate-700 text-slate-400 hover:border-cyan-500'
                       }`}
                     >
-                      Пока нет
+                      Только личные продажи
                     </Button>
                   </div>
                 </div>
@@ -504,9 +510,12 @@ const PartnerSystem = () => {
                   <p className="text-6xl md:text-8xl font-bold text-center bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-3 animate-gradient bg-300%">
                     {calculateIncome()}
                   </p>
-                  <p className="text-2xl md:text-3xl text-center text-slate-400 mb-10">млн рублей</p>
+                  <p className="text-2xl md:text-3xl text-center text-slate-400 mb-4">млрд рублей</p>
+                  <p className="text-base md:text-lg text-cyan-400 text-center mb-8">
+                    🚀 {parseFloat(calculateIncome()) >= 1 ? 'Вы достигаете статуса миллиардера!' : 'Увеличьте параметры для выхода на миллиард'}
+                  </p>
                   <p className="text-sm text-slate-500 text-center mb-8">
-                    На основе введённых данных и модели грейдов
+                    Расчёт: личные продажи (18%) + доход от сети партнёров (5%)
                   </p>
                   <Button
                     onClick={() => document.getElementById('join')?.scrollIntoView({ behavior: 'smooth' })}
