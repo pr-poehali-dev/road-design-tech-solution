@@ -149,36 +149,36 @@ const PartnerSystem = () => {
             </span>
           </h1>
           
-          <div className="text-base md:text-xl lg:text-2xl text-slate-300 mb-8 md:mb-12 max-w-4xl mx-auto px-4 leading-relaxed min-h-[120px] md:min-h-[160px] flex items-center justify-center">
+          <div className="text-sm md:text-xl lg:text-2xl text-slate-300 mb-6 md:mb-12 max-w-4xl mx-auto px-4 leading-relaxed min-h-[80px] md:min-h-[160px] flex items-center justify-center">
             <p className="text-cyan-400 font-semibold">
               {typedText}
-              <span className="inline-block w-1 h-6 md:h-8 bg-cyan-400 ml-1 animate-pulse" />
+              <span className="inline-block w-0.5 md:w-1 h-4 md:h-8 bg-cyan-400 ml-1 animate-pulse" />
             </p>
           </div>
-          <p className="text-lg md:text-2xl text-cyan-400 font-semibold mb-8">
+          <p className="text-base md:text-2xl text-cyan-400 font-semibold mb-6 md:mb-8 px-4">
             Станьте миллиардером вместе с DEOD.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center px-4">
             <Button
               onClick={() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' })}
-              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-base md:text-lg px-8 md:px-10 py-5 md:py-7 w-full sm:w-auto shadow-2xl shadow-cyan-500/50 hover:shadow-cyan-500/70 transition-all transform hover:scale-105"
+              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-sm md:text-lg px-6 md:px-10 py-4 md:py-7 w-full sm:w-auto shadow-2xl shadow-cyan-500/50 hover:shadow-cyan-500/70 transition-all transform hover:scale-105"
             >
-              Рассчитать свой потенциал
-              <Icon name="Calculator" className="ml-2" size={20} />
+              Рассчитать потенциал
+              <Icon name="Calculator" className="ml-2" size={18} />
             </Button>
             <Button
               onClick={() => document.getElementById('join')?.scrollIntoView({ behavior: 'smooth' })}
               variant="outline"
-              className="border-2 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 text-base md:text-lg px-8 md:px-10 py-5 md:py-7 w-full sm:w-auto backdrop-blur-sm hover:border-cyan-400 transition-all"
+              className="border-2 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 text-sm md:text-lg px-6 md:px-10 py-4 md:py-7 w-full sm:w-auto backdrop-blur-sm hover:border-cyan-400 transition-all"
             >
-              Получить приглашение в закрытый клуб
-              <Icon name="ArrowRight" className="ml-2" size={20} />
+              Получить приглашение
+              <Icon name="ArrowRight" className="ml-2" size={18} />
             </Button>
           </div>
         </div>
 
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+        <div className="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 animate-bounce hidden sm:block">
           <Icon name="ChevronDown" size={36} className="text-cyan-400 opacity-70" />
         </div>
       </section>
@@ -186,7 +186,7 @@ const PartnerSystem = () => {
       {/* Three Pillars */}
       <section className="py-16 md:py-24 relative">
         <div className="container mx-auto px-4 md:px-6">
-          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-center mb-12 md:mb-20">
+          <h2 className="text-2xl md:text-5xl lg:text-6xl font-bold text-center mb-8 md:mb-20 px-4">
             <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
               DEOD меняет правила.
             </span>
@@ -229,9 +229,9 @@ const PartnerSystem = () => {
                   <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br ${pillar.gradient} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-xl ${pillar.glow}`}>
                     <Icon name={pillar.icon as any} size={32} className="text-white md:w-10 md:h-10" />
                   </div>
-                  <h3 className="text-2xl md:text-3xl font-bold mb-3 text-cyan-400">{pillar.title}</h3>
-                  <p className="text-base md:text-lg font-semibold text-white mb-4">{pillar.subtitle}</p>
-                  <p className="text-sm md:text-base text-slate-400 leading-relaxed">{pillar.description}</p>
+                  <h3 className="text-xl md:text-3xl font-bold mb-2 md:mb-3 text-cyan-400">{pillar.title}</h3>
+                  <p className="text-sm md:text-lg font-semibold text-white mb-3 md:mb-4">{pillar.subtitle}</p>
+                  <p className="text-xs md:text-base text-slate-400 leading-relaxed">{pillar.description}</p>
                 </CardContent>
               </Card>
             ))}
@@ -244,10 +244,10 @@ const PartnerSystem = () => {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
         
         <div className="container mx-auto px-4 md:px-6 relative z-10">
-          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-center mb-6 text-cyan-400">
+          <h2 className="text-2xl md:text-5xl lg:text-6xl font-bold text-center mb-4 md:mb-6 text-cyan-400 px-4">
             Вы приводите клиента.
           </h2>
-          <p className="text-xl md:text-3xl text-slate-300 text-center mb-16 font-light">
+          <p className="text-base md:text-3xl text-slate-300 text-center mb-12 md:mb-16 font-light px-4">
             Экосистема делает всё остальное.
           </p>
           
@@ -286,8 +286,8 @@ const PartnerSystem = () => {
                         <Icon name={step.icon as any} size={32} className="text-white" />
                       </div>
                       <span className="text-6xl font-bold text-cyan-500/20 mb-4">{step.step}</span>
-                      <h3 className="text-xl md:text-2xl font-bold mb-4 text-cyan-400">{step.title}</h3>
-                      <p className="text-sm md:text-base text-slate-300 leading-relaxed">{step.description}</p>
+                      <h3 className="text-lg md:text-2xl font-bold mb-3 md:mb-4 text-cyan-400">{step.title}</h3>
+                      <p className="text-xs md:text-base text-slate-300 leading-relaxed">{step.description}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -300,20 +300,20 @@ const PartnerSystem = () => {
       {/* Statistics */}
       <section className="py-16 md:py-24">
         <div className="container mx-auto px-4 md:px-6">
-          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-center mb-6">
+          <h2 className="text-2xl md:text-5xl lg:text-6xl font-bold text-center mb-4 md:mb-6 px-4">
             <span className="bg-gradient-to-r from-cyan-400 to-purple-600 bg-clip-text text-transparent">
               Математика, которая не врёт
             </span>
           </h2>
-          <p className="text-lg md:text-2xl text-slate-300 text-center mb-16">
+          <p className="text-base md:text-2xl text-slate-300 text-center mb-12 md:mb-16 px-4">
             Мы спроектировали систему, где ваш рост — инженерный расчёт
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
             <Card className="bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-blue-600/10 border-cyan-500/30 hover:border-cyan-400 transition-all shadow-xl shadow-cyan-500/20">
-              <CardContent className="p-8 md:p-12 text-center">
-                <p className="text-sm md:text-base text-slate-400 mb-4">Потенциал оборота экосистемы через 24 месяца</p>
-                <p className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent mb-2 animate-pulse">
+              <CardContent className="p-6 md:p-12 text-center">
+                <p className="text-xs md:text-base text-slate-400 mb-3 md:mb-4">Потенциал оборота экосистемы через 24 месяца</p>
+                <p className="text-3xl md:text-7xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent mb-2 animate-pulse">
                   50 млрд ₽
                 </p>
                 <div className="w-full h-1 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full mt-4" />
@@ -321,9 +321,9 @@ const PartnerSystem = () => {
             </Card>
 
             <Card className="bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-pink-600/10 border-purple-500/30 hover:border-purple-400 transition-all shadow-xl shadow-purple-500/20">
-              <CardContent className="p-8 md:p-12 text-center">
-                <p className="text-sm md:text-base text-slate-400 mb-4">Максимальный годовой доход амбассадора в системе</p>
-                <p className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent mb-2 animate-pulse">
+              <CardContent className="p-6 md:p-12 text-center">
+                <p className="text-xs md:text-base text-slate-400 mb-3 md:mb-4">Максимальный годовой доход амбассадора в системе</p>
+                <p className="text-3xl md:text-7xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent mb-2 animate-pulse">
                   1.5 млрд ₽
                 </p>
                 <div className="w-full h-1 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full mt-4" />
@@ -331,7 +331,7 @@ const PartnerSystem = () => {
             </Card>
           </div>
 
-          <h3 className="text-2xl md:text-4xl font-bold text-center mb-12 text-cyan-400">
+          <h3 className="text-xl md:text-4xl font-bold text-center mb-8 md:mb-12 text-cyan-400 px-4">
             Профили успеха
           </h3>
 
@@ -357,17 +357,17 @@ const PartnerSystem = () => {
               },
             ].map((profile, idx) => (
               <Card key={idx} className={`bg-gradient-to-br ${profile.gradient} ${profile.border} hover:scale-105 transition-all backdrop-blur-sm`}>
-                <CardContent className="p-8">
-                  <div className="flex items-start gap-6">
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-r from-cyan-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-xl">
-                      <Icon name="User" size={32} className="text-white" />
+                <CardContent className="p-6 md:p-8">
+                  <div className="flex items-start gap-4 md:gap-6">
+                    <div className="w-14 h-14 md:w-20 md:h-20 rounded-full bg-gradient-to-r from-cyan-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-xl">
+                      <Icon name="User" size={24} className="text-white md:w-8 md:h-8" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-lg md:text-xl font-bold text-white mb-2">{profile.title}</h3>
-                      <p className="text-sm text-slate-400 mb-1">{profile.time}</p>
-                      <p className="text-sm text-cyan-400 font-semibold mb-6">{profile.network}</p>
-                      <div className="border-t border-slate-700 pt-4">
-                        <p className="text-3xl md:text-4xl font-bold text-cyan-400 mb-1">{profile.income}</p>
+                      <h3 className="text-base md:text-xl font-bold text-white mb-1 md:mb-2">{profile.title}</h3>
+                      <p className="text-xs md:text-sm text-slate-400 mb-1">{profile.time}</p>
+                      <p className="text-xs md:text-sm text-cyan-400 font-semibold mb-4 md:mb-6">{profile.network}</p>
+                      <div className="border-t border-slate-700 pt-3 md:pt-4">
+                        <p className="text-2xl md:text-4xl font-bold text-cyan-400 mb-1">{profile.income}</p>
                         <p className="text-xs text-slate-500">{profile.period}</p>
                       </div>
                     </div>
@@ -384,10 +384,10 @@ const PartnerSystem = () => {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.1)_0%,transparent_70%)]" />
         
         <div className="container mx-auto px-4 md:px-6 relative z-10">
-          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-center mb-6 text-cyan-400">
+          <h2 className="text-2xl md:text-5xl lg:text-6xl font-bold text-center mb-4 md:mb-6 text-cyan-400 px-4">
             Ваша карьерная траектория спроектирована
           </h2>
-          <p className="text-lg md:text-xl text-slate-300 text-center mb-16">
+          <p className="text-base md:text-xl text-slate-300 text-center mb-12 md:mb-16 px-4">
             От партнёра до амбассадора
           </p>
           
@@ -436,11 +436,11 @@ const PartnerSystem = () => {
                       <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${stage.color} mx-auto mb-6 flex items-center justify-center shadow-2xl`}>
                         <Icon name={stage.icon as any} size={28} className="text-white" />
                       </div>
-                      <h3 className="text-xl md:text-2xl font-bold text-center mb-2 text-cyan-400">{stage.title}</h3>
-                      <p className="text-sm text-slate-500 text-center mb-6">{stage.period}</p>
-                      <p className="text-sm text-slate-300 mb-8 min-h-[80px]">{stage.focus}</p>
-                      <div className="text-center pt-6 border-t border-slate-700">
-                        <p className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
+                      <h3 className="text-lg md:text-2xl font-bold text-center mb-2 text-cyan-400">{stage.title}</h3>
+                      <p className="text-xs md:text-sm text-slate-500 text-center mb-4 md:mb-6">{stage.period}</p>
+                      <p className="text-xs md:text-sm text-slate-300 mb-6 md:mb-8 min-h-[60px] md:min-h-[80px]">{stage.focus}</p>
+                      <div className="text-center pt-4 md:pt-6 border-t border-slate-700">
+                        <p className="text-xl md:text-3xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
                           {stage.income}
                         </p>
                       </div>
@@ -456,20 +456,20 @@ const PartnerSystem = () => {
       {/* Calculator */}
       <section id="calculator" className="py-16 md:py-24">
         <div className="container mx-auto px-4 md:px-6 max-w-4xl">
-          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-center mb-6">
+          <h2 className="text-2xl md:text-5xl lg:text-6xl font-bold text-center mb-4 md:mb-6 px-4">
             <span className="bg-gradient-to-r from-cyan-400 to-purple-600 bg-clip-text text-transparent">
               Спроектируйте свой доход
             </span>
           </h2>
-          <p className="text-lg md:text-xl text-slate-300 text-center mb-12">
+          <p className="text-base md:text-xl text-slate-300 text-center mb-8 md:mb-12 px-4">
             Минималистичный инженерный калькулятор
           </p>
 
           <Card className="bg-slate-900/90 border-cyan-500/30 shadow-2xl shadow-cyan-500/20 backdrop-blur-sm">
-            <CardContent className="p-8 md:p-12">
-              <div className="space-y-10">
+            <CardContent className="p-6 md:p-12">
+              <div className="space-y-8 md:space-y-10">
                 <div>
-                  <label className="text-base md:text-lg text-slate-200 mb-4 block font-semibold">
+                  <label className="text-sm md:text-lg text-slate-200 mb-3 md:mb-4 block font-semibold">
                     Сколько крупных проектов (от 100 млн) вы можете приводить в год?
                   </label>
                   <Input
@@ -488,15 +488,15 @@ const PartnerSystem = () => {
                 </div>
 
                 <div>
-                  <label className="text-base md:text-lg text-slate-200 mb-4 block font-semibold">
+                  <label className="text-sm md:text-lg text-slate-200 mb-3 md:mb-4 block font-semibold">
                     Какой средний бюджет ваших проектов?
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                  <div className="grid grid-cols-3 md:grid-cols-5 gap-2 md:gap-3">
                     {[100, 250, 500, 750, 1000].map((budget) => (
                       <Button
                         key={budget}
                         onClick={() => setCalculatorData({ ...calculatorData, avgBudget: budget })}
-                        className={`text-sm md:text-base py-6 ${
+                        className={`text-xs md:text-base py-4 md:py-6 ${
                           calculatorData.avgBudget === budget
                             ? 'bg-gradient-to-r from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/50'
                             : 'bg-slate-800 border border-slate-700 text-slate-400 hover:border-cyan-500'
@@ -509,13 +509,13 @@ const PartnerSystem = () => {
                 </div>
 
                 <div>
-                  <label className="text-base md:text-lg text-slate-200 mb-4 block font-semibold">
+                  <label className="text-sm md:text-lg text-slate-200 mb-3 md:mb-4 block font-semibold">
                     Будете ли строить команду из 10+ партнёров?
                   </label>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                     <Button
                       onClick={() => setCalculatorData({ ...calculatorData, buildTeam: true })}
-                      className={`text-base md:text-lg py-6 ${
+                      className={`text-sm md:text-lg py-4 md:py-6 ${
                         calculatorData.buildTeam
                           ? 'bg-gradient-to-r from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/50'
                           : 'bg-slate-800 border border-slate-700 text-slate-400 hover:border-cyan-500'
@@ -525,7 +525,7 @@ const PartnerSystem = () => {
                     </Button>
                     <Button
                       onClick={() => setCalculatorData({ ...calculatorData, buildTeam: false })}
-                      className={`text-base md:text-lg py-6 ${
+                      className={`text-sm md:text-lg py-4 md:py-6 ${
                         !calculatorData.buildTeam
                           ? 'bg-gradient-to-r from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/50'
                           : 'bg-slate-800 border border-slate-700 text-slate-400 hover:border-cyan-500'
@@ -536,23 +536,23 @@ const PartnerSystem = () => {
                   </div>
                 </div>
 
-                <div className="pt-10 border-t-2 border-cyan-500/30">
-                  <p className="text-lg md:text-xl text-slate-300 mb-4 text-center">
+                <div className="pt-8 md:pt-10 border-t-2 border-cyan-500/30">
+                  <p className="text-base md:text-xl text-slate-300 mb-3 md:mb-4 text-center">
                     Ваш расчётный годовой потенциал в экосистеме DEOD:
                   </p>
-                  <p className="text-6xl md:text-8xl font-bold text-center bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-3 animate-gradient bg-300%">
+                  <p className="text-5xl md:text-8xl font-bold text-center bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-2 md:mb-3 animate-gradient bg-300%">
                     {calculateIncome()}
                   </p>
-                  <p className="text-2xl md:text-3xl text-center text-slate-400 mb-4">млрд рублей</p>
-                  <p className="text-base md:text-lg text-cyan-400 text-center mb-8">
+                  <p className="text-xl md:text-3xl text-center text-slate-400 mb-3 md:mb-4">млрд рублей</p>
+                  <p className="text-sm md:text-lg text-cyan-400 text-center mb-6 md:mb-8">
                     🚀 {parseFloat(calculateIncome()) >= 1 ? 'Вы достигаете статуса миллиардера!' : 'Увеличьте параметры для выхода на миллиард'}
                   </p>
-                  <p className="text-sm text-slate-500 text-center mb-8">
+                  <p className="text-xs md:text-sm text-slate-500 text-center mb-6 md:mb-8">
                     Расчёт: личные продажи (18%) + доход от сети партнёров (5%)
                   </p>
                   <Button
                     onClick={() => document.getElementById('join')?.scrollIntoView({ behavior: 'smooth' })}
-                    className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-lg md:text-xl py-7 shadow-2xl shadow-cyan-500/50 hover:scale-105 transition-all"
+                    className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-sm md:text-xl py-5 md:py-7 shadow-2xl shadow-cyan-500/50 hover:scale-105 transition-all"
                   >
                     Зафиксировать свою позицию в следующем наборе
                     <Icon name="ArrowRight" className="ml-2" size={24} />
@@ -573,16 +573,16 @@ const PartnerSystem = () => {
             <div className="inline-block px-6 py-3 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-sm font-semibold mb-6">
               Ограниченное предложение
             </div>
-            <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-6">
+            <h2 className="text-2xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 px-4">
               <span className="text-cyan-400">Следующий набор —</span>
               <span className="bg-gradient-to-r from-cyan-400 to-purple-600 bg-clip-text text-transparent block">
                 25 мест
               </span>
             </h2>
-            <p className="text-base md:text-xl text-slate-300 mb-4">
+            <p className="text-sm md:text-xl text-slate-300 mb-3 md:mb-4 px-4">
               Проверьте, ваше ли это сообщество
             </p>
-            <p className="text-lg md:text-2xl text-slate-400 italic leading-relaxed px-4">
+            <p className="text-base md:text-2xl text-slate-400 italic leading-relaxed px-4">
               «Мы ищем не всех. Мы ищем <span className="text-cyan-400 font-semibold">своих</span>: 
               амбициозных, с глубоким пониманием рынка или безупречными связями, 
               готовых строить не просто доход, а <span className="text-purple-400 font-semibold">наследие</span>.»
@@ -590,10 +590,10 @@ const PartnerSystem = () => {
           </div>
 
           <Card className="bg-slate-900/90 border-cyan-500/30 shadow-2xl shadow-cyan-500/20 backdrop-blur-sm">
-            <CardContent className="p-8 md:p-12">
-              <form onSubmit={handleSubmit} className="space-y-6">
+            <CardContent className="p-6 md:p-12">
+              <form onSubmit={handleSubmit} className="space-y-5 md:space-y-6">
                 <div>
-                  <label className="text-base md:text-lg text-slate-200 mb-3 block font-semibold">
+                  <label className="text-sm md:text-lg text-slate-200 mb-2 md:mb-3 block font-semibold">
                     Имя
                   </label>
                   <Input
@@ -607,7 +607,7 @@ const PartnerSystem = () => {
                 </div>
 
                 <div>
-                  <label className="text-base md:text-lg text-slate-200 mb-3 block font-semibold">
+                  <label className="text-sm md:text-lg text-slate-200 mb-2 md:mb-3 block font-semibold">
                     Телефон / Telegram
                   </label>
                   <Input
@@ -615,20 +615,20 @@ const PartnerSystem = () => {
                     required
                     value={formData.contact}
                     onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
-                    className="bg-slate-800 border-slate-700 text-white focus:border-cyan-500 text-base md:text-lg py-6"
+                    className="bg-slate-800 border-slate-700 text-white focus:border-cyan-500 text-sm md:text-lg py-4 md:py-6"
                     placeholder="+7 (___) ___-__-__ или @username"
                   />
                 </div>
 
                 <div>
-                  <label className="text-base md:text-lg text-slate-200 mb-3 block font-semibold">
+                  <label className="text-sm md:text-lg text-slate-200 mb-2 md:mb-3 block font-semibold">
                     Главный профессиональный актив
                   </label>
                   <select
                     required
                     value={formData.asset}
                     onChange={(e) => setFormData({ ...formData, asset: e.target.value })}
-                    className="w-full px-4 py-4 rounded-lg bg-slate-800 border border-slate-700 text-white focus:border-cyan-500 text-base md:text-lg"
+                    className="w-full px-3 md:px-4 py-3 md:py-4 rounded-lg bg-slate-800 border border-slate-700 text-white focus:border-cyan-500 text-sm md:text-lg"
                   >
                     <option value="">Выберите вариант</option>
                     <option value="connections">Глубокие отраслевые связи</option>
@@ -639,7 +639,7 @@ const PartnerSystem = () => {
                 </div>
 
                 <div>
-                  <label className="text-base md:text-lg text-slate-200 mb-4 block font-semibold">
+                  <label className="text-sm md:text-lg text-slate-200 mb-3 md:mb-4 block font-semibold">
                     Ожидаемый личный годовой доход через 2 года
                   </label>
                   <Input
@@ -653,7 +653,7 @@ const PartnerSystem = () => {
                   />
                   <div className="flex justify-between mt-3 text-sm text-slate-500">
                     <span>20 млн</span>
-                    <span className="text-cyan-400 font-bold text-xl">
+                    <span className="text-cyan-400 font-bold text-base md:text-xl">
                       {formData.expectedIncome >= 1000 ? '1+ млрд' : `${formData.expectedIncome}+ млн`} ₽
                     </span>
                     <span>1 млрд</span>
@@ -662,7 +662,7 @@ const PartnerSystem = () => {
 
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-lg md:text-xl py-7 mt-8 shadow-2xl shadow-cyan-500/50 hover:scale-105 transition-all"
+                  className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-base md:text-xl py-5 md:py-7 mt-6 md:mt-8 shadow-2xl shadow-cyan-500/50 hover:scale-105 transition-all"
                 >
                   Отправить заявку
                   <Icon name="Send" className="ml-2" size={24} />
@@ -677,10 +677,10 @@ const PartnerSystem = () => {
       <footer className="py-12 border-t border-slate-800 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/5 to-transparent" />
         <div className="container mx-auto px-4 md:px-6 text-center relative z-10">
-          <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-4 animate-gradient bg-300%">
+          <p className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-3 md:mb-4 animate-gradient bg-300%">
             DEOD
           </p>
-          <p className="text-lg md:text-xl text-slate-400 font-light">
+          <p className="text-base md:text-xl text-slate-400 font-light">
             Капитализируйте вашу экспертизу
           </p>
         </div>
