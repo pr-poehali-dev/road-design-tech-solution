@@ -7,6 +7,15 @@ import { Link } from 'react-router-dom';
 
 const PartnerSystem = () => {
   const [scrollY, setScrollY] = useState(0);
+  const [typedText, setTypedText] = useState('');
+  const [textIndex, setTextIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  const texts = [
+    'Первая в России экосистема, где партнёр зарабатывает от 1 млрд ₽ в год.',
+    'Превращайте ваши связи в строительстве и проектировании в капитал, влияние и статус.',
+  ];
+
   const [calculatorData, setCalculatorData] = useState({
     projects: 5,
     avgBudget: 500,
@@ -25,6 +34,33 @@ const PartnerSystem = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    const currentText = texts[textIndex];
+    const typingSpeed = isDeleting ? 30 : 80;
+    const pauseTime = isDeleting ? 500 : 3000;
+
+    if (!isDeleting && typedText === currentText) {
+      setTimeout(() => setIsDeleting(true), pauseTime);
+      return;
+    }
+
+    if (isDeleting && typedText === '') {
+      setIsDeleting(false);
+      setTextIndex((prev) => (prev + 1) % texts.length);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      setTypedText(
+        isDeleting
+          ? currentText.substring(0, typedText.length - 1)
+          : currentText.substring(0, typedText.length + 1)
+      );
+    }, typingSpeed);
+
+    return () => clearTimeout(timeout);
+  }, [typedText, isDeleting, textIndex]);
 
   const calculateIncome = () => {
     // Базовая ставка 18% для амбассадора
@@ -113,17 +149,14 @@ const PartnerSystem = () => {
             </span>
           </h1>
           
-          <p className="text-base md:text-xl lg:text-2xl text-slate-300 mb-8 md:mb-12 max-w-4xl mx-auto px-4 leading-relaxed">
-            Первая в России экосистема, где партнёр зарабатывает от <span className="text-cyan-400 font-bold text-2xl md:text-3xl">1 млрд ₽ в год</span>.
-            <br />
-            Превращайте ваши связи в строительстве и проектировании в 
-            <span className="text-cyan-400 font-bold"> капитал</span>, 
-            <span className="text-blue-400 font-bold"> влияние</span> и 
-            <span className="text-purple-400 font-bold"> статус</span>.
-            <br />
-            <span className="text-lg md:text-2xl text-cyan-400 font-semibold mt-4 block">
-              Станьте миллиардером вместе с DEOD.
-            </span>
+          <div className="text-base md:text-xl lg:text-2xl text-slate-300 mb-8 md:mb-12 max-w-4xl mx-auto px-4 leading-relaxed min-h-[120px] md:min-h-[160px] flex items-center justify-center">
+            <p className="text-cyan-400 font-semibold">
+              {typedText}
+              <span className="inline-block w-1 h-6 md:h-8 bg-cyan-400 ml-1 animate-pulse" />
+            </p>
+          </div>
+          <p className="text-lg md:text-2xl text-cyan-400 font-semibold mb-8">
+            Станьте миллиардером вместе с DEOD.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -373,7 +406,7 @@ const PartnerSystem = () => {
                   icon: 'Target',
                 },
                 {
-                  title: 'Стратег',
+                  title: 'Стратегический партнёр',
                   period: '6-12 мес.',
                   focus: 'Создание ядра команды (3-5 партнёров). Проекты от 100 млн.',
                   income: '200-500 млн/год',
@@ -381,7 +414,7 @@ const PartnerSystem = () => {
                   icon: 'Users',
                 },
                 {
-                  title: 'Директор сети',
+                  title: 'Генеральный партнёр',
                   period: '12-18 мес.',
                   focus: 'Управление структурой 10+ партнёров. Проекты от 200 млн.',
                   income: '500 млн - 1 млрд/год',
