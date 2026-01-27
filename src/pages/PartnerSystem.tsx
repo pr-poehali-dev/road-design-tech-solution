@@ -341,7 +341,7 @@ const PartnerSystem = () => {
                 title: '3. Вы получаете доход',
                 subtitle: 'До 18% от стоимости проекта',
                 description: 'Деньги перечисляются поэтапно по ходу реализации проекта. Плюс 5% с продаж вашей команды партнёров.',
-                gradient: 'from-purple-600 to-pink-600',
+                gradient: 'from-purple-600 to-purple-700',
                 glow: 'shadow-purple-500/30',
               },
             ].map((pillar, idx) => (
@@ -444,13 +444,13 @@ const PartnerSystem = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-pink-600/10 border-purple-500/30 hover:border-purple-400 transition-all shadow-xl shadow-purple-500/20">
+            <Card className="bg-gradient-to-br from-purple-500/10 via-purple-600/10 to-purple-700/10 border-purple-500/30 hover:border-purple-400 transition-all shadow-xl shadow-purple-500/20">
               <CardContent className="p-6 md:p-12 text-center">
                 <p className="text-xs md:text-base text-slate-400 mb-3 md:mb-4">Доход амбассадора за год</p>
-                <p className="text-3xl md:text-7xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent mb-2 animate-pulse">
+                <p className="text-3xl md:text-7xl font-bold bg-gradient-to-r from-purple-400 to-purple-500 bg-clip-text text-transparent mb-2 animate-pulse">
                   1.5 млрд ₽
                 </p>
-                <div className="w-full h-1 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full mt-4" />
+                <div className="w-full h-1 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full mt-4" />
               </CardContent>
             </Card>
           </div>
@@ -476,7 +476,7 @@ const PartnerSystem = () => {
                 network: 'Собрал команду 10 партнёров',
                 income: '1.04 млрд ₽',
                 period: 'год (540млн + 500млн от команды)',
-                gradient: 'from-purple-500/20 to-pink-600/20',
+                gradient: 'from-purple-500/20 to-purple-700/20',
                 border: 'border-purple-500/30',
               },
             ].map((profile, idx) => (
@@ -517,7 +517,7 @@ const PartnerSystem = () => {
           
           <div className="relative">
             {/* Progress line */}
-            <div className="hidden md:block absolute top-20 left-0 right-0 h-2 bg-gradient-to-r from-cyan-500 via-blue-500 via-purple-500 to-pink-600 rounded-full" />
+            <div className="hidden md:block absolute top-20 left-0 right-0 h-2 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 rounded-full" />
             
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
               {[
@@ -550,7 +550,7 @@ const PartnerSystem = () => {
                   period: 'Уровень 4',
                   focus: 'Многоуровневая сеть 20+ партнёров. Крупные проекты 500+ млн.',
                   income: '1.5+ млрд/год',
-                  color: 'from-purple-600 to-pink-600',
+                  color: 'from-purple-600 to-purple-700',
                   icon: 'Crown',
                 },
               ].map((stage, idx) => (
