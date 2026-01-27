@@ -114,7 +114,7 @@ const PartnerSystem = () => {
         
         {/* Animated Building Blueprints */}
         <div className="absolute inset-0">
-          {/* Left Blueprint */}
+          {/* Left Blueprint - Multi-story building */}
           <div className="absolute left-0 top-1/4 w-64 h-80 opacity-10 animate-blueprint-float-left">
             <svg viewBox="0 0 200 250" className="w-full h-full stroke-cyan-400 fill-none">
               <rect x="40" y="40" width="120" height="180" strokeWidth="1.5" className="animate-draw-1" />
@@ -127,10 +127,15 @@ const PartnerSystem = () => {
               <rect x="120" y="60" width="20" height="15" strokeWidth="1" className="animate-draw-4" />
               <rect x="60" y="100" width="20" height="15" strokeWidth="1" className="animate-draw-4" />
               <rect x="120" y="100" width="20" height="15" strokeWidth="1" className="animate-draw-4" />
+              {/* Dimension lines */}
+              <line x1="30" y1="40" x2="30" y2="220" strokeWidth="0.5" className="animate-draw-5" markerEnd="url(#arrow)" markerStart="url(#arrow)" />
+              <line x1="40" y1="230" x2="160" y2="230" strokeWidth="0.5" className="animate-draw-5" markerEnd="url(#arrow)" markerStart="url(#arrow)" />
+              <text x="20" y="130" fill="currentColor" fontSize="10" className="animate-draw-5">18м</text>
+              <text x="85" y="242" fill="currentColor" fontSize="10" className="animate-draw-5">12м</text>
             </svg>
           </div>
 
-          {/* Right Blueprint */}
+          {/* Right Blueprint - Floor plan */}
           <div className="absolute right-0 top-1/3 w-72 h-64 opacity-10 animate-blueprint-float-right">
             <svg viewBox="0 0 240 200" className="w-full h-full stroke-cyan-400 fill-none">
               <rect x="20" y="20" width="200" height="160" strokeWidth="1.5" className="animate-draw-1" />
@@ -141,10 +146,15 @@ const PartnerSystem = () => {
               <rect x="170" y="30" width="40" height="30" strokeWidth="1" className="animate-draw-3" />
               <circle cx="120" cy="100" r="30" strokeWidth="1" strokeDasharray="5" className="animate-draw-4" />
               <line x1="100" y1="140" x2="140" y2="140" strokeWidth="2" className="animate-draw-5" />
+              {/* Dimension arrows */}
+              <line x1="20" y1="10" x2="220" y2="10" strokeWidth="0.5" className="animate-draw-5" markerEnd="url(#arrow)" markerStart="url(#arrow)" />
+              <line x1="10" y1="20" x2="10" y2="180" strokeWidth="0.5" className="animate-draw-5" markerEnd="url(#arrow)" markerStart="url(#arrow)" />
+              <text x="105" y="8" fill="currentColor" fontSize="8" className="animate-draw-5">20м</text>
+              <text x="2" y="105" fill="currentColor" fontSize="8" className="animate-draw-5">16м</text>
             </svg>
           </div>
 
-          {/* Top Center Blueprint */}
+          {/* Top Center Blueprint - A-frame building */}
           <div className="absolute left-1/3 top-10 w-48 h-56 opacity-8 animate-blueprint-float-center">
             <svg viewBox="0 0 150 180" className="w-full h-full stroke-blue-400 fill-none">
               <polygon points="75,20 140,60 140,160 10,160 10,60" strokeWidth="1.5" className="animate-draw-1" />
@@ -153,6 +163,9 @@ const PartnerSystem = () => {
               <rect x="95" y="80" width="25" height="20" strokeWidth="1" className="animate-draw-3" />
               <rect x="30" y="120" width="25" height="20" strokeWidth="1" className="animate-draw-4" />
               <rect x="95" y="120" width="25" height="20" strokeWidth="1" className="animate-draw-4" />
+              {/* Measurement lines */}
+              <line x1="5" y1="60" x2="5" y2="160" strokeWidth="0.5" className="animate-draw-5" markerEnd="url(#arrow)" markerStart="url(#arrow)" />
+              <text x="1" y="115" fill="currentColor" fontSize="8" className="animate-draw-5" transform="rotate(-90 8 110)">10м</text>
             </svg>
           </div>
 
@@ -164,6 +177,81 @@ const PartnerSystem = () => {
               <line x1="30" y1="90" x2="90" y2="90" strokeWidth="1" className="animate-draw-2" />
               <rect x="40" y="40" width="12" height="15" strokeWidth="1" className="animate-draw-3" />
               <rect x="68" y="40" width="12" height="15" strokeWidth="1" className="animate-draw-3" />
+              <line x1="25" y1="30" x2="25" y2="120" strokeWidth="0.5" className="animate-draw-4" markerEnd="url(#arrow)" markerStart="url(#arrow)" />
+            </svg>
+          </div>
+
+          {/* New: Bottom Left - Section view */}
+          <div className="absolute left-10 bottom-32 w-56 h-64 opacity-9 animate-blueprint-slide-up">
+            <svg viewBox="0 0 180 200" className="w-full h-full stroke-cyan-300 fill-none">
+              <rect x="40" y="60" width="100" height="120" strokeWidth="1.5" className="animate-draw-1" />
+              <line x1="40" y1="100" x2="140" y2="100" strokeWidth="1" className="animate-draw-2" />
+              <line x1="40" y1="140" x2="140" y2="140" strokeWidth="1" className="animate-draw-2" />
+              <polygon points="35,60 90,30 145,60" strokeWidth="1" className="animate-draw-3" />
+              {/* Stairs */}
+              <line x1="80" y1="180" x2="80" y2="100" strokeWidth="1" className="animate-draw-4" />
+              <line x1="70" y1="170" x2="80" y2="170" strokeWidth="1" className="animate-draw-4" />
+              <line x1="70" y1="155" x2="80" y2="155" strokeWidth="1" className="animate-draw-4" />
+              <line x1="70" y1="140" x2="80" y2="140" strokeWidth="1" className="animate-draw-4" />
+              <line x1="70" y1="125" x2="80" y2="125" strokeWidth="1" className="animate-draw-4" />
+              <line x1="70" y1="110" x2="80" y2="110" strokeWidth="1" className="animate-draw-4" />
+              {/* Dimension */}
+              <line x1="30" y1="60" x2="30" y2="180" strokeWidth="0.5" className="animate-draw-5" markerEnd="url(#arrow)" markerStart="url(#arrow)" />
+              <text x="18" y="125" fill="currentColor" fontSize="9" className="animate-draw-5">12м</text>
+            </svg>
+          </div>
+
+          {/* New: Top Right - Detail drawing */}
+          <div className="absolute right-16 top-16 w-52 h-52 opacity-9 animate-blueprint-pulse">
+            <svg viewBox="0 0 160 160" className="w-full h-full stroke-blue-300 fill-none">
+              <circle cx="80" cy="80" r="60" strokeWidth="1.5" className="animate-draw-1" />
+              <line x1="80" y1="20" x2="80" y2="140" strokeWidth="0.5" strokeDasharray="3" className="animate-draw-2" />
+              <line x1="20" y1="80" x2="140" y2="80" strokeWidth="0.5" strokeDasharray="3" className="animate-draw-2" />
+              <rect x="60" y="60" width="40" height="40" strokeWidth="1" className="animate-draw-3" />
+              <line x1="50" y1="50" x2="110" y2="110" strokeWidth="1" strokeDasharray="2" className="animate-draw-4" />
+              <line x1="110" y1="50" x2="50" y2="110" strokeWidth="1" strokeDasharray="2" className="animate-draw-4" />
+              {/* Angle markers */}
+              <path d="M 110 80 Q 105 75, 100 80" strokeWidth="0.5" className="animate-draw-5" />
+              <text x="105" y="72" fill="currentColor" fontSize="7" className="animate-draw-5">45°</text>
+            </svg>
+          </div>
+
+          {/* New: Middle Left - Elevation view */}
+          <div className="absolute left-1/4 top-1/2 w-60 h-44 opacity-9 animate-blueprint-fade">
+            <svg viewBox="0 0 200 140" className="w-full h-full stroke-purple-300 fill-none">
+              <rect x="30" y="40" width="140" height="80" strokeWidth="1.5" className="animate-draw-1" />
+              <rect x="40" y="30" width="120" height="10" strokeWidth="1" className="animate-draw-2" />
+              <line x1="50" y1="50" x2="50" y2="120" strokeWidth="1" className="animate-draw-3" />
+              <line x1="90" y1="50" x2="90" y2="120" strokeWidth="1" className="animate-draw-3" />
+              <line x1="130" y1="50" x2="130" y2="120" strokeWidth="1" className="animate-draw-3" />
+              {/* Windows */}
+              <rect x="55" y="60" width="25" height="20" strokeWidth="1" className="animate-draw-4" />
+              <rect x="95" y="60" width="25" height="20" strokeWidth="1" className="animate-draw-4" />
+              <rect x="135" y="60" width="25" height="20" strokeWidth="1" className="animate-draw-4" />
+              {/* Ground line */}
+              <line x1="20" y1="120" x2="180" y2="120" strokeWidth="1.5" className="animate-draw-5" />
+              <line x1="20" y1="125" x2="30" y2="115" strokeWidth="0.8" className="animate-draw-5" />
+              <line x1="40" y1="125" x2="50" y2="115" strokeWidth="0.8" className="animate-draw-5" />
+            </svg>
+          </div>
+
+          {/* New: Center Bottom - Foundation detail */}
+          <div className="absolute left-1/2 bottom-24 w-48 h-40 opacity-8 animate-blueprint-float-slow">
+            <svg viewBox="0 0 150 120" className="w-full h-full stroke-cyan-300 fill-none">
+              <rect x="40" y="20" width="70" height="60" strokeWidth="1.5" className="animate-draw-1" />
+              <line x1="40" y1="40" x2="110" y2="40" strokeWidth="1" className="animate-draw-2" />
+              <rect x="35" y="80" width="80" height="15" strokeWidth="1.5" className="animate-draw-3" />
+              {/* Hatching for foundation */}
+              <line x1="40" y1="85" x2="50" y2="95" strokeWidth="0.5" className="animate-draw-4" />
+              <line x1="50" y1="85" x2="60" y2="95" strokeWidth="0.5" className="animate-draw-4" />
+              <line x1="60" y1="85" x2="70" y2="95" strokeWidth="0.5" className="animate-draw-4" />
+              <line x1="70" y1="85" x2="80" y2="95" strokeWidth="0.5" className="animate-draw-4" />
+              <line x1="80" y1="85" x2="90" y2="95" strokeWidth="0.5" className="animate-draw-4" />
+              <line x1="90" y1="85" x2="100" y2="95" strokeWidth="0.5" className="animate-draw-4" />
+              <line x1="100" y1="85" x2="110" y2="95" strokeWidth="0.5" className="animate-draw-4" />
+              {/* Dimension */}
+              <line x1="40" y1="105" x2="110" y2="105" strokeWidth="0.5" className="animate-draw-5" markerEnd="url(#arrow)" markerStart="url(#arrow)" />
+              <text x="65" y="115" fill="currentColor" fontSize="8" className="animate-draw-5">7м</text>
             </svg>
           </div>
         </div>
@@ -757,6 +845,50 @@ const PartnerSystem = () => {
           }
         }
 
+        @keyframes blueprint-slide-up {
+          0%, 100% {
+            transform: translateY(0) rotate(-2deg);
+            opacity: 0.09;
+          }
+          50% {
+            transform: translateY(-25px) rotate(2deg);
+            opacity: 0.14;
+          }
+        }
+
+        @keyframes blueprint-pulse {
+          0%, 100% {
+            transform: scale(1);
+            opacity: 0.09;
+          }
+          50% {
+            transform: scale(1.08);
+            opacity: 0.14;
+          }
+        }
+
+        @keyframes blueprint-fade {
+          0%, 100% {
+            transform: translateX(0);
+            opacity: 0.09;
+          }
+          50% {
+            transform: translateX(15px);
+            opacity: 0.13;
+          }
+        }
+
+        @keyframes blueprint-float-slow {
+          0%, 100% {
+            transform: translateY(0) translateX(0);
+            opacity: 0.08;
+          }
+          50% {
+            transform: translateY(-30px) translateX(-20px);
+            opacity: 0.12;
+          }
+        }
+
         @keyframes draw-1 {
           0% {
             stroke-dasharray: 1000;
@@ -821,6 +953,22 @@ const PartnerSystem = () => {
 
         .animate-blueprint-rotate {
           animation: blueprint-rotate 22s ease-in-out infinite;
+        }
+
+        .animate-blueprint-slide-up {
+          animation: blueprint-slide-up 19s ease-in-out infinite;
+        }
+
+        .animate-blueprint-pulse {
+          animation: blueprint-pulse 16s ease-in-out infinite;
+        }
+
+        .animate-blueprint-fade {
+          animation: blueprint-fade 21s ease-in-out infinite;
+        }
+
+        .animate-blueprint-float-slow {
+          animation: blueprint-float-slow 24s ease-in-out infinite;
         }
 
         .animate-draw-1 {
