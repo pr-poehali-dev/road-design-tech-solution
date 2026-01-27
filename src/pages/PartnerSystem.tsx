@@ -3,9 +3,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const PartnerSystem = () => {
+  const navigate = useNavigate();
   const [scrollY, setScrollY] = useState(0);
   const [typedText, setTypedText] = useState('');
   const [textIndex, setTextIndex] = useState(0);
@@ -76,7 +77,7 @@ const PartnerSystem = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    window.location.href = '/ecosystem';
+    navigate('/ecosystem');
   };
 
   return (
