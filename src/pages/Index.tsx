@@ -280,8 +280,7 @@ const Index = () => {
       source: 'Форма обратной связи'
     });
     setFormData({ name: '', phone: '' });
-    setShowThankYou(true);
-    setTimeout(() => setShowThankYou(false), 5000);
+    window.location.href = '/partner-system';
   };
   
   const handleChatNext = () => {
