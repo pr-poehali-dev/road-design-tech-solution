@@ -13,7 +13,7 @@ const PartnerSystem = () => {
   
   const texts = [
     'Приводите строительные проекты — получайте 18% с каждой сделки.',
-    'Собирайте команду партнёров — зарабатывайте на их продажах дополнительно.',
+    'Зарабатывай пассивно до 1 млрд в год на своей партнерской сети.',
   ];
 
   const [calculatorData, setCalculatorData] = useState({
@@ -446,7 +446,7 @@ const PartnerSystem = () => {
 
             <Card className="bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-pink-600/10 border-purple-500/30 hover:border-purple-400 transition-all shadow-xl shadow-purple-500/20">
               <CardContent className="p-6 md:p-12 text-center">
-                <p className="text-xs md:text-base text-slate-400 mb-3 md:mb-4">Доход топ-партнёра за год</p>
+                <p className="text-xs md:text-base text-slate-400 mb-3 md:mb-4">Доход амбассадора за год</p>
                 <p className="text-3xl md:text-7xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent mb-2 animate-pulse">
                   1.5 млрд ₽
                 </p>
@@ -546,7 +546,7 @@ const PartnerSystem = () => {
                   icon: 'MapPin',
                 },
                 {
-                  title: 'Топ-партнёр',
+                  title: 'Амбассадор',
                   period: 'Уровень 4',
                   focus: 'Многоуровневая сеть 20+ партнёров. Крупные проекты 500+ млн.',
                   income: '1.5+ млрд/год',
