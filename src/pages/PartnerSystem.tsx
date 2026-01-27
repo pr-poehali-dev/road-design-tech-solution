@@ -76,7 +76,7 @@ const PartnerSystem = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    alert('Спасибо! Мы свяжемся с вами в ближайшее время.');
+    window.location.href = '/ecosystem';
   };
 
   return (
