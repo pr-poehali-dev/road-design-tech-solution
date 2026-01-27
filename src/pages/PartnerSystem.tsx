@@ -321,6 +321,8 @@ const PartnerSystem = () => {
               <line x1="30" y1="130" x2="120" y2="130" strokeWidth="1" className="animate-draw-2" />
               <rect x="45" y="55" width="15" height="12" strokeWidth="1" className="animate-draw-3" />
               <rect x="90" y="55" width="15" height="12" strokeWidth="1" className="animate-draw-3" />
+              <line x1="25" y1="40" x2="25" y2="160" strokeWidth="0.5" className="animate-draw-4" />
+              <text x="15" y="100" fill="currentColor" fontSize="8" className="animate-draw-5">12м</text>
             </svg>
           </div>
           <div className="absolute left-16 bottom-32 w-44 h-44 animate-blueprint-pulse">
@@ -329,6 +331,19 @@ const PartnerSystem = () => {
               <line x1="70" y1="20" x2="70" y2="120" strokeWidth="0.5" strokeDasharray="3" className="animate-draw-2" />
               <line x1="20" y1="70" x2="120" y2="70" strokeWidth="0.5" strokeDasharray="3" className="animate-draw-2" />
               <rect x="55" y="55" width="30" height="30" strokeWidth="1" className="animate-draw-3" />
+              <path d="M 85 70 Q 90 65, 95 70" strokeWidth="0.5" className="animate-draw-4" />
+              <text x="92" y="63" fill="currentColor" fontSize="6" className="animate-draw-5">90°</text>
+            </svg>
+          </div>
+          <div className="absolute right-1/3 top-1/3 w-36 h-40 animate-blueprint-float-slow opacity-60">
+            <svg viewBox="0 0 120 130" className="w-full h-full stroke-purple-400 fill-none">
+              <rect x="30" y="30" width="60" height="80" strokeWidth="1" className="animate-draw-1" />
+              <line x1="30" y1="55" x2="90" y2="55" strokeWidth="0.8" className="animate-draw-2" />
+              <line x1="30" y1="80" x2="90" y2="80" strokeWidth="0.8" className="animate-draw-2" />
+              <rect x="40" y="40" width="12" height="10" strokeWidth="0.8" className="animate-draw-3" />
+              <rect x="68" y="40" width="12" height="10" strokeWidth="0.8" className="animate-draw-3" />
+              <line x1="20" y1="30" x2="20" y2="110" strokeWidth="0.5" className="animate-draw-4" />
+              <text x="12" y="75" fill="currentColor" fontSize="7" className="animate-draw-5">8м</text>
             </svg>
           </div>
         </div>
@@ -399,6 +414,8 @@ const PartnerSystem = () => {
               <rect x="100" y="70" width="30" height="25" strokeWidth="1" className="animate-draw-3" />
               <rect x="40" y="120" width="30" height="25" strokeWidth="1" className="animate-draw-4" />
               <rect x="100" y="120" width="30" height="25" strokeWidth="1" className="animate-draw-4" />
+              <line x1="10" y1="50" x2="10" y2="180" strokeWidth="0.5" className="animate-draw-5" />
+              <text x="3" y="120" fill="currentColor" fontSize="8" className="animate-draw-5">13м</text>
             </svg>
           </div>
           <div className="absolute right-12 bottom-16 w-56 h-48 animate-blueprint-rotate">
@@ -410,6 +427,17 @@ const PartnerSystem = () => {
               <rect x="35" y="40" width="12" height="15" strokeWidth="1" className="animate-draw-3" />
               <rect x="95" y="40" width="12" height="15" strokeWidth="1" className="animate-draw-3" />
               <line x1="30" y1="140" x2="150" y2="140" strokeWidth="0.5" className="animate-draw-4" />
+              <text x="80" y="148" fill="currentColor" fontSize="7" className="animate-draw-5">12м</text>
+            </svg>
+          </div>
+          <div className="absolute left-1/3 bottom-1/4 w-40 h-44 animate-blueprint-float-center opacity-60">
+            <svg viewBox="0 0 130 140" className="w-full h-full stroke-blue-400 fill-none">
+              <rect x="25" y="30" width="80" height="90" strokeWidth="1" className="animate-draw-1" />
+              <line x1="25" y1="60" x2="105" y2="60" strokeWidth="0.8" className="animate-draw-2" />
+              <line x1="25" y1="90" x2="105" y2="90" strokeWidth="0.8" className="animate-draw-2" />
+              <line x1="65" y1="30" x2="65" y2="120" strokeWidth="0.8" strokeDasharray="3" className="animate-draw-3" />
+              <rect x="35" y="40" width="15" height="15" strokeWidth="0.8" className="animate-draw-4" />
+              <rect x="75" y="40" width="15" height="15" strokeWidth="0.8" className="animate-draw-4" />
             </svg>
           </div>
         </div>
@@ -496,6 +524,20 @@ const PartnerSystem = () => {
               <rect x="85" y="60" width="20" height="18" strokeWidth="1" className="animate-draw-4" />
               <rect x="45" y="100" width="20" height="18" strokeWidth="1" className="animate-draw-5" />
               <rect x="85" y="100" width="20" height="18" strokeWidth="1" className="animate-draw-5" />
+              <line x1="20" y1="40" x2="130" y2="40" strokeWidth="0.5" className="animate-draw-5" />
+              <text x="65" y="35" fill="currentColor" fontSize="7" className="animate-draw-5">11м</text>
+            </svg>
+          </div>
+          <div className="absolute right-1/4 top-1/4 w-42 h-46 animate-blueprint-pulse opacity-60">
+            <svg viewBox="0 0 135 145" className="w-full h-full stroke-purple-300 fill-none">
+              <rect x="30" y="30" width="75" height="95" strokeWidth="1" className="animate-draw-1" />
+              <line x1="30" y1="65" x2="105" y2="65" strokeWidth="0.8" className="animate-draw-2" />
+              <line x1="30" y1="95" x2="105" y2="95" strokeWidth="0.8" className="animate-draw-2" />
+              <rect x="40" y="40" width="18" height="20" strokeWidth="0.8" className="animate-draw-3" />
+              <rect x="77" y="40" width="18" height="20" strokeWidth="0.8" className="animate-draw-3" />
+              <rect x="40" y="75" width="18" height="15" strokeWidth="0.8" className="animate-draw-4" />
+              <rect x="77" y="75" width="18" height="15" strokeWidth="0.8" className="animate-draw-4" />
+              <line x1="20" y1="30" x2="20" y2="125" strokeWidth="0.5" className="animate-draw-5" />
             </svg>
           </div>
         </div>
@@ -595,6 +637,8 @@ const PartnerSystem = () => {
               <rect x="85" y="40" width="15" height="15" strokeWidth="1" className="animate-draw-3" />
               <rect x="40" y="70" width="15" height="15" strokeWidth="1" className="animate-draw-4" />
               <rect x="85" y="70" width="15" height="15" strokeWidth="1" className="animate-draw-4" />
+              <line x1="30" y1="140" x2="110" y2="140" strokeWidth="0.5" className="animate-draw-5" />
+              <text x="60" y="147" fill="currentColor" fontSize="7" className="animate-draw-5">8м</text>
             </svg>
           </div>
           <div className="absolute right-1/4 bottom-24 w-52 h-56 animate-blueprint-pulse">
@@ -604,6 +648,18 @@ const PartnerSystem = () => {
               <line x1="20" y1="90" x2="140" y2="90" strokeWidth="0.5" strokeDasharray="3" className="animate-draw-2" />
               <rect x="60" y="70" width="40" height="40" strokeWidth="1" className="animate-draw-3" />
               <line x1="50" y1="50" x2="110" y2="130" strokeWidth="1" strokeDasharray="2" className="animate-draw-4" />
+              <path d="M 100 90 Q 105 85, 110 90" strokeWidth="0.5" className="animate-draw-5" />
+              <text x="106" y="82" fill="currentColor" fontSize="6" className="animate-draw-5">45°</text>
+            </svg>
+          </div>
+          <div className="absolute left-12 bottom-1/3 w-38 h-42 animate-blueprint-slide-up opacity-60">
+            <svg viewBox="0 0 125 135" className="w-full h-full stroke-blue-300 fill-none">
+              <polygon points="62,15 115,40 115,120 10,120 10,40" strokeWidth="1" className="animate-draw-1" />
+              <line x1="62" y1="15" x2="62" y2="120" strokeWidth="0.8" strokeDasharray="3" className="animate-draw-2" />
+              <rect x="30" y="60" width="20" height="18" strokeWidth="0.8" className="animate-draw-3" />
+              <rect x="75" y="60" width="20" height="18" strokeWidth="0.8" className="animate-draw-3" />
+              <rect x="30" y="92" width="20" height="18" strokeWidth="0.8" className="animate-draw-4" />
+              <rect x="75" y="92" width="20" height="18" strokeWidth="0.8" className="animate-draw-4" />
             </svg>
           </div>
         </div>
@@ -693,6 +749,8 @@ const PartnerSystem = () => {
               <rect x="115" y="60" width="18" height="15" strokeWidth="1" className="animate-draw-4" />
               <rect x="55" y="100" width="18" height="15" strokeWidth="1" className="animate-draw-5" />
               <rect x="115" y="100" width="18" height="15" strokeWidth="1" className="animate-draw-5" />
+              <line x1="30" y1="40" x2="30" y2="180" strokeWidth="0.5" className="animate-draw-5" />
+              <text x="18" y="115" fill="currentColor" fontSize="8" className="animate-draw-5">14м</text>
             </svg>
           </div>
           <div className="absolute right-12 bottom-28 w-56 h-60 animate-blueprint-rotate">
@@ -703,6 +761,20 @@ const PartnerSystem = () => {
               <rect x="105" y="80" width="35" height="30" strokeWidth="1" className="animate-draw-3" />
               <rect x="40" y="125" width="35" height="30" strokeWidth="1" className="animate-draw-4" />
               <rect x="105" y="125" width="35" height="30" strokeWidth="1" className="animate-draw-4" />
+              <line x1="20" y1="180" x2="160" y2="180" strokeWidth="0.5" className="animate-draw-5" />
+              <text x="80" y="188" fill="currentColor" fontSize="7" className="animate-draw-5">14м</text>
+            </svg>
+          </div>
+          <div className="absolute right-1/3 top-1/3 w-44 h-48 animate-blueprint-float-center opacity-60">
+            <svg viewBox="0 0 140 150" className="w-full h-full stroke-cyan-400 fill-none">
+              <rect x="30" y="30" width="80" height="100" strokeWidth="1" className="animate-draw-1" />
+              <line x1="30" y1="60" x2="110" y2="60" strokeWidth="0.8" className="animate-draw-2" />
+              <line x1="30" y1="90" x2="110" y2="90" strokeWidth="0.8" className="animate-draw-2" />
+              <line x1="70" y1="30" x2="70" y2="130" strokeWidth="0.8" strokeDasharray="3" className="animate-draw-3" />
+              <rect x="40" y="40" width="15" height="15" strokeWidth="0.8" className="animate-draw-4" />
+              <rect x="85" y="40" width="15" height="15" strokeWidth="0.8" className="animate-draw-4" />
+              <rect x="40" y="70" width="15" height="15" strokeWidth="0.8" className="animate-draw-5" />
+              <rect x="85" y="70" width="15" height="15" strokeWidth="0.8" className="animate-draw-5" />
             </svg>
           </div>
         </div>
@@ -828,6 +900,8 @@ const PartnerSystem = () => {
               <rect x="85" y="55" width="20" height="15" strokeWidth="1" className="animate-draw-3" />
               <rect x="45" y="90" width="20" height="15" strokeWidth="1" className="animate-draw-4" />
               <rect x="85" y="90" width="20" height="15" strokeWidth="1" className="animate-draw-4" />
+              <line x1="30" y1="170" x2="120" y2="170" strokeWidth="0.5" className="animate-draw-5" />
+              <text x="65" y="177" fill="currentColor" fontSize="7" className="animate-draw-5">9м</text>
             </svg>
           </div>
           <div className="absolute right-20 bottom-32 w-52 h-52 animate-blueprint-pulse">
@@ -838,6 +912,18 @@ const PartnerSystem = () => {
               <rect x="60" y="60" width="40" height="40" strokeWidth="1" className="animate-draw-3" />
               <line x1="50" y1="50" x2="110" y2="110" strokeWidth="1" strokeDasharray="2" className="animate-draw-4" />
               <line x1="110" y1="50" x2="50" y2="110" strokeWidth="1" strokeDasharray="2" className="animate-draw-4" />
+              <circle cx="80" cy="80" r="15" strokeWidth="0.8" className="animate-draw-5" />
+              <path d="M 95 80 Q 100 75, 105 80" strokeWidth="0.5" className="animate-draw-5" />
+            </svg>
+          </div>
+          <div className="absolute left-1/3 bottom-1/4 w-40 h-44 animate-blueprint-rotate opacity-60">
+            <svg viewBox="0 0 130 140" className="w-full h-full stroke-purple-300 fill-none">
+              <polygon points="65,20 120,50 120,120 10,120 10,50" strokeWidth="1" className="animate-draw-1" />
+              <line x1="65" y1="20" x2="65" y2="120" strokeWidth="0.8" strokeDasharray="3" className="animate-draw-2" />
+              <rect x="30" y="65" width="25" height="20" strokeWidth="0.8" className="animate-draw-3" />
+              <rect x="75" y="65" width="25" height="20" strokeWidth="0.8" className="animate-draw-3" />
+              <rect x="30" y="95" width="25" height="15" strokeWidth="0.8" className="animate-draw-4" />
+              <rect x="75" y="95" width="25" height="15" strokeWidth="0.8" className="animate-draw-4" />
             </svg>
           </div>
         </div>
