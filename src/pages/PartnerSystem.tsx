@@ -112,22 +112,60 @@ const PartnerSystem = () => {
           }}
         />
         
-        {/* Floating particles */}
+        {/* Animated Building Blueprints */}
         <div className="absolute inset-0">
-          {[...Array(30)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full bg-gradient-to-br from-cyan-400/20 via-blue-500/20 to-purple-600/20 blur-sm"
-              style={{
-                width: Math.random() * 150 + 50 + 'px',
-                height: Math.random() * 150 + 50 + 'px',
-                left: Math.random() * 100 + '%',
-                top: Math.random() * 100 + '%',
-                animation: `float ${Math.random() * 15 + 10}s ease-in-out infinite`,
-                animationDelay: `${Math.random() * 5}s`,
-              }}
-            />
-          ))}
+          {/* Left Blueprint */}
+          <div className="absolute left-0 top-1/4 w-64 h-80 opacity-10 animate-blueprint-float-left">
+            <svg viewBox="0 0 200 250" className="w-full h-full stroke-cyan-400 fill-none">
+              <rect x="40" y="40" width="120" height="180" strokeWidth="1.5" className="animate-draw-1" />
+              <line x1="40" y1="80" x2="160" y2="80" strokeWidth="1" className="animate-draw-2" />
+              <line x1="40" y1="120" x2="160" y2="120" strokeWidth="1" className="animate-draw-2" />
+              <line x1="40" y1="160" x2="160" y2="160" strokeWidth="1" className="animate-draw-2" />
+              <line x1="40" y1="200" x2="160" y2="200" strokeWidth="1" className="animate-draw-2" />
+              <line x1="100" y1="40" x2="100" y2="220" strokeWidth="1" strokeDasharray="4" className="animate-draw-3" />
+              <rect x="60" y="60" width="20" height="15" strokeWidth="1" className="animate-draw-4" />
+              <rect x="120" y="60" width="20" height="15" strokeWidth="1" className="animate-draw-4" />
+              <rect x="60" y="100" width="20" height="15" strokeWidth="1" className="animate-draw-4" />
+              <rect x="120" y="100" width="20" height="15" strokeWidth="1" className="animate-draw-4" />
+            </svg>
+          </div>
+
+          {/* Right Blueprint */}
+          <div className="absolute right-0 top-1/3 w-72 h-64 opacity-10 animate-blueprint-float-right">
+            <svg viewBox="0 0 240 200" className="w-full h-full stroke-cyan-400 fill-none">
+              <rect x="20" y="20" width="200" height="160" strokeWidth="1.5" className="animate-draw-1" />
+              <line x1="80" y1="20" x2="80" y2="180" strokeWidth="1" className="animate-draw-2" />
+              <line x1="160" y1="20" x2="160" y2="180" strokeWidth="1" className="animate-draw-2" />
+              <rect x="30" y="30" width="40" height="30" strokeWidth="1" className="animate-draw-3" />
+              <rect x="90" y="30" width="60" height="30" strokeWidth="1" className="animate-draw-3" />
+              <rect x="170" y="30" width="40" height="30" strokeWidth="1" className="animate-draw-3" />
+              <circle cx="120" cy="100" r="30" strokeWidth="1" strokeDasharray="5" className="animate-draw-4" />
+              <line x1="100" y1="140" x2="140" y2="140" strokeWidth="2" className="animate-draw-5" />
+            </svg>
+          </div>
+
+          {/* Top Center Blueprint */}
+          <div className="absolute left-1/3 top-10 w-48 h-56 opacity-8 animate-blueprint-float-center">
+            <svg viewBox="0 0 150 180" className="w-full h-full stroke-blue-400 fill-none">
+              <polygon points="75,20 140,60 140,160 10,160 10,60" strokeWidth="1.5" className="animate-draw-1" />
+              <line x1="75" y1="20" x2="75" y2="160" strokeWidth="1" strokeDasharray="3" className="animate-draw-2" />
+              <rect x="30" y="80" width="25" height="20" strokeWidth="1" className="animate-draw-3" />
+              <rect x="95" y="80" width="25" height="20" strokeWidth="1" className="animate-draw-3" />
+              <rect x="30" y="120" width="25" height="20" strokeWidth="1" className="animate-draw-4" />
+              <rect x="95" y="120" width="25" height="20" strokeWidth="1" className="animate-draw-4" />
+            </svg>
+          </div>
+
+          {/* Bottom Right Small Blueprint */}
+          <div className="absolute right-1/4 bottom-20 w-40 h-48 opacity-8 animate-blueprint-rotate">
+            <svg viewBox="0 0 120 150" className="w-full h-full stroke-purple-400 fill-none">
+              <rect x="30" y="30" width="60" height="90" strokeWidth="1.5" className="animate-draw-1" />
+              <line x1="30" y1="60" x2="90" y2="60" strokeWidth="1" className="animate-draw-2" />
+              <line x1="30" y1="90" x2="90" y2="90" strokeWidth="1" className="animate-draw-2" />
+              <rect x="40" y="40" width="12" height="15" strokeWidth="1" className="animate-draw-3" />
+              <rect x="68" y="40" width="12" height="15" strokeWidth="1" className="animate-draw-3" />
+            </svg>
+          </div>
         </div>
 
         {/* Grid overlay */}
@@ -675,19 +713,143 @@ const PartnerSystem = () => {
       </footer>
 
       <style>{`
-        @keyframes float {
+        @keyframes blueprint-float-left {
           0%, 100% {
-            transform: translateY(0) translateX(0) scale(1);
+            transform: translateY(0) translateX(0) rotate(0deg);
+            opacity: 0.1;
+          }
+          50% {
+            transform: translateY(-40px) translateX(30px) rotate(3deg);
             opacity: 0.15;
           }
-          33% {
-            transform: translateY(-30px) translateX(20px) scale(1.1);
-            opacity: 0.25;
+        }
+
+        @keyframes blueprint-float-right {
+          0%, 100% {
+            transform: translateY(0) translateX(0) rotate(0deg);
+            opacity: 0.1;
           }
-          66% {
-            transform: translateY(-15px) translateX(-20px) scale(0.95);
-            opacity: 0.2;
+          50% {
+            transform: translateY(30px) translateX(-40px) rotate(-5deg);
+            opacity: 0.15;
           }
+        }
+
+        @keyframes blueprint-float-center {
+          0%, 100% {
+            transform: translateY(0) scale(1);
+            opacity: 0.08;
+          }
+          50% {
+            transform: translateY(-20px) scale(1.05);
+            opacity: 0.12;
+          }
+        }
+
+        @keyframes blueprint-rotate {
+          0%, 100% {
+            transform: rotate(0deg) translateY(0);
+            opacity: 0.08;
+          }
+          50% {
+            transform: rotate(10deg) translateY(-15px);
+            opacity: 0.12;
+          }
+        }
+
+        @keyframes draw-1 {
+          0% {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+          }
+          100% {
+            stroke-dashoffset: 0;
+          }
+        }
+
+        @keyframes draw-2 {
+          0% {
+            stroke-dasharray: 500;
+            stroke-dashoffset: 500;
+          }
+          100% {
+            stroke-dashoffset: 0;
+          }
+        }
+
+        @keyframes draw-3 {
+          0% {
+            stroke-dasharray: 300;
+            stroke-dashoffset: 300;
+          }
+          100% {
+            stroke-dashoffset: 0;
+          }
+        }
+
+        @keyframes draw-4 {
+          0% {
+            stroke-dasharray: 200;
+            stroke-dashoffset: 200;
+          }
+          100% {
+            stroke-dashoffset: 0;
+          }
+        }
+
+        @keyframes draw-5 {
+          0% {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+          }
+          100% {
+            stroke-dashoffset: 0;
+          }
+        }
+
+        .animate-blueprint-float-left {
+          animation: blueprint-float-left 20s ease-in-out infinite;
+        }
+
+        .animate-blueprint-float-right {
+          animation: blueprint-float-right 25s ease-in-out infinite;
+        }
+
+        .animate-blueprint-float-center {
+          animation: blueprint-float-center 18s ease-in-out infinite;
+        }
+
+        .animate-blueprint-rotate {
+          animation: blueprint-rotate 22s ease-in-out infinite;
+        }
+
+        .animate-draw-1 {
+          stroke-dasharray: 1000;
+          animation: draw-1 8s ease-in-out infinite;
+        }
+
+        .animate-draw-2 {
+          stroke-dasharray: 500;
+          animation: draw-2 6s ease-in-out infinite;
+          animation-delay: 1s;
+        }
+
+        .animate-draw-3 {
+          stroke-dasharray: 300;
+          animation: draw-3 5s ease-in-out infinite;
+          animation-delay: 2s;
+        }
+
+        .animate-draw-4 {
+          stroke-dasharray: 200;
+          animation: draw-4 4s ease-in-out infinite;
+          animation-delay: 3s;
+        }
+
+        .animate-draw-5 {
+          stroke-dasharray: 100;
+          animation: draw-5 3s ease-in-out infinite;
+          animation-delay: 4s;
         }
         
         @keyframes gradient {
