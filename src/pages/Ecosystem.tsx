@@ -163,7 +163,7 @@ const Ecosystem = () => {
 
           <div className="max-w-4xl mx-auto space-y-6 text-base md:text-xl text-slate-300 mb-12 animate-fade-in" style={{ animationDelay: '0.3s' }}>
             <p className="leading-relaxed">
-              Система DEOD работает на <span className="text-cyan-400 font-semibold">сарафанного радио и пассивного дохода</span>. 
+              Система DEOD работает на <span className="font-semibold text-cyan-500">сарафанное радио на основе пассивного дохода.</span>. 
               С каждой сделки распределяется фиксированный комиссионный фонд. Вы получаете доход по двум направлениям:
             </p>
             <div className="grid md:grid-cols-2 gap-4 text-left">
