@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
+import { Link } from 'react-router-dom';
 
 interface PartnerData {
   name: string;
@@ -167,12 +168,18 @@ export default function Ecosystem() {
                 <Icon name="User" size={32} className="text-white md:hidden" />
                 <Icon name="User" size={40} className="text-white hidden md:block" />
               </div>
-              <div className="text-center sm:text-left">
+              <div className="text-center sm:text-left flex-1">
                 <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-1 md:mb-2">
                   {mockPartnerData.name}, вы — {mockPartnerData.grade}
                 </h1>
                 <p className="text-sm md:text-base text-cyan-400">Добро пожаловать в экосистему DEOD</p>
               </div>
+              <Link to="/ecosystem/gl">
+                <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-lg shadow-cyan-500/30">
+                  <Icon name="Home" className="mr-2" size={18} />
+                  Главная
+                </Button>
+              </Link>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">

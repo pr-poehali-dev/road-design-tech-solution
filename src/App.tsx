@@ -14,6 +14,7 @@ const CommercialProposal = lazy(() => import("./pages/CommercialProposal"));
 const TEC = lazy(() => import("./pages/TEC"));
 const PartnerSystem = lazy(() => import("./pages/PartnerSystem"));
 const Ecosystem = lazy(() => import("./pages/Ecosystem"));
+const EcosystemInfo = lazy(() => import("./pages/EcosystemInfo"));
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,11 @@ const App = () => (
           <Route path="/ecosystem" element={
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
               <Ecosystem />
+            </Suspense>
+          } />
+          <Route path="/ecosystem/gl" element={
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
+              <EcosystemInfo />
             </Suspense>
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
