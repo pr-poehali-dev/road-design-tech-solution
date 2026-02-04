@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 
 const PartnerSystem = () => {
   const [scrollY, setScrollY] = useState(0);
-  const [activeTab, setActiveTab] = useState<'main' | 'simulator' | 'knowledge'>('main');
+  const [activeTab, setActiveTab] = useState<'main' | 'simulator' | 'knowledge' | 'details'>('main');
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -77,6 +77,12 @@ const PartnerSystem = () => {
               className={`text-xs md:text-sm transition ${activeTab === 'main' ? 'text-cyan-400' : 'text-slate-300 hover:text-cyan-400'}`}
             >
               Экосистема
+            </button>
+            <button
+              onClick={() => setActiveTab('details')}
+              className={`text-xs md:text-sm transition ${activeTab === 'details' ? 'text-cyan-400' : 'text-slate-300 hover:text-cyan-400'}`}
+            >
+              Детали системы
             </button>
             <button
               onClick={() => setActiveTab('simulator')}
@@ -325,6 +331,13 @@ const PartnerSystem = () => {
             <KnowledgeSection />
           </div>
         )}
+
+        {/* Детали системы */}
+        {activeTab === 'details' && (
+          <div className="container mx-auto px-4 md:px-6">
+            <DetailsSection />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -467,6 +480,223 @@ const KnowledgeSection = () => {
           </Link>
         </CardContent>
       </Card>
+    </div>
+  );
+};
+
+// Компонент деталей системы (старый контент)
+const DetailsSection = () => {
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const growthMetrics = [
+    {
+      title: 'Ваш статус',
+      value: 'Амбассадор',
+      icon: 'Award',
+      color: 'from-yellow-500 to-orange-600',
+      description: 'Высший уровень партнёрской программы',
+    },
+    {
+      title: 'Размер команды',
+      value: '10+ партнёров',
+      icon: 'Users',
+      color: 'from-cyan-500 to-blue-600',
+      description: 'Активных членов вашей сети',
+    },
+    {
+      title: 'Годовой доход',
+      value: 'до 1 млрд ₽',
+      icon: 'TrendingUp',
+      color: 'from-green-500 to-emerald-600',
+      description: 'Потенциальная прибыль с сети',
+    },
+  ];
+
+  const benefits = [
+    {
+      title: 'Пассивный доход',
+      description: 'Получайте процент от сделок всей вашей партнёрской сети',
+      icon: 'Wallet',
+    },
+    {
+      title: 'Рост статуса',
+      description: 'Повышайте свой уровень и увеличивайте процент от продаж',
+      icon: 'TrendingUp',
+    },
+    {
+      title: 'Обучение команды',
+      description: 'Доступ к базе знаний и материалам для развития партнёров',
+      icon: 'BookOpen',
+    },
+    {
+      title: 'Поддержка 24/7',
+      description: 'Личный куратор и техническая поддержка на всех этапах',
+      icon: 'Headphones',
+    },
+  ];
+
+  const levels = [
+    { name: 'Агент', percent: '8-10%', color: 'slate' },
+    { name: 'Партнёр', percent: '10-12%', color: 'blue' },
+    { name: 'Старший партнёр', percent: '12-15%', color: 'cyan' },
+    { name: 'Генеральный партнёр', percent: '15-18%', color: 'purple' },
+    { name: 'Амбассадор', percent: '18%+', color: 'yellow' },
+  ];
+
+  return (
+    <div className="space-y-16">
+      {/* Hero Section */}
+      <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden">
+        <div
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: `radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.3) 0%, transparent 70%)`,
+            transform: `translateY(${scrollY * 0.2}px)`,
+          }}
+        />
+        
+        <div className="relative z-10 text-center space-y-6 px-4">
+          <h1 className="text-5xl md:text-7xl font-bold">
+            <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
+              Партнёрская экосистема
+            </span>
+          </h1>
+          <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto">
+            Приводите проекты — получайте до 18% с каждой сделки
+          </p>
+          <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto">
+            Зарабатывайте пассивно до 1 млрд ₽ в год на своей партнёрской сети
+          </p>
+        </div>
+      </section>
+
+      {/* Growth Metrics */}
+      <section className="grid md:grid-cols-3 gap-6">
+        {growthMetrics.map((metric, idx) => (
+          <Card
+            key={idx}
+            className="bg-slate-900/50 border-slate-700/50 hover:border-cyan-500/50 transition-all duration-300 hover:scale-105"
+          >
+            <CardContent className="p-6 space-y-4">
+              <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${metric.color} flex items-center justify-center`}>
+                <Icon name={metric.icon as any} size={32} className="text-white" />
+              </div>
+              <div>
+                <h3 className="text-slate-400 text-sm mb-1">{metric.title}</h3>
+                <p className="text-3xl font-bold text-white">{metric.value}</p>
+                <p className="text-slate-500 text-sm mt-2">{metric.description}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </section>
+
+      {/* Levels Overview */}
+      <section className="space-y-8">
+        <h2 className="text-4xl font-bold text-center mb-8">Уровни партнёрской программы</h2>
+        <div className="grid md:grid-cols-5 gap-4">
+          {levels.map((level, idx) => (
+            <Card
+              key={idx}
+              className={`bg-slate-900/50 border-${level.color}-500/30 hover:border-${level.color}-500/60 transition`}
+            >
+              <CardContent className="p-6 text-center space-y-3">
+                <div className="text-2xl font-bold">{level.name}</div>
+                <div className={`text-3xl font-bold text-${level.color}-400`}>{level.percent}</div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* Benefits Grid */}
+      <section className="space-y-8">
+        <h2 className="text-4xl font-bold text-center mb-8">Преимущества программы</h2>
+        <div className="grid md:grid-cols-2 gap-6">
+          {benefits.map((benefit, idx) => (
+            <Card key={idx} className="bg-slate-900/50 border-slate-700/50 hover:border-cyan-500/50 transition">
+              <CardContent className="p-8 space-y-4">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+                      <Icon name={benefit.icon as any} size={24} className="text-white" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold mb-2">{benefit.title}</h3>
+                    <p className="text-slate-400">{benefit.description}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="space-y-8">
+        <h2 className="text-4xl font-bold text-center mb-8">Как это работает</h2>
+        <div className="max-w-4xl mx-auto space-y-6">
+          {[
+            {
+              step: 1,
+              title: 'Получите приглашение',
+              description: 'Заполните форму и получите доступ к партнёрской программе',
+            },
+            {
+              step: 2,
+              title: 'Приводите проекты',
+              description: 'Рекомендуйте DEOD для строительных проектов в вашей сети',
+            },
+            {
+              step: 3,
+              title: 'Получайте доход',
+              description: 'Зарабатывайте процент с каждой сделки, которую вы привели',
+            },
+            {
+              step: 4,
+              title: 'Стройте команду',
+              description: 'Приглашайте новых партнёров и получайте доход с их сделок',
+            },
+          ].map((item) => (
+            <Card key={item.step} className="bg-slate-900/50 border-cyan-500/30">
+              <CardContent className="p-8">
+                <div className="flex items-start gap-6">
+                  <div className="flex-shrink-0">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+                      <span className="text-2xl font-bold">{item.step}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold mb-2">{item.title}</h3>
+                    <p className="text-lg text-slate-400">{item.description}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="text-center space-y-6 py-12">
+        <h2 className="text-4xl font-bold">Готовы начать зарабатывать?</h2>
+        <p className="text-xl text-slate-300 max-w-2xl mx-auto">
+          Присоединяйтесь к партнёрской программе DEOD и начните получать доход уже сегодня
+        </p>
+        <Link to="/">
+          <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-lg px-8 py-6 shadow-lg shadow-cyan-500/30">
+            <Icon name="Rocket" className="mr-2" size={24} />
+            Получить приглашение
+          </Button>
+        </Link>
+      </section>
     </div>
   );
 };
