@@ -484,15 +484,71 @@ const KnowledgeSection = () => {
   );
 };
 
-// Компонент деталей системы (старый контент)
+// Компонент деталей системы (полный оригинальный контент)
 const DetailsSection = () => {
   const [scrollY, setScrollY] = useState(0);
+  const [typedText, setTypedText] = useState('');
+  const [textIndex, setTextIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  const texts = [
+    'Приводите строительные проекты — получайте 18% с каждой сделки.',
+    'Зарабатывай пассивно до 1 млрд в год на своей партнерской сети.',
+  ];
+
+  const [calculatorData, setCalculatorData] = useState({
+    projects: 5,
+    avgBudget: 500,
+    buildTeam: true,
+  });
+
+  const [formData, setFormData] = useState({
+    name: '',
+    contact: '',
+    asset: '',
+    expectedIncome: 50,
+  });
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    const currentText = texts[textIndex];
+    const typingSpeed = isDeleting ? 30 : 80;
+    const pauseTime = isDeleting ? 500 : 3000;
+
+    if (!isDeleting && typedText === currentText) {
+      setTimeout(() => setIsDeleting(true), pauseTime);
+      return;
+    }
+
+    if (isDeleting && typedText === '') {
+      setIsDeleting(false);
+      setTextIndex((prev) => (prev + 1) % texts.length);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      setTypedText(
+        isDeleting
+          ? currentText.substring(0, typedText.length - 1)
+          : currentText.substring(0, typedText.length + 1)
+      );
+    }, typingSpeed);
+
+    return () => clearTimeout(timeout);
+  }, [typedText, isDeleting, textIndex]);
+
+  const calculateIncome = () => {
+    const baseRate = 0.18;
+    const teamBonus = calculatorData.buildTeam ? 500 : 0;
+    const personalIncome = calculatorData.projects * calculatorData.avgBudget * baseRate;
+    const yearlyIncome = personalIncome + teamBonus;
+    return (yearlyIncome / 1000).toFixed(2);
+  };
 
   const growthMetrics = [
     {
@@ -684,18 +740,146 @@ const DetailsSection = () => {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="text-center space-y-6 py-12">
-        <h2 className="text-4xl font-bold">Готовы начать зарабатывать?</h2>
-        <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-          Присоединяйтесь к партнёрской программе DEOD и начните получать доход уже сегодня
-        </p>
-        <Link to="/">
-          <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-lg px-8 py-6 shadow-lg shadow-cyan-500/30">
-            <Icon name="Rocket" className="mr-2" size={24} />
-            Получить приглашение
-          </Button>
-        </Link>
+      {/* Calculator Section */}
+      <section id="calculator" className="space-y-8">
+        <h2 className="text-4xl font-bold text-center mb-8">Рассчитайте свой потенциальный доход</h2>
+        <Card className="bg-slate-900/50 border-cyan-500/30 max-w-4xl mx-auto">
+          <CardContent className="p-8 space-y-6">
+            <div className="space-y-6">
+              <div>
+                <label className="block text-lg mb-4">
+                  Сколько проектов вы планируете привести в год?
+                  <span className="block text-cyan-400 font-bold mt-2">{calculatorData.projects} проектов</span>
+                </label>
+                <input
+                  type="range"
+                  min="1"
+                  max="20"
+                  value={calculatorData.projects}
+                  onChange={(e) => setCalculatorData({ ...calculatorData, projects: Number(e.target.value) })}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-lg mb-4">
+                  Средний бюджет одного проекта (млн ₽)
+                  <span className="block text-cyan-400 font-bold mt-2">{calculatorData.avgBudget} млн ₽</span>
+                </label>
+                <input
+                  type="range"
+                  min="100"
+                  max="2000"
+                  step="100"
+                  value={calculatorData.avgBudget}
+                  onChange={(e) => setCalculatorData({ ...calculatorData, avgBudget: Number(e.target.value) })}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                />
+              </div>
+
+              <div className="flex items-center gap-4 p-4 bg-slate-800/50 rounded-lg">
+                <input
+                  type="checkbox"
+                  id="buildTeam"
+                  checked={calculatorData.buildTeam}
+                  onChange={(e) => setCalculatorData({ ...calculatorData, buildTeam: e.target.checked })}
+                  className="w-6 h-6 accent-cyan-500 cursor-pointer"
+                />
+                <label htmlFor="buildTeam" className="text-lg cursor-pointer">
+                  Планирую строить партнёрскую команду (10+ партнёров)
+                </label>
+              </div>
+            </div>
+
+            <div className="pt-8 border-t border-slate-700">
+              <div className="text-center space-y-4">
+                <p className="text-slate-400 text-lg">Ваш потенциальный годовой доход:</p>
+                <div className="flex items-center justify-center gap-3">
+                  <Icon name="TrendingUp" className="text-green-400" size={48} />
+                  <p className="text-6xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
+                    {calculateIncome()} млрд ₽
+                  </p>
+                </div>
+                <p className="text-slate-500 text-sm">
+                  *Расчёт основан на ставке 18% для амбассадора и комиссии от команды
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Join Form */}
+      <section id="join" className="space-y-8">
+        <h2 className="text-4xl font-bold text-center mb-8">Получить приглашение</h2>
+        <Card className="bg-slate-900/50 border-cyan-500/30 max-w-2xl mx-auto">
+          <CardContent className="p-8">
+            <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+              <div>
+                <label className="block text-sm mb-2 text-slate-400">Ваше имя</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg focus:border-cyan-500 focus:outline-none text-white"
+                  placeholder="Иван Иванов"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm mb-2 text-slate-400">Контактный телефон или email</label>
+                <input
+                  type="text"
+                  value={formData.contact}
+                  onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg focus:border-cyan-500 focus:outline-none text-white"
+                  placeholder="+7 999 123-45-67"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm mb-2 text-slate-400">
+                  Ваш основной актив для привлечения проектов
+                </label>
+                <textarea
+                  value={formData.asset}
+                  onChange={(e) => setFormData({ ...formData, asset: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg focus:border-cyan-500 focus:outline-none text-white resize-none"
+                  rows={3}
+                  placeholder="Например: связи в строительной отрасли, опыт в продажах, собственный бизнес..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm mb-4 text-slate-400">
+                  Планируемый доход в месяц (млн ₽)
+                  <span className="block text-cyan-400 font-bold mt-2">{formData.expectedIncome} млн ₽</span>
+                </label>
+                <input
+                  type="range"
+                  min="10"
+                  max="200"
+                  step="10"
+                  value={formData.expectedIncome}
+                  onChange={(e) => setFormData({ ...formData, expectedIncome: Number(e.target.value) })}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-lg py-6 shadow-lg shadow-cyan-500/30"
+              >
+                <Icon name="Send" className="mr-2" size={20} />
+                Отправить заявку
+              </Button>
+
+              <p className="text-center text-sm text-slate-500">
+                После отправки заявки с вами свяжется наш менеджер для обсуждения деталей партнёрства
+              </p>
+            </form>
+          </CardContent>
+        </Card>
       </section>
     </div>
   );
