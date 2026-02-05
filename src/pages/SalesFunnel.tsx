@@ -171,7 +171,6 @@ export default function SalesFunnel() {
   const [testCompleted, setTestCompleted] = useState(false);
   const [answeredQuestions, setAnsweredQuestions] = useState<boolean[]>(new Array(testQuestions.length).fill(false));
   const [showKnowledgeBase, setShowKnowledgeBase] = useState(false);
-  const [showKnowledgeBase, setShowKnowledgeBase] = useState(false);
 
   const handleAnswerSelect = (answerIndex: number) => {
     if (answeredQuestions[currentQuestion]) return;
