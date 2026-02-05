@@ -240,7 +240,7 @@ export default function SalesFunnel() {
 
             <Card className="bg-slate-800/50 border-purple-500/20 p-6">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center flex-shrink-0">
                   <Icon name="TrendingDown" size={24} className="text-white" />
                 </div>
                 <div>

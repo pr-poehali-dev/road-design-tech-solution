@@ -88,7 +88,7 @@ const TEC = () => {
                 <Icon name="Building2" size={32} className="text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-violet-400 bg-clip-text text-transparent">
                   Заявка на подбор персонала
                 </h1>
                 <p className="text-cyan-400/80 text-sm mt-1">Дата составления: 19.01.2026</p>
@@ -149,8 +149,8 @@ const TEC = () => {
                     <p className="text-slate-300 text-sm">Бурение</p>
                   </div>
 
-                  <div className="p-4 rounded-lg bg-pink-500/5 border border-pink-500/20">
-                    <p className="text-pink-400 font-semibold mb-2 flex items-center gap-2">
+                  <div className="p-4 rounded-lg bg-violet-500/5 border border-violet-500/20">
+                    <p className="text-violet-400 font-semibold mb-2 flex items-center gap-2">
                       <Icon name="User" size={18} />
                       Руководитель (непосредственное подчинение)
                     </p>
@@ -175,8 +175,8 @@ const TEC = () => {
                     <p className="text-slate-300 text-sm">3 месяца</p>
                   </div>
 
-                  <div className="p-4 rounded-lg bg-pink-500/5 border border-pink-500/20">
-                    <p className="text-pink-400 font-semibold mb-2 flex items-center gap-2">
+                  <div className="p-4 rounded-lg bg-violet-500/5 border border-violet-500/20">
+                    <p className="text-violet-400 font-semibold mb-2 flex items-center gap-2">
                       <Icon name="Plane" size={18} />
                       Командировки
                     </p>
@@ -218,11 +218,11 @@ const TEC = () => {
                   </div>
                 </div>
 
-                <div className="p-4 rounded-lg bg-pink-500/5 border border-pink-500/20">
+                <div className="p-4 rounded-lg bg-violet-500/5 border border-violet-500/20">
                   <div className="flex items-start gap-3">
-                    <Icon name="Package" size={20} className="text-pink-400 mt-1 flex-shrink-0" />
+                    <Icon name="Package" size={20} className="text-violet-400 mt-1 flex-shrink-0" />
                     <div>
-                      <p className="text-pink-400 font-semibold mb-1">Оборудование/рабочее место</p>
+                      <p className="text-violet-400 font-semibold mb-1">Оборудование/рабочее место</p>
                       <p className="text-slate-300 text-sm">
                         Обеспечивается компанией на месте работы.
                       </p>
@@ -302,8 +302,8 @@ const TEC = () => {
                     </div>
                     
                     {vacancy.special && (
-                      <div className="p-3 rounded-lg bg-pink-500/5 border border-pink-500/20">
-                        <p className="text-pink-400 font-semibold mb-1">Особые условия:</p>
+                      <div className="p-3 rounded-lg bg-violet-500/5 border border-violet-500/20">
+                        <p className="text-violet-400 font-semibold mb-1">Особые условия:</p>
                         <p className="text-slate-300 text-sm">{vacancy.special}</p>
                       </div>
                     )}

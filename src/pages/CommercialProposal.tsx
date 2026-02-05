@@ -15,7 +15,7 @@ const budgetData = [
 
 // ИТОГО: 3540000 + 2360000 + 50000 + 150000 + 55000 + 100000 = 6255000
 
-const COLORS = ['#3b82f6', '#06b6d4', '#8b5cf6', '#f59e0b', '#10b981'];
+const COLORS = ['#3b82f6', '#06b6d4', '#8b5cf6', '#f59e0b', '#06b6d4'];
 
 const roadmapData = [
   { phase: 'Этап 0', weeks: 4 },
@@ -311,7 +311,7 @@ _____________/______/           _____________/______/
               <p className="text-sm md:text-base text-gray-500 mt-6">Республика Карелия | 2 этажа (высота 10 м) | Площадь до 1500 м² | Участок до 1 га</p>
             </div>
             <div className="text-left md:text-right">
-              <div className="text-xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent mb-2">
+              <div className="text-xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent mb-2">
                 {totalCost.toLocaleString('ru-RU')} ₽
               </div>
               <div className="text-sm md:text-base text-gray-600">Проектирование "под ключ"</div>
@@ -320,11 +320,11 @@ _____________/______/           _____________/______/
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
-            <Button onClick={exportToExcel} className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-lg">
+            <Button onClick={exportToExcel} className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-lg">
               <Icon name="FileSpreadsheet" size={18} className="mr-2" />
               <span className="text-sm md:text-base">Скачать График работ (Excel)</span>
             </Button>
-            <Button onClick={exportToPDF} className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white shadow-lg">
+            <Button onClick={exportToPDF} className="bg-gradient-to-r from-red-500 to-violet-600 hover:from-red-600 hover:to-violet-700 text-white shadow-lg">
               <Icon name="FileText" size={18} className="mr-2" />
               <span className="text-sm md:text-base">Скачать КП (PDF)</span>
             </Button>
@@ -378,7 +378,7 @@ _____________/______/           _____________/______/
 
               <div className="space-y-4">
                 <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <Icon name="CheckCircle2" size={20} className="text-emerald-600" />
+                  <Icon name="CheckCircle2" size={20} className="text-cyan-600" />
                   Состав работ
                 </h3>
                 <div className="space-y-3">

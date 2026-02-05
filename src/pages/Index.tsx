@@ -1258,8 +1258,8 @@ const Index = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
           <Card className="w-full max-w-md glow-card text-center">
             <CardContent className="pt-12 pb-12">
-              <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Icon name="CheckCircle2" size={48} className="text-green-500" />
+              <div className="w-20 h-20 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Icon name="CheckCircle2" size={48} className="text-cyan-500" />
               </div>
               <h2 className="font-heading font-bold text-3xl mb-4">Спасибо!</h2>
               <p className="text-lg text-muted-foreground mb-2">Ваша заявка успешно отправлена</p>

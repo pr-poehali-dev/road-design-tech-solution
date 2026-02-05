@@ -70,7 +70,7 @@ const Admin = () => {
                 <Icon name="Rocket" size={24} className="text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">DEAD SPACE</h1>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-violet-400 bg-clip-text text-transparent">DEAD SPACE</h1>
                 <p className="text-sm text-cyan-400/70">Админ-панель</p>
               </div>
             </div>
@@ -86,7 +86,7 @@ const Admin = () => {
               <Button 
                 variant="outline" 
                 onClick={handleLogout}
-                className="border-pink-500/50 text-pink-400 hover:bg-pink-500/10 hover:border-pink-400 transition-all"
+                className="border-violet-500/50 text-violet-400 hover:bg-violet-500/10 hover:border-violet-400 transition-all"
               >
                 <Icon name="LogOut" size={16} className="mr-2" />
                 Выйти
