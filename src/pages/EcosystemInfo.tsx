@@ -162,7 +162,10 @@ const EcosystemInfo = () => {
           </h1>
 
           <div className="max-w-4xl mx-auto space-y-6 text-base md:text-xl text-slate-300 mb-12 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-            <p className="leading-relaxed">Система DEOD работает на основе личных продаж и системы пассивного дохода. С каждой сделки распределяется фиксированный комиссионный фонд. Вы получаете доход по двум направлениям:</p>
+            <p className="leading-relaxed">
+              Система DEOD работает на <span className="text-cyan-400 font-semibold">сарафанного радио и пассивного дохода</span>. 
+              С каждой сделки распределяется фиксированный комиссионный фонд. Вы получаете доход по двум направлениям:
+            </p>
             <div className="grid md:grid-cols-2 gap-4 text-left">
               <Card className="bg-slate-900/50 border-cyan-500/30">
                 <CardContent className="p-6">

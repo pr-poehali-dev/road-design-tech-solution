@@ -582,47 +582,13 @@ export default function Ecosystem() {
             </motion.div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-              >
-                <Link to="/sales-funnel">
-                  <Card className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-purple-500/30 p-4 md:p-6 h-full hover:shadow-lg hover:shadow-purple-500/20 transition-all cursor-pointer">
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center mb-3 md:mb-4">
-                      <Icon name="TrendingDown" size={20} className="text-white md:hidden" />
-                      <Icon name="TrendingDown" size={24} className="text-white hidden md:block" />
-                    </div>
-                    <h3 className="text-base md:text-xl font-bold text-white mb-2 md:mb-3">Воронка продаж DEOD</h3>
-                    <ul className="space-y-2 mb-4">
-                      <li className="flex items-start gap-2 text-slate-300">
-                        <Icon name="CheckCircle2" size={14} className="text-purple-400 flex-shrink-0 mt-0.5 md:w-4 md:h-4" />
-                        <span className="text-xs md:text-sm">5 этапов от лида до договора</span>
-                      </li>
-                      <li className="flex items-start gap-2 text-slate-300">
-                        <Icon name="CheckCircle2" size={14} className="text-purple-400 flex-shrink-0 mt-0.5 md:w-4 md:h-4" />
-                        <span className="text-xs md:text-sm">Жёсткие правила квалификации</span>
-                      </li>
-                      <li className="flex items-start gap-2 text-slate-300">
-                        <Icon name="CheckCircle2" size={14} className="text-purple-400 flex-shrink-0 mt-0.5 md:w-4 md:h-4" />
-                        <span className="text-xs md:text-sm">Интерактивный тест на проверку</span>
-                      </li>
-                    </ul>
-                    <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-xs md:text-sm py-4 md:py-5">
-                      <Icon name="BookOpen" size={16} className="mr-2 md:w-5 md:h-5" />
-                      Изучить воронку
-                    </Button>
-                  </Card>
-                </Link>
-              </motion.div>
-
               {phases.map((phase, index) => (
                 <motion.div
                   key={phase.id}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: (index + 1) * 0.1 }}
+                  transition={{ delay: index * 0.1 }}
                 >
                   <Card className="bg-slate-800/50 border-cyan-500/20 p-4 md:p-6 h-full">
                     <div className={`w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br ${phase.color} flex items-center justify-center mb-3 md:mb-4`}>
