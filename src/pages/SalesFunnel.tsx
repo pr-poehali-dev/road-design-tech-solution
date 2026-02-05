@@ -170,6 +170,8 @@ export default function SalesFunnel() {
   const [score, setScore] = useState(0);
   const [testCompleted, setTestCompleted] = useState(false);
   const [answeredQuestions, setAnsweredQuestions] = useState<boolean[]>(new Array(testQuestions.length).fill(false));
+  const [showKnowledgeBase, setShowKnowledgeBase] = useState(false);
+  const [showKnowledgeBase, setShowKnowledgeBase] = useState(false);
 
   const handleAnswerSelect = (answerIndex: number) => {
     if (answeredQuestions[currentQuestion]) return;
@@ -230,12 +232,63 @@ export default function SalesFunnel() {
                 </h1>
                 <p className="text-lg text-cyan-400">От лида до подписания договора</p>
               </div>
-              <Link to="/ecosystem">
-                <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700">
-                  <Icon name="ArrowLeft" className="mr-2" size={18} />
-                  Назад
-                </Button>
-              </Link>
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Button
+                    onClick={() => setShowKnowledgeBase(!showKnowledgeBase)}
+                    className="bg-gradient-to-r from-purple-500 to-magenta-500 hover:from-purple-600 hover:to-magenta-600"
+                  >
+                    <Icon name="BookOpen" className="mr-2" size={18} />
+                    База знаний
+                    <Icon name="ChevronDown" className={`ml-2 transition-transform ${showKnowledgeBase ? 'rotate-180' : ''}`} size={16} />
+                  </Button>
+                  {showKnowledgeBase && (
+                    <div className="absolute right-0 mt-2 w-64 bg-slate-800/95 backdrop-blur-md border border-white/10 rounded-lg shadow-xl overflow-hidden z-50">
+                      <Link
+                        to="/ecosystem/gl"
+                        className="block px-4 py-3 text-white hover:bg-purple-500/20 transition-colors border-b border-white/10"
+                        onClick={() => setShowKnowledgeBase(false)}
+                      >
+                        Финансовая система
+                      </Link>
+                      <Link
+                        to="/sales-funnel"
+                        className="block px-4 py-3 text-white hover:bg-purple-500/20 transition-colors border-b border-white/10"
+                        onClick={() => setShowKnowledgeBase(false)}
+                      >
+                        Воронка продаж
+                      </Link>
+                      <Link
+                        to="/ecosystem/sales-script"
+                        className="block px-4 py-3 text-white hover:bg-purple-500/20 transition-colors border-b border-white/10"
+                        onClick={() => setShowKnowledgeBase(false)}
+                      >
+                        Скрипты и встречи
+                      </Link>
+                      <Link
+                        to="/ecosystem/tender-guide"
+                        className="block px-4 py-3 text-white hover:bg-purple-500/20 transition-colors border-b border-white/10"
+                        onClick={() => setShowKnowledgeBase(false)}
+                      >
+                        Работа с тендерами
+                      </Link>
+                      <Link
+                        to="/ecosystem/client-hunting"
+                        className="block px-4 py-3 text-white hover:bg-purple-500/20 transition-colors"
+                        onClick={() => setShowKnowledgeBase(false)}
+                      >
+                        Поиск клиентов
+                      </Link>
+                    </div>
+                  )}
+                </div>
+                <Link to="/ecosystem">
+                  <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700">
+                    <Icon name="ArrowLeft" className="mr-2" size={18} />
+                    Назад
+                  </Button>
+                </Link>
+              </div>
             </div>
 
             <Card className="bg-slate-800/50 border-purple-500/20 p-6">

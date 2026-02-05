@@ -16,6 +16,9 @@ const PartnerSystem = lazy(() => import("./pages/PartnerSystem"));
 const Ecosystem = lazy(() => import("./pages/Ecosystem"));
 const EcosystemInfo = lazy(() => import("./pages/EcosystemInfo"));
 const SalesFunnel = lazy(() => import("./pages/SalesFunnel"));
+const SalesScript = lazy(() => import("./pages/SalesScript"));
+const TenderGuide = lazy(() => import("./pages/TenderGuide"));
+const ClientHunting = lazy(() => import("./pages/ClientHunting"));
 
 const queryClient = new QueryClient();
 
@@ -62,6 +65,21 @@ const App = () => (
           <Route path="/sales-funnel" element={
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
               <SalesFunnel />
+            </Suspense>
+          } />
+          <Route path="/ecosystem/sales-script" element={
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
+              <SalesScript />
+            </Suspense>
+          } />
+          <Route path="/ecosystem/tender-guide" element={
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
+              <TenderGuide />
+            </Suspense>
+          } />
+          <Route path="/ecosystem/client-hunting" element={
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
+              <ClientHunting />
             </Suspense>
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

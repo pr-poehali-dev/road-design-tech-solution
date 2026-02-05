@@ -144,7 +144,7 @@ const EcosystemInfo = () => {
                     className="absolute right-0 top-full mt-2 w-80 bg-slate-800 border border-slate-600/50 rounded-lg shadow-2xl z-50"
                   >
                     <div className="p-4">
-                      <Link to="/ecosystem/financial-system" onClick={() => setKnowledgeOpen(false)}>
+                      <Link to="/ecosystem/gl" onClick={() => setKnowledgeOpen(false)}>
                         <div className="p-3 bg-gradient-to-br from-cyan-900/30 to-blue-900/30 border border-cyan-500/30 rounded-lg hover:shadow-lg hover:shadow-cyan-500/20 transition-all cursor-pointer mb-3">
                           <div className="flex items-center gap-3">
                             <Icon name="DollarSign" size={20} className="text-cyan-400" />
@@ -164,13 +164,35 @@ const EcosystemInfo = () => {
                         </div>
                       </Link>
                       
-                      <div className="p-3 bg-gradient-to-br from-blue-900/30 to-purple-900/30 border border-blue-500/30 rounded-lg hover:shadow-lg hover:shadow-blue-500/20 transition-all cursor-pointer opacity-50">
-                        <div className="flex items-center gap-3">
-                          <Icon name="TrendingUp" size={20} className="text-blue-400" />
-                          <span className="text-white font-medium">Фазы развития</span>
-                          <Icon name="Lock" size={16} className="text-blue-400 ml-auto" />
+                      <Link to="/ecosystem/sales-script" onClick={() => setKnowledgeOpen(false)}>
+                        <div className="p-3 bg-gradient-to-br from-violet-900/30 to-purple-900/30 border border-violet-500/30 rounded-lg hover:shadow-lg hover:shadow-violet-500/20 transition-all cursor-pointer mb-3">
+                          <div className="flex items-center gap-3">
+                            <Icon name="Phone" size={20} className="text-violet-400" />
+                            <span className="text-white font-medium">Скрипты и встречи</span>
+                            <Icon name="ExternalLink" size={16} className="text-violet-400 ml-auto" />
+                          </div>
                         </div>
-                      </div>
+                      </Link>
+                      
+                      <Link to="/ecosystem/tender-guide" onClick={() => setKnowledgeOpen(false)}>
+                        <div className="p-3 bg-gradient-to-br from-blue-900/30 to-cyan-900/30 border border-blue-500/30 rounded-lg hover:shadow-lg hover:shadow-blue-500/20 transition-all cursor-pointer mb-3">
+                          <div className="flex items-center gap-3">
+                            <Icon name="FileText" size={20} className="text-blue-400" />
+                            <span className="text-white font-medium">Работа с тендерами</span>
+                            <Icon name="ExternalLink" size={16} className="text-blue-400 ml-auto" />
+                          </div>
+                        </div>
+                      </Link>
+                      
+                      <Link to="/ecosystem/client-hunting" onClick={() => setKnowledgeOpen(false)}>
+                        <div className="p-3 bg-gradient-to-br from-purple-900/30 to-violet-900/30 border border-purple-500/30 rounded-lg hover:shadow-lg hover:shadow-purple-500/20 transition-all cursor-pointer">
+                          <div className="flex items-center gap-3">
+                            <Icon name="Target" size={20} className="text-purple-400" />
+                            <span className="text-white font-medium">Поиск клиентов</span>
+                            <Icon name="ExternalLink" size={16} className="text-purple-400 ml-auto" />
+                          </div>
+                        </div>
+                      </Link>
                     </div>
                   </motion.div>
                 )}
