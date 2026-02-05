@@ -155,7 +155,7 @@ const EcosystemInfo = () => {
                       </Link>
                       
                       <Link to="/sales-funnel" onClick={() => setKnowledgeOpen(false)}>
-                        <div className="p-3 bg-gradient-to-br from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-lg hover:shadow-lg hover:shadow-purple-500/20 transition-all cursor-pointer mb-3">
+                        <div className="p-3 bg-gradient-to-br from-purple-900/30 to-violet-900/30 border border-purple-500/30 rounded-lg hover:shadow-lg hover:shadow-purple-500/20 transition-all cursor-pointer mb-3">
                           <div className="flex items-center gap-3">
                             <Icon name="TrendingDown" size={20} className="text-purple-400" />
                             <span className="text-white font-medium">Воронка продаж</span>
@@ -164,11 +164,11 @@ const EcosystemInfo = () => {
                         </div>
                       </Link>
                       
-                      <div className="p-3 bg-gradient-to-br from-amber-900/30 to-orange-900/30 border border-amber-500/30 rounded-lg hover:shadow-lg hover:shadow-amber-500/20 transition-all cursor-pointer opacity-50">
+                      <div className="p-3 bg-gradient-to-br from-blue-900/30 to-purple-900/30 border border-blue-500/30 rounded-lg hover:shadow-lg hover:shadow-blue-500/20 transition-all cursor-pointer opacity-50">
                         <div className="flex items-center gap-3">
-                          <Icon name="TrendingUp" size={20} className="text-amber-400" />
+                          <Icon name="TrendingUp" size={20} className="text-blue-400" />
                           <span className="text-white font-medium">Фазы развития</span>
-                          <Icon name="Lock" size={16} className="text-amber-400 ml-auto" />
+                          <Icon name="Lock" size={16} className="text-blue-400 ml-auto" />
                         </div>
                       </div>
                     </div>

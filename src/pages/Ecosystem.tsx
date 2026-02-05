@@ -70,7 +70,7 @@ const phases = [
       'Кейс «Как я построил 3 уровня за 120 дней»',
     ],
     icon: 'Network',
-    color: 'from-purple-500 to-pink-600',
+    color: 'from-purple-500 to-violet-600',
   },
   {
     id: 4,
@@ -85,7 +85,7 @@ const phases = [
       'Шаблоны для масштабирования на новые регионы',
     ],
     icon: 'Crown',
-    color: 'from-amber-500 to-orange-600',
+    color: 'from-blue-500 to-purple-600',
   },
 ];
 
@@ -93,8 +93,8 @@ const grades = [
   { name: 'Агент', level: 4, color: 'cyan' },
   { name: 'Партнёр', level: 3, color: 'blue' },
   { name: 'Старший партнёр', level: 2, color: 'purple' },
-  { name: 'Генеральный партнёр', level: 1, color: 'pink' },
-  { name: 'Амбассадор', level: 0, color: 'amber' },
+  { name: 'Генеральный партнёр', level: 1, color: 'violet' },
+  { name: 'Амбассадор', level: 0, color: 'purple' },
 ];
 
 export default function Ecosystem() {
@@ -206,7 +206,7 @@ export default function Ecosystem() {
                           </Link>
                           
                           <Link to="/sales-funnel" onClick={() => setKnowledgeOpen(false)}>
-                            <div className="p-3 bg-gradient-to-br from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-lg hover:shadow-lg hover:shadow-purple-500/20 transition-all cursor-pointer mb-3">
+                            <div className="p-3 bg-gradient-to-br from-purple-900/30 to-violet-900/30 border border-purple-500/30 rounded-lg hover:shadow-lg hover:shadow-purple-500/20 transition-all cursor-pointer mb-3">
                               <div className="flex items-center gap-3">
                                 <Icon name="TrendingDown" size={20} className="text-purple-400" />
                                 <span className="text-white font-medium">Воронка продаж</span>
@@ -215,11 +215,11 @@ export default function Ecosystem() {
                             </div>
                           </Link>
                           
-                          <div className="p-3 bg-gradient-to-br from-amber-900/30 to-orange-900/30 border border-amber-500/30 rounded-lg hover:shadow-lg hover:shadow-amber-500/20 transition-all cursor-pointer opacity-50">
+                          <div className="p-3 bg-gradient-to-br from-blue-900/30 to-purple-900/30 border border-blue-500/30 rounded-lg hover:shadow-lg hover:shadow-blue-500/20 transition-all cursor-pointer opacity-50">
                             <div className="flex items-center gap-3">
-                              <Icon name="TrendingUp" size={20} className="text-amber-400" />
+                              <Icon name="TrendingUp" size={20} className="text-blue-400" />
                               <span className="text-white font-medium">Фазы развития</span>
-                              <Icon name="Lock" size={16} className="text-amber-400 ml-auto" />
+                              <Icon name="Lock" size={16} className="text-blue-400 ml-auto" />
                             </div>
                           </div>
                         </div>
@@ -262,9 +262,9 @@ export default function Ecosystem() {
                 <p className="text-lg md:text-2xl font-bold text-white">{mockPartnerData.networkDepth} активных уровня</p>
               </Card>
 
-              <Card className="bg-slate-800/50 border-pink-500/20 p-4 md:p-6">
+              <Card className="bg-slate-800/50 border-violet-500/20 p-4 md:p-6 shadow-lg shadow-violet-500/10">
                 <div className="flex items-center gap-2 md:gap-3 mb-2">
-                  <Icon name="DollarSign" size={20} className="text-pink-400 md:w-6 md:h-6" />
+                  <Icon name="DollarSign" size={20} className="text-violet-400 md:w-6 md:h-6" />
                   <p className="text-slate-400 text-xs md:text-sm">Прогноз дохода за квартал</p>
                 </div>
                 <p className="text-lg md:text-2xl font-bold text-white">{formatNumber(mockPartnerData.quarterForecast)} ₽</p>
@@ -687,9 +687,9 @@ export default function Ecosystem() {
 
                       {/* Воронка продаж */}
                       <Link to="/sales-funnel">
-                        <div className="p-4 md:p-6 bg-gradient-to-br from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-lg hover:shadow-lg hover:shadow-purple-500/20 transition-all cursor-pointer">
+                        <div className="p-4 md:p-6 bg-gradient-to-br from-purple-900/30 to-violet-900/30 border border-purple-500/30 rounded-lg hover:shadow-lg hover:shadow-purple-500/20 transition-all cursor-pointer">
                           <div className="flex items-start gap-4">
-                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center flex-shrink-0">
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_rgba(147,51,234,0.5)]">
                               <Icon name="TrendingDown" size={20} className="text-white" />
                             </div>
                             <div className="flex-1">
@@ -706,7 +706,7 @@ export default function Ecosystem() {
                       {/* Фазы развития */}
                       <div className="p-4 md:p-6 bg-slate-900/50 border border-slate-700 rounded-lg">
                         <div className="flex items-start gap-4 mb-4">
-                          <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center flex-shrink-0">
+                          <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_rgba(59,130,246,0.5)]">
                             <Icon name="Rocket" size={20} className="text-white" />
                           </div>
                           <div className="flex-1">
