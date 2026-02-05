@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
@@ -7,6 +8,7 @@ import { Link } from 'react-router-dom';
 const EcosystemInfo = () => {
   const [scrollY, setScrollY] = useState(0);
   const [visibleBlocks, setVisibleBlocks] = useState<number[]>([]);
+  const [knowledgeOpen, setKnowledgeOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -122,15 +124,62 @@ const EcosystemInfo = () => {
             DEOD
           </Link>
           <div className="flex items-center gap-2 md:gap-4">
+            <div className="relative">
+              <Button 
+                onClick={() => setKnowledgeOpen(!knowledgeOpen)}
+                className="bg-slate-800/80 border border-slate-600/50 hover:bg-slate-700/80 hover:border-slate-500/50 shadow-lg text-xs md:text-sm"
+                size="sm"
+              >
+                <Icon name="BookOpen" className="mr-2" size={16} />
+                База знаний
+                <Icon name={knowledgeOpen ? "ChevronUp" : "ChevronDown"} className="ml-2" size={16} />
+              </Button>
+              
+              <AnimatePresence>
+                {knowledgeOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute right-0 top-full mt-2 w-80 bg-slate-800 border border-slate-600/50 rounded-lg shadow-2xl z-50"
+                  >
+                    <div className="p-4">
+                      <Link to="/ecosystem/financial-system" onClick={() => setKnowledgeOpen(false)}>
+                        <div className="p-3 bg-gradient-to-br from-cyan-900/30 to-blue-900/30 border border-cyan-500/30 rounded-lg hover:shadow-lg hover:shadow-cyan-500/20 transition-all cursor-pointer mb-3">
+                          <div className="flex items-center gap-3">
+                            <Icon name="DollarSign" size={20} className="text-cyan-400" />
+                            <span className="text-white font-medium">Финансовая система</span>
+                            <Icon name="ExternalLink" size={16} className="text-cyan-400 ml-auto" />
+                          </div>
+                        </div>
+                      </Link>
+                      
+                      <Link to="/sales-funnel" onClick={() => setKnowledgeOpen(false)}>
+                        <div className="p-3 bg-gradient-to-br from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-lg hover:shadow-lg hover:shadow-purple-500/20 transition-all cursor-pointer mb-3">
+                          <div className="flex items-center gap-3">
+                            <Icon name="TrendingDown" size={20} className="text-purple-400" />
+                            <span className="text-white font-medium">Воронка продаж</span>
+                            <Icon name="ExternalLink" size={16} className="text-purple-400 ml-auto" />
+                          </div>
+                        </div>
+                      </Link>
+                      
+                      <div className="p-3 bg-gradient-to-br from-amber-900/30 to-orange-900/30 border border-amber-500/30 rounded-lg hover:shadow-lg hover:shadow-amber-500/20 transition-all cursor-pointer opacity-50">
+                        <div className="flex items-center gap-3">
+                          <Icon name="TrendingUp" size={20} className="text-amber-400" />
+                          <span className="text-white font-medium">Фазы развития</span>
+                          <Icon name="Lock" size={16} className="text-amber-400 ml-auto" />
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            
             <Link to="/ecosystem" className="text-xs md:text-sm text-slate-300 hover:text-cyan-400 transition">
               Назад к экосистеме
             </Link>
-            <a href="#simulator" className="text-xs md:text-sm text-slate-300 hover:text-cyan-400 transition hidden sm:block">
-              Симулятор
-            </a>
-            <a href="#knowledge" className="text-xs md:text-sm text-slate-300 hover:text-cyan-400 transition hidden sm:block">
-              База знаний
-            </a>
           </div>
         </div>
       </nav>
