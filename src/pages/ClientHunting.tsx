@@ -190,7 +190,7 @@ const testQuestions = [
     question: 'Главная ошибка при поиске?',
     options: ['Много каналов', 'Поиск всех без квалификации', 'Выход на ЛПР', 'Использование баз'],
     correctAnswer: 1,
-    explanation: 'Поиск всех подряд без квалификации тратит время на нецелевых клиентов.'
+    explanation: 'Поиск всех подряд без квалификации — трата времени. Фокус на идеальном профиле клиента.'
   }
 ];
 
@@ -226,9 +226,9 @@ export default function ClientHunting() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-950/90 backdrop-blur-xl border-b border-purple-500/20">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-950/90 backdrop-blur-xl border-b border-blue-500/20">
         <div className="container mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
-          <Link to="/ecosystem" className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-400 via-violet-500 to-cyan-600 bg-clip-text text-transparent">
+          <Link to="/ecosystem" className="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-400 via-cyan-500 to-violet-600 bg-clip-text text-transparent">
             DEOD
           </Link>
           <div className="flex items-center gap-2 md:gap-4">
@@ -242,510 +242,494 @@ export default function ClientHunting() {
                 База знаний
                 <Icon name={knowledgeOpen ? "ChevronUp" : "ChevronDown"} className="ml-2" size={16} />
               </Button>
-              
               <AnimatePresence>
                 {knowledgeOpen && (
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute right-0 top-full mt-2 w-80 bg-slate-800 border border-slate-600/50 rounded-lg shadow-2xl z-50"
+                    className="absolute right-0 mt-2 w-48 md:w-56 bg-slate-800/95 backdrop-blur-xl border border-slate-600/50 rounded-lg shadow-2xl overflow-hidden"
                   >
-                    <div className="p-4">
-                      <Link to="/ecosystem/gl" onClick={() => setKnowledgeOpen(false)}>
-                        <div className="p-3 bg-gradient-to-br from-cyan-900/30 to-blue-900/30 border border-cyan-500/30 rounded-lg hover:shadow-lg hover:shadow-cyan-500/20 transition-all cursor-pointer mb-3">
-                          <div className="flex items-center gap-3">
-                            <Icon name="DollarSign" size={20} className="text-cyan-400" />
-                            <span className="text-white font-medium">Финансовая система</span>
-                            <Icon name="ExternalLink" size={16} className="text-cyan-400 ml-auto" />
-                          </div>
-                        </div>
-                      </Link>
-                      
-                      <Link to="/sales-funnel" onClick={() => setKnowledgeOpen(false)}>
-                        <div className="p-3 bg-gradient-to-br from-purple-900/30 to-violet-900/30 border border-purple-500/30 rounded-lg hover:shadow-lg hover:shadow-purple-500/20 transition-all cursor-pointer mb-3">
-                          <div className="flex items-center gap-3">
-                            <Icon name="TrendingDown" size={20} className="text-purple-400" />
-                            <span className="text-white font-medium">Воронка продаж</span>
-                            <Icon name="ExternalLink" size={16} className="text-purple-400 ml-auto" />
-                          </div>
-                        </div>
-                      </Link>
-                      
-                      <Link to="/ecosystem/sales-script" onClick={() => setKnowledgeOpen(false)}>
-                        <div className="p-3 bg-gradient-to-br from-violet-900/30 to-purple-900/30 border border-violet-500/30 rounded-lg hover:shadow-lg hover:shadow-violet-500/20 transition-all cursor-pointer mb-3">
-                          <div className="flex items-center gap-3">
-                            <Icon name="Phone" size={20} className="text-violet-400" />
-                            <span className="text-white font-medium">Скрипты и встречи</span>
-                            <Icon name="ExternalLink" size={16} className="text-violet-400 ml-auto" />
-                          </div>
-                        </div>
-                      </Link>
-                      
-                      <Link to="/ecosystem/tender-guide" onClick={() => setKnowledgeOpen(false)}>
-                        <div className="p-3 bg-gradient-to-br from-blue-900/30 to-cyan-900/30 border border-blue-500/30 rounded-lg hover:shadow-lg hover:shadow-blue-500/20 transition-all cursor-pointer">
-                          <div className="flex items-center gap-3">
-                            <Icon name="FileText" size={20} className="text-blue-400" />
-                            <span className="text-white font-medium">Работа с тендерами</span>
-                            <Icon name="ExternalLink" size={16} className="text-blue-400 ml-auto" />
-                          </div>
-                        </div>
-                      </Link>
-                    </div>
+                    <Link to="/sales-script" className="block px-3 md:px-4 py-2 md:py-3 hover:bg-slate-700/50 transition-colors border-b border-slate-700/50">
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <Icon name="MessageSquare" size={16} className="text-cyan-400 flex-shrink-0" />
+                        <span className="text-xs md:text-sm text-slate-200 break-words min-w-0">Скрипт продаж</span>
+                      </div>
+                    </Link>
+                    <Link to="/tender-guide" className="block px-3 md:px-4 py-2 md:py-3 hover:bg-slate-700/50 transition-colors border-b border-slate-700/50">
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <Icon name="Gavel" size={16} className="text-purple-400 flex-shrink-0" />
+                        <span className="text-xs md:text-sm text-slate-200 break-words min-w-0">Тендерный блок</span>
+                      </div>
+                    </Link>
+                    <Link to="/client-hunting" className="block px-3 md:px-4 py-2 md:py-3 hover:bg-slate-700/50 transition-colors">
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <Icon name="Target" size={16} className="text-violet-400 flex-shrink-0" />
+                        <span className="text-xs md:text-sm text-slate-200 break-words min-w-0">Охота на клиентов</span>
+                      </div>
+                    </Link>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
-            
-            <Link to="/ecosystem" className="text-xs md:text-sm text-slate-300 hover:text-purple-400 transition">
-              Назад
+            <Link to="/ecosystem">
+              <Button className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-lg text-xs md:text-sm" size="sm">
+                <Icon name="ArrowLeft" className="mr-2" size={16} />
+                Назад
+              </Button>
             </Link>
           </div>
         </div>
       </nav>
 
-      <div className="pt-20 pb-16">
-        <div className="container mx-auto px-4 max-w-7xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-12"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/30 mb-4">
-              <Icon name="Target" size={18} className="text-purple-400" />
-              <span className="text-purple-400 text-sm font-semibold">База знаний</span>
-            </div>
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent mb-4">
-              Как искать клиентов
-            </h1>
-            <p className="text-slate-400 text-lg max-w-3xl mx-auto">
-              Полное руководство по поиску идеальных клиентов для инженерных и проектных работ
-            </p>
-          </motion.div>
+      <div className="container mx-auto px-4 pt-24 md:pt-28 pb-12 md:pb-16">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8 md:mb-12"
+        >
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4 bg-gradient-to-r from-violet-400 via-purple-500 to-cyan-600 bg-clip-text text-transparent break-words">
+            Охота на клиентов
+          </h1>
+          <p className="text-base md:text-lg text-slate-400 max-w-3xl mx-auto break-words">
+            Стратегия и тактика поиска целевых клиентов в B2B проектирования
+          </p>
+        </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="mb-12"
-          >
-            <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-3">
-              <Icon name="Users" size={32} className="text-purple-400" />
-              Целевая аудитория DEOD
-            </h2>
-            <div className="grid gap-6">
-              {audiences.map((aud, index) => (
-                <motion.div
-                  key={aud.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 * index }}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 md:mb-12"
+        >
+          <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6 flex items-center gap-2 md:gap-3 text-white">
+            <Icon name="Crosshair" className="text-violet-400 flex-shrink-0" size={24} />
+            <span className="break-words">Целевые аудитории</span>
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {audiences.map((audience, index) => (
+              <motion.div
+                key={audience.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Card 
+                  className={`p-4 md:p-6 bg-gradient-to-br ${audience.color} bg-opacity-10 border-2 cursor-pointer hover:scale-[1.02] transition-all h-full ${selectedAudience === audience.id ? 'ring-2 ring-violet-500 scale-[1.02]' : ''}`}
+                  onClick={() => setSelectedAudience(selectedAudience === audience.id ? null : audience.id)}
                 >
-                  <Card 
-                    className="bg-slate-900/50 border-slate-700/50 hover:border-purple-500/50 transition-all cursor-pointer"
-                    onClick={() => setSelectedAudience(selectedAudience === aud.id ? null : aud.id)}
-                  >
-                    <div className="p-6">
-                      <div className="flex items-start gap-4">
-                        <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${aud.color} flex items-center justify-center flex-shrink-0 shadow-lg`}>
-                          <Icon name={aud.icon as any} size={28} className="text-white" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-2">
-                            <h3 className="text-xl font-bold text-white">{aud.title}</h3>
-                            <Icon 
-                              name={selectedAudience === aud.id ? "ChevronUp" : "ChevronDown"} 
-                              size={24} 
-                              className="text-purple-400"
-                            />
-                          </div>
-                          <p className="text-purple-400">{aud.why}</p>
-                        </div>
+                  <div className="flex flex-col h-full">
+                    <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
+                      <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center border border-slate-700 flex-shrink-0">
+                        <Icon name={audience.icon} className="text-violet-400" size={24} />
                       </div>
-
-                      <AnimatePresence>
-                        {selectedAudience === aud.id && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="mt-6 pt-6 border-t border-slate-700/50 space-y-4"
-                          >
-                            <div>
-                              <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
-                                <Icon name="Search" size={18} className="text-purple-400" />
-                                Где искать:
-                              </h4>
-                              <ul className="space-y-2">
-                                {aud.howToFind.map((method, i) => (
-                                  <li key={i} className="flex gap-2 text-slate-300">
-                                    <Icon name="ArrowRight" size={18} className="text-purple-400 flex-shrink-0 mt-0.5" />
-                                    {method}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                            <div>
-                              <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
-                                <Icon name="UserCheck" size={18} className="text-purple-400" />
-                                Ключевые контакты:
-                              </h4>
-                              <div className="flex flex-wrap gap-2">
-                                {aud.keyContacts.map((contact, i) => (
-                                  <span key={i} className="px-3 py-1 bg-purple-500/20 border border-purple-500/30 rounded-full text-sm text-purple-300">
-                                    {contact}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg md:text-xl font-bold text-white mb-2 break-words">{audience.title}</h3>
+                      </div>
                     </div>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
+                    <p className="text-sm md:text-base text-slate-300 mb-3 md:mb-4 break-words">{audience.why}</p>
+                    <AnimatePresence>
+                      {selectedAudience === audience.id && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="space-y-4 md:space-y-6 mt-auto"
+                        >
+                          <div>
+                            <h4 className="text-sm md:text-base font-semibold text-cyan-400 mb-2 break-words">Где искать:</h4>
+                            <div className="space-y-2">
+                              {audience.howToFind.map((method, i) => (
+                                <div key={i} className="flex items-start gap-2 md:gap-3">
+                                  <Icon name="Search" className="text-blue-400 mt-1 flex-shrink-0" size={14} />
+                                  <span className="text-xs md:text-sm text-slate-300 break-words min-w-0">{method}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <h4 className="text-sm md:text-base font-semibold text-green-400 mb-2 break-words">Ключевые контакты:</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {audience.keyContacts.map((contact, i) => (
+                                <span key={i} className="text-xs md:text-sm px-2 md:px-3 py-1 bg-green-900/30 text-green-300 rounded-full border border-green-700/50 break-words">
+                                  {contact}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mb-12"
-          >
-            <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-3">
-              <Icon name="Compass" size={32} className="text-cyan-400" />
-              5 источников клиентов
-            </h2>
-            <div className="space-y-6">
-              {sources.map((source, index) => (
-                <Card key={index} className="bg-slate-900/50 border-slate-700/50 p-6">
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${source.color} flex items-center justify-center flex-shrink-0`}>
-                      <Icon name={source.icon as any} size={24} className="text-white" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 md:mb-12"
+        >
+          <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6 flex items-center gap-2 md:gap-3 text-white">
+            <Icon name="Radar" className="text-cyan-400 flex-shrink-0" size={24} />
+            <span className="break-words">5 источников лидов</span>
+          </h2>
+          <div className="grid gap-4 md:gap-6">
+            {sources.map((source, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Card className={`p-4 md:p-6 bg-gradient-to-br ${source.color} bg-opacity-10 border-2`}>
+                  <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
+                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center border border-slate-700 flex-shrink-0">
+                      <Icon name={source.icon} className="text-cyan-400" size={24} />
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-white mb-1">{source.title}</h3>
-                      <p className="text-cyan-400">{source.description}</p>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg md:text-xl font-bold text-white mb-1 break-words">{source.title}</h3>
+                      <p className="text-sm md:text-base text-cyan-300 break-words">{source.description}</p>
                     </div>
                   </div>
-                  <div className="space-y-3 ml-16">
+                  <div className="space-y-3 md:space-y-4">
                     <div>
-                      <span className="text-slate-400 text-sm font-semibold">Инструменты:</span>
-                      <div className="flex flex-wrap gap-2 mt-1">
+                      <span className="text-xs md:text-sm font-semibold text-slate-400 break-words">Инструменты:</span>
+                      <div className="flex flex-wrap gap-2 mt-2">
                         {source.tools.map((tool, i) => (
-                          <span key={i} className="px-2 py-1 bg-slate-800 border border-slate-600 rounded text-xs text-slate-300">
+                          <span key={i} className="text-xs md:text-sm px-2 md:px-3 py-1 bg-slate-800 text-slate-300 rounded-full border border-slate-700 break-words">
                             {tool}
                           </span>
                         ))}
                       </div>
                     </div>
-                    <p className="text-slate-300 text-sm"><strong>Стратегия:</strong> {source.strategy}</p>
-                    <p className="text-purple-400 text-sm font-semibold">Конверсия: {source.conversion}</p>
+                    <div className="bg-slate-800/50 p-3 md:p-4 rounded-lg border border-slate-700">
+                      <p className="text-xs md:text-sm text-slate-300 mb-2 break-words"><span className="font-semibold">Стратегия:</span> {source.strategy}</p>
+                      <p className="text-xs md:text-sm text-green-400 font-semibold break-words">Конверсия: {source.conversion}</p>
+                    </div>
                   </div>
                 </Card>
-              ))}
-            </div>
-          </motion.div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mb-12"
-          >
-            <Card className="bg-gradient-to-br from-violet-900/20 to-purple-900/20 border-violet-500/50 p-8">
-              <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-3">
-                <Icon name="Crosshair" size={32} className="text-violet-400" />
-                Портрет идеального клиента
-              </h2>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {idealClient.map((item, i) => (
-                  <div key={i} className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Icon name={item.icon as any} size={20} className="text-violet-400" />
-                      <h4 className="font-semibold text-white">{item.criteria}</h4>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 md:mb-12"
+        >
+          <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6 flex items-center gap-2 md:gap-3 text-white">
+            <Icon name="Star" className="text-yellow-400 flex-shrink-0" size={24} />
+            <span className="break-words">Профиль идеального клиента</span>
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+            {idealClient.map((item, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Card className="p-4 md:p-6 bg-gradient-to-br from-yellow-900/20 to-orange-900/20 border-yellow-500/30">
+                  <div className="flex items-start gap-3 md:gap-4">
+                    <Icon name={item.icon} className="text-yellow-400 mt-1 flex-shrink-0" size={20} />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm md:text-base font-semibold text-yellow-400 mb-1 break-words">{item.criteria}</h3>
+                      <p className="text-sm md:text-base text-slate-300 break-words">{item.value}</p>
                     </div>
-                    <p className="text-slate-300 text-sm">{item.value}</p>
                   </div>
-                ))}
-              </div>
-            </Card>
-          </motion.div>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="mb-12"
-          >
-            <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-3">
-              <Icon name="Filter" size={32} className="text-blue-400" />
-              Система квалификации BANT
-            </h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              {bant.map((item, i) => (
-                <Card key={i} className="bg-slate-900/50 border-slate-700/50 p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center text-white font-bold text-xl">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 md:mb-12"
+        >
+          <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6 flex items-center gap-2 md:gap-3 text-white">
+            <Icon name="Filter" className="text-purple-400 flex-shrink-0" size={24} />
+            <span className="break-words">Система квалификации BANT</span>
+          </h2>
+          <div className="grid gap-4 md:gap-6">
+            {bant.map((item, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Card className="p-4 md:p-6 bg-slate-800/50 border-purple-500/30">
+                  <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
+                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-purple-600 to-violet-600 flex items-center justify-center font-bold text-white text-xl md:text-2xl flex-shrink-0">
                       {item.letter}
                     </div>
-                    <h3 className="text-lg font-bold text-white">{item.title}</h3>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg md:text-xl font-bold text-white mb-2 break-words">{item.title}</h3>
+                    </div>
                   </div>
-                  <ul className="space-y-2 mb-4">
-                    {item.questions.map((q, j) => (
-                      <li key={j} className="flex gap-2 text-slate-300 text-sm">
-                        <Icon name="HelpCircle" size={16} className="text-blue-400 flex-shrink-0 mt-0.5" />
-                        {q}
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="pt-3 border-t border-slate-700">
-                    <p className="text-xs text-slate-400">Оценка: {item.score}</p>
-                  </div>
-                </Card>
-              ))}
-            </div>
-            <Card className="bg-cyan-500/10 border-cyan-500/30 p-4 mt-6">
-              <div className="flex items-center gap-3">
-                <Icon name="Lightbulb" size={20} className="text-cyan-400" />
-                <p className="text-slate-300 text-sm">
-                  <strong>Итого BANT:</strong> 16-20 = Горячий лид, 12-15 = Теплый лид, 8-11 = Холодный лид, &lt;8 = Не квалифицирован
-                </p>
-              </div>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="mb-12"
-          >
-            <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-3">
-              <Icon name="BookOpen" size={32} className="text-yellow-400" />
-              Практические кейсы
-            </h2>
-            <div className="grid md:grid-cols-3 gap-6">
-              {cases.map((c, i) => (
-                <Card key={i} className="bg-slate-900/50 border-slate-700/50 p-6">
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${c.color} flex items-center justify-center mb-4`}>
-                    <Icon name={c.icon as any} size={24} className="text-white" />
-                  </div>
-                  <h3 className="text-lg font-bold text-white mb-3">{c.title}</h3>
-                  <p className="text-slate-400 text-sm mb-4">{c.situation}</p>
-                  <div className="space-y-2 mb-4">
-                    {c.actions.map((action, j) => (
-                      <div key={j} className="flex gap-2 text-slate-300 text-xs">
-                        <Icon name="ArrowRight" size={14} className="text-purple-400 flex-shrink-0 mt-0.5" />
-                        {action}
+                  <div className="space-y-2 md:space-y-3 mb-3 md:mb-4">
+                    {item.questions.map((question, i) => (
+                      <div key={i} className="flex items-start gap-2 md:gap-3">
+                        <Icon name="HelpCircle" className="text-purple-400 mt-1 flex-shrink-0" size={16} />
+                        <span className="text-sm md:text-base text-slate-300 break-words min-w-0">{question}</span>
                       </div>
                     ))}
                   </div>
-                  <div className="pt-3 border-t border-slate-700">
-                    <p className="text-cyan-400 text-sm font-semibold mb-1">Результат: {c.result}</p>
-                    <p className="text-slate-500 text-xs">{c.metrics}</p>
+                  <div className="bg-purple-900/20 p-3 md:p-4 rounded-lg border border-purple-700/50">
+                    <p className="text-xs md:text-sm text-purple-300 break-words"><span className="font-semibold">Оценка:</span> {item.score}</p>
                   </div>
                 </Card>
-              ))}
-            </div>
-          </motion.div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="mb-12"
-          >
-            <Card className="bg-gradient-to-br from-red-900/20 to-violet-900/20 border-red-500/50 p-8">
-              <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-3">
-                <Icon name="AlertTriangle" size={32} className="text-red-400" />
-                Ошибки при поиске клиентов
-              </h2>
-              <div className="space-y-4">
-                {mistakes.map((m, i) => (
-                  <div key={i} className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
-                    <div className="flex items-start gap-3 mb-2">
-                      <Icon name="XCircle" size={20} className="text-red-400 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <h4 className="font-bold text-white mb-1">Ошибка: {m.mistake}</h4>
-                        <p className="text-slate-400 text-sm mb-2">{m.why}</p>
-                      </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 md:mb-12"
+        >
+          <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6 flex items-center gap-2 md:gap-3 text-white">
+            <Icon name="BookOpen" className="text-cyan-400 flex-shrink-0" size={24} />
+            <span className="break-words">Реальные кейсы</span>
+          </h2>
+          <div className="grid gap-4 md:gap-6">
+            {cases.map((caseItem, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Card className={`p-4 md:p-6 bg-gradient-to-br ${caseItem.color} bg-opacity-10 border-2`}>
+                  <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
+                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center border border-slate-700 flex-shrink-0">
+                      <Icon name={caseItem.icon} className="text-cyan-400" size={24} />
                     </div>
-                    <div className="flex items-start gap-3 ml-8 pl-3 border-l-2 border-cyan-500/50">
-                      <Icon name="CheckCircle2" size={18} className="text-cyan-400 flex-shrink-0 mt-0.5" />
-                      <p className="text-slate-300 text-sm"><strong>Правильно:</strong> {m.correct}</p>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg md:text-xl font-bold text-white mb-2 break-words">{caseItem.title}</h3>
                     </div>
                   </div>
-                ))}
-              </div>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-          >
-            <Card className="bg-gradient-to-br from-purple-900/20 to-violet-900/20 border-purple-500/50">
-              <div className="p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
-                    <Icon name="GraduationCap" size={24} className="text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h2 className="text-2xl font-bold text-white">Тестовое задание</h2>
-                    <p className="text-slate-400">Проверьте знание стратегий поиска клиентов</p>
-                  </div>
-                  {!showTest && (
-                    <Button 
-                      onClick={() => setShowTest(true)}
-                      className="bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700"
-                    >
-                      <Icon name="PlayCircle" className="mr-2" size={18} />
-                      Начать тест
-                    </Button>
-                  )}
-                </div>
-
-                <AnimatePresence mode="wait">
-                  {showTest && !showResults && (
-                    <motion.div
-                      key={currentQuestion}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      className="space-y-6"
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="text-purple-400 font-semibold">
-                          Вопрос {currentQuestion + 1} из {testQuestions.length}
-                        </span>
-                        <div className="flex gap-2">
-                          {testQuestions.map((_, index) => (
-                            <div 
-                              key={index}
-                              className={`w-2 h-2 rounded-full ${
-                                index === currentQuestion ? 'bg-purple-400' : 
-                                index < currentQuestion ? 'bg-cyan-400' : 'bg-slate-600'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-
-                      <h3 className="text-xl font-bold text-white mb-6">
-                        {testQuestions[currentQuestion].question}
-                      </h3>
-
-                      <div className="space-y-3">
-                        {testQuestions[currentQuestion].options.map((option, index) => (
-                          <Button
-                            key={index}
-                            onClick={() => handleAnswer(index)}
-                            className={`w-full justify-start text-left p-4 h-auto ${
-                              selectedAnswers[currentQuestion] === index
-                                ? index === testQuestions[currentQuestion].correctAnswer
-                                  ? 'bg-cyan-500/20 border-cyan-500 hover:bg-cyan-500/30'
-                                  : 'bg-red-500/20 border-red-500 hover:bg-red-500/30'
-                                : 'bg-slate-800/50 border-slate-600 hover:bg-slate-700/50'
-                            }`}
-                            variant="outline"
-                            disabled={selectedAnswers[currentQuestion] !== undefined}
-                          >
-                            <div className="flex items-center gap-3 w-full">
-                              <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                                selectedAnswers[currentQuestion] === index
-                                  ? index === testQuestions[currentQuestion].correctAnswer
-                                    ? 'border-cyan-400 bg-cyan-500/20'
-                                    : 'border-red-400 bg-red-500/20'
-                                  : 'border-slate-500'
-                              }`}>
-                                <span className="font-semibold">{String.fromCharCode(65 + index)}</span>
-                              </div>
-                              <span className="flex-1">{option}</span>
-                              {selectedAnswers[currentQuestion] === index && (
-                                <Icon 
-                                  name={index === testQuestions[currentQuestion].correctAnswer ? "CheckCircle2" : "XCircle"} 
-                                  size={20}
-                                  className={index === testQuestions[currentQuestion].correctAnswer ? "text-cyan-400" : "text-red-400"}
-                                />
-                              )}
-                            </div>
-                          </Button>
+                  <div className="space-y-3 md:space-y-4">
+                    <div>
+                      <h4 className="text-sm md:text-base font-semibold text-slate-400 mb-2 break-words">Ситуация:</h4>
+                      <p className="text-sm md:text-base text-slate-300 break-words">{caseItem.situation}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-sm md:text-base font-semibold text-slate-400 mb-2 break-words">Действия:</h4>
+                      <div className="space-y-2">
+                        {caseItem.actions.map((action, i) => (
+                          <div key={i} className="flex items-start gap-2 md:gap-3">
+                            <Icon name="ArrowRight" className="text-blue-400 mt-1 flex-shrink-0" size={14} />
+                            <span className="text-sm md:text-base text-slate-300 break-words min-w-0">{action}</span>
+                          </div>
                         ))}
                       </div>
+                    </div>
+                    <div className="bg-green-900/20 p-3 md:p-4 rounded-lg border border-green-700/50">
+                      <h4 className="text-sm md:text-base font-semibold text-green-400 mb-1 break-words">Результат:</h4>
+                      <p className="text-sm md:text-base text-green-300 mb-2 break-words">{caseItem.result}</p>
+                      <p className="text-xs md:text-sm text-green-400 font-semibold break-words">{caseItem.metrics}</p>
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
 
-                      {selectedAnswers[currentQuestion] !== undefined && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className={`p-4 rounded-lg border ${
-                            selectedAnswers[currentQuestion] === testQuestions[currentQuestion].correctAnswer
-                              ? 'bg-cyan-500/10 border-cyan-500/30'
-                              : 'bg-purple-500/10 border-purple-500/30'
-                          }`}
-                        >
-                          <p className="text-slate-300">{testQuestions[currentQuestion].explanation}</p>
-                        </motion.div>
-                      )}
-                    </motion.div>
-                  )}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 md:mb-12"
+        >
+          <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6 flex items-center gap-2 md:gap-3 text-white">
+            <Icon name="AlertTriangle" className="text-red-400 flex-shrink-0" size={24} />
+            <span className="break-words">5 главных ошибок</span>
+          </h2>
+          <div className="grid gap-4 md:gap-6">
+            {mistakes.map((item, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Card className="p-4 md:p-6 bg-slate-800/50 border-red-500/30 hover:border-red-500/50 transition-all">
+                  <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
+                    <Icon name="X" className="text-red-400 mt-1 flex-shrink-0" size={20} />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg md:text-xl font-bold text-red-400 mb-2 break-words">{item.mistake}</h3>
+                      <p className="text-sm md:text-base text-slate-400 break-words">{item.why}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 md:gap-4 bg-green-900/20 p-3 md:p-4 rounded-lg border border-green-700/50">
+                    <Icon name="Check" className="text-green-400 mt-1 flex-shrink-0" size={20} />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm md:text-base font-semibold text-green-400 mb-1 break-words">Правильно:</h4>
+                      <p className="text-sm md:text-base text-green-300 break-words">{item.correct}</p>
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
 
-                  {showResults && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="text-center py-8"
-                    >
-                      <div className={`w-32 h-32 rounded-full mx-auto mb-6 flex items-center justify-center ${
-                        correctCount >= 4 
-                          ? 'bg-gradient-to-br from-cyan-500 to-blue-600' 
-                          : 'bg-gradient-to-br from-purple-500 to-violet-600'
-                      }`}>
-                        <div className="text-white">
-                          <div className="text-4xl font-bold">{correctCount}/{testQuestions.length}</div>
-                          <div className="text-sm">правильно</div>
-                        </div>
-                      </div>
-                      
-                      <h3 className="text-2xl font-bold text-white mb-4">
-                        {correctCount >= 4 
-                          ? '🎉 Отличный результат!' 
-                          : '💪 Хороший старт!'}
-                      </h3>
-                      
-                      <p className="text-slate-400 mb-8 max-w-md mx-auto">
-                        {correctCount >= 4 
-                          ? 'Вы знаете, как находить идеальных клиентов!' 
-                          : 'Пересмотрите материал для улучшения навыков поиска.'}
-                      </p>
-                      
-                      <div className="flex gap-4 justify-center">
-                        <Button 
-                          onClick={resetTest}
-                          className="bg-purple-500 hover:bg-purple-600"
-                        >
-                          <Icon name="RotateCcw" className="mr-2" size={18} />
-                          Пройти снова
-                        </Button>
-                        <Button 
-                          onClick={() => setShowTest(false)}
-                          variant="outline"
-                          className="border-slate-600 hover:bg-slate-800"
-                        >
-                          Закрыть
-                        </Button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </Card>
-          </motion.div>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <Button
+            onClick={() => setShowTest(true)}
+            className="bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 shadow-2xl shadow-violet-500/20 text-base md:text-lg px-6 md:px-8 py-4 md:py-6"
+          >
+            <Icon name="Brain" className="mr-2" size={20} />
+            Проверить знания
+          </Button>
+        </motion.div>
       </div>
+
+      <AnimatePresence>
+        {showTest && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            onClick={() => {
+              setShowTest(false);
+              resetTest();
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-slate-900 rounded-2xl p-6 md:p-8 max-w-2xl w-full border border-slate-700 shadow-2xl max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {!showResults ? (
+                <>
+                  <div className="flex justify-between items-start mb-4 md:mb-6">
+                    <h2 className="text-xl md:text-2xl font-bold text-white break-words flex-1 min-w-0">
+                      Вопрос {currentQuestion + 1} из {testQuestions.length}
+                    </h2>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setShowTest(false);
+                        resetTest();
+                      }}
+                      className="flex-shrink-0"
+                    >
+                      <Icon name="X" size={20} />
+                    </Button>
+                  </div>
+                  <div className="mb-4 bg-slate-800 rounded-full h-2">
+                    <div 
+                      className="bg-gradient-to-r from-violet-500 to-cyan-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${((currentQuestion + 1) / testQuestions.length) * 100}%` }}
+                    />
+                  </div>
+                  <p className="text-base md:text-xl text-white mb-4 md:mb-6 font-medium break-words">
+                    {testQuestions[currentQuestion].question}
+                  </p>
+                  <div className="space-y-3 md:space-y-4">
+                    {testQuestions[currentQuestion].options.map((option, index) => (
+                      <motion.button
+                        key={index}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => handleAnswer(index)}
+                        className={`w-full p-3 md:p-4 text-left rounded-lg border-2 transition-all ${
+                          selectedAnswers[currentQuestion] === index
+                            ? index === testQuestions[currentQuestion].correctAnswer
+                              ? 'border-green-500 bg-green-900/20'
+                              : 'border-red-500 bg-red-900/20'
+                            : 'border-slate-600 hover:border-violet-500 bg-slate-800/50'
+                        }`}
+                        disabled={selectedAnswers[currentQuestion] !== undefined}
+                      >
+                        <div className="flex items-center gap-3 md:gap-4">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 flex-shrink-0 ${
+                            selectedAnswers[currentQuestion] === index
+                              ? index === testQuestions[currentQuestion].correctAnswer
+                                ? 'border-green-500 bg-green-500'
+                                : 'border-red-500 bg-red-500'
+                              : 'border-slate-600'
+                          }`}>
+                            {selectedAnswers[currentQuestion] === index && (
+                              <Icon 
+                                name={index === testQuestions[currentQuestion].correctAnswer ? "Check" : "X"} 
+                                size={16} 
+                                className="text-white"
+                              />
+                            )}
+                          </div>
+                          <span className="text-sm md:text-base text-white break-words flex-1 min-w-0">{option}</span>
+                        </div>
+                      </motion.button>
+                    ))}
+                  </div>
+                  {selectedAnswers[currentQuestion] !== undefined && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-4 md:mt-6 p-3 md:p-4 bg-slate-800/50 rounded-lg border border-slate-700"
+                    >
+                      <p className="text-xs md:text-sm text-slate-300 break-words">
+                        {testQuestions[currentQuestion].explanation}
+                      </p>
+                    </motion.div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center">
+                  <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6 text-white break-words">Результаты теста</h2>
+                  <div className="mb-6 md:mb-8">
+                    <div className="text-4xl md:text-6xl font-bold mb-2 md:mb-4 bg-gradient-to-r from-violet-400 to-cyan-600 bg-clip-text text-transparent">
+                      {correctCount} / {testQuestions.length}
+                    </div>
+                    <p className="text-base md:text-lg text-slate-400 break-words">
+                      {correctCount === testQuestions.length
+                        ? 'Отлично! Вы отлично усвоили материал!'
+                        : correctCount >= testQuestions.length * 0.7
+                        ? 'Хорошо! Но есть куда расти.'
+                        : 'Рекомендуем повторить материал.'}
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
+                    <Button
+                      onClick={resetTest}
+                      className="bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500"
+                    >
+                      <Icon name="RotateCcw" className="mr-2" size={16} />
+                      Пройти снова
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowTest(false);
+                        resetTest();
+                      }}
+                    >
+                      Закрыть
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -223,9 +223,9 @@ export default function SalesScript() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-950/90 backdrop-blur-xl border-b border-violet-500/20">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-950/90 backdrop-blur-xl border-b border-blue-500/20">
         <div className="container mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
-          <Link to="/ecosystem" className="text-xl md:text-2xl font-bold bg-gradient-to-r from-violet-400 via-purple-500 to-cyan-600 bg-clip-text text-transparent">
+          <Link to="/ecosystem" className="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-400 via-cyan-500 to-violet-600 bg-clip-text text-transparent">
             DEOD
           </Link>
           <div className="flex items-center gap-2 md:gap-4">
@@ -239,370 +239,304 @@ export default function SalesScript() {
                 База знаний
                 <Icon name={knowledgeOpen ? "ChevronUp" : "ChevronDown"} className="ml-2" size={16} />
               </Button>
-              
               <AnimatePresence>
                 {knowledgeOpen && (
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute right-0 top-full mt-2 w-80 bg-slate-800 border border-slate-600/50 rounded-lg shadow-2xl z-50"
+                    className="absolute right-0 mt-2 w-48 md:w-56 bg-slate-800/95 backdrop-blur-xl border border-slate-600/50 rounded-lg shadow-2xl overflow-hidden"
                   >
-                    <div className="p-4">
-                      <Link to="/ecosystem/gl" onClick={() => setKnowledgeOpen(false)}>
-                        <div className="p-3 bg-gradient-to-br from-cyan-900/30 to-blue-900/30 border border-cyan-500/30 rounded-lg hover:shadow-lg hover:shadow-cyan-500/20 transition-all cursor-pointer mb-3">
-                          <div className="flex items-center gap-3">
-                            <Icon name="DollarSign" size={20} className="text-cyan-400" />
-                            <span className="text-white font-medium">Финансовая система</span>
-                            <Icon name="ExternalLink" size={16} className="text-cyan-400 ml-auto" />
-                          </div>
-                        </div>
-                      </Link>
-                      
-                      <Link to="/sales-funnel" onClick={() => setKnowledgeOpen(false)}>
-                        <div className="p-3 bg-gradient-to-br from-purple-900/30 to-violet-900/30 border border-purple-500/30 rounded-lg hover:shadow-lg hover:shadow-purple-500/20 transition-all cursor-pointer mb-3">
-                          <div className="flex items-center gap-3">
-                            <Icon name="TrendingDown" size={20} className="text-purple-400" />
-                            <span className="text-white font-medium">Воронка продаж</span>
-                            <Icon name="ExternalLink" size={16} className="text-purple-400 ml-auto" />
-                          </div>
-                        </div>
-                      </Link>
-                      
-                      <Link to="/ecosystem/tender-guide" onClick={() => setKnowledgeOpen(false)}>
-                        <div className="p-3 bg-gradient-to-br from-blue-900/30 to-cyan-900/30 border border-blue-500/30 rounded-lg hover:shadow-lg hover:shadow-blue-500/20 transition-all cursor-pointer mb-3">
-                          <div className="flex items-center gap-3">
-                            <Icon name="FileText" size={20} className="text-blue-400" />
-                            <span className="text-white font-medium">Работа с тендерами</span>
-                            <Icon name="ExternalLink" size={16} className="text-blue-400 ml-auto" />
-                          </div>
-                        </div>
-                      </Link>
-                      
-                      <Link to="/ecosystem/client-hunting" onClick={() => setKnowledgeOpen(false)}>
-                        <div className="p-3 bg-gradient-to-br from-purple-900/30 to-violet-900/30 border border-purple-500/30 rounded-lg hover:shadow-lg hover:shadow-purple-500/20 transition-all cursor-pointer">
-                          <div className="flex items-center gap-3">
-                            <Icon name="Target" size={20} className="text-purple-400" />
-                            <span className="text-white font-medium">Поиск клиентов</span>
-                            <Icon name="ExternalLink" size={16} className="text-purple-400 ml-auto" />
-                          </div>
-                        </div>
-                      </Link>
-                    </div>
+                    <Link to="/sales-script" className="block px-3 md:px-4 py-2 md:py-3 hover:bg-slate-700/50 transition-colors border-b border-slate-700/50">
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <Icon name="MessageSquare" size={16} className="text-cyan-400 flex-shrink-0" />
+                        <span className="text-xs md:text-sm text-slate-200 break-words min-w-0">Скрипт продаж</span>
+                      </div>
+                    </Link>
+                    <Link to="/tender-guide" className="block px-3 md:px-4 py-2 md:py-3 hover:bg-slate-700/50 transition-colors border-b border-slate-700/50">
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <Icon name="Gavel" size={16} className="text-purple-400 flex-shrink-0" />
+                        <span className="text-xs md:text-sm text-slate-200 break-words min-w-0">Тендерный блок</span>
+                      </div>
+                    </Link>
+                    <Link to="/client-hunting" className="block px-3 md:px-4 py-2 md:py-3 hover:bg-slate-700/50 transition-colors">
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <Icon name="Target" size={16} className="text-violet-400 flex-shrink-0" />
+                        <span className="text-xs md:text-sm text-slate-200 break-words min-w-0">Охота на клиентов</span>
+                      </div>
+                    </Link>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
-            
-            <Link to="/ecosystem" className="text-xs md:text-sm text-slate-300 hover:text-violet-400 transition">
-              Назад
+            <Link to="/ecosystem">
+              <Button className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-lg text-xs md:text-sm" size="sm">
+                <Icon name="ArrowLeft" className="mr-2" size={16} />
+                Назад
+              </Button>
             </Link>
           </div>
         </div>
       </nav>
 
-      <div className="pt-20 pb-16">
-        <div className="container mx-auto px-4 max-w-7xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-12"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/30 mb-4">
-              <Icon name="Phone" size={18} className="text-violet-400" />
-              <span className="text-violet-400 text-sm font-semibold">База знаний</span>
-            </div>
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-violet-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent mb-4">
-              Скрипты и встречи
-            </h1>
-            <p className="text-slate-400 text-lg max-w-3xl mx-auto">
-              Детальное руководство по работе со скриптами продаж и проведению встреч с клиентами
-            </p>
-          </motion.div>
+      <div className="container mx-auto px-4 pt-24 md:pt-28 pb-12 md:pb-16">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8 md:mb-12"
+        >
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4 bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-600 bg-clip-text text-transparent break-words">
+            Скрипт продаж проектных услуг
+          </h1>
+          <p className="text-base md:text-lg text-slate-400 max-w-3xl mx-auto break-words">
+            Работающая методология для сложных B2B-продаж в строительном проектировании
+          </p>
+        </motion.div>
 
-          <div className="grid grid-cols-1 gap-6 mb-12">
-            {phases.map((phase, index) => (
-              <motion.div
-                key={phase.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
+        <div className="grid gap-4 md:gap-6 mb-8 md:mb-12">
+          {phases.map((phase, index) => (
+            <motion.div
+              key={phase.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <Card 
+                className={`p-4 md:p-6 bg-gradient-to-br ${phase.color} bg-opacity-10 border-2 cursor-pointer hover:scale-[1.02] transition-all ${selectedPhase === phase.id ? 'ring-2 ring-cyan-500 scale-[1.02]' : ''}`}
+                onClick={() => setSelectedPhase(selectedPhase === phase.id ? null : phase.id)}
               >
-                <Card 
-                  className="bg-slate-900/50 border-slate-700/50 hover:border-violet-500/50 transition-all cursor-pointer"
-                  onClick={() => setSelectedPhase(selectedPhase === phase.id ? null : phase.id)}
-                >
-                  <div className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${phase.color} flex items-center justify-center flex-shrink-0 shadow-lg`}>
-                        <Icon name={phase.icon as any} size={28} className="text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="text-xl font-bold text-white">{phase.title}</h3>
-                          <Icon 
-                            name={selectedPhase === phase.id ? "ChevronUp" : "ChevronDown"} 
-                            size={24} 
-                            className="text-violet-400"
-                          />
-                        </div>
-                        <p className="text-violet-400 font-medium mb-2">Цель: {phase.goal}</p>
-                      </div>
-                    </div>
-
+                <div className="flex items-start gap-3 md:gap-4">
+                  <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center border border-slate-700 flex-shrink-0">
+                    <Icon name={phase.icon} className="text-cyan-400" size={24} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg md:text-xl font-bold text-white mb-1 md:mb-2 flex items-center gap-2 break-words">
+                      <span className="break-words">{phase.title}</span>
+                    </h3>
+                    <p className="text-sm md:text-base text-cyan-300 font-medium mb-2 md:mb-3 break-words">{phase.goal}</p>
                     <AnimatePresence>
                       {selectedPhase === phase.id && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
-                          className="mt-6 pt-6 border-t border-slate-700/50"
+                          className="space-y-4 md:space-y-6 mt-3 md:mt-4"
                         >
-                          <div className="space-y-4">
+                          <div className="space-y-2 md:space-y-3">
                             {phase.content.map((item, i) => (
-                              <div key={i} className="flex gap-3">
-                                <Icon name="CheckCircle2" size={20} className="text-violet-400 flex-shrink-0 mt-0.5" />
-                                <p className="text-slate-300">{item}</p>
+                              <div key={i} className="flex items-start gap-2 md:gap-3">
+                                <Icon name="Check" className="text-green-400 mt-1 flex-shrink-0" size={16} />
+                                <span className="text-sm md:text-base text-slate-300 break-words min-w-0">{item}</span>
                               </div>
                             ))}
-                            
-                            {phase.script && (
-                              <div className="mt-6 p-4 bg-violet-500/10 border border-violet-500/30 rounded-lg">
-                                <div className="flex items-center gap-2 mb-3">
-                                  <Icon name="MessageSquare" size={18} className="text-violet-400" />
-                                  <span className="text-violet-400 font-semibold">Скрипт:</span>
-                                </div>
-                                <p className="text-slate-300 italic">{phase.script}</p>
-                              </div>
-                            )}
-                            
-                            {phase.example && (
-                              <div className="mt-4 p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <Icon name="Lightbulb" size={18} className="text-cyan-400" />
-                                  <span className="text-cyan-400 font-semibold">Результат:</span>
-                                </div>
-                                <p className="text-slate-300">{phase.example}</p>
-                              </div>
-                            )}
                           </div>
+                          {phase.script && (
+                            <div className="bg-slate-800/50 p-3 md:p-4 rounded-lg border border-slate-700">
+                              <p className="text-sm md:text-base text-slate-300 italic break-words">{phase.script}</p>
+                            </div>
+                          )}
+                          {phase.example && (
+                            <div className="bg-green-900/20 p-3 md:p-4 rounded-lg border border-green-700/50">
+                              <p className="text-sm md:text-base text-green-300 break-words">{phase.example}</p>
+                            </div>
+                          )}
                         </motion.div>
                       )}
                     </AnimatePresence>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 md:mb-12"
+        >
+          <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6 flex items-center gap-2 md:gap-3 text-white">
+            <Icon name="AlertTriangle" className="text-red-400 flex-shrink-0" size={24} />
+            <span className="break-words">5 главных ошибок в продажах</span>
+          </h2>
+          <div className="grid gap-4 md:gap-6">
+            {mistakes.map((item, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Card className="p-4 md:p-6 bg-slate-800/50 border-red-500/30 hover:border-red-500/50 transition-all">
+                  <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
+                    <Icon name="X" className="text-red-400 mt-1 flex-shrink-0" size={20} />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg md:text-xl font-bold text-red-400 mb-2 break-words">{item.mistake}</h3>
+                      <p className="text-sm md:text-base text-slate-400 break-words">{item.why}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 md:gap-4 bg-green-900/20 p-3 md:p-4 rounded-lg border border-green-700/50">
+                    <Icon name="Check" className="text-green-400 mt-1 flex-shrink-0" size={20} />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm md:text-base font-semibold text-green-400 mb-1 break-words">Правильно:</h4>
+                      <p className="text-sm md:text-base text-green-300 break-words">{item.correct}</p>
+                    </div>
                   </div>
                 </Card>
               </motion.div>
             ))}
           </div>
+        </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="mb-12"
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <Button
+            onClick={() => setShowTest(true)}
+            className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-2xl shadow-cyan-500/20 text-base md:text-lg px-6 md:px-8 py-4 md:py-6"
           >
-            <Card className="bg-gradient-to-br from-slate-900 to-slate-800 border-violet-500/30">
-              <div className="p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-red-500 to-violet-600 flex items-center justify-center">
-                    <Icon name="AlertTriangle" size={24} className="text-white" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-white">Ключевые ошибки и как их избежать</h2>
-                </div>
-                
-                <img 
-                  src="https://cdn.poehali.dev/projects/5adabe83-9a88-49bb-ba7c-144288d55800/bucket/71b34447-e950-45dd-9a9c-1733ae7d1ef5.png" 
-                  alt="Ключевые ошибки в продажах"
-                  className="w-full rounded-lg mb-6 border border-slate-700"
-                />
-                
-                <div className="space-y-6">
-                  {mistakes.map((item, index) => (
-                    <div key={index} className="bg-slate-800/50 rounded-lg p-6 border border-slate-700/50">
-                      <div className="flex items-start gap-3 mb-3">
-                        <Icon name="XCircle" size={20} className="text-red-400 flex-shrink-0 mt-1" />
-                        <div className="flex-1">
-                          <h3 className="text-lg font-bold text-red-400 mb-2">Ошибка: {item.mistake}</h3>
-                          <p className="text-slate-400 mb-3">Почему это провал: {item.why}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3 ml-8 pl-3 border-l-2 border-cyan-500/50">
-                        <Icon name="CheckCircle2" size={20} className="text-cyan-400 flex-shrink-0 mt-1" />
-                        <div>
-                          <h4 className="text-cyan-400 font-semibold mb-2">Правильный подход:</h4>
-                          <p className="text-slate-300">{item.correct}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-          >
-            <Card className="bg-gradient-to-br from-violet-900/20 to-purple-900/20 border-violet-500/50">
-              <div className="p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-                    <Icon name="GraduationCap" size={24} className="text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h2 className="text-2xl font-bold text-white">Тестовое задание</h2>
-                    <p className="text-slate-400">Проверьте, как вы усвоили материал</p>
-                  </div>
-                  {!showTest && (
-                    <Button 
-                      onClick={() => setShowTest(true)}
-                      className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
-                    >
-                      <Icon name="PlayCircle" className="mr-2" size={18} />
-                      Начать тест
-                    </Button>
-                  )}
-                </div>
-
-                <AnimatePresence mode="wait">
-                  {showTest && !showResults && (
-                    <motion.div
-                      key={currentQuestion}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      className="space-y-6"
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="text-violet-400 font-semibold">
-                          Вопрос {currentQuestion + 1} из {questions.length}
-                        </span>
-                        <div className="flex gap-2">
-                          {questions.map((_, index) => (
-                            <div 
-                              key={index}
-                              className={`w-2 h-2 rounded-full ${
-                                index === currentQuestion ? 'bg-violet-400' : 
-                                index < currentQuestion ? 'bg-cyan-400' : 'bg-slate-600'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-
-                      <h3 className="text-xl font-bold text-white mb-6">
-                        {questions[currentQuestion].question}
-                      </h3>
-
-                      <div className="space-y-3">
-                        {questions[currentQuestion].options.map((option, index) => (
-                          <Button
-                            key={index}
-                            onClick={() => handleAnswer(index)}
-                            className={`w-full justify-start text-left p-4 h-auto ${
-                              selectedAnswers[currentQuestion] === index
-                                ? index === questions[currentQuestion].correctAnswer
-                                  ? 'bg-cyan-500/20 border-cyan-500 hover:bg-cyan-500/30'
-                                  : 'bg-red-500/20 border-red-500 hover:bg-red-500/30'
-                                : 'bg-slate-800/50 border-slate-600 hover:bg-slate-700/50'
-                            }`}
-                            variant="outline"
-                            disabled={selectedAnswers[currentQuestion] !== undefined}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                                selectedAnswers[currentQuestion] === index
-                                  ? index === questions[currentQuestion].correctAnswer
-                                    ? 'border-cyan-400 bg-cyan-500/20'
-                                    : 'border-red-400 bg-red-500/20'
-                                  : 'border-slate-500'
-                              }`}>
-                                <span className="font-semibold">{String.fromCharCode(65 + index)}</span>
-                              </div>
-                              <span className="flex-1">{option}</span>
-                              {selectedAnswers[currentQuestion] === index && (
-                                <Icon 
-                                  name={index === questions[currentQuestion].correctAnswer ? "CheckCircle2" : "XCircle"} 
-                                  size={20}
-                                  className={index === questions[currentQuestion].correctAnswer ? "text-cyan-400" : "text-red-400"}
-                                />
-                              )}
-                            </div>
-                          </Button>
-                        ))}
-                      </div>
-
-                      {selectedAnswers[currentQuestion] !== undefined && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className={`p-4 rounded-lg border ${
-                            selectedAnswers[currentQuestion] === questions[currentQuestion].correctAnswer
-                              ? 'bg-cyan-500/10 border-cyan-500/30'
-                              : 'bg-violet-500/10 border-violet-500/30'
-                          }`}
-                        >
-                          <p className="text-slate-300">{questions[currentQuestion].explanation}</p>
-                        </motion.div>
-                      )}
-                    </motion.div>
-                  )}
-
-                  {showResults && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="text-center py-8"
-                    >
-                      <div className={`w-32 h-32 rounded-full mx-auto mb-6 flex items-center justify-center ${
-                        correctCount >= 4 
-                          ? 'bg-gradient-to-br from-cyan-500 to-blue-600' 
-                          : 'bg-gradient-to-br from-violet-500 to-purple-600'
-                      }`}>
-                        <div className="text-white">
-                          <div className="text-4xl font-bold">{correctCount}/{questions.length}</div>
-                          <div className="text-sm">правильно</div>
-                        </div>
-                      </div>
-                      
-                      <h3 className="text-2xl font-bold text-white mb-4">
-                        {correctCount >= 4 
-                          ? '🎉 Отличный результат!' 
-                          : '💪 Хороший старт!'}
-                      </h3>
-                      
-                      <p className="text-slate-400 mb-8 max-w-md mx-auto">
-                        {correctCount >= 4 
-                          ? 'Вы отлично разбираетесь в технике продаж! Применяйте эти знания на практике.' 
-                          : 'Пересмотрите материал и попробуйте ещё раз. Практика — ключ к мастерству.'}
-                      </p>
-                      
-                      <div className="flex gap-4 justify-center">
-                        <Button 
-                          onClick={resetTest}
-                          className="bg-violet-500 hover:bg-violet-600"
-                        >
-                          <Icon name="RotateCcw" className="mr-2" size={18} />
-                          Пройти снова
-                        </Button>
-                        <Button 
-                          onClick={() => setShowTest(false)}
-                          variant="outline"
-                          className="border-slate-600 hover:bg-slate-800"
-                        >
-                          Закрыть
-                        </Button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </Card>
-          </motion.div>
-        </div>
+            <Icon name="Brain" className="mr-2" size={20} />
+            Проверить знания
+          </Button>
+        </motion.div>
       </div>
+
+      <AnimatePresence>
+        {showTest && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            onClick={() => {
+              setShowTest(false);
+              resetTest();
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-slate-900 rounded-2xl p-6 md:p-8 max-w-2xl w-full border border-slate-700 shadow-2xl max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {!showResults ? (
+                <>
+                  <div className="flex justify-between items-start mb-4 md:mb-6">
+                    <h2 className="text-xl md:text-2xl font-bold text-white break-words flex-1 min-w-0">
+                      Вопрос {currentQuestion + 1} из {questions.length}
+                    </h2>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setShowTest(false);
+                        resetTest();
+                      }}
+                      className="flex-shrink-0"
+                    >
+                      <Icon name="X" size={20} />
+                    </Button>
+                  </div>
+                  <div className="mb-4 bg-slate-800 rounded-full h-2">
+                    <div 
+                      className="bg-gradient-to-r from-cyan-500 to-blue-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
+                    />
+                  </div>
+                  <p className="text-base md:text-xl text-white mb-4 md:mb-6 font-medium break-words">
+                    {questions[currentQuestion].question}
+                  </p>
+                  <div className="space-y-3 md:space-y-4">
+                    {questions[currentQuestion].options.map((option, index) => (
+                      <motion.button
+                        key={index}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => handleAnswer(index)}
+                        className={`w-full p-3 md:p-4 text-left rounded-lg border-2 transition-all ${
+                          selectedAnswers[currentQuestion] === index
+                            ? index === questions[currentQuestion].correctAnswer
+                              ? 'border-green-500 bg-green-900/20'
+                              : 'border-red-500 bg-red-900/20'
+                            : 'border-slate-600 hover:border-cyan-500 bg-slate-800/50'
+                        }`}
+                        disabled={selectedAnswers[currentQuestion] !== undefined}
+                      >
+                        <div className="flex items-center gap-3 md:gap-4">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 flex-shrink-0 ${
+                            selectedAnswers[currentQuestion] === index
+                              ? index === questions[currentQuestion].correctAnswer
+                                ? 'border-green-500 bg-green-500'
+                                : 'border-red-500 bg-red-500'
+                              : 'border-slate-600'
+                          }`}>
+                            {selectedAnswers[currentQuestion] === index && (
+                              <Icon 
+                                name={index === questions[currentQuestion].correctAnswer ? "Check" : "X"} 
+                                size={16} 
+                                className="text-white"
+                              />
+                            )}
+                          </div>
+                          <span className="text-sm md:text-base text-white break-words flex-1 min-w-0">{option}</span>
+                        </div>
+                      </motion.button>
+                    ))}
+                  </div>
+                  {selectedAnswers[currentQuestion] !== undefined && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-4 md:mt-6 p-3 md:p-4 bg-slate-800/50 rounded-lg border border-slate-700"
+                    >
+                      <p className="text-xs md:text-sm text-slate-300 break-words">
+                        {questions[currentQuestion].explanation}
+                      </p>
+                    </motion.div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center">
+                  <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6 text-white break-words">Результаты теста</h2>
+                  <div className="mb-6 md:mb-8">
+                    <div className="text-4xl md:text-6xl font-bold mb-2 md:mb-4 bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent">
+                      {correctCount} / {questions.length}
+                    </div>
+                    <p className="text-base md:text-lg text-slate-400 break-words">
+                      {correctCount === questions.length
+                        ? 'Отлично! Вы отлично усвоили материал!'
+                        : correctCount >= questions.length * 0.7
+                        ? 'Хорошо! Но есть куда расти.'
+                        : 'Рекомендуем повторить материал.'}
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
+                    <Button
+                      onClick={resetTest}
+                      className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500"
+                    >
+                      <Icon name="RotateCcw" className="mr-2" size={16} />
+                      Пройти снова
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowTest(false);
+                        resetTest();
+                      }}
+                    >
+                      Закрыть
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
