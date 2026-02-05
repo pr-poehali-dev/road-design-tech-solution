@@ -101,6 +101,7 @@ export default function Ecosystem() {
   const [selectedPhase, setSelectedPhase] = useState<number | null>(null);
   const [simulatorGrade, setSimulatorGrade] = useState(grades[1]);
   const [dealAmount, setDealAmount] = useState(10000000);
+  const [knowledgeOpen, setKnowledgeOpen] = useState(false);
   const [calculatorData, setCalculatorData] = useState({
     grade: grades[1].name,
     dealAmount: 50000000,
@@ -563,15 +564,15 @@ export default function Ecosystem() {
         </div>
       </section>
 
-      {/* Knowledge Base */}
+      {/* Knowledge Base - Dropdown */}
       <section className="py-12 md:py-16 lg:py-24 bg-slate-900/50">
         <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-4xl mx-auto">
             <motion.div
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              className="text-center mb-8 md:mb-12 lg:mb-16"
+              className="text-center mb-8 md:mb-12"
             >
               <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-white mb-4 md:mb-6">
                 База знаний
@@ -581,92 +582,105 @@ export default function Ecosystem() {
               </p>
             </motion.div>
 
-            <div className="space-y-4 md:space-y-6">
-              {/* Финансовая система */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+            <Card className="bg-slate-800/50 border-cyan-500/20 overflow-hidden">
+              <button
+                onClick={() => setKnowledgeOpen(!knowledgeOpen)}
+                className="w-full p-6 md:p-8 flex items-center justify-between hover:bg-slate-800/70 transition-colors"
               >
-                <Link to="/ecosystem/gl">
-                  <Card className="bg-gradient-to-br from-cyan-900/40 to-blue-900/40 border-cyan-500/30 p-6 md:p-8 hover:shadow-lg hover:shadow-cyan-500/20 transition-all cursor-pointer">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
-                        <Icon name="Coins" size={24} className="text-white md:w-7 md:h-7" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-xl md:text-2xl font-bold text-white">1. Финансовая система</h3>
-                        <p className="text-sm text-slate-300 mt-1">Ваша партнёрская сеть DEOD</p>
-                      </div>
-                      <Icon name="ExternalLink" size={20} className="text-cyan-400" />
-                    </div>
-                    <p className="text-slate-300 text-sm">
-                      Узнайте о системе доходов, грейдах и механике партнёрской сети. Калькулятор доходов, прогнозы и статистика.
-                    </p>
-                  </Card>
-                </Link>
-              </motion.div>
-
-              {/* Воронка продаж */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1 }}
-              >
-                <Link to="/sales-funnel">
-                  <Card className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-purple-500/30 p-6 md:p-8 hover:shadow-lg hover:shadow-purple-500/20 transition-all cursor-pointer">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-                        <Icon name="TrendingDown" size={24} className="text-white md:w-7 md:h-7" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-xl md:text-2xl font-bold text-white">2. Воронка продаж</h3>
-                        <p className="text-sm text-slate-300 mt-1">От лида до подписания договора</p>
-                      </div>
-                      <Icon name="ExternalLink" size={20} className="text-purple-400" />
-                    </div>
-                    <p className="text-slate-300 text-sm">
-                      5 этапов воронки с жёсткими правилами квалификации. Интерактивное обучение + тест на проверку знаний.
-                    </p>
-                  </Card>
-                </Link>
-              </motion.div>
-
-              {/* Фазы развития */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.2 }}
-              >
-                <Card className="bg-slate-800/50 border-slate-700 p-6 md:p-8">
-                  <h3 className="text-xl md:text-2xl font-bold text-white mb-6">Фазы развития</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {phases.map((phase, index) => (
-                      <Card key={phase.id} className="bg-slate-900/50 border-cyan-500/20 p-4 md:p-6">
-                        <div className={`w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br ${phase.color} flex items-center justify-center mb-3`}>
-                          <Icon name={phase.icon as any} size={20} className="text-white md:w-6 md:h-6" />
-                        </div>
-                        <h4 className="text-base md:text-lg font-bold text-white mb-2">Фаза {phase.id}: {phase.title}</h4>
-                        <ul className="space-y-2 mb-4">
-                          {phase.materials.slice(0, 3).map((material, idx) => (
-                            <li key={idx} className="flex items-start gap-2 text-slate-300">
-                              <Icon name="FileText" size={14} className="text-cyan-400 flex-shrink-0 mt-0.5" />
-                              <span className="text-xs md:text-sm">{material}</span>
-                            </li>
-                          ))}
-                        </ul>
-                        <Button className="w-full bg-slate-700 hover:bg-slate-600 text-xs md:text-sm py-3">
-                          <Icon name="FolderOpen" size={16} className="mr-2" />
-                          Открыть материалы
-                        </Button>
-                      </Card>
-                    ))}
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+                    <Icon name="BookOpen" size={24} className="text-white" />
                   </div>
-                </Card>
-              </motion.div>
-            </div>
+                  <div className="text-left">
+                    <h3 className="text-xl md:text-2xl font-bold text-white">Открыть базу знаний</h3>
+                    <p className="text-sm text-slate-400 mt-1">3 раздела • Воронка продаж • Финансы • Развитие</p>
+                  </div>
+                </div>
+                <Icon 
+                  name={knowledgeOpen ? "ChevronUp" : "ChevronDown"} 
+                  size={24} 
+                  className="text-cyan-400 flex-shrink-0" 
+                />
+              </button>
+
+              <AnimatePresence>
+                {knowledgeOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="border-t border-slate-700"
+                  >
+                    <div className="p-6 md:p-8 space-y-4">
+                      {/* Финансовая система */}
+                      <Link to="/ecosystem/gl">
+                        <div className="p-4 md:p-6 bg-gradient-to-br from-cyan-900/30 to-blue-900/30 border border-cyan-500/30 rounded-lg hover:shadow-lg hover:shadow-cyan-500/20 transition-all cursor-pointer">
+                          <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center flex-shrink-0">
+                              <Icon name="Coins" size={20} className="text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="text-lg md:text-xl font-bold text-white mb-2">1. Финансовая система</h4>
+                              <p className="text-sm text-slate-300">
+                                Система доходов, грейды, калькулятор прибыли и прогнозы развития партнёрской сети
+                              </p>
+                            </div>
+                            <Icon name="ExternalLink" size={18} className="text-cyan-400 flex-shrink-0" />
+                          </div>
+                        </div>
+                      </Link>
+
+                      {/* Воронка продаж */}
+                      <Link to="/sales-funnel">
+                        <div className="p-4 md:p-6 bg-gradient-to-br from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-lg hover:shadow-lg hover:shadow-purple-500/20 transition-all cursor-pointer">
+                          <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center flex-shrink-0">
+                              <Icon name="TrendingDown" size={20} className="text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="text-lg md:text-xl font-bold text-white mb-2">2. Воронка продаж</h4>
+                              <p className="text-sm text-slate-300">
+                                5 этапов работы с клиентом: от лида до подписания. Жёсткие правила + интерактивный тест
+                              </p>
+                            </div>
+                            <Icon name="ExternalLink" size={18} className="text-purple-400 flex-shrink-0" />
+                          </div>
+                        </div>
+                      </Link>
+
+                      {/* Фазы развития */}
+                      <div className="p-4 md:p-6 bg-slate-900/50 border border-slate-700 rounded-lg">
+                        <div className="flex items-start gap-4 mb-4">
+                          <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center flex-shrink-0">
+                            <Icon name="Rocket" size={20} className="text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-lg md:text-xl font-bold text-white mb-2">3. Фазы развития</h4>
+                            <p className="text-sm text-slate-300 mb-4">
+                              Пошаговый план роста от Агента до Амбассадора с материалами для каждого этапа
+                            </p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {phases.map((phase) => (
+                            <div key={phase.id} className="p-3 bg-slate-800/50 border border-slate-600 rounded-lg">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className={`w-8 h-8 rounded bg-gradient-to-br ${phase.color} flex items-center justify-center`}>
+                                  <Icon name={phase.icon as any} size={16} className="text-white" />
+                                </div>
+                                <h5 className="text-sm font-bold text-white">Фаза {phase.id}: {phase.title}</h5>
+                              </div>
+                              <p className="text-xs text-slate-400">{phase.period}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </Card>
           </div>
         </div>
       </section>
