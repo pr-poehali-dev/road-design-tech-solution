@@ -141,7 +141,7 @@ const EcosystemInfo = () => {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute right-0 top-full mt-2 w-80 bg-slate-800 border border-slate-600/50 rounded-lg shadow-2xl z-50"
+                    className="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-2rem)] bg-slate-800 border border-slate-600/50 rounded-lg shadow-2xl z-50"
                   >
                     <div className="p-4">
                       <Link to="/ecosystem/gl" onClick={() => setKnowledgeOpen(false)}>

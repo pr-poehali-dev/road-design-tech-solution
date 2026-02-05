@@ -226,10 +226,10 @@ export default function SalesFunnel() {
           >
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2">
+                <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-white mb-2">
                   Воронка продаж DEOD
                 </h1>
-                <p className="text-lg text-cyan-400">От лида до подписания договора</p>
+                <p className="text-sm md:text-lg text-cyan-400">От лида до подписания договора</p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="relative">
@@ -242,7 +242,7 @@ export default function SalesFunnel() {
                     <Icon name="ChevronDown" className={`ml-2 transition-transform ${showKnowledgeBase ? 'rotate-180' : ''}`} size={16} />
                   </Button>
                   {showKnowledgeBase && (
-                    <div className="absolute right-0 mt-2 w-64 bg-slate-800/95 backdrop-blur-md border border-white/10 rounded-lg shadow-xl overflow-hidden z-50">
+                    <div className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-2rem)] bg-slate-800/95 backdrop-blur-md border border-white/10 rounded-lg shadow-xl overflow-hidden z-50">
                       <Link
                         to="/ecosystem/gl"
                         className="block px-4 py-3 text-white hover:bg-purple-500/20 transition-colors border-b border-white/10"

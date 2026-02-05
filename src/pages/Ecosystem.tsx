@@ -157,7 +157,7 @@ export default function Ecosystem() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       {/* Personal Header */}
-      <section className="py-8 md:py-12 bg-slate-900/50 border-b border-cyan-500/20">
+      <section className="py-6 md:py-12 bg-slate-900/50 border-b border-cyan-500/20">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -192,7 +192,7 @@ export default function Ecosystem() {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="absolute right-0 top-full mt-2 w-80 bg-slate-800 border border-slate-600/50 rounded-lg shadow-2xl z-50"
+                        className="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-2rem)] bg-slate-800 border border-slate-600/50 rounded-lg shadow-2xl z-50"
                       >
                         <div className="p-4">
                           <Link to="/ecosystem/gl" onClick={() => setKnowledgeOpen(false)}>
