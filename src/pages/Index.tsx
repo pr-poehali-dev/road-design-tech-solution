@@ -9,6 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import InputMask from 'react-input-mask';
+import Header from '@/components/sections/Header';
+import HeroSection from '@/components/sections/HeroSection';
+import ChallengesSection from '@/components/sections/ChallengesSection';
+import TechnologiesSection from '@/components/sections/TechnologiesSection';
+import ProjectsSection from '@/components/sections/ProjectsSection';
 
 const AdminLink = () => {
   const [show, setShow] = useState(false);
@@ -343,241 +348,15 @@ const Index = () => {
   
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="fixed top-0 w-full bg-background/90 backdrop-blur-lg border-b border-border z-50">
-        <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center glow-button">
-              <Icon name="Route" size={24} className="text-white" />
-            </div>
-            <span className="font-heading font-bold text-xl md:text-2xl">DEOD</span>
-          </div>
-          <div className="hidden md:flex gap-6 text-sm font-medium items-center">
-            <a href="#technologies" className="hover:text-primary transition-colors">Технологии</a>
-            <a href="#calculator" className="hover:text-primary transition-colors">Калькулятор</a>
-            <a href="#projects" className="hover:text-primary transition-colors">Кейсы</a>
-            <a href="#contact" className="hover:text-primary transition-colors">Контакты</a>
-          </div>
-          <Button 
-            size="lg" 
-            className="bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base px-3 sm:px-4 md:px-6 py-2 touch-manipulation glow-button"
-            onClick={() => {
-              saveLead({
-                type: 'Консультация',
-                name: 'Не указано',
-                phone: '',
-                email: '',
-                message: 'Клик на кнопку "Консультация" в header',
-                source: 'Header кнопка'
-              });
-              document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
-            }}
-          >
-            Консультация
-          </Button>
-        </nav>
-      </header>
+      <Header saveLead={saveLead} />
 
-      <section className="relative pt-32 pb-24 px-4 overflow-hidden road-animation">
-        <div className="absolute inset-0 z-0">
-          <img 
-            src="https://cdn.poehali.dev/files/Дороги.png" 
-            alt="Highway interchange complex"
-            className="w-full h-full object-cover opacity-40"
-            style={{ opacity: 0.9 }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/80" />
-        </div>
-        <div className="absolute inset-0 bg-grid-pattern opacity-20 z-[1]" />
-        <div className="car-light" style={{ top: '30%' }} />
-        <div className="car-light" style={{ top: '60%', animationDelay: '4s' }} />
-        <div className="light-sweep" style={{ animationDelay: '1s' }} />
-        <div className="road-stripes" style={{ left: '45%' }} />
-        <div className="road-stripes" style={{ left: '55%', animationDelay: '0.5s' }} />
-        <div className="container mx-auto relative z-10">
-          <div className="max-w-5xl mx-auto text-center">
-            <Badge className="mb-6 bg-primary/10 text-primary border-primary/30 px-4 py-2 text-sm font-semibold animate-fade-in">
-              Проектирование дорог и стабилизация грунтов
-            </Badge>
-            <h1 className="font-heading font-black text-4xl sm:text-5xl md:text-7xl lg:text-8xl mb-8 leading-[1.1] animate-fade-in text-white">
-              Проектируем не просто дороги.{' '}
-              <span className="text-gradient-white block mt-2">
-                Проектируем надежное основание
-              </span>
-            </h1>
-            <p className="text-xl md:text-2xl text-white/90 mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in font-light">
-              Разрабатываем проекты дорог любых категорий с применением технологий стабилизации грунтов. 
-              Гарантируем прохождение экспертизы и снижение ваших затрат на строительство до 30%.
-            </p>
-            <div className="flex flex-col gap-6 items-center animate-scale-in px-4 sm:px-0">
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center w-full">
-                <Button 
-                  size="lg" 
-                  className="w-full sm:w-auto bg-primary hover:bg-primary/90 font-semibold text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 group touch-manipulation glow-button"
-                  onClick={() => setShowQuoteForm(true)}
-                >
-                  <Icon name="FileText" className="mr-2 group-hover:scale-110 transition-transform" size={16} />
-                  <span className="truncate">Рассчитать стоимость</span>
-                </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="w-full sm:w-auto border-2 font-semibold text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 group touch-manipulation glow-button"
-                  onClick={() => window.location.href = '/partner-system'}
-                >
-                  <Icon name="TrendingUp" className="mr-2 group-hover:scale-110 transition-transform" size={16} />
-                  <span className="truncate">Партнёрская система</span>
-                </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="w-full sm:w-auto border-2 font-semibold text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 group touch-manipulation glow-button"
-                  onClick={() => {
-                    document.getElementById('technologies')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                >
-                  <Icon name="Presentation" className="mr-2 group-hover:scale-110 transition-transform" size={16} />
-                  <span className="truncate">Технологические решения</span>
-                </Button>
-                <Button 
-                  size="lg" 
-                  variant="secondary" 
-                  className="w-full sm:w-auto font-semibold text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 group touch-manipulation"
-                  onClick={() => window.location.href = '/kp'}
-                >
-                  <Icon name="Briefcase" className="mr-2 group-hover:scale-110 transition-transform" size={16} />
-                  <span className="truncate">Коммерческое предложение</span>
-                </Button>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 text-white/90 text-sm sm:text-base">
-                <a 
-                  href="tel:+79955556231" 
-                  className="flex items-center gap-2 hover:text-primary transition-colors group"
-                >
-                  <Icon name="Phone" size={18} className="group-hover:scale-110 transition-transform" />
-                  <span>+7 (995) 555-62-31</span>
-                </a>
-                <a 
-                  href="mailto:infosppi.ooo@mail.ru" 
-                  className="flex items-center gap-2 hover:text-primary transition-colors group"
-                >
-                  <Icon name="Mail" size={18} className="group-hover:scale-110 transition-transform" />
-                  <span>infosppi.ooo@mail.ru</span>
-                </a>
-              </div>
-            </div>
-          </div>
+      <HeroSection setShowQuoteForm={setShowQuoteForm} saveLead={saveLead} />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mt-12 sm:mt-20 max-w-6xl mx-auto px-4 sm:px-0">
-            <Card 
-              className="glow-card overflow-hidden group md:hover:scale-105 transition-all duration-300" 
-            >
-              <div className="relative h-40 sm:h-48 overflow-hidden">
-                <img 
-                  src="https://cdn.poehali.dev/files/economica-i-finansy-800x533.jpg" 
-                  alt="Экономия на строительстве"
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  style={{ opacity: 0.85 }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                <div className="absolute bottom-3 left-3 w-12 h-12 sm:w-14 sm:h-14 bg-primary/90 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                  <Icon name="TrendingDown" size={24} className="text-white sm:w-7 sm:h-7" />
-                </div>
-              </div>
-              <CardHeader className="p-4 sm:p-6">
-                <CardTitle className="font-heading text-2xl sm:text-3xl">до 30%</CardTitle>
-                <CardDescription className="text-sm sm:text-base">экономии на строительстве</CardDescription>
-              </CardHeader>
-            </Card>
-            <Card 
-              className="glow-card overflow-hidden group md:hover:scale-105 transition-all duration-300" 
-            >
-              <div className="relative h-40 sm:h-48 overflow-hidden">
-                <img 
-                  src="https://cdn.poehali.dev/files/экспертиза.png" 
-                  alt="Прохождение экспертизы"
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  style={{ opacity: 0.85 }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                <div className="absolute bottom-3 left-3 w-12 h-12 sm:w-14 sm:h-14 bg-primary/90 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                  <Icon name="CheckCircle" size={24} className="text-white sm:w-7 sm:h-7" />
-                </div>
-              </div>
-              <CardHeader className="p-4 sm:p-6">
-                <CardTitle className="font-heading text-2xl sm:text-3xl">100%</CardTitle>
-                <CardDescription className="text-sm sm:text-base">прохождение экспертизы</CardDescription>
-              </CardHeader>
-            </Card>
-            <Card 
-              className="glow-card overflow-hidden group md:hover:scale-105 transition-all duration-300" 
-            >
-              <div className="relative h-40 sm:h-48 overflow-hidden">
-                <img 
-                  src="https://cdn.poehali.dev/files/230713212132.jpg" 
-                  alt="Быстрая разработка проекта"
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  style={{ opacity: 0.85 }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                <div className="absolute bottom-3 left-3 w-12 h-12 sm:w-14 sm:h-14 bg-primary/90 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                  <Icon name="Calendar" size={24} className="text-white sm:w-7 sm:h-7" />
-                </div>
-              </div>
-              <CardHeader className="p-4 sm:p-6">
-                <CardTitle className="font-heading text-2xl sm:text-3xl">от 2 недель</CardTitle>
-                <CardDescription className="text-sm sm:text-base">срок разработки проекта</CardDescription>
-              </CardHeader>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-24 px-4 bg-gradient-to-b from-background to-secondary/20">
-        <div className="container mx-auto">
-          <div className="text-center mb-16 animate-fade-in">
-            <h2 className="font-heading font-bold text-4xl md:text-6xl mb-6">
-              Решаем сложные задачи
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Каждый проект уникален. Подбираем оптимальное технологическое решение под ваши условия
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {challenges.map((challenge, index) => (
-              <Card 
-                key={challenge.id}
-                className={`glow-card cursor-pointer transition-all duration-300 overflow-hidden group ${
-                  activeChallenge === challenge.id ? 'ring-2 ring-primary' : ''
-                }`}
-                onClick={() => setActiveChallenge(activeChallenge === challenge.id ? null : challenge.id)}
-                style={{ 
-                  animationDelay: `${index * 0.1}s`
-                }}
-              >
-                <div className="relative h-40 sm:h-48 overflow-hidden">
-                  <img 
-                    src={challenge.image} 
-                    alt={challenge.problem}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    style={{ opacity: 0.85 }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                  <div className="absolute bottom-3 left-3 w-12 h-12 sm:w-14 sm:h-14 bg-primary/90 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                    <Icon name={challenge.icon as any} size={24} className="text-white sm:w-7 sm:h-7" />
-                  </div>
-                </div>
-                <CardHeader className="p-4 sm:p-6">
-                  <CardTitle className="font-heading text-xl sm:text-2xl mb-3">{challenge.problem}</CardTitle>
-                  <CardDescription className="text-sm sm:text-base leading-relaxed">
-                    {challenge.solution}
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+      <ChallengesSection 
+        challenges={challenges} 
+        activeChallenge={activeChallenge} 
+        setActiveChallenge={setActiveChallenge} 
+      />
 
       <section className="py-24 px-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-primary/10" />
@@ -742,129 +521,15 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="technologies" className="py-24 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-80 z-0">
-          <img 
-            src="https://cdn.poehali.dev/files/стабил.jpg" 
-            alt="Стабилизация грунтов"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-background/70" />
-        </div>
-        <div className="container mx-auto max-w-6xl relative z-10">
-          <div className="text-center mb-16 animate-fade-in">
-            <h2 className="font-heading font-bold text-4xl md:text-6xl mb-6">
-              Технологии стабилизации
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              Комплексный подход к укреплению дорожного основания
-            </p>
-          </div>
-          
-          <Tabs value={activeTech} onValueChange={setActiveTech} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-8 h-auto p-1">
-              <TabsTrigger value="cement" className="text-xs sm:text-sm md:text-base py-2 sm:py-3">
-                <Icon name="Droplet" size={16} className="mr-2 hidden sm:inline" />
-                Вяжущие
-              </TabsTrigger>
-              <TabsTrigger value="bitumen" className="text-xs sm:text-sm md:text-base py-2 sm:py-3">
-                <Icon name="Recycle" size={16} className="mr-2 hidden sm:inline" />
-                Битум
-              </TabsTrigger>
-              <TabsTrigger value="mechanical" className="text-xs sm:text-sm md:text-base py-2 sm:py-3">
-                <Icon name="Grid3x3" size={16} className="mr-2 hidden sm:inline" />
-                Армирование
-              </TabsTrigger>
-            </TabsList>
-            
-            {Object.entries(technologies).map(([key, tech]) => (
-              <TabsContent key={key} value={key} className="animate-fade-in">
-                <Card className="glow-card">
-                  <CardHeader>
-                    <CardTitle className="font-heading text-3xl mb-4">{tech.title}</CardTitle>
-                    <CardDescription className="text-lg leading-relaxed mb-6">
-                      {tech.description}
-                    </CardDescription>
-                    <div className="flex flex-wrap gap-2">
-                      {tech.tags.map((tag, i) => (
-                        <Badge key={i} variant="secondary" className="text-sm px-3 py-1">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardHeader>
-                </Card>
-              </TabsContent>
-            ))}
-          </Tabs>
-        </div>
-      </section>
+      <TechnologiesSection 
+        technologies={technologies} 
+        activeTech={activeTech} 
+        setActiveTech={setActiveTech} 
+      />
 
 
 
-      <section id="projects" className="py-24 px-4">
-        <div className="container mx-auto">
-          <div className="text-center mb-16 animate-fade-in">
-            <h2 className="font-heading font-bold text-4xl md:text-6xl mb-6">
-              Реализованные проекты
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              Подтвержденный опыт работы на сложных объектах
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-            {projects.map((project, index) => (
-              <Card 
-                key={index} 
-                className="glow-card overflow-hidden"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="relative h-48 overflow-hidden">
-                  <img 
-                    src={project.image} 
-                    alt={project.title}
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <Badge className="absolute top-4 left-4 bg-primary text-white">
-                    {project.location}
-                  </Badge>
-                </div>
-                <CardHeader>
-                  <CardTitle className="font-heading text-xl mb-2">{project.title}</CardTitle>
-                  <div className="space-y-3 text-sm">
-                    <div>
-                      <span className="font-semibold text-primary">Вызов:</span>
-                      <p className="text-muted-foreground mt-1">{project.challenge}</p>
-                    </div>
-                    <div>
-                      <span className="font-semibold text-primary">Решение:</span>
-                      <p className="text-muted-foreground mt-1">{project.solution}</p>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-3 gap-2 pt-4 border-t border-border">
-                    <div>
-                      <div className="text-lg font-bold text-primary">{project.results.saved}</div>
-                      <div className="text-xs text-muted-foreground">экономия</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">-{project.results.reduction}</div>
-                      <div className="text-xs text-muted-foreground">снижение</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{project.results.time}</div>
-                      <div className="text-xs text-muted-foreground">срок</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+      <ProjectsSection projects={projects} />
 
       <section id="contact" className="py-24 px-4 bg-gradient-to-b from-background to-secondary/20">
         <div className="container mx-auto max-w-4xl">
