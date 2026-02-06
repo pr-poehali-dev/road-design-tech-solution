@@ -110,6 +110,7 @@ export default function Ecosystem() {
     isFirstDeal: false,
   });
   const [learningProgress, setLearningProgress] = useState({
+    financialSystem: false,
     salesFunnel: false,
     salesScript: false,
     tenderGuide: false,
@@ -118,6 +119,7 @@ export default function Ecosystem() {
   });
 
   useEffect(() => {
+    const financialSystemResults = localStorage.getItem('financialSystemTestResults');
     const salesFunnelResults = localStorage.getItem('salesFunnelTestResults');
     const salesScriptResults = localStorage.getItem('salesScriptTestResults');
     const tenderGuideResults = localStorage.getItem('tenderGuideTestResults');
@@ -125,6 +127,7 @@ export default function Ecosystem() {
     const callScriptsResults = localStorage.getItem('callScriptsTestResults');
 
     setLearningProgress({
+      financialSystem: financialSystemResults ? JSON.parse(financialSystemResults).passed : false,
       salesFunnel: salesFunnelResults ? JSON.parse(salesFunnelResults).passed : false,
       salesScript: salesScriptResults ? JSON.parse(salesScriptResults).passed : false,
       tenderGuide: tenderGuideResults ? JSON.parse(tenderGuideResults).passed : false,
@@ -376,6 +379,29 @@ export default function Ecosystem() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <Link to="/ecosystem/gl">
+                  <div className={`p-4 rounded-lg border transition-all cursor-pointer ${
+                    learningProgress.financialSystem 
+                      ? 'bg-green-500/10 border-green-500/50 hover:bg-green-500/20' 
+                      : 'bg-red-500/10 border-red-500/50 hover:bg-red-500/20'
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      <Icon 
+                        name={learningProgress.financialSystem ? "CheckCircle" : "XCircle"} 
+                        size={20} 
+                        className={learningProgress.financialSystem ? 'text-green-400' : 'text-red-400'} 
+                      />
+                      <div className="flex-1">
+                        <p className="text-white font-medium">Финансовая система</p>
+                        <p className="text-xs text-slate-400">
+                          {learningProgress.financialSystem ? 'Тест сдан ✓' : 'Тест не сдан'}
+                        </p>
+                      </div>
+                      <Icon name="ExternalLink" size={16} className="text-slate-400" />
+                    </div>
+                  </div>
+                </Link>
+
                 <Link to="/sales-funnel">
                   <div className={`p-4 rounded-lg border transition-all cursor-pointer ${
                     learningProgress.salesFunnel 
@@ -520,6 +546,7 @@ export default function Ecosystem() {
                     <h3 className="text-xl font-bold text-white">Ваши достижения</h3>
                     <p className="text-sm text-slate-400">
                       {[
+                        learningProgress.financialSystem && 'financial_expert',
                         learningProgress.salesFunnel && 'funnel_master',
                         learningProgress.salesScript && 'script_expert',
                         learningProgress.tenderGuide && 'tender_pro',
@@ -541,6 +568,23 @@ export default function Ecosystem() {
               </div>
 
               <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
+                {/* Financial System Badge */}
+                {learningProgress.financialSystem && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="relative group"
+                  >
+                    <div className="w-full aspect-square rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 cursor-pointer hover:scale-110 transition-transform">
+                      <Icon name="DollarSign" size={24} className="text-white" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900" />
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                      Финансовый эксперт
+                    </div>
+                  </motion.div>
+                )}
+
                 {/* First Test Badge */}
                 {Object.values(learningProgress).filter(Boolean).length >= 1 && (
                   <motion.div

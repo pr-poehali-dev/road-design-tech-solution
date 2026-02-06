@@ -4,11 +4,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Link } from 'react-router-dom';
+import { financialTestQuestions } from '@/utils/financialTestQuestions';
 
 const EcosystemInfo = () => {
   const [scrollY, setScrollY] = useState(0);
   const [visibleBlocks, setVisibleBlocks] = useState<number[]>([]);
   const [knowledgeOpen, setKnowledgeOpen] = useState(false);
+  const [showTest, setShowTest] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const [testPassed, setTestPassed] = useState(() => {
+    const saved = localStorage.getItem('financialSystemTestResults');
+    return saved ? JSON.parse(saved).passed : false;
+  });
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -116,9 +125,63 @@ const EcosystemInfo = () => {
     }
   ];
 
+  const handleAnswer = (answerIndex: number) => {
+    const newAnswers = [...selectedAnswers];
+    newAnswers[currentQuestion] = answerIndex;
+    setSelectedAnswers(newAnswers);
+
+    if (currentQuestion < financialTestQuestions.length - 1) {
+      setTimeout(() => setCurrentQuestion(currentQuestion + 1), 500);
+    } else {
+      setTimeout(() => setShowResults(true), 500);
+    }
+  };
+
+  const correctCount = selectedAnswers.filter((answer, index) => 
+    answer === financialTestQuestions[index].correctAnswer
+  ).length;
+
+  const isPassed = correctCount >= 20;
+
+  useEffect(() => {
+    if (showResults) {
+      localStorage.setItem('financialSystemTestResults', JSON.stringify({
+        passed: isPassed,
+        score: correctCount,
+        total: financialTestQuestions.length,
+        timestamp: Date.now()
+      }));
+      setTestPassed(isPassed);
+    }
+  }, [showResults, isPassed, correctCount]);
+
+  const resetTest = () => {
+    setCurrentQuestion(0);
+    setSelectedAnswers([]);
+    setShowResults(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white overflow-hidden">
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-950/90 backdrop-blur-xl border-b border-cyan-500/20">
+      {/* Not Passed Banner */}
+      {!testPassed && !showTest && (
+        <div className="fixed top-0 left-0 right-0 z-40 bg-red-600/90 backdrop-blur-xl border-b border-red-500/50 py-3">
+          <div className="container mx-auto px-4 text-center">
+            <p className="text-white font-bold flex items-center justify-center gap-2">
+              <Icon name="AlertCircle" size={20} />
+              БЛОК НЕ СДАН! Пройдите тест (минимум 20/25 правильных ответов)
+              <Button 
+                onClick={() => setShowTest(true)} 
+                size="sm" 
+                className="ml-4 bg-white text-red-600 hover:bg-slate-100"
+              >
+                Пройти тест
+              </Button>
+            </p>
+          </div>
+        </div>
+      )}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-950/90 backdrop-blur-xl border-b border-cyan-500/20" style={{ marginTop: (!testPassed && !showTest) ? '48px' : '0' }}>
         <div className="container mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
           <Link to="/ecosystem" className="text-xl md:text-2xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
             DEOD
@@ -185,11 +248,21 @@ const EcosystemInfo = () => {
                       </Link>
                       
                       <Link to="/ecosystem/client-hunting" onClick={() => setKnowledgeOpen(false)}>
-                        <div className="p-3 bg-gradient-to-br from-purple-900/30 to-violet-900/30 border border-purple-500/30 rounded-lg hover:shadow-lg hover:shadow-purple-500/20 transition-all cursor-pointer">
+                        <div className="p-3 bg-gradient-to-br from-purple-900/30 to-violet-900/30 border border-purple-500/30 rounded-lg hover:shadow-lg hover:shadow-purple-500/20 transition-all cursor-pointer mb-3">
                           <div className="flex items-center gap-3">
                             <Icon name="Target" size={20} className="text-purple-400" />
                             <span className="text-white font-medium">Поиск клиентов</span>
                             <Icon name="ExternalLink" size={16} className="text-purple-400 ml-auto" />
+                          </div>
+                        </div>
+                      </Link>
+                      
+                      <Link to="/ecosystem/call-scripts" onClick={() => setKnowledgeOpen(false)}>
+                        <div className="p-3 bg-gradient-to-br from-cyan-900/30 to-violet-900/30 border border-cyan-500/30 rounded-lg hover:shadow-lg hover:shadow-cyan-500/20 transition-all cursor-pointer">
+                          <div className="flex items-center gap-3">
+                            <Icon name="Phone" size={20} className="text-cyan-400" />
+                            <span className="text-white font-medium">Скрипты звонков</span>
+                            <Icon name="ExternalLink" size={16} className="text-cyan-400 ml-auto" />
                           </div>
                         </div>
                       </Link>
@@ -579,8 +652,151 @@ const EcosystemInfo = () => {
           <p className="text-sm md:text-base text-slate-400">
             Партнёрская финансовая экосистема
           </p>
+          <Button
+            onClick={() => setShowTest(true)}
+            className="mt-6 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500"
+          >
+            <Icon name="GraduationCap" className="mr-2" size={16} />
+            Пройти тест по финансовой системе
+          </Button>
         </div>
       </footer>
+
+      {/* Test Modal */}
+      <AnimatePresence>
+        {showTest && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/90 backdrop-blur-md z-[60] flex items-center justify-center p-4 overflow-y-auto"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="w-full max-w-4xl my-8"
+            >
+              <Card className="bg-slate-800/50 border-slate-700/50 p-6 md:p-8">
+                {!showResults ? (
+                  <>
+                    <div className="flex justify-between items-center mb-6">
+                      <div>
+                        <h2 className="text-2xl font-bold text-white mb-2">Тест: Финансовая система DEOD</h2>
+                        <p className="text-sm text-slate-400">Вопрос {currentQuestion + 1} из {financialTestQuestions.length}</p>
+                      </div>
+                      <Button
+                        onClick={() => setShowTest(false)}
+                        variant="ghost"
+                        size="sm"
+                        className="text-slate-400 hover:text-white"
+                      >
+                        <Icon name="X" size={24} />
+                      </Button>
+                    </div>
+
+                    <div className="mb-6">
+                      <div className="h-2 bg-slate-700 rounded-full overflow-hidden mb-4">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${((currentQuestion + 1) / financialTestQuestions.length) * 100}%` }}
+                          className="h-full bg-gradient-to-r from-violet-500 to-purple-600"
+                        />
+                      </div>
+                    </div>
+
+                    <h3 className="text-xl md:text-2xl font-bold text-white mb-6">
+                      {financialTestQuestions[currentQuestion].question}
+                    </h3>
+
+                    <div className="space-y-3">
+                      {financialTestQuestions[currentQuestion].options.map((option, index) => (
+                        <motion.button
+                          key={index}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleAnswer(index)}
+                          className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                            selectedAnswers[currentQuestion] === index
+                              ? index === financialTestQuestions[currentQuestion].correctAnswer
+                                ? 'border-green-500 bg-green-500/20'
+                                : 'border-red-500 bg-red-500/20'
+                              : 'border-slate-600 bg-slate-700/30 hover:border-violet-500'
+                          }`}
+                          disabled={selectedAnswers[currentQuestion] !== undefined}
+                        >
+                          <span className="text-white">{option}</span>
+                        </motion.button>
+                      ))}
+                    </div>
+
+                    {selectedAnswers[currentQuestion] !== undefined && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`mt-6 p-4 rounded-lg ${
+                          selectedAnswers[currentQuestion] === financialTestQuestions[currentQuestion].correctAnswer
+                            ? 'bg-green-500/20 border border-green-500/50'
+                            : 'bg-red-500/20 border border-red-500/50'
+                        }`}
+                      >
+                        <p className="text-white text-sm">
+                          {financialTestQuestions[currentQuestion].explanation}
+                        </p>
+                      </motion.div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className={`w-24 h-24 mx-auto mb-6 rounded-full flex items-center justify-center ${
+                        isPassed ? 'bg-green-500/20' : 'bg-red-500/20'
+                      }`}
+                    >
+                      <Icon 
+                        name={isPassed ? "CheckCircle" : "XCircle"} 
+                        size={48} 
+                        className={isPassed ? 'text-green-400' : 'text-red-400'} 
+                      />
+                    </motion.div>
+
+                    <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
+                      {isPassed ? 'Поздравляем! 🎉' : 'Тест не сдан 😔'}
+                    </h3>
+
+                    <p className="text-xl text-slate-300 mb-6">
+                      Правильных ответов: {correctCount} из {financialTestQuestions.length}
+                    </p>
+
+                    <div className="space-y-3">
+                      <Button
+                        onClick={resetTest}
+                        className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500"
+                        size="lg"
+                      >
+                        <Icon name="RotateCcw" className="mr-2" size={20} />
+                        Пройти тест заново
+                      </Button>
+                      {isPassed && (
+                        <Button
+                          onClick={() => setShowTest(false)}
+                          className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500"
+                          size="lg"
+                        >
+                          <Icon name="CheckCircle" className="mr-2" size={20} />
+                          Закрыть
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </Card>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

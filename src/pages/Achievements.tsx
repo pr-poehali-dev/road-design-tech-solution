@@ -33,6 +33,7 @@ export default function Achievements() {
   const [knowledgeOpen, setKnowledgeOpen] = useState(false);
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
   const [learningProgress, setLearningProgress] = useState({
+    financialSystem: false,
     salesFunnel: false,
     salesScript: false,
     tenderGuide: false,
@@ -41,6 +42,7 @@ export default function Achievements() {
   });
 
   useEffect(() => {
+    const financialSystemResults = localStorage.getItem('financialSystemTestResults');
     const salesFunnelResults = localStorage.getItem('salesFunnelTestResults');
     const salesScriptResults = localStorage.getItem('salesScriptTestResults');
     const tenderGuideResults = localStorage.getItem('tenderGuideTestResults');
@@ -48,6 +50,7 @@ export default function Achievements() {
     const callScriptsResults = localStorage.getItem('callScriptsTestResults');
 
     setLearningProgress({
+      financialSystem: financialSystemResults ? JSON.parse(financialSystemResults).passed : false,
       salesFunnel: salesFunnelResults ? JSON.parse(salesFunnelResults).passed : false,
       salesScript: salesScriptResults ? JSON.parse(salesScriptResults).passed : false,
       tenderGuide: tenderGuideResults ? JSON.parse(tenderGuideResults).passed : false,
@@ -66,6 +69,16 @@ export default function Achievements() {
       requirement: 'Пройти 1 тест',
       unlocked: Object.values(learningProgress).filter(Boolean).length >= 1,
       unlockedAt: learningProgress.salesFunnel ? Date.now() : undefined,
+      rarity: 'common'
+    },
+    {
+      id: 'financial_expert',
+      title: 'Финансовый эксперт',
+      description: 'Успешно сдан тест по финансовой системе',
+      icon: 'DollarSign',
+      color: 'from-cyan-500 to-blue-600',
+      requirement: 'Сдать тест "Финансовая система"',
+      unlocked: learningProgress.financialSystem,
       rarity: 'common'
     },
     {
