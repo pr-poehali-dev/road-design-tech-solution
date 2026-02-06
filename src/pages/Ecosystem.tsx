@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -109,6 +109,29 @@ export default function Ecosystem() {
     networkLevel: 1,
     isFirstDeal: false,
   });
+  const [learningProgress, setLearningProgress] = useState({
+    salesFunnel: false,
+    salesScript: false,
+    tenderGuide: false,
+    clientHunting: false,
+    callScripts: false,
+  });
+
+  useEffect(() => {
+    const salesFunnelResults = localStorage.getItem('salesFunnelTestResults');
+    const salesScriptResults = localStorage.getItem('salesScriptTestResults');
+    const tenderGuideResults = localStorage.getItem('tenderGuideTestResults');
+    const clientHuntingResults = localStorage.getItem('clientHuntingTestResults');
+    const callScriptsResults = localStorage.getItem('callScriptsTestResults');
+
+    setLearningProgress({
+      salesFunnel: salesFunnelResults ? JSON.parse(salesFunnelResults).passed : false,
+      salesScript: salesScriptResults ? JSON.parse(salesScriptResults).passed : false,
+      tenderGuide: tenderGuideResults ? JSON.parse(tenderGuideResults).passed : false,
+      clientHunting: clientHuntingResults ? JSON.parse(clientHuntingResults).passed : false,
+      callScripts: callScriptsResults ? JSON.parse(callScriptsResults).passed : false,
+    });
+  }, []);
 
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat('ru-RU').format(num);
@@ -236,11 +259,21 @@ export default function Ecosystem() {
                           </Link>
                           
                           <Link to="/ecosystem/client-hunting" onClick={() => setKnowledgeOpen(false)}>
-                            <div className="p-3 bg-gradient-to-br from-purple-900/30 to-violet-900/30 border border-purple-500/30 rounded-lg hover:shadow-lg hover:shadow-purple-500/20 transition-all cursor-pointer">
+                            <div className="p-3 bg-gradient-to-br from-purple-900/30 to-violet-900/30 border border-purple-500/30 rounded-lg hover:shadow-lg hover:shadow-purple-500/20 transition-all cursor-pointer mb-3">
                               <div className="flex items-center gap-3">
                                 <Icon name="Target" size={20} className="text-purple-400" />
                                 <span className="text-white font-medium">Поиск клиентов</span>
                                 <Icon name="ExternalLink" size={16} className="text-purple-400 ml-auto" />
+                              </div>
+                            </div>
+                          </Link>
+                          
+                          <Link to="/ecosystem/call-scripts" onClick={() => setKnowledgeOpen(false)}>
+                            <div className="p-3 bg-gradient-to-br from-cyan-900/30 to-violet-900/30 border border-cyan-500/30 rounded-lg hover:shadow-lg hover:shadow-cyan-500/20 transition-all cursor-pointer">
+                              <div className="flex items-center gap-3">
+                                <Icon name="Phone" size={20} className="text-cyan-400" />
+                                <span className="text-white font-medium">Скрипты звонков</span>
+                                <Icon name="ExternalLink" size={16} className="text-cyan-400 ml-auto" />
                               </div>
                             </div>
                           </Link>
@@ -309,6 +342,171 @@ export default function Ecosystem() {
               <p className="text-slate-400 text-xs md:text-sm mt-2">
                 Осталось: {formatNumber(mockPartnerData.progressToNext.total - mockPartnerData.progressToNext.current)} млн ₽
               </p>
+            </Card>
+            
+            {/* Learning Progress */}
+            <Card className="mt-6 bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-violet-500/30 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg">
+                  <Icon name="GraduationCap" size={24} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Прогресс обучения</h3>
+                  <p className="text-sm text-slate-400">
+                    {Object.values(learningProgress).filter(Boolean).length} из {Object.keys(learningProgress).length} блоков сдано
+                  </p>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-slate-400">Общий прогресс</span>
+                  <span className="text-sm text-violet-400 font-semibold">
+                    {Math.round((Object.values(learningProgress).filter(Boolean).length / Object.keys(learningProgress).length) * 100)}%
+                  </span>
+                </div>
+                <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(Object.values(learningProgress).filter(Boolean).length / Object.keys(learningProgress).length) * 100}%` }}
+                    transition={{ duration: 1, ease: 'easeOut' }}
+                    className="h-full bg-gradient-to-r from-violet-500 to-purple-600"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <Link to="/sales-funnel">
+                  <div className={`p-4 rounded-lg border transition-all cursor-pointer ${
+                    learningProgress.salesFunnel 
+                      ? 'bg-green-500/10 border-green-500/50 hover:bg-green-500/20' 
+                      : 'bg-red-500/10 border-red-500/50 hover:bg-red-500/20'
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      <Icon 
+                        name={learningProgress.salesFunnel ? "CheckCircle" : "XCircle"} 
+                        size={20} 
+                        className={learningProgress.salesFunnel ? 'text-green-400' : 'text-red-400'} 
+                      />
+                      <div className="flex-1">
+                        <p className="text-white font-medium">Воронка продаж</p>
+                        <p className="text-xs text-slate-400">
+                          {learningProgress.salesFunnel ? 'Тест сдан ✓' : 'Тест не сдан'}
+                        </p>
+                      </div>
+                      <Icon name="ExternalLink" size={16} className="text-slate-400" />
+                    </div>
+                  </div>
+                </Link>
+
+                <Link to="/ecosystem/sales-script">
+                  <div className={`p-4 rounded-lg border transition-all cursor-pointer ${
+                    learningProgress.salesScript 
+                      ? 'bg-green-500/10 border-green-500/50 hover:bg-green-500/20' 
+                      : 'bg-red-500/10 border-red-500/50 hover:bg-red-500/20'
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      <Icon 
+                        name={learningProgress.salesScript ? "CheckCircle" : "XCircle"} 
+                        size={20} 
+                        className={learningProgress.salesScript ? 'text-green-400' : 'text-red-400'} 
+                      />
+                      <div className="flex-1">
+                        <p className="text-white font-medium">Скрипты и встречи</p>
+                        <p className="text-xs text-slate-400">
+                          {learningProgress.salesScript ? 'Тест сдан ✓' : 'Тест не сдан'}
+                        </p>
+                      </div>
+                      <Icon name="ExternalLink" size={16} className="text-slate-400" />
+                    </div>
+                  </div>
+                </Link>
+
+                <Link to="/ecosystem/tender-guide">
+                  <div className={`p-4 rounded-lg border transition-all cursor-pointer ${
+                    learningProgress.tenderGuide 
+                      ? 'bg-green-500/10 border-green-500/50 hover:bg-green-500/20' 
+                      : 'bg-red-500/10 border-red-500/50 hover:bg-red-500/20'
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      <Icon 
+                        name={learningProgress.tenderGuide ? "CheckCircle" : "XCircle"} 
+                        size={20} 
+                        className={learningProgress.tenderGuide ? 'text-green-400' : 'text-red-400'} 
+                      />
+                      <div className="flex-1">
+                        <p className="text-white font-medium">Работа с тендерами</p>
+                        <p className="text-xs text-slate-400">
+                          {learningProgress.tenderGuide ? 'Тест сдан ✓' : 'Тест не сдан'}
+                        </p>
+                      </div>
+                      <Icon name="ExternalLink" size={16} className="text-slate-400" />
+                    </div>
+                  </div>
+                </Link>
+
+                <Link to="/ecosystem/client-hunting">
+                  <div className={`p-4 rounded-lg border transition-all cursor-pointer ${
+                    learningProgress.clientHunting 
+                      ? 'bg-green-500/10 border-green-500/50 hover:bg-green-500/20' 
+                      : 'bg-red-500/10 border-red-500/50 hover:bg-red-500/20'
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      <Icon 
+                        name={learningProgress.clientHunting ? "CheckCircle" : "XCircle"} 
+                        size={20} 
+                        className={learningProgress.clientHunting ? 'text-green-400' : 'text-red-400'} 
+                      />
+                      <div className="flex-1">
+                        <p className="text-white font-medium">Поиск клиентов</p>
+                        <p className="text-xs text-slate-400">
+                          {learningProgress.clientHunting ? 'Тест сдан ✓' : 'Тест не сдан'}
+                        </p>
+                      </div>
+                      <Icon name="ExternalLink" size={16} className="text-slate-400" />
+                    </div>
+                  </div>
+                </Link>
+
+                <Link to="/ecosystem/call-scripts">
+                  <div className={`p-4 rounded-lg border transition-all cursor-pointer ${
+                    learningProgress.callScripts 
+                      ? 'bg-green-500/10 border-green-500/50 hover:bg-green-500/20' 
+                      : 'bg-red-500/10 border-red-500/50 hover:bg-red-500/20'
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      <Icon 
+                        name={learningProgress.callScripts ? "CheckCircle" : "XCircle"} 
+                        size={20} 
+                        className={learningProgress.callScripts ? 'text-green-400' : 'text-red-400'} 
+                      />
+                      <div className="flex-1">
+                        <p className="text-white font-medium">Скрипты звонков</p>
+                        <p className="text-xs text-slate-400">
+                          {learningProgress.callScripts ? 'Тест сдан ✓' : 'Тест не сдан'}
+                        </p>
+                      </div>
+                      <Icon name="ExternalLink" size={16} className="text-slate-400" />
+                    </div>
+                  </div>
+                </Link>
+              </div>
+
+              {Object.values(learningProgress).every(Boolean) && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-4 p-4 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/50 rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon name="Trophy" size={24} className="text-yellow-400" />
+                    <div>
+                      <p className="text-white font-bold">Поздравляем!</p>
+                      <p className="text-sm text-slate-300">Вы успешно завершили все блоки обучения!</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </Card>
           </motion.div>
         </div>
