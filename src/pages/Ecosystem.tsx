@@ -508,6 +508,191 @@ export default function Ecosystem() {
                 </motion.div>
               )}
             </Card>
+
+            {/* Badges Showcase */}
+            <Card className="mt-6 bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-yellow-500/30 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg">
+                    <Icon name="Award" size={24} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">Ваши достижения</h3>
+                    <p className="text-sm text-slate-400">
+                      {[
+                        learningProgress.salesFunnel && 'funnel_master',
+                        learningProgress.salesScript && 'script_expert',
+                        learningProgress.tenderGuide && 'tender_pro',
+                        learningProgress.clientHunting && 'hunter',
+                        learningProgress.callScripts && 'call_master',
+                        Object.values(learningProgress).filter(Boolean).length >= 1 && 'first_test',
+                        Object.values(learningProgress).filter(Boolean).length >= 3 && 'three_tests',
+                        Object.values(learningProgress).every(Boolean) && 'all_tests'
+                      ].filter(Boolean).length} бейджей получено
+                    </p>
+                  </div>
+                </div>
+                <Link to="/achievements">
+                  <Button className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500">
+                    <Icon name="Trophy" className="mr-2" size={16} />
+                    Все достижения
+                  </Button>
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
+                {/* First Test Badge */}
+                {Object.values(learningProgress).filter(Boolean).length >= 1 && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="relative group"
+                  >
+                    <div className="w-full aspect-square rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 cursor-pointer hover:scale-110 transition-transform">
+                      <Icon name="Award" size={24} className="text-white" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900" />
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                      Первые шаги
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Funnel Master */}
+                {learningProgress.salesFunnel && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="relative group"
+                  >
+                    <div className="w-full aspect-square rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center shadow-lg shadow-purple-500/30 cursor-pointer hover:scale-110 transition-transform">
+                      <Icon name="TrendingDown" size={24} className="text-white" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900" />
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                      Мастер воронки
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Script Expert */}
+                {learningProgress.salesScript && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="relative group"
+                  >
+                    <div className="w-full aspect-square rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/30 cursor-pointer hover:scale-110 transition-transform">
+                      <Icon name="Phone" size={24} className="text-white" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900" />
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                      Эксперт переговоров
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Tender Pro */}
+                {learningProgress.tenderGuide && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="relative group"
+                  >
+                    <div className="w-full aspect-square rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-blue-500/30 cursor-pointer hover:scale-110 transition-transform">
+                      <Icon name="FileText" size={24} className="text-white" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900" />
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                      Профи тендеров
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Hunter */}
+                {learningProgress.clientHunting && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="relative group"
+                  >
+                    <div className="w-full aspect-square rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center shadow-lg shadow-purple-500/30 cursor-pointer hover:scale-110 transition-transform">
+                      <Icon name="Target" size={24} className="text-white" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900" />
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                      Охотник за клиентами
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Call Master */}
+                {learningProgress.callScripts && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="relative group"
+                  >
+                    <div className="w-full aspect-square rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 cursor-pointer hover:scale-110 transition-transform">
+                      <Icon name="PhoneCall" size={24} className="text-white" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900" />
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                      Мастер звонков
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Three Tests Badge */}
+                {Object.values(learningProgress).filter(Boolean).length >= 3 && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="relative group"
+                  >
+                    <div className="w-full aspect-square rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/40 cursor-pointer hover:scale-110 transition-transform border-2 border-blue-400">
+                      <Icon name="BookOpen" size={24} className="text-white" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900" />
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                      Ученик (Редкий)
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* All Tests Badge - Guru */}
+                {Object.values(learningProgress).every(Boolean) && (
+                  <motion.div
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: "spring", stiffness: 200 }}
+                    className="relative group"
+                  >
+                    <div className="w-full aspect-square rounded-lg bg-gradient-to-br from-yellow-500 to-orange-600 flex items-center justify-center shadow-xl shadow-yellow-500/50 cursor-pointer hover:scale-110 transition-transform border-2 border-yellow-400 animate-pulse">
+                      <Icon name="Trophy" size={24} className="text-white" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900" />
+                    <div className="absolute -top-2 -right-2 text-2xl">✨</div>
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gradient-to-r from-yellow-600 to-orange-600 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none font-bold">
+                      Гуру продаж (Эпический)
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+
+              {Object.values(learningProgress).every(Boolean) && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="mt-4 p-3 bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border border-yellow-500/50 rounded-lg"
+                >
+                  <p className="text-sm text-yellow-300 text-center flex items-center justify-center gap-2">
+                    <Icon name="Star" size={16} />
+                    <span>Вы получили эпический бейдж "Гуру продаж"! 🎉</span>
+                  </p>
+                </motion.div>
+              )}
+            </Card>
           </motion.div>
         </div>
       </section>
