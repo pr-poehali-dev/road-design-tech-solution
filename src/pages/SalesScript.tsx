@@ -245,24 +245,55 @@ export default function SalesScript() {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-56 bg-slate-800/95 backdrop-blur-xl border border-slate-600/50 rounded-lg shadow-2xl overflow-hidden"
+                    className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 bg-slate-800/95 backdrop-blur-xl border border-slate-600/50 rounded-lg shadow-2xl overflow-hidden"
                   >
-                    <Link to="/ecosystem/sales-script" className="block px-3 md:px-4 py-2 md:py-3 hover:bg-slate-700/50 transition-colors border-b border-slate-700/50">
-                      <div className="flex items-center gap-2 md:gap-3">
-                        <Icon name="MessageSquare" size={16} className="text-cyan-400 flex-shrink-0" />
-                        <span className="text-xs md:text-sm text-slate-200 break-words min-w-0">Скрипт продаж</span>
+                    <Link to="/ecosystem/gl" onClick={() => setKnowledgeOpen(false)}>
+                      <div className="p-3 bg-gradient-to-br from-cyan-900/30 to-blue-900/30 border-b border-cyan-500/30 hover:bg-cyan-900/40 transition-all cursor-pointer">
+                        <div className="flex items-center gap-3">
+                          <Icon name="DollarSign" size={20} className="text-cyan-400" />
+                          <span className="text-white font-medium">Финансовая система</span>
+                          <Icon name="ExternalLink" size={16} className="text-cyan-400 ml-auto" />
+                        </div>
                       </div>
                     </Link>
-                    <Link to="/ecosystem/tender-guide" className="block px-3 md:px-4 py-2 md:py-3 hover:bg-slate-700/50 transition-colors border-b border-slate-700/50">
-                      <div className="flex items-center gap-2 md:gap-3">
-                        <Icon name="Gavel" size={16} className="text-purple-400 flex-shrink-0" />
-                        <span className="text-xs md:text-sm text-slate-200 break-words min-w-0">Тендерный блок</span>
+                    
+                    <Link to="/sales-funnel" onClick={() => setKnowledgeOpen(false)}>
+                      <div className="p-3 bg-gradient-to-br from-purple-900/30 to-violet-900/30 border-b border-purple-500/30 hover:bg-purple-900/40 transition-all cursor-pointer">
+                        <div className="flex items-center gap-3">
+                          <Icon name="TrendingDown" size={20} className="text-purple-400" />
+                          <span className="text-white font-medium">Воронка продаж</span>
+                          <Icon name="ExternalLink" size={16} className="text-purple-400 ml-auto" />
+                        </div>
                       </div>
                     </Link>
-                    <Link to="/ecosystem/client-hunting" className="block px-3 md:px-4 py-2 md:py-3 hover:bg-slate-700/50 transition-colors">
-                      <div className="flex items-center gap-2 md:gap-3">
-                        <Icon name="Target" size={16} className="text-violet-400 flex-shrink-0" />
-                        <span className="text-xs md:text-sm text-slate-200 break-words min-w-0">Охота на клиентов</span>
+                    
+                    <Link to="/ecosystem/sales-script" onClick={() => setKnowledgeOpen(false)}>
+                      <div className="p-3 bg-gradient-to-br from-violet-900/30 to-purple-900/30 border-b border-violet-500/30 hover:bg-violet-900/40 transition-all cursor-pointer">
+                        <div className="flex items-center gap-3">
+                          <Icon name="Phone" size={20} className="text-violet-400" />
+                          <span className="text-white font-medium">Скрипты и встречи</span>
+                          <Icon name="ExternalLink" size={16} className="text-violet-400 ml-auto" />
+                        </div>
+                      </div>
+                    </Link>
+                    
+                    <Link to="/ecosystem/tender-guide" onClick={() => setKnowledgeOpen(false)}>
+                      <div className="p-3 bg-gradient-to-br from-blue-900/30 to-cyan-900/30 border-b border-blue-500/30 hover:bg-blue-900/40 transition-all cursor-pointer">
+                        <div className="flex items-center gap-3">
+                          <Icon name="FileText" size={20} className="text-blue-400" />
+                          <span className="text-white font-medium">Работа с тендерами</span>
+                          <Icon name="ExternalLink" size={16} className="text-blue-400 ml-auto" />
+                        </div>
+                      </div>
+                    </Link>
+                    
+                    <Link to="/ecosystem/client-hunting" onClick={() => setKnowledgeOpen(false)}>
+                      <div className="p-3 bg-gradient-to-br from-purple-900/30 to-violet-900/30 hover:bg-purple-900/40 transition-all cursor-pointer">
+                        <div className="flex items-center gap-3">
+                          <Icon name="Target" size={20} className="text-purple-400" />
+                          <span className="text-white font-medium">Поиск клиентов</span>
+                          <Icon name="ExternalLink" size={16} className="text-purple-400 ml-auto" />
+                        </div>
                       </div>
                     </Link>
                   </motion.div>
