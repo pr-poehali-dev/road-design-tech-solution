@@ -129,11 +129,13 @@ const EcosystemInfo = () => {
     const newAnswers = [...selectedAnswers];
     newAnswers[currentQuestion] = answerIndex;
     setSelectedAnswers(newAnswers);
+  };
 
+  const handleNextQuestion = () => {
     if (currentQuestion < financialTestQuestions.length - 1) {
-      setTimeout(() => setCurrentQuestion(currentQuestion + 1), 500);
+      setCurrentQuestion(currentQuestion + 1);
     } else {
-      setTimeout(() => setShowResults(true), 500);
+      setShowResults(true);
     }
   };
 
@@ -734,15 +736,34 @@ const EcosystemInfo = () => {
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={`mt-6 p-4 rounded-lg ${
+                        className="mt-6"
+                      >
+                        <div className={`p-4 rounded-lg mb-4 ${
                           selectedAnswers[currentQuestion] === financialTestQuestions[currentQuestion].correctAnswer
                             ? 'bg-green-500/20 border border-green-500/50'
                             : 'bg-red-500/20 border border-red-500/50'
-                        }`}
-                      >
-                        <p className="text-white text-sm">
-                          {financialTestQuestions[currentQuestion].explanation}
-                        </p>
+                        }`}>
+                          <p className="text-white text-sm">
+                            {financialTestQuestions[currentQuestion].explanation}
+                          </p>
+                        </div>
+                        <Button
+                          onClick={handleNextQuestion}
+                          className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500"
+                          size="lg"
+                        >
+                          {currentQuestion < financialTestQuestions.length - 1 ? (
+                            <>
+                              Следующий вопрос
+                              <Icon name="ArrowRight" className="ml-2" size={20} />
+                            </>
+                          ) : (
+                            <>
+                              Показать результаты
+                              <Icon name="CheckCircle" className="ml-2" size={20} />
+                            </>
+                          )}
+                        </Button>
                       </motion.div>
                     )}
                   </>

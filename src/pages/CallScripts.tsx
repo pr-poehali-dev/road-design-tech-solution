@@ -109,6 +109,36 @@ const scripts: Script[] = [
   },
   {
     id: 4,
+    title: 'Звонок в госкорпорацию',
+    stage: 'Первый контакт (B2G)',
+    goal: 'Выйти на ЛПР и узнать о планах закупок',
+    duration: '5-7 минут',
+    script: [
+      'Добрый день! Меня зовут [Имя], компания [Название]. Мы специализируемся на проектировании объектов [направление]. Я правильно понимаю, что вы курируете вопросы капитального строительства?',
+      '[Ждём подтверждения] Отлично! Мы работаем с такими организациями как [примеры госкомпаний]. Скажите, у вас есть планы закупок на проектирование в этом году?',
+      '[Если есть планы] Замечательно! Можете подсказать, где я могу ознакомиться с вашим планом-графиком закупок? Или есть возможность обсудить требования до публикации тендера?',
+      '[Уточняем контакты] Подскажите, пожалуйста, с кем ещё лучше связаться по вопросам участия в закупках? Может быть, есть ответственный за формирование технического задания?',
+      '[Фиксируем] Спасибо большое! Я изучу ваш план закупок и свяжусь с [ФИО ответственного]. Можно отправить вам нашу презентацию на почту?'
+    ],
+    tips: [
+      'Будьте максимально вежливы и официальны',
+      'Упоминайте опыт работы с другими госструктурами',
+      'Просите о встрече только после изучения плана закупок',
+      'Узнавайте всех ЛПР в цепочке принятия решений',
+      'Записывайте даты публикации тендеров',
+      'Спрашивайте про возможность COP (предтендерных консультаций)'
+    ],
+    objections: [
+      { objection: 'Всё через тендер, звонить бесполезно', response: 'Понимаю! Я как раз хотел уточнить сроки публикации тендера и технические требования, чтобы подготовить качественное предложение. Это поможет нам сделать конкурентное предложение.' },
+      { objection: 'Мы не даём консультаций до тендера', response: 'Конечно, я понимаю все ограничения 44-ФЗ. Я просто хотел уточнить общедоступную информацию из плана-графика. Можете подсказать, на каком ресурсе её лучше смотреть?' },
+      { objection: 'Обращайтесь в отдел закупок', response: 'Спасибо! Подскажите, пожалуйста, как лучше с ними связаться — есть общий email или нужно звонить напрямую? И кто у вас курирует техническую часть ТЗ?' },
+      { objection: 'У нас долгий цикл согласований', response: 'Я понимаю специфику работы госструктур. Именно поэтому хотел заранее подготовиться. Скажите, когда примерно планируется публикация — во втором квартале?' }
+    ],
+    icon: 'Building',
+    color: 'from-blue-500 to-cyan-600'
+  },
+  {
+    id: 5,
     title: 'Встреча по итогам КП',
     stage: 'Переговоры',
     goal: 'Закрыть сделку или договориться о следующем шаге',
@@ -421,11 +451,13 @@ export default function CallScripts() {
     const newAnswers = [...selectedAnswers];
     newAnswers[currentQuestion] = answerIndex;
     setSelectedAnswers(newAnswers);
+  };
 
+  const handleNextQuestion = () => {
     if (currentQuestion < testQuestions.length - 1) {
-      setTimeout(() => setCurrentQuestion(currentQuestion + 1), 500);
+      setCurrentQuestion(currentQuestion + 1);
     } else {
-      setTimeout(() => setShowResults(true), 500);
+      setShowResults(true);
     }
   };
 
@@ -624,15 +656,34 @@ export default function CallScripts() {
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className={`mt-6 p-4 rounded-lg ${
+                      className="mt-6"
+                    >
+                      <div className={`p-4 rounded-lg mb-4 ${
                         selectedAnswers[currentQuestion] === testQuestions[currentQuestion].correctAnswer
                           ? 'bg-green-500/20 border border-green-500/50'
                           : 'bg-red-500/20 border border-red-500/50'
-                      }`}
-                    >
-                      <p className="text-white text-sm">
-                        {testQuestions[currentQuestion].explanation}
-                      </p>
+                      }`}>
+                        <p className="text-white text-sm">
+                          {testQuestions[currentQuestion].explanation}
+                        </p>
+                      </div>
+                      <Button
+                        onClick={handleNextQuestion}
+                        className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500"
+                        size="lg"
+                      >
+                        {currentQuestion < testQuestions.length - 1 ? (
+                          <>
+                            Следующий вопрос
+                            <Icon name="ArrowRight" className="ml-2" size={20} />
+                          </>
+                        ) : (
+                          <>
+                            Показать результаты
+                            <Icon name="CheckCircle" className="ml-2" size={20} />
+                          </>
+                        )}
+                      </Button>
                     </motion.div>
                   )}
                 </>
