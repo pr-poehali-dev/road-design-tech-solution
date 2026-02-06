@@ -239,7 +239,7 @@ export default function SalesFunnel() {
                   >
                     <Icon name="BookOpen" className="mr-2" size={18} />
                     База знаний
-                    <Icon name="ChevronDown" className={`ml-2 transition-transform ${showKnowledgeBase ? 'rotate-180' : ''}`} size={16} />
+                    <Icon name="ChevronDown" className={`ml-2 transition-transform animate-pulse ${showKnowledgeBase ? 'rotate-180' : ''}`} size={18} />
                   </Button>
                   {showKnowledgeBase && (
                     <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-64 bg-slate-800/95 backdrop-blur-md border border-white/10 rounded-lg shadow-xl overflow-hidden z-50">

@@ -179,11 +179,11 @@ export default function Ecosystem() {
                 <div className="relative">
                   <Button 
                     onClick={() => setKnowledgeOpen(!knowledgeOpen)}
-                    className="bg-slate-800/80 border border-slate-600/50 hover:bg-slate-700/80 hover:border-slate-500/50 shadow-lg"
+                    className="bg-slate-800/80 border border-slate-600/50 hover:bg-slate-700/80 hover:border-slate-500/50 shadow-lg relative"
                   >
                     <Icon name="BookOpen" className="mr-2" size={18} />
                     База знаний
-                    <Icon name={knowledgeOpen ? "ChevronUp" : "ChevronDown"} className="ml-2" size={18} />
+                    <Icon name={knowledgeOpen ? "ChevronUp" : "ChevronDown"} className="ml-2 animate-pulse" size={20} />
                   </Button>
                   
                   <AnimatePresence>

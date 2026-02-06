@@ -240,7 +240,7 @@ export default function ClientHunting() {
               >
                 <Icon name="BookOpen" className="mr-2" size={16} />
                 База знаний
-                <Icon name={knowledgeOpen ? "ChevronUp" : "ChevronDown"} className="ml-2" size={16} />
+                <Icon name={knowledgeOpen ? "ChevronUp" : "ChevronDown"} className="ml-2 animate-pulse" size={18} />
               </Button>
               <AnimatePresence>
                 {knowledgeOpen && (
@@ -250,19 +250,19 @@ export default function ClientHunting() {
                     exit={{ opacity: 0, y: -10 }}
                     className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-56 bg-slate-800/95 backdrop-blur-xl border border-slate-600/50 rounded-lg shadow-2xl overflow-hidden"
                   >
-                    <Link to="/sales-script" className="block px-3 md:px-4 py-2 md:py-3 hover:bg-slate-700/50 transition-colors border-b border-slate-700/50">
+                    <Link to="/ecosystem/sales-script" className="block px-3 md:px-4 py-2 md:py-3 hover:bg-slate-700/50 transition-colors border-b border-slate-700/50">
                       <div className="flex items-center gap-2 md:gap-3">
                         <Icon name="MessageSquare" size={16} className="text-cyan-400 flex-shrink-0" />
                         <span className="text-xs md:text-sm text-slate-200 break-words min-w-0">Скрипт продаж</span>
                       </div>
                     </Link>
-                    <Link to="/tender-guide" className="block px-3 md:px-4 py-2 md:py-3 hover:bg-slate-700/50 transition-colors border-b border-slate-700/50">
+                    <Link to="/ecosystem/tender-guide" className="block px-3 md:px-4 py-2 md:py-3 hover:bg-slate-700/50 transition-colors border-b border-slate-700/50">
                       <div className="flex items-center gap-2 md:gap-3">
                         <Icon name="Gavel" size={16} className="text-purple-400 flex-shrink-0" />
                         <span className="text-xs md:text-sm text-slate-200 break-words min-w-0">Тендерный блок</span>
                       </div>
                     </Link>
-                    <Link to="/client-hunting" className="block px-3 md:px-4 py-2 md:py-3 hover:bg-slate-700/50 transition-colors">
+                    <Link to="/ecosystem/client-hunting" className="block px-3 md:px-4 py-2 md:py-3 hover:bg-slate-700/50 transition-colors">
                       <div className="flex items-center gap-2 md:gap-3">
                         <Icon name="Target" size={16} className="text-violet-400 flex-shrink-0" />
                         <span className="text-xs md:text-sm text-slate-200 break-words min-w-0">Охота на клиентов</span>

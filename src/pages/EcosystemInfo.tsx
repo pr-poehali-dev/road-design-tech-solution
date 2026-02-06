@@ -132,7 +132,7 @@ const EcosystemInfo = () => {
               >
                 <Icon name="BookOpen" className="mr-2" size={16} />
                 База знаний
-                <Icon name={knowledgeOpen ? "ChevronUp" : "ChevronDown"} className="ml-2" size={16} />
+                <Icon name={knowledgeOpen ? "ChevronUp" : "ChevronDown"} className="ml-2 animate-pulse" size={18} />
               </Button>
               
               <AnimatePresence>
