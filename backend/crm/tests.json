@@ -1,0 +1,24 @@
+{
+  "tests": [
+    {
+      "name": "Get partner clients",
+      "method": "GET",
+      "path": "/?resource=clients&partner_id=1",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "clients": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get partner stats",
+      "method": "GET",
+      "path": "/?resource=stats&partner_id=1",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "stats": "object"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
