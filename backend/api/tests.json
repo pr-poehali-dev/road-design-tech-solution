@@ -1,0 +1,34 @@
+{
+  "tests": [
+    {
+      "name": "Get channels list",
+      "method": "GET",
+      "path": "/chat/channels",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "channels": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get online users",
+      "method": "GET",
+      "path": "/chat/online",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "online_count": "number"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Admin stats",
+      "method": "GET",
+      "path": "/admin/stats",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "stats": "object"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

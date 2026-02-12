@@ -1,0 +1,41 @@
+{
+  "tests": [
+    {
+      "name": "Get messages from general channel",
+      "method": "GET",
+      "path": "/?action=messages&channel_id=general",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "messages": "array",
+        "channel_id": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get online users",
+      "method": "GET",
+      "path": "/?action=online_users",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "users": "array",
+        "count": "number"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Register user",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "register_user",
+        "name": "Test User",
+        "phone": "+79991234567"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "user": "object"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
