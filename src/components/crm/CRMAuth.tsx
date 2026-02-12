@@ -20,7 +20,7 @@ export const CRMAuth = ({ password, setPassword, onLogin }: CRMAuthProps) => {
           <div className="mx-auto w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(6,182,212,0.5)]">
             <Icon name="Lock" size={32} className="text-white" />
           </div>
-          <CardTitle className="text-2xl font-semibold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">DEOD CRM</CardTitle>
+          <CardTitle className="text-2xl font-semibold bg-gradient-to-r from-cyan-400 via-purple-400 to-violet-400 bg-clip-text text-transparent">DEAD SPACE</CardTitle>
           <CardDescription className="text-slate-300">Введите пароль для входа</CardDescription>
         </CardHeader>
         <CardContent>
@@ -40,9 +40,9 @@ export const CRMAuth = ({ password, setPassword, onLogin }: CRMAuthProps) => {
               type="button" 
               variant="outline" 
               className="w-full h-10 border-slate-600 text-slate-300 hover:bg-slate-700/50"
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/crm')}
             >
-              На главную
+              Назад в CRM
             </Button>
           </form>
         </CardContent>

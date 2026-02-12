@@ -143,50 +143,57 @@ const CRM = () => {
     setShowCreateLead(true);
   };
 
-  const createLead = () => {
+  const createLead = async () => {
     if (!newLead.name || !newLead.email) {
       alert('Заполните имя и email');
       return;
     }
 
-    const lead: Lead = {
-      id: Date.now().toString(),
-      name: newLead.name,
-      email: newLead.email,
-      phone: newLead.phone || undefined,
-      company: newLead.company || undefined,
-      message: newLead.message || undefined,
-      type: newLead.type,
-      status: newLead.status,
-      source: 'Ручное создание',
-      createdAt: new Date().toISOString()
-    };
+    try {
+      const userProfile = localStorage.getItem('userProfile');
+      if (!userProfile) return;
+      
+      const profile = JSON.parse(userProfile);
+      const partnerId = profile.id || 'default';
 
-    const updatedLeads = [...leads, lead];
-    setLeads(updatedLeads);
+      // Создаем клиента в backend
+      const response = await fetch('https://functions.poehali.dev/dfa8f17b-5894-48e3-b263-bb3c5de0282e', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resource: 'client',
+          partner_id: partnerId,
+          contact_name: newLead.name,
+          email: newLead.email,
+          phone: newLead.phone || '',
+          company_name: newLead.company || '',
+          notes: newLead.message || '',
+          stage: newLead.status,
+          source: 'Ручное создание'
+        })
+      });
 
-    const activity: Activity = {
-      id: (Date.now() + 1).toString(),
-      leadId: lead.id,
-      type: 'note',
-      description: 'Лид создан вручную',
-      createdAt: new Date().toISOString()
-    };
-    const updatedActivities = [...activities, activity];
-    setActivities(updatedActivities);
-
-    saveData(updatedLeads, tasks, updatedActivities);
-
-    setNewLead({
-      name: '',
-      email: '',
-      phone: '',
-      company: '',
-      message: '',
-      type: 'Ручной ввод',
-      status: 'new'
-    });
-    setShowCreateLead(false);
+      if (response.ok) {
+        // Перезагружаем данные после создания
+        await loadData();
+        
+        setNewLead({
+          name: '',
+          email: '',
+          phone: '',
+          company: '',
+          message: '',
+          type: 'Ручной ввод',
+          status: 'new'
+        });
+        setShowCreateLead(false);
+      } else {
+        alert('Ошибка создания клиента');
+      }
+    } catch (error) {
+      console.error('Error creating lead:', error);
+      alert('Ошибка создания клиента');
+    }
   };
 
   const updateLeadStatus = async (id: string, newStatus: Lead['status']) => {

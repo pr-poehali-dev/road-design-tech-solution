@@ -169,45 +169,43 @@ export default function Chat() {
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !currentUser) return;
+    if (!file || !currentUser || !currentUser.id) return;
 
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      userId: 'current',
-      userName: currentUser.name,
-      file: {
-        name: file.name,
-        url: URL.createObjectURL(file),
-        type: file.type,
-      },
-      timestamp: Date.now(),
-      isOwn: true,
-    };
+    try {
+      await chatApi.sendMessage({
+        channel_id: activeChannel,
+        user_id: currentUser.id,
+        content: `Отправлен файл: ${file.name}`,
+        message_type: 'file'
+      });
 
-    setMessages([...messages, newMessage]);
+      loadMessages(activeChannel);
+    } catch (error) {
+      console.error('Ошибка отправки файла:', error);
+    }
   };
 
-  const handleVoiceRecord = () => {
+  const handleVoiceRecord = async () => {
+    if (!currentUser || !currentUser.id) return;
+    
     setIsRecording(!isRecording);
     
     if (!isRecording) {
-      // Start recording simulation
-      setTimeout(() => {
-        if (currentUser) {
-          const newMessage: Message = {
-            id: Date.now().toString(),
-            userId: 'current',
-            userName: currentUser.name,
-            voice: {
-              url: '#',
-              duration: 5,
-            },
-            timestamp: Date.now(),
-            isOwn: true,
-          };
-          setMessages([...messages, newMessage]);
+      setTimeout(async () => {
+        try {
+          await chatApi.sendMessage({
+            channel_id: activeChannel,
+            user_id: currentUser.id!,
+            content: 'Голосовое сообщение (5 сек)',
+            message_type: 'voice'
+          });
+
+          loadMessages(activeChannel);
+          setIsRecording(false);
+        } catch (error) {
+          console.error('Ошибка отправки голосового сообщения:', error);
           setIsRecording(false);
         }
       }, 3000);
