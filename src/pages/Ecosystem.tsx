@@ -224,6 +224,12 @@ export default function Ecosystem() {
                 <p className="text-sm md:text-base text-cyan-400">Добро пожаловать в экосистему DEOD</p>
               </div>
               <div className="flex gap-3">
+                <Link to="/crm">
+                  <Button className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-lg">
+                    <Icon name="LayoutDashboard" className="mr-2" size={18} />
+                    CRM
+                  </Button>
+                </Link>
                 <Link to="/chat">
                   <Button className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 shadow-lg">
                     <Icon name="MessageSquare" className="mr-2" size={18} />
