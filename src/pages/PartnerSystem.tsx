@@ -77,6 +77,17 @@ const PartnerSystem = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Сохраняем профиль пользователя в localStorage
+    const userProfile = {
+      name: formData.name,
+      contact: formData.contact,
+      asset: formData.asset,
+      expectedIncome: formData.expectedIncome,
+      registeredAt: Date.now()
+    };
+    
+    localStorage.setItem('userProfile', JSON.stringify(userProfile));
     navigate('/ecosystem');
   };
 

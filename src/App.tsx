@@ -21,6 +21,7 @@ const TenderGuide = lazy(() => import("./pages/TenderGuide"));
 const ClientHunting = lazy(() => import("./pages/ClientHunting"));
 const CallScripts = lazy(() => import("./pages/CallScripts"));
 const Achievements = lazy(() => import("./pages/Achievements"));
+const Chat = lazy(() => import("./pages/Chat"));
 
 const queryClient = new QueryClient();
 
@@ -92,6 +93,11 @@ const App = () => (
           <Route path="/achievements" element={
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
               <Achievements />
+            </Suspense>
+          } />
+          <Route path="/chat" element={
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
+              <Chat />
             </Suspense>
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

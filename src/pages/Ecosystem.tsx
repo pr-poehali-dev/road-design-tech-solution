@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 
 interface PartnerData {
   name: string;
+  contact: string;
   grade: string;
   personalTurnover: number;
   networkTurnover: number;
@@ -15,14 +16,34 @@ interface PartnerData {
   progressToNext: { current: number; total: number };
 }
 
-const mockPartnerData: PartnerData = {
-  name: 'Александр',
-  grade: 'Партнёр',
-  personalTurnover: 45000000,
-  networkTurnover: 120000000,
-  networkDepth: 2,
-  quarterForecast: 18000000,
-  progressToNext: { current: 45, total: 100 },
+const getPartnerData = (): PartnerData => {
+  const userProfile = localStorage.getItem('userProfile');
+  const defaultName = 'Партнёр';
+  
+  if (userProfile) {
+    const profile = JSON.parse(userProfile);
+    return {
+      name: profile.name || defaultName,
+      contact: profile.contact || '',
+      grade: 'Партнёр',
+      personalTurnover: 45000000,
+      networkTurnover: 120000000,
+      networkDepth: 2,
+      quarterForecast: 18000000,
+      progressToNext: { current: 45, total: 100 },
+    };
+  }
+  
+  return {
+    name: defaultName,
+    contact: '',
+    grade: 'Партнёр',
+    personalTurnover: 45000000,
+    networkTurnover: 120000000,
+    networkDepth: 2,
+    quarterForecast: 18000000,
+    progressToNext: { current: 45, total: 100 },
+  };
 };
 
 const phases = [
@@ -98,6 +119,7 @@ const grades = [
 ];
 
 export default function Ecosystem() {
+  const [partnerData] = useState<PartnerData>(getPartnerData());
   const [selectedPhase, setSelectedPhase] = useState<number | null>(null);
   const [simulatorGrade, setSimulatorGrade] = useState(grades[1]);
   const [dealAmount, setDealAmount] = useState(10000000);
@@ -197,11 +219,17 @@ export default function Ecosystem() {
               </div>
               <div className="text-center sm:text-left flex-1">
                 <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-1 md:mb-2">
-                  {mockPartnerData.name}, вы — {mockPartnerData.grade}
+                  {partnerData.name}, вы — {partnerData.grade}
                 </h1>
                 <p className="text-sm md:text-base text-cyan-400">Добро пожаловать в экосистему DEOD</p>
               </div>
               <div className="flex gap-3">
+                <Link to="/chat">
+                  <Button className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 shadow-lg">
+                    <Icon name="MessageSquare" className="mr-2" size={18} />
+                    Чат
+                  </Button>
+                </Link>
                 <div className="relative">
                   <Button 
                     onClick={() => setKnowledgeOpen(!knowledgeOpen)}
