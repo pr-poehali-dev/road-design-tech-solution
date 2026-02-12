@@ -57,26 +57,62 @@ const CRM = () => {
 
   const loadData = async () => {
     try {
-      // Загружаем заявки из backend
-      const response = await fetch('https://functions.poehali.dev/2c86d047-a46f-48f8-86f6-21557b41ca9b');
-      if (response.ok) {
-        const data = await response.json();
-        if (data.leads) {
-          setLeads(data.leads);
+      const userProfile = localStorage.getItem('userProfile');
+      if (!userProfile) return;
+      
+      const profile = JSON.parse(userProfile);
+      const partnerId = profile.id || 'default';
+      
+      // Загружаем клиентов партнера из backend/crm
+      const clientsResponse = await fetch(
+        `https://functions.poehali.dev/dfa8f17b-5894-48e3-b263-bb3c5de0282e?resource=clients&partner_id=${partnerId}`
+      );
+      
+      if (clientsResponse.ok) {
+        const clientsData = await clientsResponse.json();
+        if (clientsData.clients) {
+          const mappedLeads = clientsData.clients.map((client: Record<string, unknown>) => ({
+            id: client.id,
+            name: client.contact_name || '',
+            email: client.email || '',
+            phone: client.phone || '',
+            company: client.company_name || '',
+            message: client.notes || '',
+            type: 'CRM',
+            status: client.stage || 'new',
+            createdAt: client.created_at,
+            updatedAt: client.updated_at
+          }));
+          setLeads(mappedLeads);
+        }
+      }
+      
+      // Загружаем задачи партнера
+      const tasksResponse = await fetch(
+        `https://functions.poehali.dev/dfa8f17b-5894-48e3-b263-bb3c5de0282e?resource=tasks&partner_id=${partnerId}`
+      );
+      
+      if (tasksResponse.ok) {
+        const tasksData = await tasksResponse.json();
+        if (tasksData.tasks) {
+          setTasks(tasksData.tasks);
+        }
+      }
+      
+      // Загружаем активности партнера
+      const activitiesResponse = await fetch(
+        `https://functions.poehali.dev/dfa8f17b-5894-48e3-b263-bb3c5de0282e?resource=activities&partner_id=${partnerId}`
+      );
+      
+      if (activitiesResponse.ok) {
+        const activitiesData = await activitiesResponse.json();
+        if (activitiesData.activities) {
+          setActivities(activitiesData.activities);
         }
       }
     } catch (error) {
-      console.error('Error loading leads from backend:', error);
-      // Fallback: загружаем из localStorage
-      const savedLeads = localStorage.getItem('crm_leads');
-      if (savedLeads) setLeads(JSON.parse(savedLeads));
+      console.error('Error loading CRM data:', error);
     }
-    
-    // Задачи и активности пока остаются в localStorage
-    const savedTasks = localStorage.getItem('crm_tasks');
-    const savedActivities = localStorage.getItem('crm_activities');
-    if (savedTasks) setTasks(JSON.parse(savedTasks));
-    if (savedActivities) setActivities(JSON.parse(savedActivities));
   };
 
   const saveData = (newLeads: Lead[], newTasks?: Task[], newActivities?: Activity[]) => {

@@ -124,6 +124,7 @@ export default function Ecosystem() {
   const [simulatorGrade, setSimulatorGrade] = useState(grades[1]);
   const [dealAmount, setDealAmount] = useState(10000000);
   const [knowledgeOpen, setKnowledgeOpen] = useState(false);
+  const [newClientsCount, setNewClientsCount] = useState(0);
   const [calculatorData, setCalculatorData] = useState({
     grade: grades[1].name,
     dealAmount: 50000000,
@@ -156,6 +157,32 @@ export default function Ecosystem() {
       clientHunting: clientHuntingResults ? JSON.parse(clientHuntingResults).passed : false,
       callScripts: callScriptsResults ? JSON.parse(callScriptsResults).passed : false,
     });
+
+    // Загрузка количества новых клиентов
+    const loadNewClientsCount = async () => {
+      try {
+        const userProfile = localStorage.getItem('userProfile');
+        if (!userProfile) return;
+        
+        const profile = JSON.parse(userProfile);
+        const partnerId = profile.id || 'default';
+        
+        const response = await fetch(
+          `https://functions.poehali.dev/dfa8f17b-5894-48e3-b263-bb3c5de0282e?resource=stats&partner_id=${partnerId}`
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          setNewClientsCount(data.leads_count || 0);
+        }
+      } catch (error) {
+        console.error('Error loading new clients count:', error);
+      }
+    };
+
+    loadNewClientsCount();
+    const interval = setInterval(loadNewClientsCount, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const formatNumber = (num: number) => {
@@ -225,9 +252,14 @@ export default function Ecosystem() {
               </div>
               <div className="flex gap-3">
                 <Link to="/crm">
-                  <Button className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-lg">
+                  <Button className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-lg relative">
                     <Icon name="LayoutDashboard" className="mr-2" size={18} />
                     CRM
+                    {newClientsCount > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center animate-pulse">
+                        {newClientsCount}
+                      </span>
+                    )}
                   </Button>
                 </Link>
                 <Link to="/chat">
