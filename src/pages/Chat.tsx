@@ -5,21 +5,27 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
 import { Link } from 'react-router-dom';
+import { chatApi } from '@/lib/api';
 
 interface UserProfile {
+  id?: number;
   name: string;
   contact: string;
+  phone?: string;
   avatar?: string;
+  is_online?: boolean;
 }
 
 interface Message {
   id: string;
-  userId: string;
-  userName: string;
-  text?: string;
-  file?: { name: string; url: string; type: string };
-  voice?: { url: string; duration: number };
-  timestamp: number;
+  user_id: number;
+  user_name: string;
+  channel_id: string;
+  content?: string;
+  message_type?: string;
+  file_url?: string;
+  file_name?: string;
+  created_at: string;
   isOwn?: boolean;
 }
 
@@ -38,75 +44,129 @@ export default function Chat() {
   const [activeChannel, setActiveChannel] = useState<string>('general');
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
-  const [channels, setChannels] = useState<Channel[]>([
-    { id: 'general', name: 'Общий чат', type: 'public', icon: 'MessageSquare', unreadCount: 3 },
-    { id: 'support', name: 'Техподдержка', type: 'public', icon: 'HeadphonesIcon', unreadCount: 0 },
-    { id: 'deals', name: 'Сделки и проекты', type: 'group', icon: 'Briefcase', unreadCount: 1 },
-  ]);
+  const [channels, setChannels] = useState<Channel[]>([]);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [showUserList, setShowUserList] = useState(false);
-  const [users] = useState<UserProfile[]>([
-    { name: 'Александр', contact: '+7 999 123 45 67' },
-    { name: 'Мария', contact: '+7 999 234 56 78' },
-    { name: 'Дмитрий', contact: '+7 999 345 67 89' },
-  ]);
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [onlineCount, setOnlineCount] = useState(0);
+  const [loading, setLoading] = useState(true);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const userProfile = localStorage.getItem('userProfile');
-    if (userProfile) {
-      const profile = JSON.parse(userProfile);
-      setCurrentUser({ name: profile.name, contact: profile.contact });
-    }
+    const initChat = async () => {
+      const userProfile = localStorage.getItem('userProfile');
+      if (!userProfile) {
+        setLoading(false);
+        return;
+      }
 
-    // Mock messages
-    setMessages([
-      {
-        id: '1',
-        userId: 'system',
-        userName: 'Система',
-        text: 'Добро пожаловать в чат DEOD! Здесь вы можете общаться с партнерами.',
-        timestamp: Date.now() - 3600000,
-      },
-      {
-        id: '2',
-        userId: 'user1',
-        userName: 'Александр',
-        text: 'Всем привет! Как дела с проектами?',
-        timestamp: Date.now() - 1800000,
-      },
-      {
-        id: '3',
-        userId: 'user2',
-        userName: 'Мария',
-        text: 'Отлично! Только что закрыли сделку на 50 млн',
-        timestamp: Date.now() - 900000,
-      },
-    ]);
+      const profile = JSON.parse(userProfile);
+      
+      try {
+        const userData = await chatApi.registerUser(profile.name, profile.contact);
+        setCurrentUser({
+          id: userData.user.id,
+          name: userData.user.name,
+          contact: userData.user.phone,
+          phone: userData.user.phone
+        });
+
+        loadChannels();
+        loadMessages(activeChannel);
+        loadOnlineUsers();
+      } catch (error) {
+        console.error('Ошибка инициализации чата:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initChat();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const interval = setInterval(() => {
+      chatApi.updateOnlineStatus(currentUser.id!, true);
+      loadMessages(activeChannel);
+      loadOnlineUsers();
+    }, 5000);
+
+    return () => {
+      clearInterval(interval);
+      if (currentUser.id) {
+        chatApi.updateOnlineStatus(currentUser.id, false);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser, activeChannel]);
+
+  const loadChannels = async () => {
+    try {
+      const data = await chatApi.getChannels();
+      setChannels(data.channels.map((ch) => ({
+        id: ch.id,
+        name: ch.name,
+        type: ch.type,
+        icon: ch.type === 'public' ? 'MessageSquare' : ch.type === 'group' ? 'Users' : 'User',
+        unreadCount: 0
+      })));
+    } catch (error) {
+      console.error('Ошибка загрузки каналов:', error);
+      setChannels([
+        { id: 'general', name: 'Общий чат', type: 'public', icon: 'MessageSquare', unreadCount: 0 }
+      ]);
+    }
+  };
+
+  const loadMessages = async (channelId: string) => {
+    try {
+      const data = await chatApi.getMessages(channelId);
+      setMessages(data.messages.map((msg) => ({
+        ...msg,
+        isOwn: currentUser?.id === msg.user_id
+      })));
+    } catch (error) {
+      console.error('Ошибка загрузки сообщений:', error);
+    }
+  };
+
+  const loadOnlineUsers = async () => {
+    try {
+      const data = await chatApi.getOnlineUsers();
+      setUsers(data.users);
+      setOnlineCount(data.count);
+    } catch (error) {
+      console.error('Ошибка загрузки пользователей:', error);
+    }
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSendMessage = () => {
-    if (!message.trim() || !currentUser) return;
+  const handleSendMessage = async () => {
+    if (!message.trim() || !currentUser || !currentUser.id) return;
 
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      userId: 'current',
-      userName: currentUser.name,
-      text: message,
-      timestamp: Date.now(),
-      isOwn: true,
-    };
+    try {
+      await chatApi.sendMessage({
+        channel_id: activeChannel,
+        user_id: currentUser.id,
+        content: message,
+        message_type: 'text'
+      });
 
-    setMessages([...messages, newMessage]);
-    setMessage('');
+      setMessage('');
+      loadMessages(activeChannel);
+    } catch (error) {
+      console.error('Ошибка отправки сообщения:', error);
+    }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -211,6 +271,10 @@ export default function Chat() {
                 <span className="text-sm text-white hidden sm:block">{currentUser.name}</span>
               </div>
             )}
+            <div className="flex items-center gap-2 px-3 py-1 bg-slate-800 rounded-full">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-sm text-white">{onlineCount} онлайн</span>
+            </div>
             <Link to="/ecosystem">
               <Button size="sm" className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500">
                 <Icon name="ArrowLeft" className="mr-2" size={16} />
@@ -306,6 +370,9 @@ export default function Chat() {
                    'Личный чат'}
                 </p>
               </div>
+              {loading && (
+                <div className="ml-auto text-sm text-cyan-400">Загрузка...</div>
+              )}
             </div>
           </div>
 
@@ -325,26 +392,26 @@ export default function Chat() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-semibold text-cyan-400">{msg.userName}</span>
+                        <span className="text-xs font-semibold text-cyan-400">{msg.user_name}</span>
                         <span className="text-xs text-slate-500">
-                          {new Date(msg.timestamp).toLocaleTimeString('ru-RU', {
+                          {new Date(msg.created_at).toLocaleTimeString('ru-RU', {
                             hour: '2-digit',
                             minute: '2-digit',
                           })}
                         </span>
                       </div>
                       
-                      {msg.text && (
+                      {msg.content && (
                         <Card className={`p-3 ${
                           msg.isOwn
                             ? 'bg-gradient-to-br from-cyan-600 to-blue-600'
                             : 'bg-slate-800'
                         }`}>
-                          <p className="text-sm text-white">{msg.text}</p>
+                          <p className="text-sm text-white">{msg.content}</p>
                         </Card>
                       )}
                       
-                      {msg.file && (
+                      {msg.file_url && (
                         <Card className={`p-3 ${
                           msg.isOwn
                             ? 'bg-gradient-to-br from-cyan-600 to-blue-600'
@@ -352,28 +419,12 @@ export default function Chat() {
                         }`}>
                           <div className="flex items-center gap-2">
                             <Icon name="Paperclip" size={16} className="text-white" />
-                            <span className="text-sm text-white truncate">{msg.file.name}</span>
-                            <Button size="sm" variant="ghost" className="ml-auto">
-                              <Icon name="Download" size={14} />
-                            </Button>
-                          </div>
-                        </Card>
-                      )}
-                      
-                      {msg.voice && (
-                        <Card className={`p-3 ${
-                          msg.isOwn
-                            ? 'bg-gradient-to-br from-cyan-600 to-blue-600'
-                            : 'bg-slate-800'
-                        }`}>
-                          <div className="flex items-center gap-2">
-                            <Button size="sm" variant="ghost">
-                              <Icon name="Play" size={14} />
-                            </Button>
-                            <div className="flex-1 h-2 bg-white/20 rounded-full overflow-hidden">
-                              <div className="h-full w-0 bg-white rounded-full" />
-                            </div>
-                            <span className="text-xs text-white">{msg.voice.duration}s</span>
+                            <span className="text-sm text-white truncate">{msg.file_name}</span>
+                            <a href={msg.file_url} download>
+                              <Button size="sm" variant="ghost" className="ml-auto">
+                                <Icon name="Download" size={14} />
+                              </Button>
+                            </a>
                           </div>
                         </Card>
                       )}
