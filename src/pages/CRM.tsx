@@ -61,7 +61,12 @@ const CRM = () => {
       if (!userProfile) return;
       
       const profile = JSON.parse(userProfile);
-      const partnerId = profile.id || 'default';
+      const partnerId = profile.id;
+      
+      if (!partnerId) {
+        console.error('Partner ID not found in user profile');
+        return;
+      }
       
       // Загружаем клиентов партнера из backend/crm
       const clientsResponse = await fetch(
@@ -151,10 +156,18 @@ const CRM = () => {
 
     try {
       const userProfile = localStorage.getItem('userProfile');
-      if (!userProfile) return;
+      if (!userProfile) {
+        alert('Профиль пользователя не найден');
+        return;
+      }
       
       const profile = JSON.parse(userProfile);
-      const partnerId = profile.id || 'default';
+      const partnerId = profile.id;
+      
+      if (!partnerId) {
+        alert('ID партнера не найден в профиле');
+        return;
+      }
 
       // Создаем клиента в backend
       const response = await fetch('https://functions.poehali.dev/dfa8f17b-5894-48e3-b263-bb3c5de0282e', {
