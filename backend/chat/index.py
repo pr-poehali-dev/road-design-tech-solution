@@ -84,10 +84,9 @@ def get_messages(conn, channel_id):
                 m.message_type,
                 m.file_url,
                 m.file_name,
-                m.created_at,
-                m.updated_at
-            FROM messages m
-            LEFT JOIN users u ON m.user_id = u.id
+                m.created_at
+            FROM t_p24285059_road_design_tech_sol.chat_messages m
+            LEFT JOIN t_p24285059_road_design_tech_sol.chat_users u ON m.user_id = u.id
             WHERE m.channel_id = %s
             ORDER BY m.created_at ASC
             LIMIT 100
@@ -116,7 +115,7 @@ def get_online_users(conn):
                 u.phone,
                 u.is_online,
                 u.last_seen
-            FROM users u
+            FROM t_p24285059_road_design_tech_sol.chat_users u
             WHERE u.is_online = true
             ORDER BY u.name
         """)
@@ -144,9 +143,9 @@ def get_channels(conn):
                 c.type,
                 c.created_at,
                 COUNT(DISTINCT cm.user_id) as members_count,
-                (SELECT COUNT(*) FROM messages WHERE channel_id = c.id) as messages_count
-            FROM channels c
-            LEFT JOIN channel_members cm ON c.id = cm.channel_id
+                (SELECT COUNT(*) FROM t_p24285059_road_design_tech_sol.chat_messages WHERE channel_id = c.id) as messages_count
+            FROM t_p24285059_road_design_tech_sol.chat_channels c
+            LEFT JOIN t_p24285059_road_design_tech_sol.chat_channel_members cm ON c.id = cm.channel_id
             GROUP BY c.id, c.name, c.type, c.created_at
             ORDER BY c.created_at DESC
         """)
@@ -175,7 +174,7 @@ def send_message(conn, body):
     
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute("""
-            INSERT INTO messages (channel_id, user_id, content, message_type, file_url, file_name)
+            INSERT INTO t_p24285059_road_design_tech_sol.chat_messages (channel_id, user_id, content, message_type, file_url, file_name)
             VALUES (%s, %s, %s, %s, %s, %s)
             RETURNING id, created_at
         """, (channel_id, user_id, content, message_type, file_url, file_name))
@@ -205,7 +204,7 @@ def update_online_status(conn, body):
     
     with conn.cursor() as cur:
         cur.execute("""
-            UPDATE users 
+            UPDATE t_p24285059_road_design_tech_sol.chat_users 
             SET is_online = %s, last_seen = CURRENT_TIMESTAMP
             WHERE id = %s
         """, (is_online, user_id))
@@ -229,13 +228,13 @@ def register_user(conn, body):
     
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         # Проверяем существует ли пользователь
-        cur.execute("SELECT * FROM users WHERE phone = %s", (phone,))
+        cur.execute("SELECT * FROM t_p24285059_road_design_tech_sol.chat_users WHERE phone = %s", (phone,))
         user = cur.fetchone()
         
         if user:
             # Обновляем статус онлайн
             cur.execute("""
-                UPDATE users 
+                UPDATE t_p24285059_road_design_tech_sol.chat_users 
                 SET is_online = true, last_seen = CURRENT_TIMESTAMP
                 WHERE id = %s
                 RETURNING id, name, phone, role
@@ -252,7 +251,7 @@ def register_user(conn, body):
         else:
             # Создаем нового пользователя
             cur.execute("""
-                INSERT INTO users (name, phone, is_online, role)
+                INSERT INTO t_p24285059_road_design_tech_sol.chat_users (name, phone, is_online, role)
                 VALUES (%s, %s, true, 'partner')
                 RETURNING id, name, phone, role
             """, (name, phone))
