@@ -249,6 +249,20 @@ export default function Ecosystem() {
                   {partnerData.name}, вы — {partnerData.grade}
                 </h1>
                 <p className="text-sm md:text-base text-cyan-400">Добро пожаловать в экосистему DEOD</p>
+                {(() => {
+                  const userProfile = localStorage.getItem('userProfile');
+                  if (userProfile) {
+                    const profile = JSON.parse(userProfile);
+                    if (profile.id) {
+                      return (
+                        <p className="text-xs text-slate-500 mt-1">
+                          ID: {profile.id}
+                        </p>
+                      );
+                    }
+                  }
+                  return null;
+                })()}
               </div>
               <div className="flex gap-3">
                 <Link to="/crm">

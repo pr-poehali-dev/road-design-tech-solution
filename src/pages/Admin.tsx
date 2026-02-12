@@ -17,19 +17,30 @@ import { WarehouseDesigner } from '@/components/crm/WarehouseDesigner';
 
 const Admin = () => {
   const { toast } = useToast();
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showProjectCard, setShowProjectCard] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  const handleLogin = () => {
-    localStorage.setItem('crm_auth', 'authenticated');
-    setIsAuthenticated(true);
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === '1989d1985R!1964Li.#') {
+      localStorage.setItem('admin_auth', 'authenticated');
+      setIsAuthenticated(true);
+    } else {
+      toast({
+        title: 'Ошибка',
+        description: 'Неверный пароль',
+        variant: 'destructive'
+      });
+    }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('crm_auth');
+    localStorage.removeItem('admin_auth');
     setIsAuthenticated(false);
+    setPassword('');
   };
 
   const handleOpenProject = (lead: Lead) => {
@@ -42,7 +53,7 @@ const Admin = () => {
     setActiveTab('production');
   };
 
-  const handleGenerateSpec = async (data: any) => {
+  const handleGenerateSpec = async (data: Record<string, unknown>) => {
     toast({
       title: 'Генерация ТЗ...',
       description: 'YandexGPT создаёт техническое задание'
@@ -50,7 +61,7 @@ const Admin = () => {
     // TODO: Вызов backend для генерации ТЗ
   };
 
-  const handleGenerateProposal = async (data: any) => {
+  const handleGenerateProposal = async (data: Record<string, unknown>) => {
     toast({
       title: 'Генерация КП...',
       description: 'YandexGPT создаёт коммерческое предложение'
@@ -59,6 +70,16 @@ const Admin = () => {
   };
 
 
+
+  if (!isAuthenticated) {
+    return (
+      <CRMAuth
+        password={password}
+        setPassword={setPassword}
+        onLogin={handleLogin}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">

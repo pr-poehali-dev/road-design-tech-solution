@@ -78,8 +78,16 @@ const PartnerSystem = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Генерируем уникальный partner_id
+    const generatePartnerId = () => {
+      const timestamp = Date.now().toString(36);
+      const randomStr = Math.random().toString(36).substring(2, 7);
+      return `${timestamp}-${randomStr}`.toUpperCase();
+    };
+    
     // Сохраняем профиль пользователя в localStorage
     const userProfile = {
+      id: generatePartnerId(),
       name: formData.name,
       contact: formData.contact,
       asset: formData.asset,
