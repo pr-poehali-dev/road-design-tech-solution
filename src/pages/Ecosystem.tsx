@@ -329,7 +329,7 @@ export default function Ecosystem() {
                   <Icon name="TrendingUp" size={20} className="text-cyan-400 md:w-6 md:h-6" />
                   <p className="text-slate-400 text-xs md:text-sm">Личный оборот за квартал</p>
                 </div>
-                <p className="text-lg md:text-2xl font-bold text-white">{formatNumber(mockPartnerData.personalTurnover)} ₽</p>
+                <p className="text-lg md:text-2xl font-bold text-white">{formatNumber(partnerData.personalTurnover)} ₽</p>
               </Card>
 
               <Card className="bg-slate-800/50 border-blue-500/20 p-4 md:p-6">
@@ -337,7 +337,7 @@ export default function Ecosystem() {
                   <Icon name="Network" size={20} className="text-blue-400 md:w-6 md:h-6" />
                   <p className="text-slate-400 text-xs md:text-sm">Оборот вашей сети</p>
                 </div>
-                <p className="text-lg md:text-2xl font-bold text-white">{formatNumber(mockPartnerData.networkTurnover)} ₽</p>
+                <p className="text-lg md:text-2xl font-bold text-white">{formatNumber(partnerData.networkTurnover)} ₽</p>
               </Card>
 
               <Card className="bg-slate-800/50 border-purple-500/20 p-4 md:p-6">
@@ -345,7 +345,7 @@ export default function Ecosystem() {
                   <Icon name="Layers" size={20} className="text-purple-400 md:w-6 md:h-6" />
                   <p className="text-slate-400 text-xs md:text-sm">Глубина сети</p>
                 </div>
-                <p className="text-lg md:text-2xl font-bold text-white">{mockPartnerData.networkDepth} активных уровня</p>
+                <p className="text-lg md:text-2xl font-bold text-white">{partnerData.networkDepth} активных уровня</p>
               </Card>
 
               <Card className="bg-slate-800/50 border-violet-500/20 p-4 md:p-6 shadow-lg shadow-violet-500/10">
@@ -353,25 +353,25 @@ export default function Ecosystem() {
                   <Icon name="DollarSign" size={20} className="text-violet-400 md:w-6 md:h-6" />
                   <p className="text-slate-400 text-xs md:text-sm">Прогноз дохода за квартал</p>
                 </div>
-                <p className="text-lg md:text-2xl font-bold text-white">{formatNumber(mockPartnerData.quarterForecast)} ₽</p>
+                <p className="text-lg md:text-2xl font-bold text-white">{formatNumber(partnerData.quarterForecast)} ₽</p>
               </Card>
             </div>
 
             <Card className="mt-4 md:mt-6 bg-slate-800/50 border-cyan-500/20 p-4 md:p-6">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm md:text-base text-white font-semibold">До следующего грейда</p>
-                <p className="text-sm md:text-base text-cyan-400">{mockPartnerData.progressToNext.current}%</p>
+                <p className="text-sm md:text-base text-cyan-400">{partnerData.progressToNext.current}%</p>
               </div>
               <div className="w-full h-2 md:h-3 bg-slate-700 rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: `${mockPartnerData.progressToNext.current}%` }}
+                  animate={{ width: `${partnerData.progressToNext.current}%` }}
                   transition={{ duration: 1, ease: 'easeOut' }}
                   className="h-full bg-gradient-to-r from-cyan-500 to-blue-600"
                 />
               </div>
               <p className="text-slate-400 text-xs md:text-sm mt-2">
-                Осталось: {formatNumber(mockPartnerData.progressToNext.total - mockPartnerData.progressToNext.current)} млн ₽
+                Осталось: {formatNumber(partnerData.progressToNext.total - partnerData.progressToNext.current)} млн ₽
               </p>
             </Card>
             
