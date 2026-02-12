@@ -9,19 +9,31 @@ import NotFound from "./pages/NotFound";
 import CRM from "./pages/CRM";
 import Admin from "./pages/Admin";
 
-const Warehouses = lazy(() => import("./pages/Warehouses"));
-const CommercialProposal = lazy(() => import("./pages/CommercialProposal"));
-const TEC = lazy(() => import("./pages/TEC"));
-const PartnerSystem = lazy(() => import("./pages/PartnerSystem"));
-const Ecosystem = lazy(() => import("./pages/Ecosystem"));
-const EcosystemInfo = lazy(() => import("./pages/EcosystemInfo"));
-const SalesFunnel = lazy(() => import("./pages/SalesFunnel"));
-const SalesScript = lazy(() => import("./pages/SalesScript"));
-const TenderGuide = lazy(() => import("./pages/TenderGuide"));
-const ClientHunting = lazy(() => import("./pages/ClientHunting"));
-const CallScripts = lazy(() => import("./pages/CallScripts"));
-const Achievements = lazy(() => import("./pages/Achievements"));
-const Chat = lazy(() => import("./pages/Chat"));
+// Lazy loading with error retry
+const lazyWithRetry = (componentImport: () => Promise<{ default: React.ComponentType }>) =>
+  lazy(async () => {
+    try {
+      return await componentImport();
+    } catch (error) {
+      // Force reload on module import failure
+      window.location.reload();
+      return await componentImport();
+    }
+  });
+
+const Warehouses = lazyWithRetry(() => import("./pages/Warehouses"));
+const CommercialProposal = lazyWithRetry(() => import("./pages/CommercialProposal"));
+const TEC = lazyWithRetry(() => import("./pages/TEC"));
+const PartnerSystem = lazyWithRetry(() => import("./pages/PartnerSystem"));
+const Ecosystem = lazyWithRetry(() => import("./pages/Ecosystem"));
+const EcosystemInfo = lazyWithRetry(() => import("./pages/EcosystemInfo"));
+const SalesFunnel = lazyWithRetry(() => import("./pages/SalesFunnel"));
+const SalesScript = lazyWithRetry(() => import("./pages/SalesScript"));
+const TenderGuide = lazyWithRetry(() => import("./pages/TenderGuide"));
+const ClientHunting = lazyWithRetry(() => import("./pages/ClientHunting"));
+const CallScripts = lazyWithRetry(() => import("./pages/CallScripts"));
+const Achievements = lazyWithRetry(() => import("./pages/Achievements"));
+const Chat = lazyWithRetry(() => import("./pages/Chat"));
 
 const queryClient = new QueryClient();
 
