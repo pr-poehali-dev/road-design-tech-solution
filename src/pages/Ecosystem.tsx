@@ -308,13 +308,22 @@ export default function Ecosystem() {
   const referralLink = inviteCode ? `${window.location.origin}/partner-system?ref=${inviteCode}` : '';
   const activeLines = (networkData?.line_stats || []).filter(l => l.partners_count > 0).length;
 
-  const copyReferral = async () => {
+  const copyReferral = () => {
     if (!referralLink) return;
     try {
-      await navigator.clipboard.writeText(referralLink);
+      const textarea = document.createElement('textarea');
+      textarea.value = referralLink;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch { /* fallback */ }
+    } catch (e) {
+      console.error('Copy failed', e);
+    }
   };
 
   /* ---- simulator / calculator (unchanged logic) ---- */
