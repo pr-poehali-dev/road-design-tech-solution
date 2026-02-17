@@ -17,30 +17,26 @@ import { WarehouseDesigner } from '@/components/crm/WarehouseDesigner';
 
 const Admin = () => {
   const { toast } = useToast();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    const profile = localStorage.getItem('userProfile');
+    if (profile) {
+      try { return !!JSON.parse(profile).id; } catch { return false; }
+    }
+    return false;
+  });
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showProjectCard, setShowProjectCard] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password === '1989d1985R!1964Li.#') {
-      localStorage.setItem('admin_auth', 'authenticated');
-      setIsAuthenticated(true);
-    } else {
-      toast({
-        title: 'Ошибка',
-        description: 'Неверный пароль',
-        variant: 'destructive'
-      });
-    }
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+    toast({ title: 'Добро пожаловать', description: 'Вход выполнен успешно' });
   };
 
   const handleLogout = () => {
     localStorage.removeItem('admin_auth');
+    localStorage.removeItem('userProfile');
     setIsAuthenticated(false);
-    setPassword('');
   };
 
   const handleOpenProject = (lead: Lead) => {
@@ -74,9 +70,7 @@ const Admin = () => {
   if (!isAuthenticated) {
     return (
       <CRMAuth
-        password={password}
-        setPassword={setPassword}
-        onLogin={handleLogin}
+        onLoginSuccess={handleLoginSuccess}
       />
     );
   }

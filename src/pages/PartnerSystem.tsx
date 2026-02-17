@@ -5,12 +5,17 @@ import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
 import { Link, useNavigate } from 'react-router-dom';
 
+const API_URL = 'https://functions.poehali.dev/dfa8f17b-5894-48e3-b263-bb3c5de0282e';
+
 const PartnerSystem = () => {
   const navigate = useNavigate();
   const [scrollY, setScrollY] = useState(0);
   const [typedText, setTypedText] = useState('');
   const [textIndex, setTextIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
   
   const texts = [
     'Приводите строительные проекты — получайте 18% с каждой сделки.',
@@ -26,6 +31,8 @@ const PartnerSystem = () => {
   const [formData, setFormData] = useState({
     name: '',
     contact: '',
+    password: '',
+    inviteCode: '',
     asset: '',
     expectedIncome: 50,
   });
@@ -34,6 +41,26 @@ const PartnerSystem = () => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    // Check if already registered
+    try {
+      const raw = localStorage.getItem('userProfile');
+      if (raw) {
+        const p = JSON.parse(raw);
+        if (p && typeof p.id === 'number' && p.id > 0) {
+          setAlreadyRegistered(true);
+        }
+      }
+    } catch { /* ignore */ }
+
+    // Read ?ref= from URL
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    if (ref) {
+      setFormData(prev => ({ ...prev, inviteCode: ref.toUpperCase() }));
+    }
   }, []);
 
   useEffect(() => {
@@ -75,20 +102,49 @@ const PartnerSystem = () => {
     return (yearlyIncome / 1000).toFixed(2);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const userProfile = {
-      id: Math.floor(Date.now() / 1000),
-      name: formData.name,
-      contact: formData.contact,
-      asset: formData.asset,
-      expectedIncome: formData.expectedIncome,
-      registeredAt: Date.now()
-    };
-    
-    localStorage.setItem('userProfile', JSON.stringify(userProfile));
-    navigate('/ecosystem');
+    setSubmitError('');
+
+    if (formData.password.length < 4) {
+      setSubmitError('Пароль должен быть не менее 4 символов');
+      return;
+    }
+
+    setSubmitLoading(true);
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resource: 'register',
+          name: formData.name,
+          phone: formData.contact,
+          password: formData.password,
+          email: '',
+          company: '',
+          invite_code: formData.inviteCode || undefined,
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        setSubmitError(data.error || 'Ошибка регистрации');
+        return;
+      }
+
+      if (data.user) {
+        localStorage.setItem('userProfile', JSON.stringify(data.user));
+        navigate('/ecosystem');
+      } else {
+        setSubmitError('Не удалось получить данные пользователя');
+      }
+    } catch (err) {
+      setSubmitError('Ошибка сети. Попробуйте ещё раз.');
+      console.error(err);
+    } finally {
+      setSubmitLoading(false);
+    }
   };
 
   return (
@@ -957,83 +1013,156 @@ const PartnerSystem = () => {
 
           <Card className="bg-slate-900/90 border-cyan-500/30 shadow-2xl shadow-cyan-500/20 backdrop-blur-sm">
             <CardContent className="p-6 md:p-12">
-              <form onSubmit={handleSubmit} className="space-y-5 md:space-y-6">
-                <div>
-                  <label className="text-sm md:text-lg text-slate-200 mb-2 md:mb-3 block font-semibold">
-                    Имя
-                  </label>
-                  <Input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="bg-slate-800 border-slate-700 text-white focus:border-cyan-500 text-base md:text-lg py-6"
-                    placeholder="Ваше имя"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm md:text-lg text-slate-200 mb-2 md:mb-3 block font-semibold">
-                    Телефон / Telegram
-                  </label>
-                  <Input
-                    type="text"
-                    required
-                    value={formData.contact}
-                    onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
-                    className="bg-slate-800 border-slate-700 text-white focus:border-cyan-500 text-sm md:text-lg py-4 md:py-6"
-                    placeholder="+7 (___) ___-__-__ или @username"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm md:text-lg text-slate-200 mb-2 md:mb-3 block font-semibold">
-                    Главный профессиональный актив
-                  </label>
-                  <select
-                    required
-                    value={formData.asset}
-                    onChange={(e) => setFormData({ ...formData, asset: e.target.value })}
-                    className="w-full px-3 md:px-4 py-3 md:py-4 rounded-lg bg-slate-800 border border-slate-700 text-white focus:border-cyan-500 text-sm md:text-lg"
-                  >
-                    <option value="">Выберите вариант</option>
-                    <option value="connections">Глубокие отраслевые связи</option>
-                    <option value="tenders">Опыт в госзакупках/тендерах</option>
-                    <option value="expertise">Экспертиза в строительстве/проектировании</option>
-                    <option value="team">Управляю командой продаж</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-sm md:text-lg text-slate-200 mb-3 md:mb-4 block font-semibold">
-                    Ожидаемый личный годовой доход через 2 года
-                  </label>
-                  <Input
-                    type="range"
-                    min="20"
-                    max="1000"
-                    step="10"
-                    value={formData.expectedIncome}
-                    onChange={(e) => setFormData({ ...formData, expectedIncome: Number(e.target.value) })}
-                    className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer"
-                  />
-                  <div className="flex justify-between mt-3 text-sm text-slate-500">
-                    <span>20 млн</span>
-                    <span className="text-cyan-400 font-bold text-base md:text-xl">
-                      {formData.expectedIncome >= 1000 ? '1+ млрд' : `${formData.expectedIncome}+ млн`} ₽
-                    </span>
-                    <span>1 млрд</span>
+              {alreadyRegistered ? (
+                <div className="text-center py-8">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center mx-auto mb-6">
+                    <Icon name="CheckCircle" size={40} className="text-white" />
                   </div>
+                  <h3 className="text-2xl md:text-3xl font-bold text-white mb-3">Вы уже зарегистрированы</h3>
+                  <p className="text-slate-400 mb-8">Перейдите в личный кабинет для работы с партнёрской сетью</p>
+                  <Button
+                    onClick={() => navigate('/ecosystem')}
+                    className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-base md:text-xl py-5 md:py-7 px-8 shadow-2xl shadow-cyan-500/50 hover:scale-105 transition-all"
+                  >
+                    <Icon name="ArrowRight" className="mr-2" size={24} />
+                    Перейти в кабинет
+                  </Button>
                 </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-5 md:space-y-6">
+                  <div>
+                    <label className="text-sm md:text-lg text-slate-200 mb-2 md:mb-3 block font-semibold">
+                      Имя *
+                    </label>
+                    <Input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="bg-slate-800 border-slate-700 text-white focus:border-cyan-500 text-base md:text-lg py-6"
+                      placeholder="Ваше имя"
+                    />
+                  </div>
 
-                <Button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-base md:text-xl py-5 md:py-7 mt-6 md:mt-8 shadow-2xl shadow-cyan-500/50 hover:scale-105 transition-all"
-                >
-                  Отправить заявку
-                  <Icon name="Send" className="ml-2" size={24} />
-                </Button>
-              </form>
+                  <div>
+                    <label className="text-sm md:text-lg text-slate-200 mb-2 md:mb-3 block font-semibold">
+                      Телефон *
+                    </label>
+                    <Input
+                      type="tel"
+                      required
+                      value={formData.contact}
+                      onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
+                      className="bg-slate-800 border-slate-700 text-white focus:border-cyan-500 text-sm md:text-lg py-4 md:py-6"
+                      placeholder="+7 (___) ___-__-__"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm md:text-lg text-slate-200 mb-2 md:mb-3 block font-semibold">
+                      Пароль *
+                    </label>
+                    <Input
+                      type="password"
+                      required
+                      minLength={4}
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="bg-slate-800 border-slate-700 text-white focus:border-cyan-500 text-sm md:text-lg py-4 md:py-6"
+                      placeholder="Минимум 4 символа"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm md:text-lg text-slate-200 mb-2 md:mb-3 block font-semibold">
+                      Код приглашения
+                    </label>
+                    <div className="relative">
+                      <Icon name="Gift" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-400/60" />
+                      <Input
+                        type="text"
+                        value={formData.inviteCode}
+                        onChange={(e) => setFormData({ ...formData, inviteCode: e.target.value.toUpperCase() })}
+                        className="bg-slate-800 border-slate-700 text-white focus:border-cyan-500 text-sm md:text-lg py-4 md:py-6 pl-10 uppercase tracking-widest font-mono"
+                        placeholder="Необязательно"
+                      />
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">Если вас пригласил партнёр, введите его код</p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm md:text-lg text-slate-200 mb-2 md:mb-3 block font-semibold">
+                      Главный профессиональный актив
+                    </label>
+                    <select
+                      required
+                      value={formData.asset}
+                      onChange={(e) => setFormData({ ...formData, asset: e.target.value })}
+                      className="w-full px-3 md:px-4 py-3 md:py-4 rounded-lg bg-slate-800 border border-slate-700 text-white focus:border-cyan-500 text-sm md:text-lg"
+                    >
+                      <option value="">Выберите вариант</option>
+                      <option value="connections">Глубокие отраслевые связи</option>
+                      <option value="tenders">Опыт в госзакупках/тендерах</option>
+                      <option value="expertise">Экспертиза в строительстве/проектировании</option>
+                      <option value="team">Управляю командой продаж</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm md:text-lg text-slate-200 mb-3 md:mb-4 block font-semibold">
+                      Ожидаемый личный годовой доход через 2 года
+                    </label>
+                    <Input
+                      type="range"
+                      min="20"
+                      max="1000"
+                      step="10"
+                      value={formData.expectedIncome}
+                      onChange={(e) => setFormData({ ...formData, expectedIncome: Number(e.target.value) })}
+                      className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <div className="flex justify-between mt-3 text-sm text-slate-500">
+                      <span>20 млн</span>
+                      <span className="text-cyan-400 font-bold text-base md:text-xl">
+                        {formData.expectedIncome >= 1000 ? '1+ млрд' : `${formData.expectedIncome}+ млн`} &#8381;
+                      </span>
+                      <span>1 млрд</span>
+                    </div>
+                  </div>
+
+                  {submitError && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-2 text-red-400 text-sm">
+                      <Icon name="AlertCircle" size={16} />
+                      {submitError}
+                    </div>
+                  )}
+
+                  <Button
+                    type="submit"
+                    disabled={submitLoading}
+                    className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-base md:text-xl py-5 md:py-7 mt-6 md:mt-8 shadow-2xl shadow-cyan-500/50 hover:scale-105 transition-all disabled:opacity-50 disabled:hover:scale-100"
+                  >
+                    {submitLoading ? (
+                      <>
+                        <Icon name="Loader2" size={24} className="mr-2 animate-spin" />
+                        Регистрация...
+                      </>
+                    ) : (
+                      <>
+                        Зарегистрироваться
+                        <Icon name="Send" className="ml-2" size={24} />
+                      </>
+                    )}
+                  </Button>
+
+                  <p className="text-center text-sm text-slate-500 mt-4">
+                    Уже есть аккаунт?{' '}
+                    <Link to="/crm" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-4">
+                      Войти
+                    </Link>
+                  </p>
+                </form>
+              )}
             </CardContent>
           </Card>
         </div>

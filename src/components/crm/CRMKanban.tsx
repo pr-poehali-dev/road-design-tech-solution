@@ -11,12 +11,18 @@ export interface Lead {
   phone?: string;
   company?: string;
   message?: string;
+  description?: string;
   status: 'new' | 'first-contact' | 'evaluation' | 'proposal' | 'negotiation' | 'closed-won' | 'closed-lost';
   createdAt: string;
   source: string;
   budget?: string;
   tags?: string[];
   manager?: string;
+  deal_amount?: number;
+  revenue?: number;
+  planned_revenue?: number;
+  contract_amount?: number;
+  received_amount?: number;
 }
 
 interface CRMKanbanProps {

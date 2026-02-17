@@ -4,10 +4,12 @@ import { CRMHeader } from '@/components/crm/CRMHeader';
 import { CRMKanban, Lead } from '@/components/crm/CRMKanban';
 import { CRMLeadModal, Task, Activity } from '@/components/crm/CRMLeadModal';
 
+const API_URL = 'https://functions.poehali.dev/dfa8f17b-5894-48e3-b263-bb3c5de0282e';
+
 const CRM = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState('');
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [revenueStats, setRevenueStats] = useState({ totalRevenue: 0, totalPlanned: 0, totalContracts: 0, totalReceived: 0 });
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -47,8 +49,18 @@ const CRM = () => {
   ];
 
   useEffect(() => {
-    setIsAuthenticated(true);
-    loadData();
+    const userProfile = localStorage.getItem('userProfile');
+    if (userProfile) {
+      try {
+        const profile = JSON.parse(userProfile);
+        if (profile && profile.id) {
+          setIsAuthenticated(true);
+          loadData();
+        }
+      } catch {
+        // invalid profile, stay on auth screen
+      }
+    }
     const savedColors = localStorage.getItem('crm_colors');
     if (savedColors) {
       setCustomColors(JSON.parse(savedColors));
@@ -70,7 +82,7 @@ const CRM = () => {
       
       // Загружаем клиентов партнера из backend/crm
       const clientsResponse = await fetch(
-        `https://functions.poehali.dev/dfa8f17b-5894-48e3-b263-bb3c5de0282e?resource=clients&partner_id=${partnerId}`
+        `${API_URL}?resource=clients&partner_id=${partnerId}`
       );
       
       if (clientsResponse.ok) {
@@ -83,10 +95,16 @@ const CRM = () => {
             phone: client.phone || '',
             company: client.company_name || '',
             message: client.notes || '',
+            description: client.description || '',
             type: 'CRM',
             status: client.stage || 'new',
             createdAt: client.created_at,
-            updatedAt: client.updated_at
+            updatedAt: client.updated_at,
+            deal_amount: Number(client.deal_amount) || 0,
+            revenue: Number(client.revenue) || 0,
+            planned_revenue: Number(client.planned_revenue) || 0,
+            contract_amount: Number(client.contract_amount) || 0,
+            received_amount: Number(client.received_amount) || 0,
           }));
           setLeads(mappedLeads);
         }
@@ -94,7 +112,7 @@ const CRM = () => {
       
       // Загружаем задачи партнера
       const tasksResponse = await fetch(
-        `https://functions.poehali.dev/dfa8f17b-5894-48e3-b263-bb3c5de0282e?resource=tasks&partner_id=${partnerId}`
+        `${API_URL}?resource=tasks&partner_id=${partnerId}`
       );
       
       if (tasksResponse.ok) {
@@ -106,13 +124,30 @@ const CRM = () => {
       
       // Загружаем активности партнера
       const activitiesResponse = await fetch(
-        `https://functions.poehali.dev/dfa8f17b-5894-48e3-b263-bb3c5de0282e?resource=activities&partner_id=${partnerId}`
+        `${API_URL}?resource=activities&partner_id=${partnerId}`
       );
       
       if (activitiesResponse.ok) {
         const activitiesData = await activitiesResponse.json();
         if (activitiesData.activities) {
           setActivities(activitiesData.activities);
+        }
+      }
+
+      // Загружаем статистику с revenue-данными
+      const statsResponse = await fetch(
+        `${API_URL}?resource=stats&partner_id=${partnerId}`
+      );
+
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        if (statsData.stats) {
+          setRevenueStats({
+            totalRevenue: parseFloat(statsData.stats.total_revenue) || 0,
+            totalPlanned: parseFloat(statsData.stats.total_planned) || 0,
+            totalContracts: parseFloat(statsData.stats.total_contracts) || 0,
+            totalReceived: parseFloat(statsData.stats.total_received) || 0,
+          });
         }
       }
     } catch (error) {
@@ -126,30 +161,15 @@ const CRM = () => {
     if (newActivities) localStorage.setItem('crm_activities', JSON.stringify(newActivities));
   };
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password === 'deod2024') {
-      localStorage.setItem('crm_auth', 'authenticated');
-      const existing = localStorage.getItem('userProfile');
-      if (!existing || !JSON.parse(existing).id) {
-        localStorage.setItem('userProfile', JSON.stringify({
-          id: 1,
-          name: 'Admin',
-          contact: '',
-          registeredAt: Date.now()
-        }));
-      }
-      setIsAuthenticated(true);
-      loadData();
-    } else {
-      alert('Неверный пароль');
-    }
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+    loadData();
   };
 
   const handleLogout = () => {
     localStorage.removeItem('crm_auth');
+    localStorage.removeItem('userProfile');
     setIsAuthenticated(false);
-    setPassword('');
   };
 
   const openCreateLeadModal = (status?: Lead['status']) => {
@@ -179,7 +199,7 @@ const CRM = () => {
       }
 
       // Создаем клиента в backend
-      const response = await fetch('https://functions.poehali.dev/dfa8f17b-5894-48e3-b263-bb3c5de0282e', {
+      const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -238,11 +258,20 @@ const CRM = () => {
     
     // Синхронизируем с backend
     try {
-      await fetch('https://functions.poehali.dev/2c86d047-a46f-48f8-86f6-21557b41ca9b', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status: newStatus })
-      });
+      const userProfile = localStorage.getItem('userProfile');
+      const profile = userProfile ? JSON.parse(userProfile) : null;
+      if (profile?.id) {
+        await fetch(API_URL, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            resource: 'client',
+            partner_id: profile.id,
+            id: Number(id),
+            updates: { stage: newStatus }
+          })
+        });
+      }
     } catch (error) {
       console.error('Failed to update lead status:', error);
     }
@@ -266,9 +295,13 @@ const CRM = () => {
     
     // Удаляем из backend
     try {
-      await fetch(`https://functions.poehali.dev/2c86d047-a46f-48f8-86f6-21557b41ca9b?id=${id}`, {
-        method: 'DELETE'
-      });
+      const userProfile = localStorage.getItem('userProfile');
+      const profile = userProfile ? JSON.parse(userProfile) : null;
+      if (profile?.id) {
+        await fetch(`${API_URL}?resource=client&partner_id=${profile.id}&id=${id}`, {
+          method: 'DELETE'
+        });
+      }
     } catch (error) {
       console.error('Failed to delete lead:', error);
     }
@@ -357,15 +390,63 @@ const CRM = () => {
     window.open(`tel:${phone}`);
   };
 
+  const updateLead = async (id: string, updates: Record<string, unknown>) => {
+    try {
+      const userProfile = localStorage.getItem('userProfile');
+      if (!userProfile) return;
+      const profile = JSON.parse(userProfile);
+      const partnerId = profile.id;
+      if (!partnerId) return;
+
+      const response = await fetch(API_URL, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resource: 'client',
+          partner_id: partnerId,
+          id: Number(id),
+          updates
+        })
+      });
+
+      if (response.ok) {
+        // Immediately update selectedLead with mapped field names
+        if (selectedLead && String(selectedLead.id) === String(id)) {
+          const mapped: Partial<Lead> = {};
+          if (updates.contact_name !== undefined) mapped.name = String(updates.contact_name);
+          if (updates.email !== undefined) mapped.email = String(updates.email);
+          if (updates.phone !== undefined) mapped.phone = String(updates.phone);
+          if (updates.company_name !== undefined) mapped.company = String(updates.company_name);
+          if (updates.notes !== undefined) mapped.message = String(updates.notes);
+          if (updates.description !== undefined) mapped.description = String(updates.description);
+          if (updates.stage !== undefined) mapped.status = String(updates.stage) as Lead['status'];
+          if (updates.deal_amount !== undefined) mapped.deal_amount = Number(updates.deal_amount);
+          if (updates.revenue !== undefined) mapped.revenue = Number(updates.revenue);
+          if (updates.planned_revenue !== undefined) mapped.planned_revenue = Number(updates.planned_revenue);
+          if (updates.contract_amount !== undefined) mapped.contract_amount = Number(updates.contract_amount);
+          if (updates.received_amount !== undefined) mapped.received_amount = Number(updates.received_amount);
+          setSelectedLead({ ...selectedLead, ...mapped });
+        }
+        // Reload all data from backend (updates leads list + stats)
+        await loadData();
+      } else {
+        alert('Ошибка обновления сделки');
+      }
+    } catch (error) {
+      console.error('Error updating lead:', error);
+      alert('Ошибка обновления сделки');
+    }
+  };
+
   const updateStageColor = (stageId: string, color: string, textColor: string) => {
     const newColors = { ...customColors, [stageId]: { color, textColor } };
     setCustomColors(newColors);
     localStorage.setItem('crm_colors', JSON.stringify(newColors));
   };
 
-  const getConversionRate = () => {
+  const getConversionRate = (): string => {
     const total = leads.length;
-    if (total === 0) return 0;
+    if (total === 0) return '0';
     const won = leads.filter(l => l.status === 'closed-won').length;
     return ((won / total) * 100).toFixed(0);
   };
@@ -386,9 +467,7 @@ const CRM = () => {
   if (!isAuthenticated) {
     return (
       <CRMAuth 
-        password={password} 
-        setPassword={setPassword} 
-        onLogin={handleLogin} 
+        onLoginSuccess={handleLoginSuccess} 
       />
     );
   }
@@ -405,6 +484,10 @@ const CRM = () => {
         activeLeads={leads.filter(l => !['closed-won', 'closed-lost'].includes(l.status)).length}
         conversionRate={getConversionRate()}
         totalBudget={getTotalBudget()}
+        totalRevenue={revenueStats.totalRevenue}
+        totalPlanned={revenueStats.totalPlanned}
+        totalContracts={revenueStats.totalContracts}
+        totalReceived={revenueStats.totalReceived}
       />
 
       <CRMKanban
@@ -431,6 +514,7 @@ const CRM = () => {
         onCloseCreateLead={() => setShowCreateLead(false)}
         onDeleteLead={deleteLead}
         onUpdateLeadStatus={updateLeadStatus}
+        onUpdateLead={updateLead}
         onAddNote={addNote}
         onAddTask={addTask}
         onToggleTaskComplete={toggleTaskComplete}

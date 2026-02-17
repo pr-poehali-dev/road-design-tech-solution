@@ -19,6 +19,29 @@
         "stats": "object"
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Login with wrong password",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "resource": "login",
+        "phone": "000",
+        "password": "wrong"
+      },
+      "expectedStatus": 401,
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Register missing fields",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "resource": "register",
+        "name": ""
+      },
+      "expectedStatus": 400,
+      "bodyMatcher": "partial"
     }
   ]
 }
