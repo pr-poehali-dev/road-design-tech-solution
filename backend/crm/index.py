@@ -281,7 +281,7 @@ def get_clients(conn, partner_id, params):
 
     query = """
         SELECT
-            c.*,
+            c.*, c.contact_person AS contact_name,
             COUNT(DISTINCT a.id) AS activities_count,
             COUNT(DISTINCT t.id) AS tasks_count
         FROM crm_clients c
@@ -311,7 +311,7 @@ def get_client_details(conn, partner_id, client_id):
 
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute("""
-            SELECT * FROM crm_clients
+            SELECT *, contact_person AS contact_name FROM crm_clients
             WHERE id = %s AND partner_id = %s
         """, (client_id, partner_id))
 
@@ -348,7 +348,7 @@ def create_client(conn, partner_id, body):
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute("""
             INSERT INTO crm_clients (
-                partner_id, company_name, contact_name, email, phone,
+                partner_id, company_name, contact_person, email, phone,
                 stage, deal_amount, notes, description,
                 revenue, planned_revenue, contract_amount, received_amount
             ) VALUES (
@@ -392,12 +392,17 @@ def update_client(conn, partner_id, body):
         return error_response('Missing id or updates', 400)
 
     allowed_fields = {
-        'company_name', 'contact_name', 'email', 'phone', 'stage',
+        'company_name', 'contact_person', 'contact_name', 'email', 'phone', 'stage',
         'deal_amount', 'notes', 'description', 'status', 'source',
         'revenue', 'planned_revenue', 'contract_amount', 'received_amount',
     }
 
-    filtered = {k: v for k, v in updates.items() if k in allowed_fields}
+    filtered = {}
+    for k, v in updates.items():
+        if k not in allowed_fields:
+            continue
+        col = 'contact_person' if k == 'contact_name' else k
+        filtered[col] = v
     if not filtered:
         return error_response('No valid fields to update', 400)
 
