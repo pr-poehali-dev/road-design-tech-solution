@@ -34,6 +34,7 @@ const ClientHunting = lazyWithRetry(() => import("./pages/ClientHunting"));
 const CallScripts = lazyWithRetry(() => import("./pages/CallScripts"));
 const Achievements = lazyWithRetry(() => import("./pages/Achievements"));
 const Chat = lazyWithRetry(() => import("./pages/Chat"));
+const Valentine = lazyWithRetry(() => import("./pages/Valentine"));
 
 const queryClient = new QueryClient();
 
@@ -110,6 +111,11 @@ const App = () => (
           <Route path="/chat" element={
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
               <Chat />
+            </Suspense>
+          } />
+          <Route path="/valentine" element={
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-[#050a18] text-white/40">Загрузка...</div>}>
+              <Valentine />
             </Suspense>
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -82,6 +82,17 @@ const HeroSection = ({ setShowQuoteForm, saveLead }: HeroSectionProps) => {
                   <span className="truncate">Коммерческое предложение</span>
                 </Button>
               </div>
+              <Button 
+                  size="lg" 
+                  className="w-full sm:w-auto font-bold text-sm md:text-base px-8 md:px-12 py-5 md:py-7 group touch-manipulation relative overflow-hidden bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 hover:from-pink-600 hover:via-purple-600 hover:to-cyan-600 text-white border-0 shadow-[0_0_30px_rgba(168,85,247,0.4)] hover:shadow-[0_0_50px_rgba(168,85,247,0.6)] transition-all duration-500 rounded-xl"
+                  onClick={() => window.location.href = '/valentine'}
+                >
+                  <span className="relative z-10 flex items-center gap-2 text-lg">
+                    <Icon name="Star" className="group-hover:rotate-[360deg] transition-transform duration-700" size={22} />
+                    День Рождения
+                    <Icon name="Heart" className="group-hover:scale-125 transition-transform" size={18} />
+                  </span>
+                </Button>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 text-white/90 text-sm sm:text-base">
                 <a 
                   href="tel:+79955556231" 
