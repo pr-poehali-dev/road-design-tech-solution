@@ -130,6 +130,15 @@ const CRM = () => {
     e.preventDefault();
     if (password === 'deod2024') {
       localStorage.setItem('crm_auth', 'authenticated');
+      const existing = localStorage.getItem('userProfile');
+      if (!existing || !JSON.parse(existing).id) {
+        localStorage.setItem('userProfile', JSON.stringify({
+          id: 1,
+          name: 'Admin',
+          contact: '',
+          registeredAt: Date.now()
+        }));
+      }
       setIsAuthenticated(true);
       loadData();
     } else {

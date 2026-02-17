@@ -165,7 +165,8 @@ export default function Ecosystem() {
         if (!userProfile) return;
         
         const profile = JSON.parse(userProfile);
-        const partnerId = profile.id || 'default';
+        const partnerId = profile.id;
+        if (!partnerId) return;
         
         const response = await fetch(
           `https://functions.poehali.dev/dfa8f17b-5894-48e3-b263-bb3c5de0282e?resource=stats&partner_id=${partnerId}`

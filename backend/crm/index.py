@@ -49,6 +49,11 @@ def handle_get(event, conn):
     if not partner_id:
         return error_response('Missing partner_id', 400)
     
+    try:
+        partner_id = int(partner_id)
+    except (ValueError, TypeError):
+        return error_response('Invalid partner_id: must be a number', 400)
+    
     if resource == 'clients':
         return get_clients(conn, partner_id, params)
     elif resource == 'client':
@@ -73,6 +78,11 @@ def handle_post(event, conn):
     if not partner_id:
         return error_response('Missing partner_id', 400)
     
+    try:
+        partner_id = int(partner_id)
+    except (ValueError, TypeError):
+        return error_response('Invalid partner_id: must be a number', 400)
+    
     if resource == 'client':
         return create_client(conn, partner_id, body)
     elif resource == 'task':
@@ -92,6 +102,11 @@ def handle_put(event, conn):
     if not partner_id:
         return error_response('Missing partner_id', 400)
     
+    try:
+        partner_id = int(partner_id)
+    except (ValueError, TypeError):
+        return error_response('Invalid partner_id: must be a number', 400)
+    
     if resource == 'client':
         return update_client(conn, partner_id, body)
     elif resource == 'task':
@@ -109,6 +124,11 @@ def handle_delete(event, conn):
     
     if not partner_id or not item_id:
         return error_response('Missing partner_id or id', 400)
+    
+    try:
+        partner_id = int(partner_id)
+    except (ValueError, TypeError):
+        return error_response('Invalid partner_id: must be a number', 400)
     
     if resource == 'client':
         return delete_client(conn, partner_id, item_id)
@@ -286,7 +306,7 @@ def get_partner_stats(conn, partner_id):
 
 def create_client(conn, partner_id, body):
     """Создать клиента"""
-    data = body.get('data', {})
+    data = body.get('data') or body
     
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute("""
@@ -297,14 +317,14 @@ def create_client(conn, partner_id, body):
             RETURNING id, created_at
         """, (
             partner_id,
-            data.get('company_name'),
-            data.get('contact_person'),
-            data.get('email'),
-            data.get('phone'),
+            data.get('company_name', ''),
+            data.get('contact_person') or data.get('contact_name', ''),
+            data.get('email', ''),
+            data.get('phone', ''),
             data.get('stage', 'lead'),
             data.get('deal_amount', 0),
-            data.get('source'),
-            data.get('notes')
+            data.get('source', ''),
+            data.get('notes', '')
         ))
         
         result = cur.fetchone()
