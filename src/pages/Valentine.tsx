@@ -182,6 +182,83 @@ const chapters = [
   },
 ];
 
+/* ───────────── BACKGROUND MUSIC ───────────── */
+function BackgroundMusic() {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showHint, setShowHint] = useState(true);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const togglePlay = useCallback(() => {
+    if (!isPlaying) {
+      setIsPlaying(true);
+      setShowHint(false);
+    } else {
+      setIsPlaying(false);
+    }
+  }, [isPlaying]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowHint(false), 6000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <>
+      {isPlaying && (
+        <iframe
+          ref={iframeRef}
+          src="https://www.youtube.com/embed/lfLBb-Q4hlc?autoplay=1&loop=1&playlist=lfLBb-Q4hlc&controls=0&showinfo=0&modestbranding=1&rel=0"
+          allow="autoplay"
+          style={{ position: "fixed", width: 0, height: 0, border: "none", opacity: 0, pointerEvents: "none" }}
+          title="bg-music"
+        />
+      )}
+      <motion.div
+        className="fixed top-5 right-5 z-[100] flex items-center gap-3"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.5, duration: 0.8 }}
+      >
+        {showHint && !isPlaying && (
+          <motion.span
+            className="text-xs text-cyan-300/60 bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full border border-cyan-500/20"
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0 }}
+          >
+            Включи музыку ♪
+          </motion.span>
+        )}
+        <motion.button
+          className={`w-11 h-11 rounded-full backdrop-blur-md border flex items-center justify-center transition-all duration-500 ${
+            isPlaying
+              ? "bg-cyan-500/20 border-cyan-400/40 shadow-[0_0_20px_rgba(0,200,255,0.15)]"
+              : "bg-white/5 border-white/15 hover:bg-white/10 hover:border-white/25"
+          }`}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={togglePlay}
+        >
+          {isPlaying ? (
+            <motion.div className="flex items-center gap-[3px]">
+              {[0, 1, 2].map((i) => (
+                <motion.div
+                  key={i}
+                  className="w-[3px] bg-cyan-300 rounded-full"
+                  animate={{ height: [4, 14, 6, 12, 4] }}
+                  transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
+                />
+              ))}
+            </motion.div>
+          ) : (
+            <Icon name="Music" size={18} className="text-white/60" />
+          )}
+        </motion.button>
+      </motion.div>
+    </>
+  );
+}
+
 /* ───────────── STARS background canvas ───────────── */
 function StarField() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -935,6 +1012,7 @@ export default function Valentine() {
 
   return (
     <div className="min-h-screen bg-[#050a18] text-white overflow-x-hidden selection:bg-cyan-500/30">
+      <BackgroundMusic />
       <StarField />
       <AuroraBorealis intensity={auroraIntensity} />
       <FloatingParticles />
