@@ -207,9 +207,9 @@ function BackgroundMusic() {
       {isPlaying && (
         <iframe
           ref={iframeRef}
-          src="https://www.youtube.com/embed/lfLBb-Q4hlc?autoplay=1&loop=1&playlist=lfLBb-Q4hlc&controls=0&showinfo=0&modestbranding=1&rel=0"
+          src="https://rutube.ru/play/embed/2303eac71bcd6c1fe4226c567636a34f/?p=pRiA2WRSqJUgPi5ELjUkwA&autostart=true"
           allow="autoplay"
-          style={{ position: "fixed", width: 0, height: 0, border: "none", opacity: 0, pointerEvents: "none" }}
+          style={{ position: "fixed", width: 1, height: 1, border: "none", opacity: 0, pointerEvents: "none", top: -10, left: -10 }}
           title="bg-music"
         />
       )}
