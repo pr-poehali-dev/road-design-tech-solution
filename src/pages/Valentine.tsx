@@ -183,32 +183,28 @@ const chapters = [
 ];
 
 /* ───────────── BACKGROUND MUSIC ───────────── */
-function BackgroundMusic() {
+function BackgroundMusic({ started }: { started: boolean }) {
   const [isMuted, setIsMuted] = useState(false);
+
+  if (!started) return null;
 
   return (
     <>
-      <iframe
-        src="https://rutube.ru/play/embed/2303eac71bcd6c1fe4226c567636a34f/?p=pRiA2WRSqJUgPi5ELjUkwA&autostart=true"
-        allow="autoplay"
-        style={{
-          position: "fixed",
-          width: 1,
-          height: 1,
-          border: "none",
-          opacity: 0,
-          pointerEvents: "none",
-          top: -10,
-          left: -10,
-          ...(isMuted ? { display: "none" } : {}),
-        }}
-        title="bg-music"
-      />
+      {!isMuted && (
+        <div className="fixed bottom-0 right-0 z-[200] overflow-hidden" style={{ width: 1, height: 1, opacity: 0.01 }}>
+          <iframe
+            src="https://rutube.ru/play/embed/2303eac71bcd6c1fe4226c567636a34f/?p=pRiA2WRSqJUgPi5ELjUkwA&autostart=true&t=0"
+            allow="autoplay; encrypted-media"
+            style={{ width: 320, height: 180, border: "none" }}
+            title="bg-music"
+          />
+        </div>
+      )}
       <motion.div
         className="fixed top-5 right-5 z-[100]"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.5, duration: 0.8 }}
+        transition={{ delay: 0.5, duration: 0.8 }}
       >
         <motion.button
           className={`w-11 h-11 rounded-full backdrop-blur-md border flex items-center justify-center transition-all duration-500 ${
@@ -955,6 +951,7 @@ type ViewState =
 export default function Valentine() {
   const [view, setView] = useState<ViewState>({ type: "intro" });
   const [auroraIntensity, setAuroraIntensity] = useState(0.4);
+  const [musicStarted, setMusicStarted] = useState(false);
 
   const totalChapters = chapters.length - 1;
 
@@ -993,7 +990,7 @@ export default function Valentine() {
 
   return (
     <div className="min-h-screen bg-[#050a18] text-white overflow-x-hidden selection:bg-cyan-500/30">
-      <BackgroundMusic />
+      <BackgroundMusic started={musicStarted} />
       <StarField />
       <AuroraBorealis intensity={auroraIntensity} />
       <FloatingParticles />
@@ -1002,7 +999,7 @@ export default function Valentine() {
       <AnimatePresence mode="wait">
         {view.type === "intro" && (
           <motion.div key="intro" exit={{ opacity: 0 }} transition={{ duration: 1 }}>
-            <IntroScreen onStart={() => goToChapter(1)} />
+            <IntroScreen onStart={() => { setMusicStarted(true); goToChapter(1); }} />
           </motion.div>
         )}
 
