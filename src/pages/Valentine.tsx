@@ -184,62 +184,43 @@ const chapters = [
 
 /* ───────────── BACKGROUND MUSIC ───────────── */
 function BackgroundMusic() {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [showHint, setShowHint] = useState(true);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-
-  const togglePlay = useCallback(() => {
-    if (!isPlaying) {
-      setIsPlaying(true);
-      setShowHint(false);
-    } else {
-      setIsPlaying(false);
-    }
-  }, [isPlaying]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowHint(false), 6000);
-    return () => clearTimeout(timer);
-  }, []);
+  const [isMuted, setIsMuted] = useState(false);
 
   return (
     <>
-      {isPlaying && (
-        <iframe
-          ref={iframeRef}
-          src="https://rutube.ru/play/embed/2303eac71bcd6c1fe4226c567636a34f/?p=pRiA2WRSqJUgPi5ELjUkwA&autostart=true"
-          allow="autoplay"
-          style={{ position: "fixed", width: 1, height: 1, border: "none", opacity: 0, pointerEvents: "none", top: -10, left: -10 }}
-          title="bg-music"
-        />
-      )}
+      <iframe
+        src="https://rutube.ru/play/embed/2303eac71bcd6c1fe4226c567636a34f/?p=pRiA2WRSqJUgPi5ELjUkwA&autostart=true"
+        allow="autoplay"
+        style={{
+          position: "fixed",
+          width: 1,
+          height: 1,
+          border: "none",
+          opacity: 0,
+          pointerEvents: "none",
+          top: -10,
+          left: -10,
+          ...(isMuted ? { display: "none" } : {}),
+        }}
+        title="bg-music"
+      />
       <motion.div
-        className="fixed top-5 right-5 z-[100] flex items-center gap-3"
+        className="fixed top-5 right-5 z-[100]"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.5, duration: 0.8 }}
       >
-        {showHint && !isPlaying && (
-          <motion.span
-            className="text-xs text-cyan-300/60 bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full border border-cyan-500/20"
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0 }}
-          >
-            Включи музыку ♪
-          </motion.span>
-        )}
         <motion.button
           className={`w-11 h-11 rounded-full backdrop-blur-md border flex items-center justify-center transition-all duration-500 ${
-            isPlaying
+            !isMuted
               ? "bg-cyan-500/20 border-cyan-400/40 shadow-[0_0_20px_rgba(0,200,255,0.15)]"
               : "bg-white/5 border-white/15 hover:bg-white/10 hover:border-white/25"
           }`}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
-          onClick={togglePlay}
+          onClick={() => setIsMuted(!isMuted)}
         >
-          {isPlaying ? (
+          {!isMuted ? (
             <motion.div className="flex items-center gap-[3px]">
               {[0, 1, 2].map((i) => (
                 <motion.div
@@ -251,7 +232,7 @@ function BackgroundMusic() {
               ))}
             </motion.div>
           ) : (
-            <Icon name="Music" size={18} className="text-white/60" />
+            <Icon name="VolumeX" size={18} className="text-white/60" />
           )}
         </motion.button>
       </motion.div>
