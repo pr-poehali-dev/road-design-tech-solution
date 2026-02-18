@@ -191,7 +191,7 @@ function BackgroundMusic() {
       {!isMuted && (
         <div className="fixed -bottom-1 -right-1 z-[200] overflow-hidden" style={{ width: 2, height: 2, clipPath: "inset(0)" }}>
           <iframe
-            src="https://rutube.ru/play/embed/2303eac71bcd6c1fe4226c567636a34f/?p=pRiA2WRSqJUgPi5ELjUkwA&autostart=true&t=0"
+            src="https://rutube.ru/play/embed/99ae88b56071163f349ce283c181d868/?autostart=true&t=0"
             allow="autoplay; encrypted-media; accelerometer; gyroscope"
             referrerPolicy="no-referrer-when-downgrade"
             style={{ width: 320, height: 180, border: "none" }}
