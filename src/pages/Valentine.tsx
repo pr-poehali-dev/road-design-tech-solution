@@ -183,55 +183,95 @@ const chapters = [
 ];
 
 /* ───────────── BACKGROUND MUSIC ───────────── */
-function BackgroundMusic() {
-  const [isMuted, setIsMuted] = useState(false);
+const MUSIC_URL = "https://rutube.ru/play/embed/99ae88b56071163f349ce283c181d868/?autostart=true&t=0";
 
+function useBackgroundMusic() {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const start = useCallback(() => {
+    if (iframeRef.current) return;
+    let container = containerRef.current;
+    if (!container) {
+      container = document.createElement("div");
+      container.style.cssText = "position:fixed;bottom:-2px;right:-2px;width:2px;height:2px;overflow:hidden;z-index:200;clip-path:inset(0)";
+      document.body.appendChild(container);
+      containerRef.current = container;
+    }
+    const iframe = document.createElement("iframe");
+    iframe.src = MUSIC_URL;
+    iframe.allow = "autoplay; encrypted-media";
+    iframe.style.cssText = "width:320px;height:180px;border:none";
+    iframe.title = "bg-music";
+    container.appendChild(iframe);
+    iframeRef.current = iframe;
+    setIsPlaying(true);
+  }, []);
+
+  const toggle = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    if (isPlaying) {
+      container.style.display = "none";
+      if (iframeRef.current) {
+        iframeRef.current.src = "";
+      }
+      setIsPlaying(false);
+    } else {
+      container.style.display = "block";
+      if (iframeRef.current) {
+        iframeRef.current.src = MUSIC_URL;
+      }
+      setIsPlaying(true);
+    }
+  }, [isPlaying]);
+
+  useEffect(() => {
+    return () => {
+      if (containerRef.current) {
+        containerRef.current.remove();
+      }
+    };
+  }, []);
+
+  return { start, toggle, isPlaying };
+}
+
+function MusicButton({ isPlaying, onToggle }: { isPlaying: boolean; onToggle: () => void }) {
   return (
-    <>
-      {!isMuted && (
-        <div className="fixed -bottom-1 -right-1 z-[200] overflow-hidden" style={{ width: 2, height: 2, clipPath: "inset(0)" }}>
-          <iframe
-            src="https://rutube.ru/play/embed/99ae88b56071163f349ce283c181d868/?autostart=true&t=0"
-            allow="autoplay; encrypted-media; accelerometer; gyroscope"
-            referrerPolicy="no-referrer-when-downgrade"
-            style={{ width: 320, height: 180, border: "none" }}
-            title="bg-music"
-          />
-        </div>
-      )}
-      <motion.div
-        className="fixed top-5 right-5 z-[100]"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.8 }}
+    <motion.div
+      className="fixed top-5 right-5 z-[100]"
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.5, duration: 0.8 }}
+    >
+      <motion.button
+        className={`w-11 h-11 rounded-full backdrop-blur-md border flex items-center justify-center transition-all duration-500 ${
+          isPlaying
+            ? "bg-cyan-500/20 border-cyan-400/40 shadow-[0_0_20px_rgba(0,200,255,0.15)]"
+            : "bg-white/5 border-white/15 hover:bg-white/10 hover:border-white/25"
+        }`}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={onToggle}
       >
-        <motion.button
-          className={`w-11 h-11 rounded-full backdrop-blur-md border flex items-center justify-center transition-all duration-500 ${
-            !isMuted
-              ? "bg-cyan-500/20 border-cyan-400/40 shadow-[0_0_20px_rgba(0,200,255,0.15)]"
-              : "bg-white/5 border-white/15 hover:bg-white/10 hover:border-white/25"
-          }`}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setIsMuted(!isMuted)}
-        >
-          {!isMuted ? (
-            <motion.div className="flex items-center gap-[3px]">
-              {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  className="w-[3px] bg-cyan-300 rounded-full"
-                  animate={{ height: [4, 14, 6, 12, 4] }}
-                  transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
-                />
-              ))}
-            </motion.div>
-          ) : (
-            <Icon name="VolumeX" size={18} className="text-white/60" />
-          )}
-        </motion.button>
-      </motion.div>
-    </>
+        {isPlaying ? (
+          <motion.div className="flex items-center gap-[3px]">
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                className="w-[3px] bg-cyan-300 rounded-full"
+                animate={{ height: [4, 14, 6, 12, 4] }}
+                transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
+              />
+            ))}
+          </motion.div>
+        ) : (
+          <Icon name="VolumeX" size={18} className="text-white/60" />
+        )}
+      </motion.button>
+    </motion.div>
   );
 }
 
@@ -950,7 +990,7 @@ type ViewState =
 export default function Valentine() {
   const [view, setView] = useState<ViewState>({ type: "intro" });
   const [auroraIntensity, setAuroraIntensity] = useState(0.4);
-  const [musicStarted, setMusicStarted] = useState(false);
+  const music = useBackgroundMusic();
 
   const totalChapters = chapters.length - 1;
 
@@ -989,7 +1029,7 @@ export default function Valentine() {
 
   return (
     <div className="min-h-screen bg-[#050a18] text-white overflow-x-hidden selection:bg-cyan-500/30">
-      <BackgroundMusic />
+      <MusicButton isPlaying={music.isPlaying} onToggle={music.toggle} />
       <StarField />
       <AuroraBorealis intensity={auroraIntensity} />
       <FloatingParticles />
@@ -998,7 +1038,7 @@ export default function Valentine() {
       <AnimatePresence mode="wait">
         {view.type === "intro" && (
           <motion.div key="intro" exit={{ opacity: 0 }} transition={{ duration: 1 }}>
-            <IntroScreen onStart={() => { setMusicStarted(true); goToChapter(1); }} />
+            <IntroScreen onStart={() => { music.start(); goToChapter(1); }} />
           </motion.div>
         )}
 
