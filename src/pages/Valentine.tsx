@@ -183,18 +183,17 @@ const chapters = [
 ];
 
 /* ───────────── BACKGROUND MUSIC ───────────── */
-function BackgroundMusic({ started }: { started: boolean }) {
+function BackgroundMusic() {
   const [isMuted, setIsMuted] = useState(false);
-
-  if (!started) return null;
 
   return (
     <>
       {!isMuted && (
-        <div className="fixed bottom-0 right-0 z-[200] overflow-hidden" style={{ width: 1, height: 1, opacity: 0.01 }}>
+        <div className="fixed -bottom-1 -right-1 z-[200] overflow-hidden" style={{ width: 2, height: 2, clipPath: "inset(0)" }}>
           <iframe
             src="https://rutube.ru/play/embed/2303eac71bcd6c1fe4226c567636a34f/?p=pRiA2WRSqJUgPi5ELjUkwA&autostart=true&t=0"
-            allow="autoplay; encrypted-media"
+            allow="autoplay; encrypted-media; accelerometer; gyroscope"
+            referrerPolicy="no-referrer-when-downgrade"
             style={{ width: 320, height: 180, border: "none" }}
             title="bg-music"
           />
@@ -990,7 +989,7 @@ export default function Valentine() {
 
   return (
     <div className="min-h-screen bg-[#050a18] text-white overflow-x-hidden selection:bg-cyan-500/30">
-      <BackgroundMusic started={musicStarted} />
+      <BackgroundMusic />
       <StarField />
       <AuroraBorealis intensity={auroraIntensity} />
       <FloatingParticles />
