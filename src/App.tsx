@@ -118,6 +118,11 @@ const App = () => (
               <Valentine />
             </Suspense>
           } />
+          <Route path="/aksinia" element={
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-[#050a18] text-white/40">Загрузка...</div>}>
+              <Valentine />
+            </Suspense>
+          } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
