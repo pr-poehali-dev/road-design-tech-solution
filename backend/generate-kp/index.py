@@ -1,11 +1,15 @@
-"""Генерация коммерческого предложения и дорожной карты через ИИ на основе загруженных файлов"""
+"""Генерация КП через ИИ — асинхронная очередь через БД, поллинг статуса"""
 import json
 import os
 import base64
-import re
 import io
 import httpx
-from datetime import datetime
+import psycopg2
+import threading
+
+
+def get_db():
+    return psycopg2.connect(os.environ['DATABASE_URL'])
 
 
 def extract_text_from_pdf(data: bytes) -> str:
@@ -34,11 +38,9 @@ def extract_text_from_docx(data: bytes) -> str:
         for block in doc.element.body:
             tag = block.tag.split('}')[-1] if '}' in block.tag else block.tag
             if tag == 'p':
-                from docx.oxml.ns import qn
-                para_xml = block
                 para = None
                 for p in doc.paragraphs:
-                    if p._element is para_xml:
+                    if p._element is block:
                         para = p
                         break
                 if para and para.text.strip():
@@ -125,64 +127,90 @@ PRICE_LIST = [
 
 PRICE_LIST_STR = json.dumps(PRICE_LIST, ensure_ascii=False)
 
-# ЭТАП 1: Промпт для извлечения параметров из ТЗ (быстрый, без расчётов)
-PARSE_SYSTEM_PROMPT = """Ты — технический аналитик проектно-инжиниринговой компании.
-Прочитай техническое задание и извлеки ВСЕ ключевые параметры.
+KP_SYSTEM_PROMPT = f"""Ты — эксперт по составлению коммерческих предложений для проектно-инжиниринговой компании.
+На основе предоставленных документов (ТЗ, технические задания, файлы) составь детальное Коммерческое Предложение (КП) на русском языке.
 
-ВАЖНО: читай документ ПОЛНОСТЬЮ, включая таблицы. Ищи числа во всех разделах.
+ПРАЙС-ЛИСТ компании (используй ТОЛЬКО эти позиции для расчёта стоимости):
+{PRICE_LIST_STR}
 
-Отвечай ТОЛЬКО JSON:
-{
-  "client": "название заказчика или организации",
-  "object_name": "полное наименование объекта",
-  "work_type": "новое строительство / реконструкция / капитальный ремонт / изыскания",
-  "location": "адрес или местоположение объекта",
-  "area_ha": число или null (площадь участка/территории в га; если указаны м² — переведи в га),
-  "volume_m3": число или null (строительный объём в м³; если не указан явно — оцени по аналогам исходя из типа и площади объекта),
-  "area_m2": число или null (площадь строений в м² — для дорог, мостов, интерьеров),
-  "has_state_expertise": true/false (требуется ли госэкспертиза),
-  "has_eco_expertise": true/false (требуется ли ГЭЭ или экологическая экспертиза),
-  "has_author_supervision": true/false (требуется ли авторский надзор),
-  "supervision_months": число или null (сколько месяцев авторского надзора),
-  "has_nts": true/false (требуется ли НТС — научно-техническое сопровождение),
-  "nts_months": число или null,
-  "has_geodesy": true/false (нужны ли геодезические изыскания ИГДИ),
-  "has_ecology": true/false (нужны ли экологические изыскания ИЭИ),
-  "has_geology": true/false (нужны ли геологические изыскания),
-  "has_survey": true/false (нужно ли обследование конструкций ОБМ),
-  "survey_volume_m3": число или null (объём обследования в м³),
-  "object_type": "ОКС / дорога / мост / интерьер / ПГО / ППТ / ПМТ / БЗУ / другое",
-  "financing": "бюджет / коммерческий / госконтракт",
-  "notes": "важные особые условия из ТЗ"
-}"""
+АЛГОРИТМ СОСТАВЛЕНИЯ КП (выполняй строго по шагам):
 
-# ЭТАП 2: Промпт для генерации КП на основе извлечённых параметров
-KP_SYSTEM_PROMPT = """Ты — эксперт по коммерческим предложениям. Составь КП по переданным параметрам.
+ШАГ 1 — Извлечь из ТЗ ключевые параметры:
+- Тип объекта и наименование
+- Вид работ: новое строительство (НС) / реконструкция (РЕК) / капремонт (КР)
+- Площадь участка изысканий в га (найди в ТЗ явно или рассчитай из размеров)
+- Строительный объём новых/реконструируемых сооружений в м³ (найди или оцени по аналогам)
+- Наличие требований к экспертизам (ГЭЭ, госэкспертиза)
+- Наличие авторского надзора, НТС
 
-ПРАЙС (коды и цены за ед.):
-ИИ-ИГДИ=40000/га, ИИ-ИЭИ=65000/га, ИИ-ОБМ=500/м³
-ОКС НС: до100м³=5000, 100-500=4000, 500-5000=2000, >5000=1500 (руб/м³)
-ОКС РЕК: до100=3000, 100-500=2500 (руб/м³)
-ОКС КР: до100=2000, 100-500=1500 (руб/м³)
-Дорога НС: до1000м²=700, 1000-5000=600, 5000-10000=550, >10000=500 (руб/м²)
-Дорога РЕК: до1000=2000, 1000-5000=1400 (руб/м²)
-СОПГЭ=200000/компл, ОП-АН=100000/мес, ОП-НТС=1500000/мес
-ПГО: до100га=24000, 100-500=23000, 500-2000=22000 (руб/га)
-ОП-ОКС.БЗУ=500000/га, СОПГЭ=200000/компл
+ШАГ 2 — Подобрать позиции из прайса:
+ИНЖЕНЕРНЫЕ ИЗЫСКАНИЯ (для каждого вида изысканий):
+- ИИ-ИГДИ (геодезия): объём = площадь_га, цена = 40000/га
+- ИИ-ИЭИ (экология): объём = площадь_га, цена = 65000/га
+- ИИ-ОБМ (обследование конструкций): если есть существующие сооружения, объём в м³, цена = 500/м³
+- Инженерно-геологические, гидрометеорологические, археологические — если требуются в ТЗ, добавляй с ориентировочной ценой (нет в прайсе)
 
-ПРАВИЛА:
-- has_geodesy=true → ИИ-ИГДИ: vol=area_ha, total=area_ha×40000
-- has_ecology=true → ИИ-ИЭИ: vol=area_ha, total=area_ha×65000
-- has_survey=true → ИИ-ОБМ: vol=survey_volume_m3, total×500
-- object_type=ОКС → подбери нужную строку по work_type и volume_m3
-- ЕСЛИ volume_m3 null → оцени сам (адм. здание ~5000м³, промышленный ~20000м³)
-- has_state_expertise=true → СОПГЭ: 1×200000
-- has_author_supervision=true → ОП-АН: supervision_months×100000
-- has_nts=true → ОП-НТС: nts_months×1500000
-- НЕ СТАВЬ volume=0 если можно оценить! total=volume×price_per_unit
+ПРОЕКТИРОВАНИЕ:
+- Новое строительство ОКС:
+  * до 100 м³ → "ОП-ОКС.НС до 100", 5000 руб/м³
+  * 100–500 м³ → "ОП-ОКС.НС 100-500", 4000 руб/м³
+  * 500–5000 м³ → "ОП-ОКС.НС 500-5000", 2000 руб/м³
+  * более 5000 м³ → "ОП-ОКС.НС более 5000", 1500 руб/м³  ← для крупных объектов
+- Реконструкция ОКС: "ОП-ОКС.РЕК ..." соответствующий диапазон
 
-Отвечай ТОЛЬКО JSON:
-{"kp": {"title": "...", "client": "...", "date": "...", "object_name": "...", "work_type": "...", "summary": "...", "sections": [{"name": "...", "items": [{"code": "...", "name": "...", "unit": "...", "volume": 0, "price_per_unit": 0, "total": 0, "notes": "..."}]}], "total_sum": 0, "total_sum_words": "...", "timeline": [{"phase": "...", "duration": "...", "description": "..."}], "payment_conditions": ["..."], "special_conditions": ["..."], "validity": "30 дней"}}"""
+ЭКСПЕРТИЗЫ:
+- СОПГЭ: 1 комплект = 200000 руб (всегда включай если требуется госэкспертиза)
+
+ДОПОЛНИТЕЛЬНЫЕ (только если явно указано в ТЗ):
+- ОП-АН (авторский надзор): объём = кол-во месяцев, 100000/мес
+- ОП-НТС: объём = кол-во месяцев, 1500000/мес
+
+ШАГ 3 — Рассчитать каждую строку:
+total = volume × price_per_unit (ПРОВЕРИТЬ арифметику!)
+Если объём из ТЗ не указан → ОЦЕНИ по аналогам (НЕ СТАВЬ 0!):
+- Административное здание: ~5000-10000 м³
+- Промышленный объект: ~10000-50000 м³
+- Жилой дом: ~5000-15000 м³
+
+ШАГ 4 — Посчитать total_sum:
+Сложить ВСЕ строки total. Перепроверить сумму.
+
+ПРИМЕР (для объекта 6.9 га, 25000 м³ НС):
+- ИИ-ИГДИ: 6.9 × 40000 = 276000
+- ИИ-ИЭИ: 6.9 × 65000 = 448500
+- ОП-ОКС.НС более 5000: 25000 × 1500 = 37500000
+- СОПГЭ: 1 × 200000 = 200000
+- ОП-АН: 18 × 100000 = 1800000
+- ИТОГО = 40224500
+
+СТРУКТУРА КП:
+1. Титульная страница: название, клиент, дата, объект, вид работ, основание, источник финансирования
+2. Краткое резюме: суть проекта 3-5 предложений
+3. Разделы работ: "Инженерные изыскания", "Проектирование", "Сопровождение экспертиз", "Дополнительные услуги"
+4. В каждом разделе — таблица: Код | Наименование | Ед. | Объём | Цена за ед. | Итого
+5. Итоговая стоимость с разбивкой: базовый пакет и опции
+6. Сроки реализации по этапам
+7. Условия оплаты (аванс 40%, промежуточные платежи, финальный расчёт)
+8. Особые условия и исключения
+
+Отвечай ТОЛЬКО JSON в формате:
+{{
+  "kp": {{
+    "title": "...",
+    "client": "...",
+    "date": "...",
+    "object_name": "...",
+    "work_type": "...",
+    "summary": "...",
+    "sections": [{{"name": "...", "items": [{{"code": "...", "name": "...", "unit": "...", "volume": 0, "price_per_unit": 0, "total": 0, "notes": "..."}}]}}],
+    "total_sum": 0,
+    "total_sum_words": "...",
+    "timeline": [{{"phase": "...", "duration": "...", "description": "..."}}],
+    "payment_conditions": ["..."],
+    "special_conditions": ["..."],
+    "validity": "30 дней"
+  }}
+}}"""
 
 ROADMAP_SYSTEM_PROMPT = """Ты — опытный менеджер проектов. На основе технического задания и коммерческого предложения составь подробную дорожную карту реализации проекта.
 
@@ -209,9 +237,8 @@ ROADMAP_SYSTEM_PROMPT = """Ты — опытный менеджер проект
 }"""
 
 
-def call_ai(system_prompt: str, user_message: str, max_tokens: int = 4000) -> str:
+def call_ai(system_prompt: str, user_message: str) -> str:
     api_key = os.environ.get('OPENROUTER_API_KEY', '')
-
     response = httpx.post(
         'https://openrouter.ai/api/v1/chat/completions',
         headers={
@@ -224,12 +251,11 @@ def call_ai(system_prompt: str, user_message: str, max_tokens: int = 4000) -> st
                 {'role': 'system', 'content': system_prompt},
                 {'role': 'user', 'content': user_message}
             ],
-            'max_tokens': max_tokens,
+            'max_tokens': 8000,
             'temperature': 0.2,
         },
-        timeout=28.0
+        timeout=180.0
     )
-
     result = response.json()
     if 'choices' not in result:
         error_msg = result.get('error', {}).get('message', str(result))
@@ -246,8 +272,58 @@ def extract_json(text: str) -> dict:
     return json.loads(text)
 
 
+def process_job_async(job_id: str, action: str, combined_text: str, extra_prompt: str, kp_data: dict):
+    """Фоновый поток: выполняет запрос к ИИ и сохраняет результат в БД"""
+    conn = None
+    try:
+        if action == 'generate_kp':
+            user_message = f"""СОДЕРЖИМОЕ ЗАГРУЖЕННЫХ ДОКУМЕНТОВ:
+{combined_text}
+
+{f'ДОПОЛНИТЕЛЬНЫЕ ТРЕБОВАНИЯ ОТ КЛИЕНТА: {extra_prompt}' if extra_prompt else ''}
+
+Составь коммерческое предложение на основе этих материалов."""
+            ai_response = call_ai(KP_SYSTEM_PROMPT, user_message)
+        else:
+            user_message = f"""СОДЕРЖИМОЕ ЗАГРУЖЕННЫХ ДОКУМЕНТОВ:
+{combined_text}
+
+{f'ДОПОЛНИТЕЛЬНЫЕ ТРЕБОВАНИЯ: {extra_prompt}' if extra_prompt else ''}
+"""
+            if kp_data:
+                user_message += f"\nКОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ:\n{json.dumps(kp_data, ensure_ascii=False)}"
+            user_message += "\n\nСоставь дорожную карту реализации проекта."
+            ai_response = call_ai(ROADMAP_SYSTEM_PROMPT, user_message)
+
+        result_data = extract_json(ai_response)
+        result_json = json.dumps(result_data, ensure_ascii=False)
+
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute(
+            "UPDATE kp_jobs SET status='done', result=%s, updated_at=NOW() WHERE id=%s",
+            (result_json, job_id)
+        )
+        conn.commit()
+    except Exception as e:
+        try:
+            if conn is None:
+                conn = get_db()
+            cur = conn.cursor()
+            cur.execute(
+                "UPDATE kp_jobs SET status='error', error=%s, updated_at=NOW() WHERE id=%s",
+                (str(e), job_id)
+            )
+            conn.commit()
+        except Exception:
+            pass
+    finally:
+        if conn:
+            conn.close()
+
+
 def handler(event: dict, context) -> dict:
-    """Генерация КП и дорожной карты через ИИ (двухэтапный подход: парсинг ТЗ → генерация КП)"""
+    """Генерация КП через ИИ — асинхронная очередь (start_job → check_job) чтобы обойти таймаут"""
 
     if event.get('httpMethod') == 'OPTIONS':
         return {
@@ -269,17 +345,37 @@ def handler(event: dict, context) -> dict:
         }
 
     body = json.loads(event.get('body', '{}'))
-    action = body.get('action', 'generate_kp')
+    action = body.get('action', '')
+
+    CORS = {'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json'}
 
     if action == 'ping':
-        return {
-            'statusCode': 200,
-            'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'status': 'ok'})
-        }
+        return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'status': 'ok'})}
 
-    files_text = body.get('files_text', '')
+    # Проверка статуса задачи
+    if action == 'check_job':
+        job_id = body.get('job_id')
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT status, result, error FROM kp_jobs WHERE id=%s", (job_id,))
+        row = cur.fetchone()
+        conn.close()
+        if not row:
+            return {'statusCode': 404, 'headers': CORS, 'body': json.dumps({'error': 'Job not found'})}
+        status, result, error = row
+        resp = {'status': status}
+        if status == 'done' and result:
+            resp['data'] = json.loads(result)
+        if status == 'error':
+            resp['error'] = error
+        return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(resp, ensure_ascii=False)}
+
+    # Запуск новой задачи (generate_kp или generate_roadmap)
+    if action not in ('generate_kp', 'generate_roadmap'):
+        return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'error': f'Unknown action: {action}'})}
+
     extra_prompt = body.get('extra_prompt', '')
+    files_text = body.get('files_text', '')
     kp_data = body.get('kp_data', None)
     files_b64 = body.get('files_b64', [])
 
@@ -299,57 +395,28 @@ def handler(event: dict, context) -> dict:
 
     combined_text = '\n\n'.join(parsed_texts) if parsed_texts else files_text
 
-    if action == 'parse_tz':
-        # ЭТАП 1: Только извлечь параметры из ТЗ (быстро, ~10 сек)
-        parse_message = f"""ТЕХНИЧЕСКОЕ ЗАДАНИЕ:
-{combined_text}
+    # Сохранить задачу в БД
+    input_data = json.dumps({'action': action, 'extra_prompt': extra_prompt}, ensure_ascii=False)
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO kp_jobs (action, status, input_data) VALUES (%s, 'processing', %s) RETURNING id",
+        (action, input_data)
+    )
+    job_id = str(cur.fetchone()[0])
+    conn.commit()
+    conn.close()
 
-{f'ДОПОЛНИТЕЛЬНЫЕ ТРЕБОВАНИЯ: {extra_prompt}' if extra_prompt else ''}
-
-Извлеки все параметры из этого ТЗ."""
-
-        params_response = call_ai(PARSE_SYSTEM_PROMPT, parse_message, max_tokens=1000)
-        params = extract_json(params_response)
-        result_data = {'params': params}
-
-    elif action == 'generate_kp':
-        # ЭТАП 2: Сгенерировать КП на основе готовых параметров (без парсинга файлов)
-        params = body.get('params', {})
-        kp_message = f"""ПАРАМЕТРЫ ОБЪЕКТА (извлечены из ТЗ):
-{json.dumps(params, ensure_ascii=False, indent=2)}
-
-{f'ДОПОЛНИТЕЛЬНЫЕ ТРЕБОВАНИЯ КЛИЕНТА: {extra_prompt}' if extra_prompt else ''}
-
-Составь коммерческое предложение на основе этих параметров."""
-
-        ai_response = call_ai(KP_SYSTEM_PROMPT, kp_message, max_tokens=2500)
-        result_data = extract_json(ai_response)
-
-    elif action == 'generate_roadmap':
-        user_message = f"""СОДЕРЖИМОЕ ДОКУМЕНТОВ:
-{combined_text}
-
-{f'ДОПОЛНИТЕЛЬНЫЕ ТРЕБОВАНИЯ: {extra_prompt}' if extra_prompt else ''}
-"""
-        if kp_data:
-            user_message += f"\nКОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ:\n{json.dumps(kp_data, ensure_ascii=False)}"
-        user_message += "\n\nСоставь дорожную карту реализации проекта."
-
-        ai_response = call_ai(ROADMAP_SYSTEM_PROMPT, user_message, max_tokens=3000)
-        result_data = extract_json(ai_response)
-
-    else:
-        return {
-            'statusCode': 400,
-            'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': f'Unknown action: {action}'})
-        }
+    # Запустить фоновый поток
+    t = threading.Thread(
+        target=process_job_async,
+        args=(job_id, action, combined_text, extra_prompt, kp_data),
+        daemon=True
+    )
+    t.start()
 
     return {
-        'statusCode': 200,
-        'headers': {
-            'Access-Control-Allow-Origin': '*',
-            'Content-Type': 'application/json'
-        },
-        'body': json.dumps(result_data, ensure_ascii=False)
+        'statusCode': 202,
+        'headers': CORS,
+        'body': json.dumps({'job_id': job_id, 'status': 'processing'})
     }

@@ -157,6 +157,22 @@ export const KPGenerator = () => {
   const getFilesB64 = () =>
     files.filter(f => f.b64).map(f => ({ name: f.name, data: f.b64! }));
 
+  const pollJob = async (jobId: string, maxWaitMs = 180000): Promise<Record<string, unknown>> => {
+    const start = Date.now();
+    while (Date.now() - start < maxWaitMs) {
+      await new Promise(r => setTimeout(r, 3000));
+      const res = await fetch(GENERATE_KP_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'check_job', job_id: jobId }),
+      });
+      const data = await res.json();
+      if (data.status === 'done') return data.data;
+      if (data.status === 'error') throw new Error(data.error || 'Ошибка генерации');
+    }
+    throw new Error('Превышено время ожидания (3 мин)');
+  };
+
   const generateKP = async () => {
     if (files.length === 0) {
       toast({ title: 'Загрузите файлы', description: 'Необходимо загрузить хотя бы один файл с ТЗ', variant: 'destructive' });
@@ -164,30 +180,22 @@ export const KPGenerator = () => {
     }
     setLoadingKP(true);
     try {
-      // Шаг 1: Парсинг ТЗ
-      toast({ title: 'Шаг 1/2: Читаю техническое задание...', description: 'Извлекаю параметры объекта' });
-      const parseRes = await fetch(GENERATE_KP_URL, {
+      toast({ title: 'Анализирую ТЗ...', description: 'DeepSeek читает документ и составляет КП (~1 мин)' });
+      const startRes = await fetch(GENERATE_KP_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'parse_tz', files_text: getFilesText(), files_b64: getFilesB64(), extra_prompt: extraPrompt }),
+        body: JSON.stringify({ action: 'generate_kp', files_text: getFilesText(), files_b64: getFilesB64(), extra_prompt: extraPrompt }),
       });
-      const parseData = await parseRes.json();
-      if (!parseData.params) throw new Error(parseData.error || 'Ошибка разбора ТЗ');
+      const startData = await startRes.json();
+      if (!startData.job_id) throw new Error(startData.error || 'Не удалось запустить задачу');
 
-      // Шаг 2: Генерация КП
-      toast({ title: 'Шаг 2/2: Составляю КП...', description: 'Рассчитываю стоимость по прайсу' });
-      const kpRes = await fetch(GENERATE_KP_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'generate_kp', params: parseData.params, extra_prompt: extraPrompt }),
-      });
-      const data = await kpRes.json();
-      if (data.kp) {
-        setKpData(data.kp);
+      const result = await pollJob(startData.job_id);
+      if (result.kp) {
+        setKpData(result.kp);
         setActiveResult('kp');
         toast({ title: 'КП сформировано', description: 'Коммерческое предложение готово к скачиванию' });
       } else {
-        throw new Error(data.error || 'Неизвестная ошибка');
+        throw new Error('Неверный формат ответа');
       }
     } catch (e) {
       toast({ title: 'Ошибка генерации', description: e instanceof Error ? e.message : String(e), variant: 'destructive' });
@@ -203,18 +211,22 @@ export const KPGenerator = () => {
     }
     setLoadingRoadmap(true);
     try {
-      const res = await fetch(GENERATE_KP_URL, {
+      toast({ title: 'Составляю дорожную карту...', description: 'DeepSeek анализирует проект (~1 мин)' });
+      const startRes = await fetch(GENERATE_KP_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'generate_roadmap', files_text: getFilesText(), files_b64: getFilesB64(), extra_prompt: extraPrompt, kp_data: kpData }),
       });
-      const data = await res.json();
-      if (data.roadmap) {
-        setRoadmapData(data.roadmap);
+      const startData = await startRes.json();
+      if (!startData.job_id) throw new Error(startData.error || 'Не удалось запустить задачу');
+
+      const result = await pollJob(startData.job_id);
+      if (result.roadmap) {
+        setRoadmapData(result.roadmap);
         setActiveResult('roadmap');
         toast({ title: 'Дорожная карта готова', description: 'Карта реализации проекта сформирована' });
       } else {
-        throw new Error(data.error || 'Неизвестная ошибка');
+        throw new Error('Неверный формат ответа');
       }
     } catch (e) {
       toast({ title: 'Ошибка генерации', description: e instanceof Error ? e.message : String(e), variant: 'destructive' });
