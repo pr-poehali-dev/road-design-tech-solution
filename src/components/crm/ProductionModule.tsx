@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ const GENERATE_KP_URL = 'https://functions.poehali.dev/f595b8a7-903c-4870-b1f7-d
 
 interface Document {
   id: string;
+  phaseId: number | string;
   section: string;
   sectionCode: string;
   status: 'draft' | 'review' | 'approved' | 'rejected';
@@ -17,6 +18,18 @@ interface Document {
   aiGenerated: boolean;
   version: number;
   createdAt: string;
+}
+
+interface RoadmapPhase {
+  id: number;
+  name: string;
+  duration: string;
+  start_month: number;
+  end_month: number;
+  tasks: string[];
+  deliverables: string[];
+  responsible: string;
+  section_codes?: string[];
 }
 
 interface ProjectContext {
@@ -30,15 +43,12 @@ interface ProductionModuleProps {
   projectContext?: ProjectContext | null;
 }
 
-const sections = [
+const FALLBACK_SECTIONS = [
   { code: 'ПЗ', name: 'Пояснительная записка', icon: 'FileText' },
-  { code: 'ПЗУ', name: 'Схема планировочной организации', icon: 'Map' },
-  { code: 'АР', name: 'Архитектурные решения', icon: 'Building2' },
-  { code: 'КР', name: 'Конструктивные решения', icon: 'Hammer' },
-  { code: 'ИОС', name: 'Инженерные системы', icon: 'Zap' },
-  { code: 'ПОС', name: 'Проект организации строительства', icon: 'HardHat' },
-  { code: 'ООС', name: 'Охрана окружающей среды', icon: 'Leaf' },
-  { code: 'ПБ', name: 'Пожарная безопасность', icon: 'Flame' },
+  { code: 'ПД', name: 'Проектная документация', icon: 'BookOpen' },
+  { code: 'РД', name: 'Рабочая документация', icon: 'Hammer' },
+  { code: 'ИИ', name: 'Инженерные изыскания', icon: 'Search' },
+  { code: 'ЭКС', name: 'Экспертиза', icon: 'CheckSquare' },
 ];
 
 const statusLabels: Record<Document['status'], { label: string; cls: string }> = {
@@ -63,50 +73,75 @@ export const ProductionModule = ({ projectContext }: ProductionModuleProps) => {
     }
   }, [projectContext?.kpId]);
 
-  const buildContext = (sectionCode: string, sectionName: string): string => {
+  // Берём этапы из дорожной карты, иначе fallback
+  const sections = useMemo(() => {
+    const phases = (projectContext?.roadmapData?.phases as RoadmapPhase[] | undefined);
+    if (phases && phases.length > 0) {
+      return phases.map(p => ({
+        code: p.section_codes?.[0] || `Эт.${p.id}`,
+        name: p.name,
+        icon: getPhaseIcon(p.name),
+        phaseId: p.id,
+        duration: p.duration,
+        deliverables: p.deliverables,
+        tasks: p.tasks,
+        responsible: p.responsible,
+      }));
+    }
+    return FALLBACK_SECTIONS.map(s => ({ ...s, phaseId: s.code, duration: '', deliverables: [], tasks: [], responsible: '' }));
+  }, [projectContext?.roadmapData]);
+
+  const buildContext = (sectionCode: string, sectionName: string, phaseId: number | string): string => {
     const ctx: string[] = [];
+
+    if (projectContext?.filesText) {
+      ctx.push(`=== ТЕХНИЧЕСКОЕ ЗАДАНИЕ ===`);
+      ctx.push(projectContext.filesText.slice(0, 6000));
+    }
 
     if (projectContext?.kpData) {
       const kp = projectContext.kpData as Record<string, unknown>;
-      ctx.push(`=== КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ ===`);
+      ctx.push(`\n=== КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ ===`);
       ctx.push(`Проект: ${kp.title}`);
       ctx.push(`Клиент: ${kp.client}`);
       ctx.push(`Краткое резюме: ${kp.summary}`);
-      ctx.push(`Общая стоимость: ${kp.total_sum} руб.`);
-
-      const timeline = kp.timeline as Array<{ phase: string; duration: string; description: string }> | undefined;
-      if (timeline?.length) {
-        ctx.push(`\nСроки: ${timeline.map(t => `${t.phase} (${t.duration}): ${t.description}`).join('; ')}`);
-      }
-      const conditions = (kp.payment_conditions || kp.conditions) as string[] | undefined;
-      if (conditions?.length) {
-        ctx.push(`Условия: ${conditions.join('; ')}`);
-      }
     }
 
     if (projectContext?.roadmapData) {
       const rm = projectContext.roadmapData as Record<string, unknown>;
-      ctx.push(`\n=== ДОРОЖНАЯ КАРТА ===`);
-      ctx.push(`${rm.overview}`);
-      const phases = rm.phases as Array<{ name: string; duration: string; tasks: string[]; deliverables: string[] }> | undefined;
+      ctx.push(`\n=== ДОРОЖНАЯ КАРТА ПРОЕКТА ===`);
+      ctx.push(`Обзор: ${rm.overview}`);
+      const phases = rm.phases as RoadmapPhase[] | undefined;
       if (phases?.length) {
-        ctx.push(`Этапы: ${phases.map(p => `${p.name} (${p.duration}): задачи — ${p.tasks.join(', ')}`).join(' | ')}`);
+        ctx.push(`Этапы ПИР:`);
+        phases.forEach(p => {
+          const marker = p.id === phaseId ? ' ◀ ТЕКУЩИЙ ЭТАП' : '';
+          ctx.push(`  • ${p.name} (${p.duration})${marker}: ${p.deliverables.join(', ')}`);
+        });
       }
     }
 
-    if (projectContext?.filesText) {
-      ctx.push(`\n=== ТЕХНИЧЕСКОЕ ЗАДАНИЕ ===`);
-      ctx.push(projectContext.filesText.slice(0, 8000));
+    // Данные конкретного этапа
+    const phase = (projectContext?.roadmapData?.phases as RoadmapPhase[] | undefined)?.find(p => p.id === phaseId);
+    if (phase) {
+      ctx.push(`\n=== ТЕКУЩИЙ ЭТАП ===`);
+      ctx.push(`Название: ${phase.name}`);
+      ctx.push(`Срок: ${phase.duration}`);
+      ctx.push(`Задачи: ${phase.tasks.join('; ')}`);
+      ctx.push(`Ожидаемые результаты: ${phase.deliverables.join('; ')}`);
     }
 
     ctx.push(`\n=== ЗАДАЧА ===`);
-    ctx.push(`Разработай раздел "${sectionCode} — ${sectionName}" проектной документации на основе приведённых данных.`);
-    ctx.push(`Подготовь профессиональный структурированный текст раздела с конкретными техническими решениями, нормативными ссылками и расчётными обоснованиями.`);
+    ctx.push(`Разработай содержание этапа "${sectionCode} — ${sectionName}".`);
+    ctx.push(`Подготовь профессиональный структурированный текст с конкретными техническими решениями, нормативными ссылками (СП, ГОСТ, СНиП, ФЗ) и расчётными обоснованиями, соответствующими объекту из ТЗ.`);
+    if (phase?.deliverables?.length) {
+      ctx.push(`Охвати в тексте следующие документы/разделы: ${phase.deliverables.join(', ')}.`);
+    }
 
     return ctx.join('\n');
   };
 
-  const pollJob = async (jobId: string, maxWaitMs = 120000): Promise<Record<string, unknown>> => {
+  const pollJob = async (jobId: string, maxWaitMs = 180000): Promise<Record<string, unknown>> => {
     const start = Date.now();
     while (Date.now() - start < maxWaitMs) {
       await new Promise(r => setTimeout(r, 3000));
@@ -119,15 +154,16 @@ export const ProductionModule = ({ projectContext }: ProductionModuleProps) => {
       if (data.status === 'done') return data.data;
       if (data.status === 'error') throw new Error(data.error || 'Ошибка генерации');
     }
-    throw new Error('Превышено время ожидания (2 мин)');
+    throw new Error('Превышено время ожидания (3 мин)');
   };
 
-  const handleGenerateDocument = async (sectionCode: string, sectionName: string) => {
-    setGenerating(sectionCode);
-    toast({ title: 'AI генерирует раздел...', description: `DeepSeek создаёт черновик раздела ${sectionCode}` });
+  const handleGenerateDocument = async (sectionCode: string, sectionName: string, phaseId: number | string) => {
+    const key = String(phaseId);
+    setGenerating(key);
+    toast({ title: 'AI генерирует раздел...', description: `DeepSeek создаёт черновик: ${sectionName}` });
 
     try {
-      const contextText = buildContext(sectionCode, sectionName);
+      const contextText = buildContext(sectionCode, sectionName, phaseId);
 
       const startRes = await fetch(GENERATE_KP_URL, {
         method: 'POST',
@@ -147,6 +183,7 @@ export const ProductionModule = ({ projectContext }: ProductionModuleProps) => {
 
       const newDoc: Document = {
         id: crypto.randomUUID(),
+        phaseId,
         section: sectionName,
         sectionCode,
         status: 'draft',
@@ -156,10 +193,10 @@ export const ProductionModule = ({ projectContext }: ProductionModuleProps) => {
         createdAt: new Date().toISOString(),
       };
 
-      setDocuments(prev => [...prev.filter(d => d.sectionCode !== sectionCode), newDoc]);
+      setDocuments(prev => [...prev.filter(d => String(d.phaseId) !== key), newDoc]);
       setSelectedDoc(newDoc);
       setEditContent(content);
-      toast({ title: 'Раздел создан', description: `Черновик ${sectionCode} готов к редактированию` });
+      toast({ title: 'Раздел создан', description: `Черновик «${sectionCode}» готов к редактированию` });
     } catch (error) {
       toast({
         title: 'Ошибка генерации',
@@ -194,39 +231,26 @@ export const ProductionModule = ({ projectContext }: ProductionModuleProps) => {
     toast({ title: `Статус: ${statusLabels[newStatus].label}`, description: selectedDoc.sectionCode });
   };
 
+  const hasRoadmap = !!(projectContext?.roadmapData?.phases);
   const hasContext = !!(projectContext?.kpData || projectContext?.filesText);
 
   return (
     <div className="space-y-4">
-      {hasContext && (
-        <Card className="bg-emerald-900/20 border-emerald-500/30">
-          <CardContent className="py-3 px-4">
-            <div className="flex items-center gap-2 text-sm">
-              <Icon name="CheckCircle" size={16} className="text-emerald-400 shrink-0" />
-              <span className="text-emerald-300 font-medium">Контекст загружен:</span>
-              <span className="text-slate-300">
-                {[
-                  projectContext?.kpData && 'КП',
-                  projectContext?.roadmapData && 'дорожная карта',
-                  projectContext?.filesText && 'ТЗ',
-                ].filter(Boolean).join(' + ')}
-              </span>
-              <span className="text-slate-400 text-xs ml-2">— ИИ будет генерировать разделы с учётом этих данных</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {!hasContext && (
-        <Card className="bg-slate-800/40 border-slate-600/30">
-          <CardContent className="py-3 px-4">
-            <div className="flex items-center gap-2 text-sm text-slate-400">
-              <Icon name="Info" size={16} className="shrink-0" />
-              Нет контекста. Передайте КП в производство из вкладки «Генерация КП» — ИИ будет генерировать разделы на основе ТЗ и дорожной карты
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <Card className={hasRoadmap ? 'bg-emerald-900/20 border-emerald-500/30' : 'bg-amber-900/20 border-amber-500/30'}>
+        <CardContent className="py-3 px-4">
+          <div className="flex items-center gap-2 text-sm">
+            <Icon name={hasRoadmap ? 'CheckCircle' : 'AlertCircle'} size={16} className={hasRoadmap ? 'text-emerald-400 shrink-0' : 'text-amber-400 shrink-0'} />
+            <span className={`font-medium ${hasRoadmap ? 'text-emerald-300' : 'text-amber-300'}`}>
+              {hasRoadmap ? 'Разделы из дорожной карты:' : 'Дорожная карта не загружена:'}
+            </span>
+            <span className="text-slate-300 text-xs">
+              {hasRoadmap
+                ? `${sections.length} этапов ПИР${hasContext ? ' · КП + ТЗ загружены' : ''}`
+                : 'Передайте КП в производство — разделы сформируются автоматически по ТЗ'}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-2">
@@ -234,18 +258,19 @@ export const ProductionModule = ({ projectContext }: ProductionModuleProps) => {
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-sm">
                 <Icon name="FolderOpen" size={16} />
-                Разделы проекта
+                Этапы ПИР
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {sections.map((section) => {
-                const doc = documents.find(d => d.sectionCode === section.code);
-                const isGenerating = generating === section.code;
-                const isSelected = selectedDoc?.sectionCode === section.code;
+                const key = String(section.phaseId);
+                const doc = documents.find(d => String(d.phaseId) === key);
+                const isGenerating = generating === key;
+                const isSelected = selectedDoc && String(selectedDoc.phaseId) === key;
 
                 return (
                   <div
-                    key={section.code}
+                    key={key}
                     onClick={() => doc && handleSelectDoc(doc)}
                     className={`p-3 border rounded-lg transition-colors cursor-pointer ${isSelected ? 'bg-accent border-primary/50' : 'hover:bg-accent'}`}
                   >
@@ -260,13 +285,16 @@ export const ProductionModule = ({ projectContext }: ProductionModuleProps) => {
                         </Badge>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground mb-2">{section.name}</p>
+                    <p className="text-xs text-muted-foreground mb-1">{section.name}</p>
+                    {section.duration && (
+                      <p className="text-xs text-slate-500 mb-2">⏱ {section.duration}</p>
+                    )}
                     {!doc && (
                       <Button
                         size="sm"
                         variant="outline"
                         className="w-full text-xs"
-                        onClick={e => { e.stopPropagation(); handleGenerateDocument(section.code, section.name); }}
+                        onClick={e => { e.stopPropagation(); handleGenerateDocument(section.code, section.name, section.phaseId); }}
                         disabled={isGenerating}
                       >
                         {isGenerating ? (
@@ -281,7 +309,7 @@ export const ProductionModule = ({ projectContext }: ProductionModuleProps) => {
                         size="sm"
                         variant="ghost"
                         className="w-full text-xs text-muted-foreground"
-                        onClick={e => { e.stopPropagation(); handleGenerateDocument(section.code, section.name); }}
+                        onClick={e => { e.stopPropagation(); handleGenerateDocument(section.code, section.name, section.phaseId); }}
                         disabled={isGenerating}
                       >
                         {isGenerating ? (
@@ -304,7 +332,10 @@ export const ProductionModule = ({ projectContext }: ProductionModuleProps) => {
               <CardContent className="h-full flex items-center justify-center text-muted-foreground">
                 <div className="text-center">
                   <Icon name="FileSearch" size={36} className="mx-auto mb-3 opacity-30" />
-                  <p className="text-sm">Выберите раздел или сгенерируйте его через AI</p>
+                  <p className="text-sm">Выберите этап или сгенерируйте его через AI</p>
+                  {hasRoadmap && (
+                    <p className="text-xs mt-2 text-slate-500">Разделы сформированы по дорожной карте проекта</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -373,5 +404,21 @@ export const ProductionModule = ({ projectContext }: ProductionModuleProps) => {
     </div>
   );
 };
+
+function getPhaseIcon(name: string): string {
+  const n = name.toLowerCase();
+  if (n.includes('изыскан')) return 'Search';
+  if (n.includes('геодез')) return 'Compass';
+  if (n.includes('геолог')) return 'Mountain';
+  if (n.includes('эколог')) return 'Leaf';
+  if (n.includes('предпроект') || n.includes('ппт') || n.includes('пмт')) return 'Map';
+  if (n.includes('проектн') || n.includes(' пд') || n.includes('стадия п')) return 'FileText';
+  if (n.includes('рабоч') || n.includes(' рд') || n.includes('стадия р')) return 'Hammer';
+  if (n.includes('экспертиз') || n.includes('гэ') || n.includes('нгэ') || n.includes('гээ')) return 'CheckSquare';
+  if (n.includes('авторск') || n.includes(' ан')) return 'Eye';
+  if (n.includes('нтс') || n.includes('согласован')) return 'Users';
+  if (n.includes('ту') || n.includes('технич')) return 'Settings';
+  return 'FileText';
+}
 
 export default ProductionModule;
