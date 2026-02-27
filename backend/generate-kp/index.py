@@ -331,8 +331,8 @@ def handler(event: dict, context) -> dict:
 
     combined_text = '\n\n'.join(parsed_texts) if parsed_texts else files_text
 
-    if action == 'generate_kp':
-        # ЭТАП 1: Извлечь параметры из ТЗ
+    if action == 'parse_tz':
+        # ЭТАП 1: Только извлечь параметры из ТЗ (быстро, ~10 сек)
         parse_message = f"""ТЕХНИЧЕСКОЕ ЗАДАНИЕ:
 {combined_text}
 
@@ -342,8 +342,11 @@ def handler(event: dict, context) -> dict:
 
         params_response = call_ai(PARSE_SYSTEM_PROMPT, parse_message, max_tokens=1000)
         params = extract_json(params_response)
+        result_data = {'params': params}
 
-        # ЭТАП 2: Сгенерировать КП на основе параметров
+    elif action == 'generate_kp':
+        # ЭТАП 2: Сгенерировать КП на основе готовых параметров (без парсинга файлов)
+        params = body.get('params', {})
         kp_message = f"""ПАРАМЕТРЫ ОБЪЕКТА (извлечены из ТЗ):
 {json.dumps(params, ensure_ascii=False, indent=2)}
 

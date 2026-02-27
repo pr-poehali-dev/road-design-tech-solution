@@ -164,12 +164,24 @@ export const KPGenerator = () => {
     }
     setLoadingKP(true);
     try {
-      const res = await fetch(GENERATE_KP_URL, {
+      // Шаг 1: Парсинг ТЗ
+      toast({ title: 'Шаг 1/2: Читаю техническое задание...', description: 'Извлекаю параметры объекта' });
+      const parseRes = await fetch(GENERATE_KP_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'generate_kp', files_text: getFilesText(), files_b64: getFilesB64(), extra_prompt: extraPrompt }),
+        body: JSON.stringify({ action: 'parse_tz', files_text: getFilesText(), files_b64: getFilesB64(), extra_prompt: extraPrompt }),
       });
-      const data = await res.json();
+      const parseData = await parseRes.json();
+      if (!parseData.params) throw new Error(parseData.error || 'Ошибка разбора ТЗ');
+
+      // Шаг 2: Генерация КП
+      toast({ title: 'Шаг 2/2: Составляю КП...', description: 'Рассчитываю стоимость по прайсу' });
+      const kpRes = await fetch(GENERATE_KP_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'generate_kp', params: parseData.params, extra_prompt: extraPrompt }),
+      });
+      const data = await kpRes.json();
       if (data.kp) {
         setKpData(data.kp);
         setActiveResult('kp');
