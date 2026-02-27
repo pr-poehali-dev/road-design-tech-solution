@@ -15,6 +15,7 @@ import { Lead } from '@/components/crm/CRMKanban';
 import { useToast } from '@/hooks/use-toast';
 import { WarehouseDesigner } from '@/components/crm/WarehouseDesigner';
 import { KPGenerator } from '@/components/crm/KPGenerator';
+import { KPList } from '@/components/crm/KPList';
 
 const Admin = () => {
   const { toast } = useToast();
@@ -28,6 +29,12 @@ const Admin = () => {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showProjectCard, setShowProjectCard] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [productionContext, setProductionContext] = useState<{
+    kpData: Record<string, unknown>;
+    roadmapData: Record<string, unknown> | null;
+    filesText: string;
+    kpId: string;
+  } | null>(null);
 
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
@@ -50,20 +57,22 @@ const Admin = () => {
     setActiveTab('production');
   };
 
-  const handleGenerateSpec = async (data: Record<string, unknown>) => {
-    toast({
-      title: 'Генерация ТЗ...',
-      description: 'YandexGPT создаёт техническое задание'
-    });
-    // TODO: Вызов backend для генерации ТЗ
+  const handleGenerateSpec = async (_data: Record<string, unknown>) => {
+    toast({ title: 'Генерация ТЗ...', description: 'YandexGPT создаёт техническое задание' });
   };
 
-  const handleGenerateProposal = async (data: Record<string, unknown>) => {
-    toast({
-      title: 'Генерация КП...',
-      description: 'YandexGPT создаёт коммерческое предложение'
-    });
-    // TODO: Вызов backend для генерации КП
+  const handleGenerateProposal = async (_data: Record<string, unknown>) => {
+    toast({ title: 'Генерация КП...', description: 'YandexGPT создаёт коммерческое предложение' });
+  };
+
+  const handleSendToProduction = (
+    kpData: Record<string, unknown>,
+    roadmapData: Record<string, unknown> | null,
+    filesText: string,
+    kpId: string
+  ) => {
+    setProductionContext({ kpData, roadmapData, filesText, kpId });
+    setActiveTab('production');
   };
 
 
@@ -114,7 +123,7 @@ const Admin = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-9 lg:w-auto bg-slate-900/50 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+          <TabsList className="grid w-full grid-cols-10 lg:w-auto bg-slate-900/50 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
             <TabsTrigger value="dashboard" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.5)]">
               <Icon name="LayoutDashboard" size={16} className="mr-2" />
               Дашборд
@@ -151,6 +160,10 @@ const Admin = () => {
               <Icon name="Sparkles" size={16} className="mr-2" />
               КП (ИИ)
             </TabsTrigger>
+            <TabsTrigger value="kp-list" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-[0_0_15px_rgba(139,92,246,0.5)]">
+              <Icon name="Archive" size={16} className="mr-2" />
+              Все КП
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
@@ -162,7 +175,7 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="production" className="space-y-6">
-            <ProductionModule lead={selectedLead} />
+            <ProductionModule projectContext={productionContext} />
           </TabsContent>
 
           <TabsContent value="client" className="space-y-6">
@@ -186,7 +199,11 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="kp-generator" className="space-y-6">
-            <KPGenerator />
+            <KPGenerator onSendToProduction={handleSendToProduction} />
+          </TabsContent>
+
+          <TabsContent value="kp-list" className="space-y-6">
+            <KPList onSendToProduction={handleSendToProduction} />
           </TabsContent>
         </Tabs>
       </main>

@@ -310,7 +310,7 @@ def extract_json(text: str) -> dict:
     return json.loads(text)
 
 
-def process_job_async(job_id: str, action: str, combined_text: str, extra_prompt: str, kp_data: dict):
+def process_job_async(job_id: str, action: str, combined_text: str, extra_prompt: str, kp_data: dict, section_context: str = ''):
     """Фоновый поток: выполняет запрос к ИИ и сохраняет результат в БД"""
     conn = None
     try:
@@ -322,6 +322,13 @@ def process_job_async(job_id: str, action: str, combined_text: str, extra_prompt
 
 Составь коммерческое предложение на основе этих материалов."""
             ai_response = call_ai(KP_SYSTEM_PROMPT, user_message)
+            result_data = extract_json(ai_response)
+        elif action == 'generate_section':
+            section_system = """Ты — ведущий инженер-проектировщик с опытом 20+ лет. Разрабатывай разделы проектной документации по ГОСТ и СП.
+Используй профессиональный технический язык. Включай нормативные ссылки (СП, ГОСТ, СНиП, ФЗ).
+Структурируй текст по разделам с заголовками. Будь конкретен — указывай типы конструкций, материалы, оборудование, расчётные значения."""
+            ai_response = call_ai(section_system, section_context)
+            result_data = {'content': ai_response}
         else:
             user_message = f"""СОДЕРЖИМОЕ ЗАГРУЖЕННЫХ ДОКУМЕНТОВ:
 {combined_text}
@@ -332,8 +339,8 @@ def process_job_async(job_id: str, action: str, combined_text: str, extra_prompt
                 user_message += f"\nКОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ:\n{json.dumps(kp_data, ensure_ascii=False)}"
             user_message += "\n\nСоставь дорожную карту реализации проекта."
             ai_response = call_ai(ROADMAP_SYSTEM_PROMPT, user_message)
+            result_data = extract_json(ai_response)
 
-        result_data = extract_json(ai_response)
         result_json = json.dumps(result_data, ensure_ascii=False)
 
         conn = get_db()
@@ -408,14 +415,15 @@ def handler(event: dict, context) -> dict:
             resp['error'] = error
         return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(resp, ensure_ascii=False)}
 
-    # Запуск новой задачи (generate_kp или generate_roadmap)
-    if action not in ('generate_kp', 'generate_roadmap'):
+    # Запуск новой задачи
+    if action not in ('generate_kp', 'generate_roadmap', 'generate_section'):
         return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'error': f'Unknown action: {action}'})}
 
     extra_prompt = body.get('extra_prompt', '')
     files_text = body.get('files_text', '')
     kp_data = body.get('kp_data', None)
     files_b64 = body.get('files_b64', [])
+    section_context = body.get('context', '')
 
     # Парсинг файлов
     parsed_texts = []
@@ -448,7 +456,7 @@ def handler(event: dict, context) -> dict:
     # Запустить фоновый поток
     t = threading.Thread(
         target=process_job_async,
-        args=(job_id, action, combined_text, extra_prompt, kp_data),
+        args=(job_id, action, combined_text, extra_prompt, kp_data, section_context),
         daemon=True
     )
     t.start()

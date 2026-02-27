@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 
 const GENERATE_KP_URL = 'https://functions.poehali.dev/f595b8a7-903c-4870-b1f7-d0aac554463f';
+const KP_STORAGE_URL = 'https://functions.poehali.dev/0af926d6-1696-45cc-acd3-a20ae910f578';
 
 interface KPItem {
   code: string;
@@ -91,6 +92,12 @@ interface UploadedFile {
   b64?: string;
 }
 
+interface SavedKPMeta {
+  id: string;
+  created_at: string;
+  roadmap_id?: string | null;
+}
+
 const formatMoney = (n: number) =>
   new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(n);
 
@@ -100,7 +107,11 @@ const riskColor = (level: string) => {
   return 'bg-green-500/20 text-green-400 border-green-500/30';
 };
 
-export const KPGenerator = () => {
+interface KPGeneratorProps {
+  onSendToProduction?: (kpData: KPData, roadmapData: RoadmapData | null, filesText: string, kpId: string) => void;
+}
+
+export const KPGenerator = ({ onSendToProduction }: KPGeneratorProps) => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<UploadedFile[]>([]);
@@ -110,6 +121,8 @@ export const KPGenerator = () => {
   const [kpData, setKpData] = useState<KPData | null>(null);
   const [roadmapData, setRoadmapData] = useState<RoadmapData | null>(null);
   const [activeResult, setActiveResult] = useState<'kp' | 'roadmap'>('kp');
+  const [savedMeta, setSavedMeta] = useState<SavedKPMeta | null>(null);
+  const [sendingToProduction, setSendingToProduction] = useState(false);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploaded = Array.from(e.target.files || []);
@@ -159,6 +172,50 @@ export const KPGenerator = () => {
   const getFilesB64 = () =>
     files.filter(f => f.b64).map(f => ({ name: f.name, data: f.b64! }));
 
+  const saveKP = async (kp: KPData): Promise<string | null> => {
+    try {
+      const res = await fetch(KP_STORAGE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'save_kp', kp_data: kp, files_text: getFilesText(), extra_prompt: extraPrompt }),
+      });
+      const data = await res.json();
+      return data.id || null;
+    } catch {
+      return null;
+    }
+  };
+
+  const saveRoadmap = async (roadmap: RoadmapData, kpId: string | null): Promise<string | null> => {
+    try {
+      const res = await fetch(KP_STORAGE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'save_roadmap', roadmap_data: roadmap, kp_id: kpId }),
+      });
+      const data = await res.json();
+      return data.id || null;
+    } catch {
+      return null;
+    }
+  };
+
+  const handleSendToProduction = async () => {
+    if (!kpData || !savedMeta) return;
+    setSendingToProduction(true);
+    try {
+      await fetch(KP_STORAGE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'send_to_production', kp_id: savedMeta.id }),
+      });
+      onSendToProduction?.(kpData, roadmapData, getFilesText(), savedMeta.id);
+      toast({ title: 'Передано в производство', description: 'КП и дорожная карта направлены в раздел Производство' });
+    } finally {
+      setSendingToProduction(false);
+    }
+  };
+
   const pollJob = async (jobId: string, maxWaitMs = 180000): Promise<Record<string, unknown>> => {
     const start = Date.now();
     while (Date.now() - start < maxWaitMs) {
@@ -193,9 +250,16 @@ export const KPGenerator = () => {
 
       const result = await pollJob(startData.job_id);
       if (result.kp) {
-        setKpData(result.kp);
+        const kp = result.kp as KPData;
+        setKpData(kp);
         setActiveResult('kp');
-        toast({ title: 'КП сформировано', description: 'Коммерческое предложение готово к скачиванию' });
+        const kpId = await saveKP(kp);
+        if (kpId) {
+          setSavedMeta(prev => ({ ...(prev || {}), id: kpId, created_at: new Date().toISOString() }));
+          toast({ title: 'КП сформировано и сохранено', description: 'Коммерческое предложение готово к скачиванию' });
+        } else {
+          toast({ title: 'КП сформировано', description: 'Готово к скачиванию (сохранение не удалось)' });
+        }
       } else {
         throw new Error('Неверный формат ответа');
       }
@@ -224,9 +288,16 @@ export const KPGenerator = () => {
 
       const result = await pollJob(startData.job_id);
       if (result.roadmap) {
-        setRoadmapData(result.roadmap);
+        const roadmap = result.roadmap as RoadmapData;
+        setRoadmapData(roadmap);
         setActiveResult('roadmap');
-        toast({ title: 'Дорожная карта готова', description: 'Карта реализации проекта сформирована' });
+        const rmId = await saveRoadmap(roadmap, savedMeta?.id || null);
+        if (rmId) {
+          setSavedMeta(prev => prev ? { ...prev, roadmap_id: rmId } : null);
+          toast({ title: 'Дорожная карта готова и сохранена', description: 'Карта реализации проекта сформирована' });
+        } else {
+          toast({ title: 'Дорожная карта готова', description: 'Карта сформирована (сохранение не удалось)' });
+        }
       } else {
         throw new Error('Неверный формат ответа');
       }
@@ -451,7 +522,7 @@ export const KPGenerator = () => {
                       <Icon name="Map" size={14} className="inline mr-1" />Дорожная карта
                     </button>
                   )}
-                  <div className="ml-auto flex gap-2">
+                  <div className="ml-auto flex gap-2 flex-wrap">
                     <Button
                       size="sm"
                       variant="outline"
@@ -468,6 +539,20 @@ export const KPGenerator = () => {
                     >
                       <Icon name="FileDown" size={14} className="mr-1" />Word
                     </Button>
+                    {kpData && onSendToProduction && (
+                      <Button
+                        size="sm"
+                        onClick={handleSendToProduction}
+                        disabled={sendingToProduction}
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs"
+                      >
+                        {sendingToProduction ? (
+                          <><Icon name="Loader2" size={14} className="mr-1 animate-spin" />Отправляю...</>
+                        ) : (
+                          <><Icon name="Factory" size={14} className="mr-1" />В производство</>
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </div>
               )}
