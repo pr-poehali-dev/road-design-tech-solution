@@ -26,15 +26,57 @@ def extract_text_from_docx(data: bytes) -> str:
     try:
         import docx
         doc = docx.Document(io.BytesIO(data))
-        texts = [p.text for p in doc.paragraphs if p.text.strip()]
-        for table in doc.tables:
-            for row in table.rows:
-                row_texts = [cell.text.strip() for cell in row.cells if cell.text.strip()]
-                if row_texts:
-                    texts.append(' | '.join(row_texts))
-        return '\n'.join(texts)
+        parts = []
+
+        def get_cell_text(cell):
+            return ' '.join(p.text.strip() for p in cell.paragraphs if p.text.strip())
+
+        for block in doc.element.body:
+            tag = block.tag.split('}')[-1] if '}' in block.tag else block.tag
+            if tag == 'p':
+                from docx.oxml.ns import qn
+                para_xml = block
+                para = None
+                for p in doc.paragraphs:
+                    if p._element is para_xml:
+                        para = p
+                        break
+                if para and para.text.strip():
+                    style = para.style.name if para.style else ''
+                    if 'Heading' in style or 'heading' in style:
+                        parts.append(f'\n## {para.text.strip()}')
+                    else:
+                        parts.append(para.text.strip())
+            elif tag == 'tbl':
+                for tbl in doc.tables:
+                    if tbl._element is block:
+                        rows = tbl.rows
+                        if not rows:
+                            continue
+                        header_cells = [get_cell_text(c) for c in rows[0].cells]
+                        has_header = any(header_cells)
+                        if has_header:
+                            parts.append('\nТАБЛИЦА:')
+                            parts.append(' | '.join(header_cells))
+                            parts.append('-' * 40)
+                        for row in (rows[1:] if has_header else rows):
+                            row_texts = [get_cell_text(c) for c in row.cells]
+                            non_empty = [t for t in row_texts if t]
+                            if non_empty:
+                                if has_header:
+                                    pairs = []
+                                    for h, v in zip(header_cells, row_texts):
+                                        if v:
+                                            pairs.append(f'{h}: {v}' if h else v)
+                                    parts.append(', '.join(pairs))
+                                else:
+                                    parts.append(' | '.join(non_empty))
+                        break
+
+        return '\n'.join(parts)
     except Exception as e:
         return f'[Ошибка чтения DOCX: {e}]'
+
 
 PRICE_LIST = [
     {"code": "ОП-ОКС.БЗУ", "name": "Благоустройство земельного участка (БЗУ под ключ)", "unit": "га", "price_per_unit": 500000, "min_order_sum": 500000, "special_rules": "Округление площади: 1.1–1.4 как 1 га; 1.5–1.9 как 2 га"},
@@ -83,70 +125,79 @@ PRICE_LIST = [
 
 PRICE_LIST_STR = json.dumps(PRICE_LIST, ensure_ascii=False)
 
-KP_SYSTEM_PROMPT = f"""Ты — эксперт по составлению коммерческих предложений для проектно-инжиниринговой компании.
-На основе предоставленных документов (ТЗ, технические задания, файлы) составь детальное Коммерческое Предложение (КП) на русском языке.
+# ЭТАП 1: Промпт для извлечения параметров из ТЗ (быстрый, без расчётов)
+PARSE_SYSTEM_PROMPT = """Ты — технический аналитик проектно-инжиниринговой компании.
+Прочитай техническое задание и извлеки ВСЕ ключевые параметры.
 
-ПРАЙС-ЛИСТ компании (используй ТОЛЬКО эти позиции для расчёта стоимости):
+ВАЖНО: читай документ ПОЛНОСТЬЮ, включая таблицы. Ищи числа во всех разделах.
+
+Отвечай ТОЛЬКО JSON:
+{
+  "client": "название заказчика или организации",
+  "object_name": "полное наименование объекта",
+  "work_type": "новое строительство / реконструкция / капитальный ремонт / изыскания",
+  "location": "адрес или местоположение объекта",
+  "area_ha": число или null (площадь участка/территории в га; если указаны м² — переведи в га),
+  "volume_m3": число или null (строительный объём в м³; если не указан явно — оцени по аналогам исходя из типа и площади объекта),
+  "area_m2": число или null (площадь строений в м² — для дорог, мостов, интерьеров),
+  "has_state_expertise": true/false (требуется ли госэкспертиза),
+  "has_eco_expertise": true/false (требуется ли ГЭЭ или экологическая экспертиза),
+  "has_author_supervision": true/false (требуется ли авторский надзор),
+  "supervision_months": число или null (сколько месяцев авторского надзора),
+  "has_nts": true/false (требуется ли НТС — научно-техническое сопровождение),
+  "nts_months": число или null,
+  "has_geodesy": true/false (нужны ли геодезические изыскания ИГДИ),
+  "has_ecology": true/false (нужны ли экологические изыскания ИЭИ),
+  "has_geology": true/false (нужны ли геологические изыскания),
+  "has_survey": true/false (нужно ли обследование конструкций ОБМ),
+  "survey_volume_m3": число или null (объём обследования в м³),
+  "object_type": "ОКС / дорога / мост / интерьер / ПГО / ППТ / ПМТ / БЗУ / другое",
+  "financing": "бюджет / коммерческий / госконтракт",
+  "notes": "важные особые условия из ТЗ"
+}"""
+
+# ЭТАП 2: Промпт для генерации КП на основе извлечённых параметров
+KP_SYSTEM_PROMPT = f"""Ты — эксперт по составлению коммерческих предложений для проектно-инжиниринговой компании.
+
+ПРАЙС-ЛИСТ компании (используй ТОЛЬКО эти позиции):
 {PRICE_LIST_STR}
 
-АЛГОРИТМ СОСТАВЛЕНИЯ КП (выполняй строго по шагам):
+Тебе передают уже извлечённые параметры из ТЗ. На их основе составь КП.
 
-ШАГ 1 — Извлечь из ТЗ ключевые параметры:
-- Тип объекта и наименование
-- Вид работ: новое строительство (НС) / реконструкция (РЕК) / капремонт (КР)
-- Площадь участка изысканий в га (найди в ТЗ явно или рассчитай из размеров)
-- Строительный объём новых/реконструируемых сооружений в м³ (найди или оцени по аналогам)
-- Наличие требований к экспертизам (ГЭЭ, госэкспертиза)
-- Наличие авторского надзора, НТС
+ПРАВИЛА РАСЧЁТА:
 
-ШАГ 2 — Подобрать позиции из прайса:
-ИНЖЕНЕРНЫЕ ИЗЫСКАНИЯ (для каждого вида изысканий):
-- ИИ-ИГДИ (геодезия): объём = площадь_га, цена = 40000/га
-- ИИ-ИЭИ (экология): объём = площадь_га, цена = 65000/га
-- ИИ-ОБМ (обследование конструкций): если есть существующие сооружения, объём в м³, цена = 500/м³
-- Инженерно-геологические, гидрометеорологические, археологические — если требуются в ТЗ, добавляй с ориентировочной ценой (нет в прайсе)
+1. ИНЖЕНЕРНЫЕ ИЗЫСКАНИЯ (если has_geodesy/has_ecology true):
+   - ИИ-ИГДИ: volume = area_ha, total = area_ha × 40000
+   - ИИ-ИЭИ: volume = area_ha, total = area_ha × 65000
+   - ИИ-ОБМ: если has_survey, volume = survey_volume_m3, total = survey_volume_m3 × 500
 
-ПРОЕКТИРОВАНИЕ:
-- Новое строительство ОКС:
-  * до 100 м³ → "ОП-ОКС.НС до 100", 5000 руб/м³
-  * 100–500 м³ → "ОП-ОКС.НС 100-500", 4000 руб/м³
-  * 500–5000 м³ → "ОП-ОКС.НС 500-5000", 2000 руб/м³
-  * более 5000 м³ → "ОП-ОКС.НС более 5000", 1500 руб/м³  ← для крупных объектов
-- Реконструкция ОКС: "ОП-ОКС.РЕК ..." соответствующий диапазон
+2. ПРОЕКТИРОВАНИЕ ОКС (object_type = ОКС):
+   - Используй volume_m3 из параметров
+   - ЕСЛИ volume_m3 = null или 0 → ОЦЕНИ сам по типу объекта (НЕ ставь 0!)
+     * Жилой дом 3-5 этажей: ~5000-15000 м³
+     * Административное здание: ~3000-10000 м³
+     * Промышленный объект: ~10000-50000 м³
+   - НС до 100 м³: 5000/м³; 100-500: 4000; 500-5000: 2000; >5000: 1500
+   - РЕК до 100 м³: 3000/м³; 100-500: 2500
+   - КР до 100 м³: 2000/м³; 100-500: 1500
 
-ЭКСПЕРТИЗЫ:
-- СОПГЭ: 1 комплект = 200000 руб (всегда включай если требуется госэкспертиза)
+3. ДОРОГИ (object_type = дорога):
+   - Используй area_m2
+   - НС до 1000 м²: 700/м²; 1000-5000: 600; 5000-10000: 550; >10000: 500
+   - РЕК до 1000 м²: 2000/м²; 1000-5000: 1400
 
-ДОПОЛНИТЕЛЬНЫЕ (только если явно указано в ТЗ):
-- ОП-АН (авторский надзор): объём = кол-во месяцев, 100000/мес
-- ОП-НТС: объём = кол-во месяцев, 1500000/мес
+4. ЭКСПЕРТИЗЫ:
+   - СОПГЭ: если has_state_expertise или has_eco_expertise → 1 комплект × 200000
 
-ШАГ 3 — Рассчитать каждую строку:
-total = volume × price_per_unit (ПРОВЕРИТЬ арифметику!)
-Если объём из ТЗ не указан → volume = 0, notes = "по факту обмеров"
+5. ДОПОЛНИТЕЛЬНЫЕ:
+   - ОП-АН: если has_author_supervision → supervision_months × 100000
+   - ОП-НТС: если has_nts → nts_months × 1500000
 
-ШАГ 4 — Посчитать total_sum:
-Сложить ВСЕ строки total. Перепроверить сумму.
+ВАЖНО: НЕ СТАВЬ volume=0 если параметр известен или можно оценить!
+Арифметика: total = volume × price_per_unit, проверь каждую строку!
+total_sum = сумма всех total.
 
-ПРИМЕР (для объекта 6.9 га, 25000 м³ НС):
-- ИИ-ИГДИ: 6.9 × 40000 = 276000
-- ИИ-ИЭИ: 6.9 × 65000 = 448500
-- ОП-ОКС.НС более 5000: 25000 × 1500 = 37500000
-- СОПГЭ: 1 × 200000 = 200000
-- ОП-АН: 18 × 100000 = 1800000
-- ИТОГО = 40224500
-
-СТРУКТУРА КП:
-1. Титульная страница: название, клиент, дата, объект, вид работ, основание, источник финансирования
-2. Краткое резюме: суть проекта 3-5 предложений
-3. Разделы работ: "Инженерные изыскания", "Проектирование", "Сопровождение экспертиз", "Дополнительные услуги"
-4. В каждом разделе — таблица: Код | Наименование | Ед. | Объём | Цена за ед. | Итого
-5. Итоговая стоимость с разбивкой: базовый пакет и опции
-6. Сроки реализации по этапам
-7. Условия оплаты (аванс 40%, промежуточные платежи, финальный расчёт)
-8. Особые условия и исключения
-
-Отвечай ТОЛЬКО JSON в формате:
+Отвечай ТОЛЬКО JSON:
 {{
   "kp": {{
     "title": "...",
@@ -168,12 +219,12 @@ total = volume × price_per_unit (ПРОВЕРИТЬ арифметику!)
 ROADMAP_SYSTEM_PROMPT = """Ты — опытный менеджер проектов. На основе технического задания и коммерческого предложения составь подробную дорожную карту реализации проекта.
 
 СТРУКТУРА ДОРОЖНОЙ КАРТЫ:
-1. **Обзор проекта**: Цели, ключевые результаты
-2. **Этапы реализации**: Детальная разбивка по фазам
-3. **Ключевые вехи**: Контрольные точки и критерии приёмки
-4. **Риски и митигация**: Основные риски и пути их снижения
-5. **Команда и ресурсы**: Необходимые специалисты и ресурсы
-6. **Критический путь**: Наиболее важные зависимости
+1. Обзор проекта: Цели, ключевые результаты
+2. Этапы реализации: Детальная разбивка по фазам
+3. Ключевые вехи: Контрольные точки и критерии приёмки
+4. Риски и митигация: Основные риски и пути их снижения
+5. Команда и ресурсы: Необходимые специалисты и ресурсы
+6. Критический путь: Наиболее важные зависимости
 
 Отвечай ТОЛЬКО JSON в формате:
 {
@@ -190,9 +241,9 @@ ROADMAP_SYSTEM_PROMPT = """Ты — опытный менеджер проект
 }"""
 
 
-def call_ai(system_prompt: str, user_message: str) -> str:
+def call_ai(system_prompt: str, user_message: str, max_tokens: int = 4000) -> str:
     api_key = os.environ.get('OPENROUTER_API_KEY', '')
-    
+
     response = httpx.post(
         'https://openrouter.ai/api/v1/chat/completions',
         headers={
@@ -200,17 +251,17 @@ def call_ai(system_prompt: str, user_message: str) -> str:
             'Content-Type': 'application/json',
         },
         json={
-            'model': 'google/gemini-2.0-flash-001',
+            'model': 'deepseek/deepseek-chat',
             'messages': [
                 {'role': 'system', 'content': system_prompt},
                 {'role': 'user', 'content': user_message}
             ],
-            'max_tokens': 4000,
-            'temperature': 0.3,
+            'max_tokens': max_tokens,
+            'temperature': 0.2,
         },
-        timeout=25.0
+        timeout=28.0
     )
-    
+
     result = response.json()
     if 'choices' not in result:
         error_msg = result.get('error', {}).get('message', str(result))
@@ -220,7 +271,6 @@ def call_ai(system_prompt: str, user_message: str) -> str:
 
 def extract_json(text: str) -> dict:
     text = text.strip()
-    # Remove markdown code blocks if present
     if '```json' in text:
         text = text.split('```json')[1].split('```')[0].strip()
     elif '```' in text:
@@ -229,8 +279,8 @@ def extract_json(text: str) -> dict:
 
 
 def handler(event: dict, context) -> dict:
-    """Генерация КП и дорожной карты через ИИ на основе загруженных файлов"""
-    
+    """Генерация КП и дорожной карты через ИИ (двухэтапный подход: парсинг ТЗ → генерация КП)"""
+
     if event.get('httpMethod') == 'OPTIONS':
         return {
             'statusCode': 200,
@@ -259,43 +309,70 @@ def handler(event: dict, context) -> dict:
             'headers': {'Access-Control-Allow-Origin': '*'},
             'body': json.dumps({'status': 'ok'})
         }
+
     files_text = body.get('files_text', '')
     extra_prompt = body.get('extra_prompt', '')
     kp_data = body.get('kp_data', None)
     files_b64 = body.get('files_b64', [])
 
+    # Парсинг файлов
     parsed_texts = []
     for f in files_b64:
         name = f.get('name', '')
         b64 = f.get('data', '')
-        try:
-            raw = base64.b64decode(b64)
-            if name.lower().endswith('.pdf'):
-                text = extract_text_from_pdf(raw)
-            elif name.lower().endswith('.docx'):
-                text = extract_text_from_docx(raw)
-            else:
-                text = raw.decode('utf-8', errors='replace')
-            parsed_texts.append(f'=== ФАЙЛ: {name} ===\n{text}')
-        except Exception as e:
-            parsed_texts.append(f'=== ФАЙЛ: {name} === [Ошибка: {e}]')
+        raw = base64.b64decode(b64)
+        if name.lower().endswith('.pdf'):
+            text = extract_text_from_pdf(raw)
+        elif name.lower().endswith('.docx'):
+            text = extract_text_from_docx(raw)
+        else:
+            text = raw.decode('utf-8', errors='replace')
+        parsed_texts.append(f'=== ФАЙЛ: {name} ===\n{text}')
 
     combined_text = '\n\n'.join(parsed_texts) if parsed_texts else files_text
 
-    user_message = f"""СОДЕРЖИМОЕ ЗАГРУЖЕННЫХ ДОКУМЕНТОВ:
+    if action == 'generate_kp':
+        # ЭТАП 1: Извлечь параметры из ТЗ
+        parse_message = f"""ТЕХНИЧЕСКОЕ ЗАДАНИЕ:
 {combined_text}
 
-{f'ДОПОЛНИТЕЛЬНЫЕ ТРЕБОВАНИЯ ОТ КЛИЕНТА: {extra_prompt}' if extra_prompt else ''}
+{f'ДОПОЛНИТЕЛЬНЫЕ ТРЕБОВАНИЯ: {extra_prompt}' if extra_prompt else ''}
 
-Составь {'коммерческое предложение' if action == 'generate_kp' else 'дорожную карту'} на основе этих материалов."""
+Извлеки все параметры из этого ТЗ."""
 
-    if action == 'generate_roadmap' and kp_data:
-        user_message += f"\n\nКОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ (уже согласовано):\n{json.dumps(kp_data, ensure_ascii=False)}"
+        params_response = call_ai(PARSE_SYSTEM_PROMPT, parse_message, max_tokens=1000)
+        params = extract_json(params_response)
 
-    system_prompt = KP_SYSTEM_PROMPT if action == 'generate_kp' else ROADMAP_SYSTEM_PROMPT
+        # ЭТАП 2: Сгенерировать КП на основе параметров
+        kp_message = f"""ПАРАМЕТРЫ ОБЪЕКТА (извлечены из ТЗ):
+{json.dumps(params, ensure_ascii=False, indent=2)}
 
-    ai_response = call_ai(system_prompt, user_message)
-    result_data = extract_json(ai_response)
+{f'ДОПОЛНИТЕЛЬНЫЕ ТРЕБОВАНИЯ КЛИЕНТА: {extra_prompt}' if extra_prompt else ''}
+
+Составь коммерческое предложение на основе этих параметров."""
+
+        ai_response = call_ai(KP_SYSTEM_PROMPT, kp_message, max_tokens=4000)
+        result_data = extract_json(ai_response)
+
+    elif action == 'generate_roadmap':
+        user_message = f"""СОДЕРЖИМОЕ ДОКУМЕНТОВ:
+{combined_text}
+
+{f'ДОПОЛНИТЕЛЬНЫЕ ТРЕБОВАНИЯ: {extra_prompt}' if extra_prompt else ''}
+"""
+        if kp_data:
+            user_message += f"\nКОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ:\n{json.dumps(kp_data, ensure_ascii=False)}"
+        user_message += "\n\nСоставь дорожную карту реализации проекта."
+
+        ai_response = call_ai(ROADMAP_SYSTEM_PROMPT, user_message, max_tokens=3000)
+        result_data = extract_json(ai_response)
+
+    else:
+        return {
+            'statusCode': 400,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': f'Unknown action: {action}'})
+        }
 
     return {
         'statusCode': 200,
