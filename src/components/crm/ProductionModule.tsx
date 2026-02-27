@@ -231,6 +231,116 @@ export const ProductionModule = ({ projectContext }: ProductionModuleProps) => {
     toast({ title: `Статус: ${statusLabels[newStatus].label}`, description: selectedDoc.sectionCode });
   };
 
+  const exportAllToWord = () => {
+    const kp = projectContext?.kpData as Record<string, unknown> | undefined;
+    const rm = projectContext?.roadmapData as Record<string, unknown> | undefined;
+    const projectName = (kp?.title || rm?.project_name || 'Проект') as string;
+    const today = new Date().toLocaleDateString('ru-RU');
+
+    const sectionsHtml = sections.map(s => {
+      const doc = documents.find(d => String(d.phaseId) === String(s.phaseId));
+      if (!doc) return '';
+      const statusLabel = statusLabels[doc.status].label;
+      const content = doc.content
+        .split('\n')
+        .map(line => {
+          if (line.startsWith('# ')) return `<h2 style="font-size:16pt;font-weight:bold;margin:16px 0 8px">${line.slice(2)}</h2>`;
+          if (line.startsWith('## ')) return `<h3 style="font-size:14pt;font-weight:bold;margin:12px 0 6px">${line.slice(3)}</h3>`;
+          if (line.startsWith('### ')) return `<h4 style="font-size:12pt;font-weight:bold;margin:10px 0 4px">${line.slice(4)}</h4>`;
+          if (line.trim() === '') return '<br/>';
+          return `<p style="margin:4px 0;line-height:1.6">${line}</p>`;
+        })
+        .join('');
+
+      return `
+        <div style="page-break-before:always;padding:40px">
+          <div style="border-bottom:2px solid #1e3a5f;padding-bottom:12px;margin-bottom:24px">
+            <h2 style="font-size:18pt;color:#1e3a5f;margin:0">${doc.sectionCode} — ${doc.section}</h2>
+            <p style="color:#666;margin:4px 0 0;font-size:10pt">Статус: ${statusLabel} · Версия ${doc.version} · ${new Date(doc.createdAt).toLocaleDateString('ru-RU')}</p>
+          </div>
+          ${content}
+        </div>`;
+    }).filter(Boolean).join('');
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+      <style>
+        body{font-family:"Times New Roman",serif;font-size:12pt;color:#1a1a1a;margin:0}
+        h1{font-size:22pt;color:#1e3a5f} h2{font-size:16pt;color:#1e3a5f}
+        p{line-height:1.6;margin:4px 0}
+      </style>
+    </head><body>
+      <div style="padding:60px 40px;text-align:center;page-break-after:always">
+        <div style="margin-bottom:40px">
+          <p style="font-size:11pt;color:#666;margin-bottom:8px">Проектно-изыскательские работы</p>
+          <h1 style="margin:0 0 16px;line-height:1.3">${projectName}</h1>
+          <p style="font-size:11pt;color:#666">Проектная документация</p>
+        </div>
+        <div style="border-top:1px solid #ccc;border-bottom:1px solid #ccc;padding:20px 0;margin:40px 0">
+          <p style="margin:4px 0"><b>Дата составления:</b> ${today}</p>
+          ${kp?.client ? `<p style="margin:4px 0"><b>Заказчик:</b> ${kp.client}</p>` : ''}
+          <p style="margin:4px 0"><b>Количество разделов:</b> ${documents.length}</p>
+        </div>
+      </div>
+      ${sectionsHtml}
+    </body></html>`;
+
+    const blob = new Blob(['\ufeff' + html], { type: 'application/msword;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ПИР_${projectName.slice(0, 40).replace(/[^а-яёА-ЯЁa-zA-Z0-9]/g, '_')}.doc`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportAllToPDF = () => {
+    const kp = projectContext?.kpData as Record<string, unknown> | undefined;
+    const rm = projectContext?.roadmapData as Record<string, unknown> | undefined;
+    const projectName = (kp?.title || rm?.project_name || 'Проект') as string;
+    const today = new Date().toLocaleDateString('ru-RU');
+
+    const sectionsHtml = sections.map(s => {
+      const doc = documents.find(d => String(d.phaseId) === String(s.phaseId));
+      if (!doc) return '';
+      const content = doc.content
+        .split('\n')
+        .map(line => {
+          if (line.startsWith('# ')) return `<h2>${line.slice(2)}</h2>`;
+          if (line.startsWith('## ')) return `<h3>${line.slice(3)}</h3>`;
+          if (line.startsWith('### ')) return `<h4>${line.slice(4)}</h4>`;
+          if (line.trim() === '') return '<br/>';
+          return `<p>${line}</p>`;
+        })
+        .join('');
+      return `<div class="section"><h2>${doc.sectionCode} — ${doc.section}</h2>${content}</div>`;
+    }).filter(Boolean).join('');
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+      <style>
+        @page{margin:2cm} body{font-family:"Times New Roman",serif;font-size:12pt;color:#1a1a1a}
+        h1{font-size:20pt;color:#1e3a5f;text-align:center} h2{font-size:15pt;color:#1e3a5f;border-bottom:1px solid #ccc;padding-bottom:6px}
+        h3{font-size:13pt} h4{font-size:11pt} p{line-height:1.6;margin:4px 0}
+        .section{page-break-before:always;padding-top:20px}
+        .cover{text-align:center;padding:80px 0;page-break-after:always}
+        .cover p{color:#666;font-size:11pt}
+      </style>
+    </head><body>
+      <div class="cover">
+        <p>Проектно-изыскательские работы</p>
+        <h1>${projectName}</h1>
+        <p>Дата: ${today}${kp?.client ? ` · Заказчик: ${kp.client}` : ''}</p>
+      </div>
+      ${sectionsHtml}
+    </body></html>`;
+
+    const win = window.open('', '_blank');
+    if (!win) return;
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 600);
+  };
+
   const hasRoadmap = !!(projectContext?.roadmapData?.phases);
   const hasContext = !!(projectContext?.kpData || projectContext?.filesText);
 
@@ -251,6 +361,18 @@ export const ProductionModule = ({ projectContext }: ProductionModuleProps) => {
           </div>
         </CardContent>
       </Card>
+
+      {documents.length > 0 && (
+        <div className="flex items-center gap-2 justify-end">
+          <span className="text-xs text-slate-400 mr-1">{documents.length} разд. готово — экспорт:</span>
+          <Button size="sm" variant="outline" onClick={exportAllToPDF} className="text-xs gap-1">
+            <Icon name="FileDown" size={13} />PDF
+          </Button>
+          <Button size="sm" variant="outline" onClick={exportAllToWord} className="text-xs gap-1">
+            <Icon name="FileText" size={13} />Word
+          </Button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-2">
