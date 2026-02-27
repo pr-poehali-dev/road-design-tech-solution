@@ -1,9 +1,11 @@
-"""Генерация КП через ИИ — создаёт job в БД, фронт вызывает kp-worker отдельно"""
+"""Генерация КП через ИИ — асинхронная очередь через БД, поллинг статуса"""
 import json
 import os
 import base64
 import io
+import httpx
 import psycopg2
+import threading
 
 
 def get_db():
@@ -270,8 +272,93 @@ ROADMAP_SYSTEM_PROMPT = """Ты — опытный менеджер проект
 }"""
 
 
+def call_ai(system_prompt: str, user_message: str) -> str:
+    api_key = os.environ.get('OPENROUTER_API_KEY', '')
+    response = httpx.post(
+        'https://openrouter.ai/api/v1/chat/completions',
+        headers={
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json',
+        },
+        json={
+            'model': 'deepseek/deepseek-chat',
+            'messages': [
+                {'role': 'system', 'content': system_prompt},
+                {'role': 'user', 'content': user_message}
+            ],
+            'max_tokens': 8000,
+            'temperature': 0.2,
+        },
+        timeout=180.0
+    )
+    result = response.json()
+    if 'choices' not in result:
+        error_msg = result.get('error', {}).get('message', str(result))
+        raise Exception(f"OpenRouter error: {error_msg}")
+    return result['choices'][0]['message']['content']
+
+
+def extract_json(text: str) -> dict:
+    text = text.strip()
+    if '```json' in text:
+        text = text.split('```json')[1].split('```')[0].strip()
+    elif '```' in text:
+        text = text.split('```')[1].split('```')[0].strip()
+    return json.loads(text)
+
+
+def process_job_async(job_id: str, action: str, combined_text: str, extra_prompt: str, kp_data: dict):
+    """Фоновый поток: выполняет запрос к ИИ и сохраняет результат в БД"""
+    conn = None
+    try:
+        if action == 'generate_kp':
+            user_message = f"""СОДЕРЖИМОЕ ЗАГРУЖЕННЫХ ДОКУМЕНТОВ:
+{combined_text}
+
+{f'ДОПОЛНИТЕЛЬНЫЕ ТРЕБОВАНИЯ ОТ КЛИЕНТА: {extra_prompt}' if extra_prompt else ''}
+
+Составь коммерческое предложение на основе этих материалов."""
+            ai_response = call_ai(KP_SYSTEM_PROMPT, user_message)
+        else:
+            user_message = f"""СОДЕРЖИМОЕ ЗАГРУЖЕННЫХ ДОКУМЕНТОВ:
+{combined_text}
+
+{f'ДОПОЛНИТЕЛЬНЫЕ ТРЕБОВАНИЯ: {extra_prompt}' if extra_prompt else ''}
+"""
+            if kp_data:
+                user_message += f"\nКОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ:\n{json.dumps(kp_data, ensure_ascii=False)}"
+            user_message += "\n\nСоставь дорожную карту реализации проекта."
+            ai_response = call_ai(ROADMAP_SYSTEM_PROMPT, user_message)
+
+        result_data = extract_json(ai_response)
+        result_json = json.dumps(result_data, ensure_ascii=False)
+
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute(
+            "UPDATE kp_jobs SET status='done', result=%s, updated_at=NOW() WHERE id=%s",
+            (result_json, job_id)
+        )
+        conn.commit()
+    except Exception as e:
+        try:
+            if conn is None:
+                conn = get_db()
+            cur = conn.cursor()
+            cur.execute(
+                "UPDATE kp_jobs SET status='error', error=%s, updated_at=NOW() WHERE id=%s",
+                (str(e), job_id)
+            )
+            conn.commit()
+        except Exception:
+            pass
+    finally:
+        if conn:
+            conn.close()
+
+
 def handler(event: dict, context) -> dict:
-    """Генерация КП: парсит файлы, создаёт job в БД, возвращает job_id + combined_text для воркера"""
+    """Генерация КП через ИИ — асинхронная очередь (start_job → check_job) чтобы обойти таймаут"""
 
     if event.get('httpMethod') == 'OPTIONS':
         return {
@@ -355,13 +442,16 @@ def handler(event: dict, context) -> dict:
     conn.commit()
     conn.close()
 
-    # Возвращаем job_id и combined_text — фронт сам вызовет kp-worker
+    # Запустить фоновый поток
+    t = threading.Thread(
+        target=process_job_async,
+        args=(job_id, action, combined_text, extra_prompt, kp_data),
+        daemon=True
+    )
+    t.start()
+
     return {
         'statusCode': 202,
         'headers': CORS,
-        'body': json.dumps({
-            'job_id': job_id,
-            'status': 'processing',
-            'combined_text': combined_text
-        }, ensure_ascii=False)
+        'body': json.dumps({'job_id': job_id, 'status': 'processing'})
     }

@@ -7,7 +7,6 @@ import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 
 const GENERATE_KP_URL = 'https://functions.poehali.dev/f595b8a7-903c-4870-b1f7-d0aac554463f';
-const KP_WORKER_URL = 'https://functions.poehali.dev/5a6c2f56-6efc-41cc-9519-afc58fd49a75';
 
 interface KPItem {
   code: string;
@@ -188,26 +187,11 @@ export const KPGenerator = () => {
         body: JSON.stringify({ action: 'generate_kp', files_text: getFilesText(), files_b64: getFilesB64(), extra_prompt: extraPrompt }),
       });
       const startData = await startRes.json();
-
-      if (startData.status === 'error') throw new Error(startData.error || 'Ошибка генерации');
-      if (!startData.job_id) throw new Error('Не удалось запустить задачу');
-
-      // Fire-and-forget: запускаем воркер (он сам обратится к DeepSeek без таймаута)
-      fetch(KP_WORKER_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          job_id: startData.job_id,
-          action: 'generate_kp',
-          combined_text: startData.combined_text || '',
-          extra_prompt: extraPrompt,
-        }),
-      }).catch(() => {});
+      if (!startData.job_id) throw new Error(startData.error || 'Не удалось запустить задачу');
 
       const result = await pollJob(startData.job_id);
-
       if (result.kp) {
-        setKpData(result.kp as KPData);
+        setKpData(result.kp);
         setActiveResult('kp');
         toast({ title: 'КП сформировано', description: 'Коммерческое предложение готово к скачиванию' });
       } else {
@@ -234,24 +218,9 @@ export const KPGenerator = () => {
         body: JSON.stringify({ action: 'generate_roadmap', files_text: getFilesText(), files_b64: getFilesB64(), extra_prompt: extraPrompt, kp_data: kpData }),
       });
       const startData = await startRes.json();
-
-      if (startData.status === 'error') throw new Error(startData.error || 'Ошибка генерации');
-      if (!startData.job_id) throw new Error('Не удалось запустить задачу');
-
-      fetch(KP_WORKER_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          job_id: startData.job_id,
-          action: 'generate_roadmap',
-          combined_text: startData.combined_text || '',
-          extra_prompt: extraPrompt,
-          kp_data: kpData,
-        }),
-      }).catch(() => {});
+      if (!startData.job_id) throw new Error(startData.error || 'Не удалось запустить задачу');
 
       const result = await pollJob(startData.job_id);
-
       if (result.roadmap) {
         setRoadmapData(result.roadmap);
         setActiveResult('roadmap');
