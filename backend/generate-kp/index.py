@@ -157,64 +157,32 @@ PARSE_SYSTEM_PROMPT = """Ты — технический аналитик про
 }"""
 
 # ЭТАП 2: Промпт для генерации КП на основе извлечённых параметров
-KP_SYSTEM_PROMPT = f"""Ты — эксперт по составлению коммерческих предложений для проектно-инжиниринговой компании.
+KP_SYSTEM_PROMPT = """Ты — эксперт по коммерческим предложениям. Составь КП по переданным параметрам.
 
-ПРАЙС-ЛИСТ компании (используй ТОЛЬКО эти позиции):
-{PRICE_LIST_STR}
+ПРАЙС (коды и цены за ед.):
+ИИ-ИГДИ=40000/га, ИИ-ИЭИ=65000/га, ИИ-ОБМ=500/м³
+ОКС НС: до100м³=5000, 100-500=4000, 500-5000=2000, >5000=1500 (руб/м³)
+ОКС РЕК: до100=3000, 100-500=2500 (руб/м³)
+ОКС КР: до100=2000, 100-500=1500 (руб/м³)
+Дорога НС: до1000м²=700, 1000-5000=600, 5000-10000=550, >10000=500 (руб/м²)
+Дорога РЕК: до1000=2000, 1000-5000=1400 (руб/м²)
+СОПГЭ=200000/компл, ОП-АН=100000/мес, ОП-НТС=1500000/мес
+ПГО: до100га=24000, 100-500=23000, 500-2000=22000 (руб/га)
+ОП-ОКС.БЗУ=500000/га, СОПГЭ=200000/компл
 
-Тебе передают уже извлечённые параметры из ТЗ. На их основе составь КП.
-
-ПРАВИЛА РАСЧЁТА:
-
-1. ИНЖЕНЕРНЫЕ ИЗЫСКАНИЯ (если has_geodesy/has_ecology true):
-   - ИИ-ИГДИ: volume = area_ha, total = area_ha × 40000
-   - ИИ-ИЭИ: volume = area_ha, total = area_ha × 65000
-   - ИИ-ОБМ: если has_survey, volume = survey_volume_m3, total = survey_volume_m3 × 500
-
-2. ПРОЕКТИРОВАНИЕ ОКС (object_type = ОКС):
-   - Используй volume_m3 из параметров
-   - ЕСЛИ volume_m3 = null или 0 → ОЦЕНИ сам по типу объекта (НЕ ставь 0!)
-     * Жилой дом 3-5 этажей: ~5000-15000 м³
-     * Административное здание: ~3000-10000 м³
-     * Промышленный объект: ~10000-50000 м³
-   - НС до 100 м³: 5000/м³; 100-500: 4000; 500-5000: 2000; >5000: 1500
-   - РЕК до 100 м³: 3000/м³; 100-500: 2500
-   - КР до 100 м³: 2000/м³; 100-500: 1500
-
-3. ДОРОГИ (object_type = дорога):
-   - Используй area_m2
-   - НС до 1000 м²: 700/м²; 1000-5000: 600; 5000-10000: 550; >10000: 500
-   - РЕК до 1000 м²: 2000/м²; 1000-5000: 1400
-
-4. ЭКСПЕРТИЗЫ:
-   - СОПГЭ: если has_state_expertise или has_eco_expertise → 1 комплект × 200000
-
-5. ДОПОЛНИТЕЛЬНЫЕ:
-   - ОП-АН: если has_author_supervision → supervision_months × 100000
-   - ОП-НТС: если has_nts → nts_months × 1500000
-
-ВАЖНО: НЕ СТАВЬ volume=0 если параметр известен или можно оценить!
-Арифметика: total = volume × price_per_unit, проверь каждую строку!
-total_sum = сумма всех total.
+ПРАВИЛА:
+- has_geodesy=true → ИИ-ИГДИ: vol=area_ha, total=area_ha×40000
+- has_ecology=true → ИИ-ИЭИ: vol=area_ha, total=area_ha×65000
+- has_survey=true → ИИ-ОБМ: vol=survey_volume_m3, total×500
+- object_type=ОКС → подбери нужную строку по work_type и volume_m3
+- ЕСЛИ volume_m3 null → оцени сам (адм. здание ~5000м³, промышленный ~20000м³)
+- has_state_expertise=true → СОПГЭ: 1×200000
+- has_author_supervision=true → ОП-АН: supervision_months×100000
+- has_nts=true → ОП-НТС: nts_months×1500000
+- НЕ СТАВЬ volume=0 если можно оценить! total=volume×price_per_unit
 
 Отвечай ТОЛЬКО JSON:
-{{
-  "kp": {{
-    "title": "...",
-    "client": "...",
-    "date": "...",
-    "object_name": "...",
-    "work_type": "...",
-    "summary": "...",
-    "sections": [{{"name": "...", "items": [{{"code": "...", "name": "...", "unit": "...", "volume": 0, "price_per_unit": 0, "total": 0, "notes": "..."}}]}}],
-    "total_sum": 0,
-    "total_sum_words": "...",
-    "timeline": [{{"phase": "...", "duration": "...", "description": "..."}}],
-    "payment_conditions": ["..."],
-    "special_conditions": ["..."],
-    "validity": "30 дней"
-  }}
-}}"""
+{"kp": {"title": "...", "client": "...", "date": "...", "object_name": "...", "work_type": "...", "summary": "...", "sections": [{"name": "...", "items": [{"code": "...", "name": "...", "unit": "...", "volume": 0, "price_per_unit": 0, "total": 0, "notes": "..."}]}], "total_sum": 0, "total_sum_words": "...", "timeline": [{"phase": "...", "duration": "...", "description": "..."}], "payment_conditions": ["..."], "special_conditions": ["..."], "validity": "30 дней"}}"""
 
 ROADMAP_SYSTEM_PROMPT = """Ты — опытный менеджер проектов. На основе технического задания и коммерческого предложения составь подробную дорожную карту реализации проекта.
 
@@ -354,7 +322,7 @@ def handler(event: dict, context) -> dict:
 
 Составь коммерческое предложение на основе этих параметров."""
 
-        ai_response = call_ai(KP_SYSTEM_PROMPT, kp_message, max_tokens=4000)
+        ai_response = call_ai(KP_SYSTEM_PROMPT, kp_message, max_tokens=2500)
         result_data = extract_json(ai_response)
 
     elif action == 'generate_roadmap':
