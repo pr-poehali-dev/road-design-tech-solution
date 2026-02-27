@@ -442,16 +442,32 @@ def handler(event: dict, context) -> dict:
     conn.commit()
     conn.close()
 
-    # Запустить фоновый поток
+    # Запустить фоновый поток (не daemon — чтобы процесс не убивался до завершения)
     t = threading.Thread(
         target=process_job_async,
         args=(job_id, action, combined_text, extra_prompt, kp_data),
-        daemon=True
+        daemon=False
     )
     t.start()
+    # Ждём завершения потока (DeepSeek до 120 сек) — возвращаем результат сразу
+    t.join(timeout=120)
 
-    return {
-        'statusCode': 202,
-        'headers': CORS,
-        'body': json.dumps({'job_id': job_id, 'status': 'processing'})
-    }
+    # Проверяем результат после join
+    conn2 = get_db()
+    cur2 = conn2.cursor()
+    cur2.execute("SELECT status, result, error FROM kp_jobs WHERE id=%s", (job_id,))
+    row = cur2.fetchone()
+    conn2.close()
+
+    if row and row[0] == 'done':
+        resp = {'status': 'done', 'data': json.loads(row[1])}
+        return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(resp, ensure_ascii=False)}
+    elif row and row[0] == 'error':
+        return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'status': 'error', 'error': row[2]})}
+    else:
+        # Поток ещё работает — фронт будет поллить
+        return {
+            'statusCode': 202,
+            'headers': CORS,
+            'body': json.dumps({'job_id': job_id, 'status': 'processing'})
+        }

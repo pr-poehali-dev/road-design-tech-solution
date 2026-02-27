@@ -187,11 +187,20 @@ export const KPGenerator = () => {
         body: JSON.stringify({ action: 'generate_kp', files_text: getFilesText(), files_b64: getFilesB64(), extra_prompt: extraPrompt }),
       });
       const startData = await startRes.json();
-      if (!startData.job_id) throw new Error(startData.error || 'Не удалось запустить задачу');
 
-      const result = await pollJob(startData.job_id);
+      let result: Record<string, unknown>;
+      // Если результат уже готов в первом ответе (синхронный режим)
+      if (startData.status === 'done' && startData.data) {
+        result = startData.data;
+      } else if (startData.status === 'error') {
+        throw new Error(startData.error || 'Ошибка генерации');
+      } else {
+        if (!startData.job_id) throw new Error(startData.error || 'Не удалось запустить задачу');
+        result = await pollJob(startData.job_id);
+      }
+
       if (result.kp) {
-        setKpData(result.kp);
+        setKpData(result.kp as KPData);
         setActiveResult('kp');
         toast({ title: 'КП сформировано', description: 'Коммерческое предложение готово к скачиванию' });
       } else {
@@ -218,9 +227,17 @@ export const KPGenerator = () => {
         body: JSON.stringify({ action: 'generate_roadmap', files_text: getFilesText(), files_b64: getFilesB64(), extra_prompt: extraPrompt, kp_data: kpData }),
       });
       const startData = await startRes.json();
-      if (!startData.job_id) throw new Error(startData.error || 'Не удалось запустить задачу');
 
-      const result = await pollJob(startData.job_id);
+      let result: Record<string, unknown>;
+      if (startData.status === 'done' && startData.data) {
+        result = startData.data;
+      } else if (startData.status === 'error') {
+        throw new Error(startData.error || 'Ошибка генерации');
+      } else {
+        if (!startData.job_id) throw new Error(startData.error || 'Не удалось запустить задачу');
+        result = await pollJob(startData.job_id);
+      }
+
       if (result.roadmap) {
         setRoadmapData(result.roadmap);
         setActiveResult('roadmap');
