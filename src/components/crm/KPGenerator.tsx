@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -110,43 +110,20 @@ const riskColor = (level: string) => {
 
 interface KPGeneratorProps {
   onSendToProduction?: (kpData: KPData, roadmapData: RoadmapData | null, filesText: string, kpId: string) => void;
-  onKpReady?: (kpData: Record<string, unknown>, filesText: string, kpId: string) => void;
-  onRoadmapReady?: (roadmapData: Record<string, unknown>, kpData: Record<string, unknown> | null, filesText: string, kpId: string | null) => void;
-  savedKpContext?: {
-    kpData: Record<string, unknown> | null;
-    roadmapData: Record<string, unknown> | null;
-    filesText: string;
-    kpId: string | null;
-  };
 }
 
-export const KPGenerator = ({ onSendToProduction, onKpReady, onRoadmapReady, savedKpContext }: KPGeneratorProps) => {
+export const KPGenerator = ({ onSendToProduction }: KPGeneratorProps) => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [extraPrompt, setExtraPrompt] = useState('');
   const [loadingKP, setLoadingKP] = useState(false);
   const [loadingRoadmap, setLoadingRoadmap] = useState(false);
-  const [kpData, setKpData] = useState<KPData | null>(() => savedKpContext?.kpData as KPData | null ?? null);
-  const [roadmapData, setRoadmapData] = useState<RoadmapData | null>(() => savedKpContext?.roadmapData as RoadmapData | null ?? null);
-  const [activeResult, setActiveResult] = useState<'kp' | 'roadmap'>(() => savedKpContext?.roadmapData ? 'roadmap' : 'kp');
-  const [savedMeta, setSavedMeta] = useState<SavedKPMeta | null>(() => savedKpContext?.kpId ? { id: savedKpContext.kpId, created_at: '' } : null);
+  const [kpData, setKpData] = useState<KPData | null>(null);
+  const [roadmapData, setRoadmapData] = useState<RoadmapData | null>(null);
+  const [activeResult, setActiveResult] = useState<'kp' | 'roadmap'>('kp');
+  const [savedMeta, setSavedMeta] = useState<SavedKPMeta | null>(null);
   const [sendingToProduction, setSendingToProduction] = useState(false);
-
-  // Восстанавливаем данные из родительского контекста при переключении на вкладку
-  useEffect(() => {
-    if (savedKpContext?.kpData && !kpData) {
-      setKpData(savedKpContext.kpData as unknown as KPData);
-    }
-    if (savedKpContext?.roadmapData && !roadmapData) {
-      setRoadmapData(savedKpContext.roadmapData as unknown as RoadmapData);
-      setActiveResult('roadmap');
-    }
-    if (savedKpContext?.kpId && !savedMeta) {
-      setSavedMeta({ id: savedKpContext.kpId, created_at: '' });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [savedKpContext]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploaded = Array.from(e.target.files || []);
@@ -280,7 +257,6 @@ export const KPGenerator = ({ onSendToProduction, onKpReady, onRoadmapReady, sav
         const kpId = await saveKP(kp);
         if (kpId) {
           setSavedMeta(prev => ({ ...(prev || {}), id: kpId, created_at: new Date().toISOString() }));
-          onKpReady?.(kp as unknown as Record<string, unknown>, getFilesText(), kpId);
           toast({ title: 'КП сформировано и сохранено', description: 'Коммерческое предложение готово к скачиванию' });
         } else {
           toast({ title: 'КП сформировано', description: 'Готово к скачиванию (сохранение не удалось)' });
@@ -323,13 +299,6 @@ export const KPGenerator = ({ onSendToProduction, onKpReady, onRoadmapReady, sav
         } else {
           toast({ title: 'Дорожная карта готова', description: 'Карта сформирована (сохранение не удалось)' });
         }
-        // Сразу сообщаем Admin — productionContext обновится без нажатия "В производство"
-        onRoadmapReady?.(
-          roadmap as unknown as Record<string, unknown>,
-          kpData as unknown as Record<string, unknown> | null,
-          getFilesText(),
-          savedMeta?.id || null
-        );
       } else {
         throw new Error('Неверный формат ответа');
       }
