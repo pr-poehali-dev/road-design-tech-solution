@@ -1,4 +1,5 @@
 {
+  "kp-worker": "https://functions.poehali.dev/5a6c2f56-6efc-41cc-9519-afc58fd49a75",
   "generate-kp": "https://functions.poehali.dev/f595b8a7-903c-4870-b1f7-d0aac554463f",
   "crm": "https://functions.poehali.dev/dfa8f17b-5894-48e3-b263-bb3c5de0282e",
   "admin": "https://functions.poehali.dev/0d7b5196-aacb-49a5-9e26-b2e61bceaa5f",
