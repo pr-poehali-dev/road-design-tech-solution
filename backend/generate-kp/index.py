@@ -200,7 +200,7 @@ def call_ai(system_prompt: str, user_message: str) -> str:
             'Content-Type': 'application/json',
         },
         json={
-            'model': 'google/gemini-flash-1.5',
+            'model': 'google/gemini-2.0-flash-001',
             'messages': [
                 {'role': 'system', 'content': system_prompt},
                 {'role': 'user', 'content': user_message}
