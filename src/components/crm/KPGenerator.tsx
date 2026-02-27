@@ -48,15 +48,16 @@ interface RoadmapPhase {
   id: number;
   name: string;
   duration: string;
-  start_week: number;
-  end_week: number;
+  start_month: number;
+  end_month: number;
   tasks: string[];
   deliverables: string[];
   responsible: string;
 }
 
 interface RoadmapMilestone {
-  week: number;
+  month: number;
+  week?: number;
   name: string;
   criteria: string;
 }
@@ -665,7 +666,7 @@ export const KPGenerator = ({ onSendToProduction }: KPGeneratorProps) => {
                         <div className="space-y-2">
                           {roadmapData.milestones.map((m, mi) => (
                             <div key={mi} className="flex gap-3 items-start bg-slate-800/30 rounded-lg p-2">
-                              <Badge className="bg-slate-700 text-slate-300 text-xs shrink-0">Нед. {m.week}</Badge>
+                              <Badge className="bg-slate-700 text-slate-300 text-xs shrink-0">Мес. {m.month ?? m.week}</Badge>
                               <div>
                                 <p className="text-sm text-white font-medium">{m.name}</p>
                                 <p className="text-xs text-slate-400">{m.criteria}</p>
