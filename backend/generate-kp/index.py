@@ -140,7 +140,7 @@ def call_ai(system_prompt: str, user_message: str) -> str:
             'Content-Type': 'application/json',
         },
         json={
-            'model': 'deepseek/deepseek-chat-v3-0324',
+            'model': 'google/gemini-2.0-flash-001',
             'messages': [
                 {'role': 'system', 'content': system_prompt},
                 {'role': 'user', 'content': user_message}
