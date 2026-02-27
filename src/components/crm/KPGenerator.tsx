@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 
 const GENERATE_KP_URL = 'https://functions.poehali.dev/f595b8a7-903c-4870-b1f7-d0aac554463f';
+const KP_WORKER_URL = 'https://functions.poehali.dev/5a6c2f56-6efc-41cc-9519-afc58fd49a75';
 
 interface KPItem {
   code: string;
@@ -188,16 +189,22 @@ export const KPGenerator = () => {
       });
       const startData = await startRes.json();
 
-      let result: Record<string, unknown>;
-      // Если результат уже готов в первом ответе (синхронный режим)
-      if (startData.status === 'done' && startData.data) {
-        result = startData.data;
-      } else if (startData.status === 'error') {
-        throw new Error(startData.error || 'Ошибка генерации');
-      } else {
-        if (!startData.job_id) throw new Error(startData.error || 'Не удалось запустить задачу');
-        result = await pollJob(startData.job_id);
-      }
+      if (startData.status === 'error') throw new Error(startData.error || 'Ошибка генерации');
+      if (!startData.job_id) throw new Error('Не удалось запустить задачу');
+
+      // Fire-and-forget: запускаем воркер (он сам обратится к DeepSeek без таймаута)
+      fetch(KP_WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          job_id: startData.job_id,
+          action: 'generate_kp',
+          combined_text: startData.combined_text || '',
+          extra_prompt: extraPrompt,
+        }),
+      }).catch(() => {});
+
+      const result = await pollJob(startData.job_id);
 
       if (result.kp) {
         setKpData(result.kp as KPData);
@@ -228,15 +235,22 @@ export const KPGenerator = () => {
       });
       const startData = await startRes.json();
 
-      let result: Record<string, unknown>;
-      if (startData.status === 'done' && startData.data) {
-        result = startData.data;
-      } else if (startData.status === 'error') {
-        throw new Error(startData.error || 'Ошибка генерации');
-      } else {
-        if (!startData.job_id) throw new Error(startData.error || 'Не удалось запустить задачу');
-        result = await pollJob(startData.job_id);
-      }
+      if (startData.status === 'error') throw new Error(startData.error || 'Ошибка генерации');
+      if (!startData.job_id) throw new Error('Не удалось запустить задачу');
+
+      fetch(KP_WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          job_id: startData.job_id,
+          action: 'generate_roadmap',
+          combined_text: startData.combined_text || '',
+          extra_prompt: extraPrompt,
+          kp_data: kpData,
+        }),
+      }).catch(() => {});
+
+      const result = await pollJob(startData.job_id);
 
       if (result.roadmap) {
         setRoadmapData(result.roadmap);

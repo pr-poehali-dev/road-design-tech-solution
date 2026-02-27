@@ -1,8 +1,8 @@
-"""Генерация КП через ИИ — создаёт job в БД, фронт вызывает kp-worker отдельно"""
+"""KP Worker — обрабатывает один job: вызывает DeepSeek и сохраняет в kp_jobs.
+Вызывается fire-and-forget из фронта после создания job."""
 import json
 import os
-import base64
-import io
+import httpx
 import psycopg2
 
 
@@ -10,122 +10,64 @@ def get_db():
     return psycopg2.connect(os.environ['DATABASE_URL'])
 
 
-def extract_text_from_pdf(data: bytes) -> str:
-    try:
-        import pypdf
-        reader = pypdf.PdfReader(io.BytesIO(data))
-        texts = []
-        for page in reader.pages:
-            t = page.extract_text()
-            if t:
-                texts.append(t)
-        return '\n'.join(texts)
-    except Exception as e:
-        return f'[Ошибка чтения PDF: {e}]'
+def call_ai(system_prompt: str, user_message: str) -> str:
+    api_key = os.environ.get('OPENROUTER_API_KEY', '')
+    response = httpx.post(
+        'https://openrouter.ai/api/v1/chat/completions',
+        headers={
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json',
+        },
+        json={
+            'model': 'deepseek/deepseek-chat',
+            'messages': [
+                {'role': 'system', 'content': system_prompt},
+                {'role': 'user', 'content': user_message}
+            ],
+            'max_tokens': 8000,
+            'temperature': 0.2,
+        },
+        timeout=200.0
+    )
+    result = response.json()
+    if 'choices' not in result:
+        error_msg = result.get('error', {}).get('message', str(result))
+        raise Exception(f"OpenRouter error: {error_msg}")
+    return result['choices'][0]['message']['content']
 
 
-def extract_text_from_docx(data: bytes) -> str:
-    try:
-        import docx
-        doc = docx.Document(io.BytesIO(data))
-        parts = []
-
-        def get_cell_text(cell):
-            return ' '.join(p.text.strip() for p in cell.paragraphs if p.text.strip())
-
-        for block in doc.element.body:
-            tag = block.tag.split('}')[-1] if '}' in block.tag else block.tag
-            if tag == 'p':
-                para = None
-                for p in doc.paragraphs:
-                    if p._element is block:
-                        para = p
-                        break
-                if para and para.text.strip():
-                    style = para.style.name if para.style else ''
-                    if 'Heading' in style or 'heading' in style:
-                        parts.append(f'\n## {para.text.strip()}')
-                    else:
-                        parts.append(para.text.strip())
-            elif tag == 'tbl':
-                for tbl in doc.tables:
-                    if tbl._element is block:
-                        rows = tbl.rows
-                        if not rows:
-                            continue
-                        header_cells = [get_cell_text(c) for c in rows[0].cells]
-                        has_header = any(header_cells)
-                        if has_header:
-                            parts.append('\nТАБЛИЦА:')
-                            parts.append(' | '.join(header_cells))
-                            parts.append('-' * 40)
-                        for row in (rows[1:] if has_header else rows):
-                            row_texts = [get_cell_text(c) for c in row.cells]
-                            non_empty = [t for t in row_texts if t]
-                            if non_empty:
-                                if has_header:
-                                    pairs = []
-                                    for h, v in zip(header_cells, row_texts):
-                                        if v:
-                                            pairs.append(f'{h}: {v}' if h else v)
-                                    parts.append(', '.join(pairs))
-                                else:
-                                    parts.append(' | '.join(non_empty))
-                        break
-
-        return '\n'.join(parts)
-    except Exception as e:
-        return f'[Ошибка чтения DOCX: {e}]'
+def extract_json(text: str) -> dict:
+    text = text.strip()
+    if '```json' in text:
+        text = text.split('```json')[1].split('```')[0].strip()
+    elif '```' in text:
+        text = text.split('```')[1].split('```')[0].strip()
+    return json.loads(text)
 
 
 PRICE_LIST = [
-    {"code": "ОП-ОКС.БЗУ", "name": "Благоустройство земельного участка (БЗУ под ключ)", "unit": "га", "price_per_unit": 500000, "min_order_sum": 500000, "special_rules": "Округление площади: 1.1–1.4 как 1 га; 1.5–1.9 как 2 га"},
-    {"code": "ОП-ППТ понижающие условия", "name": "ППТ, гос, понижающие условия", "unit": "га", "price_per_unit": 215000, "special_rules": "Коэффициент 0.15 для понижающих условий"},
-    {"code": "ОП-ППТ госконтракт", "name": "ППТ, госконтракт", "unit": "га", "price_per_unit": 450000, "special_rules": "Коэффициент 0.3 для госконтрактов"},
+    {"code": "ОП-ОКС.БЗУ", "name": "Благоустройство земельного участка (БЗУ под ключ)", "unit": "га", "price_per_unit": 500000},
+    {"code": "ОП-ППТ госконтракт", "name": "ППТ, госконтракт", "unit": "га", "price_per_unit": 450000},
     {"code": "ОП-ППТ коммерческий", "name": "ППТ, коммерческий контракт", "unit": "га", "price_per_unit": 1500000},
-    {"code": "ОП-ПМТ понижающие условия", "name": "ПМТ, гос, понижающие условия", "unit": "га", "price_per_unit": 215000},
     {"code": "ОП-ПМТ госконтракт", "name": "ПМТ, госконтракт", "unit": "га", "price_per_unit": 450000},
     {"code": "ОП-ПМТ коммерческий", "name": "ПМТ, коммерческий контракт", "unit": "га", "price_per_unit": 1500000},
     {"code": "ИИ-ИГДИ", "name": "Инженерно-геодезические изыскания", "unit": "га", "price_per_unit": 40000},
     {"code": "ИИ-ИЭИ", "name": "Инженерно-экологические изыскания", "unit": "га", "price_per_unit": 65000},
-    {"code": "ИИ-ОБМ", "name": "Обмерные работы (обследование строительных конструкций)", "unit": "м³", "price_per_unit": 500},
+    {"code": "ИИ-ОБМ", "name": "Обмерные работы", "unit": "м³", "price_per_unit": 500},
     {"code": "ОП-ПГО до 100", "name": "ПГО до 100 га", "unit": "га", "price_per_unit": 24000},
     {"code": "ОП-ПГО 100-500", "name": "ПГО 100–500 га", "unit": "га", "price_per_unit": 23000},
     {"code": "ОП-ПГО 500-2000", "name": "ПГО 500–2000 га", "unit": "га", "price_per_unit": 22000},
     {"code": "ОП-ПГО 2000-5000", "name": "ПГО 2000–5000 га", "unit": "га", "price_per_unit": 21000},
     {"code": "ОП-ПГО более 5000", "name": "ПГО более 5000 га", "unit": "га", "price_per_unit": 20000},
-    {"code": "ОП-ЛИК.КОНС.ГДП", "name": "Ликвидация/консервация/рекультивация горнодобывающих участков", "unit": "га", "price_per_unit": 100000},
-    {"code": "СОПГЭ", "name": "Сопровождение экспертизы (ГЭ/НГЭ)", "unit": "комплект", "price_per_unit": 200000, "special_rules": "Может считаться по разделам по отдельному запросу"},
-    {"code": "ОП-ЛО.НС.АД до 1000", "name": "Дорога НС, до 1000 м²", "unit": "м²", "price_per_unit": 700},
-    {"code": "ОП-ЛО.НС.АД 1000-5000", "name": "Дорога НС, 1000–5000 м²", "unit": "м²", "price_per_unit": 600},
-    {"code": "ОП-ЛО.НС.АД 5000-10000", "name": "Дорога НС, 5000–10000 м²", "unit": "м²", "price_per_unit": 550},
-    {"code": "ОП-ЛО.НС.АД более 10000", "name": "Дорога НС, более 10000 м²", "unit": "м²", "price_per_unit": 500},
-    {"code": "ОП-ЛО.РЕК.АД до 1000", "name": "Дорога реконструкция, до 1000 м²", "unit": "м²", "price_per_unit": 2000},
-    {"code": "ОП-ЛО.РЕК.АД 1000-5000", "name": "Дорога реконструкция, 1000–5000 м²", "unit": "м²", "price_per_unit": 1400},
-    {"code": "ОП-ЛО.РЕК.АД 5000-10000", "name": "Дорога реконструкция, 5000–10000 м²", "unit": "м²", "price_per_unit": 1200},
-    {"code": "ОП-ЛО.РЕК.АД более 10000", "name": "Дорога реконструкция, более 10000 м²", "unit": "м²", "price_per_unit": 1000},
-    {"code": "ОП-ОКС.НС.МОСТ", "name": "Мостовое сооружение, новое", "unit": "м²", "price_per_unit": 11000},
-    {"code": "ОП-ОКС.РЕК.МОСТ", "name": "Мостовое сооружение, реконструкция", "unit": "м²", "price_per_unit": 9000},
-    {"code": "ОП-ДП до 100", "name": "Дизайн-проект интерьеров до 100 м²", "unit": "м²", "price_per_unit": 5000},
-    {"code": "ОП-ДП 100-200", "name": "Дизайн-проект 100–200 м²", "unit": "м²", "price_per_unit": 4000},
-    {"code": "ОП-ДП 200-500", "name": "Дизайн-проект 200–500 м²", "unit": "м²", "price_per_unit": 3000},
-    {"code": "ОП-ДП 500-1000", "name": "Дизайн-проект 500–1000 м²", "unit": "м²", "price_per_unit": 1000},
+    {"code": "СОПГЭ", "name": "Сопровождение экспертизы (ГЭ/НГЭ)", "unit": "комплект", "price_per_unit": 200000},
     {"code": "ОП-ОКС.НС до 100", "name": "ОКС — новое строительство, до 100 м³", "unit": "м³", "price_per_unit": 5000},
     {"code": "ОП-ОКС.НС 100-500", "name": "ОКС — новое строительство, 100–500 м³", "unit": "м³", "price_per_unit": 4000},
     {"code": "ОП-ОКС.НС 500-5000", "name": "ОКС — новое строительство, 500–5000 м³", "unit": "м³", "price_per_unit": 2000},
     {"code": "ОП-ОКС.НС более 5000", "name": "ОКС — новое строительство, более 5000 м³", "unit": "м³", "price_per_unit": 1500},
-    {"code": "ОП-ОКС.НС.СПиПП до 100", "name": "ОКС упрощённые — склады/производства, до 100 м³", "unit": "м³", "price_per_unit": 500},
-    {"code": "ОП-ОКС.НС.СПиПП 100-500", "name": "ОКС упрощённые — склады/производства, 100–500 м³", "unit": "м³", "price_per_unit": 400},
-    {"code": "ОП-ОКС.НС.СПиПП 500-5000", "name": "ОКС упрощённые — склады/производства, 500–5000 м³", "unit": "м³", "price_per_unit": 200},
-    {"code": "ОП-ОКС.НС.СПиПП более 5000", "name": "ОКС упрощённые — склады/производства, более 5000 м³", "unit": "м³", "price_per_unit": 150},
     {"code": "ОП-ОКС.РЕК до 100", "name": "ОКС — реконструкция, до 100 м³", "unit": "м³", "price_per_unit": 3000},
     {"code": "ОП-ОКС.РЕК 100-500", "name": "ОКС — реконструкция, 100–500 м³", "unit": "м³", "price_per_unit": 2500},
     {"code": "ОП-ОКС.РЕК 500-5000", "name": "ОКС — реконструкция, 500–5000 м³", "unit": "м³", "price_per_unit": 1500},
     {"code": "ОП-ОКС.РЕК более 5000", "name": "ОКС — реконструкция, более 5000 м³", "unit": "м³", "price_per_unit": 1000},
-    {"code": "ОП-ОКС.РЕН до 100", "name": "ОКС — реновация, до 100 м³", "unit": "м³", "price_per_unit": 3000},
-    {"code": "ОП-ОКС.РЕН 100-500", "name": "ОКС — реновация, 100–500 м³", "unit": "м³", "price_per_unit": 2500},
-    {"code": "ОП-ОКС.РЕН 500-5000", "name": "ОКС — реновация, 500–5000 м³", "unit": "м³", "price_per_unit": 1500},
-    {"code": "ОП-ОКС.РЕН более 5000", "name": "ОКС — реновация, более 5000 м³", "unit": "м³", "price_per_unit": 1000},
     {"code": "ОП-ОКС.КР до 100", "name": "ОКС — капитальный ремонт, до 100 м³", "unit": "м³", "price_per_unit": 2000},
     {"code": "ОП-ОКС.КР 100-500", "name": "ОКС — капитальный ремонт, 100–500 м³", "unit": "м³", "price_per_unit": 1500},
     {"code": "ОП-ОКС.КР 500-5000", "name": "ОКС — капитальный ремонт, 500–5000 м³", "unit": "м³", "price_per_unit": 1000},
@@ -134,16 +76,16 @@ PRICE_LIST = [
     {"code": "ОП-ОКС.ТР 100-500", "name": "ОКС — текущий ремонт, 100–500 м³", "unit": "м³", "price_per_unit": 450},
     {"code": "ОП-ОКС.ТР 500-5000", "name": "ОКС — текущий ремонт, 500–5000 м³", "unit": "м³", "price_per_unit": 300},
     {"code": "ОП-ОКС.ТР более 5000", "name": "ОКС — текущий ремонт, более 5000 м³", "unit": "м³", "price_per_unit": 250},
-    {"code": "ОП-ЛО.ИЛО до 1000", "name": "Локальные очистные сооружения, до 1000 м³/сут", "unit": "м³/сутки", "price_per_unit": 2300, "min_order_sum": 1125000, "special_rules": "При расширении состава +100 руб/м³/сут"},
-    {"code": "ОП-ЛО.ИЛО 1000-5000", "name": "Локальные очистные сооружения, 1000–5000 м³/сут", "unit": "м³/сутки", "price_per_unit": 1900, "min_order_sum": 1125000},
-    {"code": "ОП-ЛО.ИЛО 5000-10000", "name": "Локальные очистные сооружения, 5000–10000 м³/сут", "unit": "м³/сутки", "price_per_unit": 1500, "min_order_sum": 1125000},
-    {"code": "ОП-ЛО.ИЛО более 10000", "name": "Локальные очистные сооружения, более 10000 м³/сут", "unit": "м³/сутки", "price_per_unit": 1100, "min_order_sum": 1125000},
+    {"code": "ОП-ЛО.ИЛО до 1000", "name": "Локальные очистные сооружения, до 1000 м³/сут", "unit": "м³/сутки", "price_per_unit": 2300},
+    {"code": "ОП-ЛО.ИЛО 1000-5000", "name": "Локальные очистные сооружения, 1000–5000 м³/сут", "unit": "м³/сутки", "price_per_unit": 1900},
+    {"code": "ОП-ЛО.ИЛО 5000-10000", "name": "Локальные очистные сооружения, 5000–10000 м³/сут", "unit": "м³/сутки", "price_per_unit": 1500},
+    {"code": "ОП-ЛО.ИЛО более 10000", "name": "Локальные очистные сооружения, более 10000 м³/сут", "unit": "м³/сутки", "price_per_unit": 1100},
     {"code": "ОП-АН", "name": "Авторский надзор", "unit": "месяц", "price_per_unit": 100000},
-    {"code": "ОП-НТС", "name": "Научно-техническое сопровождение (НТС)", "unit": "месяц", "price_per_unit": 1500000, "min_order_sum": 1500000, "special_rules": "3% от предельной стоимости объекта; минимум 1 500 000 руб/мес. ВКЛЮЧАТЬ ТОЛЬКО если прямо указано в ТЗ как НТС/научно-техническое сопровождение"},
-    {"code": "ОП-ТНЗ 1 сотрудник", "name": "Технадзор/техсопровождение, 1 сотрудник", "unit": "чел.-месяц", "price_per_unit": 350000},
-    {"code": "ОП-ТНЗ 2-5 сотрудников", "name": "Технадзор/техсопровождение, 2–5 сотрудников", "unit": "чел.-месяц", "price_per_unit": 300000},
-    {"code": "ОП-ТНЗ 5-10 сотрудников", "name": "Технадзор/техсопровождение, 5–10 сотрудников", "unit": "чел.-месяц", "price_per_unit": 250000},
-    {"code": "ОП-ТНЗ более 10 сотрудников", "name": "Технадзор/техсопровождение, более 10 сотрудников", "unit": "чел.-месяц", "price_per_unit": 200000},
+    {"code": "ОП-НТС", "name": "Научно-техническое сопровождение (НТС)", "unit": "месяц", "price_per_unit": 1500000},
+    {"code": "ОП-ТНЗ 1 сотрудник", "name": "Технадзор, 1 сотрудник", "unit": "чел.-месяц", "price_per_unit": 350000},
+    {"code": "ОП-ТНЗ 2-5 сотрудников", "name": "Технадзор, 2–5 сотрудников", "unit": "чел.-месяц", "price_per_unit": 300000},
+    {"code": "ОП-ТНЗ 5-10 сотрудников", "name": "Технадзор, 5–10 сотрудников", "unit": "чел.-месяц", "price_per_unit": 250000},
+    {"code": "ОП-ТНЗ более 10 сотрудников", "name": "Технадзор, более 10 сотрудников", "unit": "чел.-месяц", "price_per_unit": 200000},
     {"code": "ОП-ЮРЗ 1 сотрудник", "name": "Юридическое сопровождение, 1 юрист", "unit": "чел.-месяц", "price_per_unit": 300000},
     {"code": "ОП-ЮРЗ 2-5 сотрудников", "name": "Юридическое сопровождение, 2–5 юристов", "unit": "чел.-месяц", "price_per_unit": 250000},
     {"code": "ОП-ЮРЗ 5-10 сотрудников", "name": "Юридическое сопровождение, 5–10 юристов", "unit": "чел.-месяц", "price_per_unit": 200000},
@@ -271,97 +213,78 @@ ROADMAP_SYSTEM_PROMPT = """Ты — опытный менеджер проект
 
 
 def handler(event: dict, context) -> dict:
-    """Генерация КП: парсит файлы, создаёт job в БД, возвращает job_id + combined_text для воркера"""
+    """Воркер: получает job_id + текст документа, вызывает DeepSeek, сохраняет результат в kp_jobs"""
+
+    CORS = {'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json'}
 
     if event.get('httpMethod') == 'OPTIONS':
         return {
             'statusCode': 200,
             'headers': {
                 'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, X-Authorization',
+                'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type',
                 'Access-Control-Max-Age': '86400'
             },
             'body': ''
         }
 
-    if event.get('httpMethod') != 'POST':
-        return {
-            'statusCode': 405,
-            'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': 'Method not allowed'})
-        }
-
     body = json.loads(event.get('body', '{}'))
-    action = body.get('action', '')
+    job_id = body.get('job_id')
+    combined_text = body.get('combined_text', '')
+    extra_prompt = body.get('extra_prompt', '')
+    action = body.get('action', 'generate_kp')
+    kp_data = body.get('kp_data', None)
 
-    CORS = {'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json'}
+    if not job_id:
+        return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'error': 'job_id required'})}
 
-    if action == 'ping':
-        return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'status': 'ok'})}
+    conn = None
+    try:
+        if action == 'generate_kp':
+            user_message = f"""СОДЕРЖИМОЕ ЗАГРУЖЕННЫХ ДОКУМЕНТОВ:
+{combined_text}
 
-    # Проверка статуса задачи
-    if action == 'check_job':
-        job_id = body.get('job_id')
+{f'ДОПОЛНИТЕЛЬНЫЕ ТРЕБОВАНИЯ ОТ КЛИЕНТА: {extra_prompt}' if extra_prompt else ''}
+
+Составь коммерческое предложение на основе этих материалов."""
+            ai_response = call_ai(KP_SYSTEM_PROMPT, user_message)
+        else:
+            user_message = f"""СОДЕРЖИМОЕ ЗАГРУЖЕННЫХ ДОКУМЕНТОВ:
+{combined_text}
+
+{f'ДОПОЛНИТЕЛЬНЫЕ ТРЕБОВАНИЯ: {extra_prompt}' if extra_prompt else ''}
+"""
+            if kp_data:
+                user_message += f"\nКОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ:\n{json.dumps(kp_data, ensure_ascii=False)}"
+            user_message += "\n\nСоставь дорожную карту реализации проекта."
+            ai_response = call_ai(ROADMAP_SYSTEM_PROMPT, user_message)
+
+        result_data = extract_json(ai_response)
+        result_json = json.dumps(result_data, ensure_ascii=False)
+
         conn = get_db()
         cur = conn.cursor()
-        cur.execute("SELECT status, result, error FROM kp_jobs WHERE id=%s", (job_id,))
-        row = cur.fetchone()
-        conn.close()
-        if not row:
-            return {'statusCode': 404, 'headers': CORS, 'body': json.dumps({'error': 'Job not found'})}
-        status, result, error = row
-        resp = {'status': status}
-        if status == 'done' and result:
-            resp['data'] = json.loads(result)
-        if status == 'error':
-            resp['error'] = error
-        return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(resp, ensure_ascii=False)}
+        cur.execute(
+            "UPDATE kp_jobs SET status='done', result=%s, updated_at=NOW() WHERE id=%s",
+            (result_json, job_id)
+        )
+        conn.commit()
+        return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'status': 'done'})}
 
-    # Запуск новой задачи (generate_kp или generate_roadmap)
-    if action not in ('generate_kp', 'generate_roadmap'):
-        return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'error': f'Unknown action: {action}'})}
-
-    extra_prompt = body.get('extra_prompt', '')
-    files_text = body.get('files_text', '')
-    kp_data = body.get('kp_data', None)
-    files_b64 = body.get('files_b64', [])
-
-    # Парсинг файлов
-    parsed_texts = []
-    for f in files_b64:
-        name = f.get('name', '')
-        b64 = f.get('data', '')
-        raw = base64.b64decode(b64)
-        if name.lower().endswith('.pdf'):
-            text = extract_text_from_pdf(raw)
-        elif name.lower().endswith('.docx'):
-            text = extract_text_from_docx(raw)
-        else:
-            text = raw.decode('utf-8', errors='replace')
-        parsed_texts.append(f'=== ФАЙЛ: {name} ===\n{text}')
-
-    combined_text = '\n\n'.join(parsed_texts) if parsed_texts else files_text
-
-    # Сохранить задачу в БД
-    input_data = json.dumps({'action': action, 'extra_prompt': extra_prompt}, ensure_ascii=False)
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute(
-        "INSERT INTO kp_jobs (action, status, input_data) VALUES (%s, 'processing', %s) RETURNING id",
-        (action, input_data)
-    )
-    job_id = str(cur.fetchone()[0])
-    conn.commit()
-    conn.close()
-
-    # Возвращаем job_id и combined_text — фронт сам вызовет kp-worker
-    return {
-        'statusCode': 202,
-        'headers': CORS,
-        'body': json.dumps({
-            'job_id': job_id,
-            'status': 'processing',
-            'combined_text': combined_text
-        }, ensure_ascii=False)
-    }
+    except Exception as e:
+        try:
+            if conn is None:
+                conn = get_db()
+            cur = conn.cursor()
+            cur.execute(
+                "UPDATE kp_jobs SET status='error', error=%s, updated_at=NOW() WHERE id=%s",
+                (str(e), job_id)
+            )
+            conn.commit()
+        except Exception:
+            pass
+        return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'status': 'error', 'error': str(e)})}
+    finally:
+        if conn:
+            conn.close()
