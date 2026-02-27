@@ -110,31 +110,36 @@ ROADMAP_SYSTEM_PROMPT = """Ты — опытный менеджер проект
 
 
 def call_ai(system_prompt: str, user_message: str) -> str:
-    api_key = os.environ.get('OPENROUTER_API_KEY', '')
+    api_key = os.environ.get('YANDEXGPT_API_KEY', '')
+    folder_id = os.environ.get('YANDEX_FOLDER_ID', '')
     
     response = httpx.post(
-        'https://openrouter.ai/api/v1/chat/completions',
+        'https://llm.api.cloud.yandex.net/foundationModels/v1/completion',
         headers={
-            'Authorization': f'Bearer {api_key}',
+            'Authorization': f'Api-Key {api_key}',
+            'x-folder-id': folder_id,
             'Content-Type': 'application/json',
         },
         json={
-            'model': 'openai/gpt-4o-mini',
+            'modelUri': f'gpt://{folder_id}/yandexgpt/latest',
+            'completionOptions': {
+                'stream': False,
+                'temperature': 0.3,
+                'maxTokens': 8000,
+            },
             'messages': [
-                {'role': 'system', 'content': system_prompt},
-                {'role': 'user', 'content': user_message}
+                {'role': 'system', 'text': system_prompt},
+                {'role': 'user', 'text': user_message}
             ],
-            'max_tokens': 4000,
-            'temperature': 0.3,
         },
         timeout=120.0
     )
     
     result = response.json()
-    if 'choices' not in result:
-        error_msg = result.get('error', {}).get('message', str(result))
-        raise Exception(f"OpenRouter error: {error_msg}")
-    return result['choices'][0]['message']['content']
+    if 'result' not in result:
+        error_msg = result.get('message', str(result))
+        raise Exception(f"YandexGPT error: {error_msg}")
+    return result['result']['alternatives'][0]['message']['text']
 
 
 def extract_json(text: str) -> dict:
