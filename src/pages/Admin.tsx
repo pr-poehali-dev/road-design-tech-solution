@@ -36,6 +36,14 @@ const Admin = () => {
     kpId: string;
   } | null>(null);
 
+  // Сохранённый контекст КП — живёт в Admin, не пропадает при переключении вкладок
+  const [kpContext, setKpContext] = useState<{
+    kpData: Record<string, unknown> | null;
+    roadmapData: Record<string, unknown> | null;
+    filesText: string;
+    kpId: string | null;
+  }>({ kpData: null, roadmapData: null, filesText: '', kpId: null });
+
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
     toast({ title: 'Добро пожаловать', description: 'Вход выполнен успешно' });
@@ -65,6 +73,40 @@ const Admin = () => {
     toast({ title: 'Генерация КП...', description: 'YandexGPT создаёт коммерческое предложение' });
   };
 
+  const handleKpReady = (
+    kpData: Record<string, unknown>,
+    filesText: string,
+    kpId: string
+  ) => {
+    setKpContext(prev => ({ ...prev, kpData, filesText, kpId }));
+  };
+
+  const handleRoadmapReady = (
+    roadmapData: Record<string, unknown>,
+    kpData: Record<string, unknown> | null,
+    filesText: string,
+    kpId: string | null
+  ) => {
+    setKpContext(prev => ({
+      ...prev,
+      roadmapData,
+      ...(kpData ? { kpData } : {}),
+      ...(filesText ? { filesText } : {}),
+      ...(kpId ? { kpId } : {}),
+    }));
+    // Обновляем productionContext: если уже есть — обновляем карту; если нет, но есть КП — создаём
+    setProductionContext(prev => {
+      const effectiveKp = kpData || prev?.kpData;
+      if (!effectiveKp) return prev; // нет КП — не трогаем
+      return {
+        kpData: effectiveKp,
+        roadmapData,
+        filesText: filesText || prev?.filesText || '',
+        kpId: kpId || prev?.kpId || '',
+      };
+    });
+  };
+
   const handleSendToProduction = (
     kpData: Record<string, unknown>,
     roadmapData: Record<string, unknown> | null,
@@ -72,6 +114,7 @@ const Admin = () => {
     kpId: string
   ) => {
     setProductionContext({ kpData, roadmapData, filesText, kpId });
+    setKpContext({ kpData, roadmapData, filesText, kpId });
     setActiveTab('production');
   };
 
@@ -199,7 +242,12 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="kp-generator" className="space-y-6">
-            <KPGenerator onSendToProduction={handleSendToProduction} />
+            <KPGenerator
+              onSendToProduction={handleSendToProduction}
+              onKpReady={handleKpReady}
+              onRoadmapReady={handleRoadmapReady}
+              savedKpContext={kpContext}
+            />
           </TabsContent>
 
           <TabsContent value="kp-list" className="space-y-6">
