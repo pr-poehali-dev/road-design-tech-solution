@@ -37,7 +37,9 @@ interface KPData {
   sections: KPSection[];
   total_sum: number;
   timeline: KPPhase[];
-  conditions: string[];
+  conditions?: string[];
+  payment_conditions?: string[];
+  special_conditions?: string[];
   validity: string;
 }
 
@@ -283,9 +285,10 @@ export const KPGenerator = () => {
     <tbody>${tableRows}</tbody></table>
     <div class="total">ИТОГО: ${formatMoney(kpData.total_sum)}</div>
     <h2>Сроки реализации</h2>
-    ${kpData.timeline.map(t => `<p><b>${t.phase}</b> (${t.duration}): ${t.description}</p>`).join('')}
+    ${(kpData.timeline || []).map(t => `<p><b>${t.phase}</b> (${t.duration}): ${t.description}</p>`).join('')}
     <h2>Условия работы</h2>
-    ${kpData.conditions.map(c => `<p>• ${c}</p>`).join('')}
+    ${(kpData.payment_conditions || kpData.conditions || []).map((c: string) => `<p>• ${c}</p>`).join('')}
+    ${(kpData.special_conditions || []).map((c: string) => `<p>• ${c}</p>`).join('')}
     <p><b>Срок действия КП:</b> ${kpData.validity}</p>
     </body></html>`;
   };
