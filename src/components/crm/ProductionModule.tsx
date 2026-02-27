@@ -373,6 +373,7 @@ export const ProductionModule = ({ projectContext }: ProductionModuleProps) => {
   const [activeSubSection, setActiveSubSection] = useState<SubSection | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [generating, setGenerating] = useState<string | null>(null);
+  const [agentStage, setAgentStage] = useState<{ stage: string; stage_num: number; total_stages: number } | null>(null);
   const [editContent, setEditContent] = useState('');
 
   useEffect(() => {
@@ -470,12 +471,13 @@ export const ProductionModule = ({ projectContext }: ProductionModuleProps) => {
   const pollJob = async (jobId: string): Promise<Record<string, unknown>> => {
     const start = Date.now();
     while (Date.now() - start < 300000) {
-      await new Promise(r => setTimeout(r, 4000));
+      await new Promise(r => setTimeout(r, 3000));
       const res = await fetch(GENERATE_KP_URL, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'check_job', job_id: jobId }),
       });
       const data = await res.json();
+      if (data.progress) setAgentStage(data.progress);
       if (data.status === 'done') return data.data;
       if (data.status === 'error') throw new Error(data.error || 'Ошибка генерации');
     }
@@ -526,6 +528,7 @@ export const ProductionModule = ({ projectContext }: ProductionModuleProps) => {
       toast({ title: 'Ошибка', description: error instanceof Error ? error.message : 'Не удалось создать', variant: 'destructive' });
     } finally {
       setGenerating(null);
+      setAgentStage(null);
     }
   };
 
@@ -623,6 +626,25 @@ export const ProductionModule = ({ projectContext }: ProductionModuleProps) => {
                   {generating === String(selectedSection.phaseId) ? '...' : 'Всё'}
                 </button>
               </div>
+
+              {/* Прогресс агентов */}
+              {generating && agentStage && (
+                <div className="p-2.5 bg-cyan-900/20 border border-cyan-500/30 rounded-lg">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <Icon name="Loader" size={12} className="animate-spin text-cyan-400" />
+                    <span className="text-xs font-medium text-cyan-300">
+                      Этап {agentStage.stage_num} из {agentStage.total_stages}
+                    </span>
+                  </div>
+                  <p className="text-xs text-cyan-400/80">{agentStage.stage}</p>
+                  <div className="mt-2 h-1 bg-slate-700 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-cyan-500 rounded-full transition-all duration-500"
+                      style={{ width: `${(agentStage.stage_num / agentStage.total_stages) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Кнопки подразделов */}
               {selectedSection.subSections.map(sub => {

@@ -1,0 +1,1 @@
+ALTER TABLE t_p24285059_road_design_tech_sol.kp_jobs ADD COLUMN IF NOT EXISTS progress text NULL;
