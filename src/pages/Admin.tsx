@@ -14,6 +14,7 @@ import { Analytics } from '@/components/crm/Analytics';
 import { Lead } from '@/components/crm/CRMKanban';
 import { useToast } from '@/hooks/use-toast';
 import { WarehouseDesigner } from '@/components/crm/WarehouseDesigner';
+import { KPGenerator } from '@/components/crm/KPGenerator';
 
 const Admin = () => {
   const { toast } = useToast();
@@ -113,7 +114,7 @@ const Admin = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8 lg:w-auto bg-slate-900/50 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+          <TabsList className="grid w-full grid-cols-9 lg:w-auto bg-slate-900/50 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
             <TabsTrigger value="dashboard" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.5)]">
               <Icon name="LayoutDashboard" size={16} className="mr-2" />
               Дашборд
@@ -145,6 +146,10 @@ const Admin = () => {
             <TabsTrigger value="warehouses" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.5)]">
               <Icon name="Warehouse" size={16} className="mr-2" />
               Склады
+            </TabsTrigger>
+            <TabsTrigger value="kp-generator" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-[0_0_15px_rgba(139,92,246,0.5)]">
+              <Icon name="Sparkles" size={16} className="mr-2" />
+              КП (ИИ)
             </TabsTrigger>
           </TabsList>
 
@@ -178,6 +183,10 @@ const Admin = () => {
 
           <TabsContent value="warehouses" className="space-y-6">
             <WarehouseDesigner />
+          </TabsContent>
+
+          <TabsContent value="kp-generator" className="space-y-6">
+            <KPGenerator />
           </TabsContent>
         </Tabs>
       </main>

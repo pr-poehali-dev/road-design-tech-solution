@@ -1,0 +1,23 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Generate KP from TZ",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "generate_kp",
+        "files_text": "Техническое задание: Строительство административного здания площадью 1500 м³. Новое строительство. Заказчик: ООО Тест. Требуется ПД+РД+экспертиза.",
+        "extra_prompt": ""
+      },
+      "expectedStatus": 200,
+      "expectedBody": {"kp": {}},
+      "bodyMatcher": "partial"
+    }
+  ]
+}
