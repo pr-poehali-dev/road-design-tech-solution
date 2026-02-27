@@ -200,15 +200,15 @@ def call_ai(system_prompt: str, user_message: str) -> str:
             'Content-Type': 'application/json',
         },
         json={
-            'model': 'deepseek/deepseek-chat-v3-0324',
+            'model': 'google/gemini-flash-1.5',
             'messages': [
                 {'role': 'system', 'content': system_prompt},
                 {'role': 'user', 'content': user_message}
             ],
-            'max_tokens': 8000,
+            'max_tokens': 4000,
             'temperature': 0.3,
         },
-        timeout=120.0
+        timeout=25.0
     )
     
     result = response.json()
