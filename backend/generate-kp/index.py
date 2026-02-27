@@ -3,8 +3,38 @@ import json
 import os
 import base64
 import re
+import io
 import httpx
 from datetime import datetime
+
+
+def extract_text_from_pdf(data: bytes) -> str:
+    try:
+        import pypdf
+        reader = pypdf.PdfReader(io.BytesIO(data))
+        texts = []
+        for page in reader.pages:
+            t = page.extract_text()
+            if t:
+                texts.append(t)
+        return '\n'.join(texts)
+    except Exception as e:
+        return f'[Ошибка чтения PDF: {e}]'
+
+
+def extract_text_from_docx(data: bytes) -> str:
+    try:
+        import docx
+        doc = docx.Document(io.BytesIO(data))
+        texts = [p.text for p in doc.paragraphs if p.text.strip()]
+        for table in doc.tables:
+            for row in table.rows:
+                row_texts = [cell.text.strip() for cell in row.cells if cell.text.strip()]
+                if row_texts:
+                    texts.append(' | '.join(row_texts))
+        return '\n'.join(texts)
+    except Exception as e:
+        return f'[Ошибка чтения DOCX: {e}]'
 
 PRICE_LIST = [
     {"code": "ОП-ОКС.БЗУ", "name": "Благоустройство земельного участка (БЗУ под ключ)", "unit": "га", "price_per_unit": 500000, "min_order_sum": 500000, "special_rules": "Округление площади: 1.1–1.4 как 1 га; 1.5–1.9 как 2 га"},
@@ -222,12 +252,38 @@ def handler(event: dict, context) -> dict:
 
     body = json.loads(event.get('body', '{}'))
     action = body.get('action', 'generate_kp')
+
+    if action == 'ping':
+        return {
+            'statusCode': 200,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'status': 'ok'})
+        }
     files_text = body.get('files_text', '')
     extra_prompt = body.get('extra_prompt', '')
     kp_data = body.get('kp_data', None)
+    files_b64 = body.get('files_b64', [])
+
+    parsed_texts = []
+    for f in files_b64:
+        name = f.get('name', '')
+        b64 = f.get('data', '')
+        try:
+            raw = base64.b64decode(b64)
+            if name.lower().endswith('.pdf'):
+                text = extract_text_from_pdf(raw)
+            elif name.lower().endswith('.docx'):
+                text = extract_text_from_docx(raw)
+            else:
+                text = raw.decode('utf-8', errors='replace')
+            parsed_texts.append(f'=== ФАЙЛ: {name} ===\n{text}')
+        except Exception as e:
+            parsed_texts.append(f'=== ФАЙЛ: {name} === [Ошибка: {e}]')
+
+    combined_text = '\n\n'.join(parsed_texts) if parsed_texts else files_text
 
     user_message = f"""СОДЕРЖИМОЕ ЗАГРУЖЕННЫХ ДОКУМЕНТОВ:
-{files_text}
+{combined_text}
 
 {f'ДОПОЛНИТЕЛЬНЫЕ ТРЕБОВАНИЯ ОТ КЛИЕНТА: {extra_prompt}' if extra_prompt else ''}
 

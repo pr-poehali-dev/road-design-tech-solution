@@ -86,6 +86,7 @@ interface UploadedFile {
   name: string;
   text: string;
   size: number;
+  b64?: string;
 }
 
 const formatMoney = (n: number) =>
@@ -113,8 +114,8 @@ export const KPGenerator = () => {
     const results: UploadedFile[] = [];
 
     for (const file of uploaded) {
-      const text = await readFileAsText(file);
-      results.push({ name: file.name, text, size: file.size });
+      const { text, b64 } = await readFile(file);
+      results.push({ name: file.name, text, size: file.size, b64 });
     }
 
     setFiles(prev => [...prev, ...results]);
@@ -122,23 +123,26 @@ export const KPGenerator = () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const readFileAsText = (file: File): Promise<string> => {
+  const readFile = (file: File): Promise<{ text: string; b64?: string }> => {
     return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result;
-        if (typeof result === 'string') {
-          resolve(result);
-        } else {
-          resolve(`[Файл: ${file.name} — бинарный контент, размер ${file.size} байт]`);
-        }
-      };
-      reader.onerror = () => resolve(`[Ошибка чтения файла: ${file.name}]`);
+      const isText = file.type.startsWith('text/') || file.name.endsWith('.txt') || file.name.endsWith('.md') || file.name.endsWith('.csv') || file.name.endsWith('.json');
+      const isBinary = file.name.endsWith('.pdf') || file.name.endsWith('.docx') || file.name.endsWith('.doc');
 
-      if (file.type.startsWith('text/') || file.name.endsWith('.txt') || file.name.endsWith('.md') || file.name.endsWith('.csv') || file.name.endsWith('.json')) {
+      if (isText) {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve({ text: (e.target?.result as string) || '' });
+        reader.onerror = () => resolve({ text: `[Ошибка чтения: ${file.name}]` });
         reader.readAsText(file, 'utf-8');
+      } else if (isBinary) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const b64 = (e.target?.result as string).split(',')[1] || '';
+          resolve({ text: `[${file.name}]`, b64 });
+        };
+        reader.onerror = () => resolve({ text: `[Ошибка чтения: ${file.name}]` });
+        reader.readAsDataURL(file);
       } else {
-        resolve(`[Файл: ${file.name}, тип: ${file.type}, размер: ${(file.size / 1024).toFixed(1)} KB — содержимое передано для анализа]`);
+        resolve({ text: `[Файл: ${file.name}, размер: ${(file.size / 1024).toFixed(1)} KB]` });
       }
     });
   };
@@ -148,7 +152,10 @@ export const KPGenerator = () => {
   };
 
   const getFilesText = () =>
-    files.map(f => `=== ФАЙЛ: ${f.name} ===\n${f.text}`).join('\n\n');
+    files.filter(f => !f.b64).map(f => `=== ФАЙЛ: ${f.name} ===\n${f.text}`).join('\n\n');
+
+  const getFilesB64 = () =>
+    files.filter(f => f.b64).map(f => ({ name: f.name, data: f.b64! }));
 
   const generateKP = async () => {
     if (files.length === 0) {
@@ -160,7 +167,7 @@ export const KPGenerator = () => {
       const res = await fetch(GENERATE_KP_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'generate_kp', files_text: getFilesText(), extra_prompt: extraPrompt }),
+        body: JSON.stringify({ action: 'generate_kp', files_text: getFilesText(), files_b64: getFilesB64(), extra_prompt: extraPrompt }),
       });
       const data = await res.json();
       if (data.kp) {
@@ -187,7 +194,7 @@ export const KPGenerator = () => {
       const res = await fetch(GENERATE_KP_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'generate_roadmap', files_text: getFilesText(), extra_prompt: extraPrompt, kp_data: kpData }),
+        body: JSON.stringify({ action: 'generate_roadmap', files_text: getFilesText(), files_b64: getFilesB64(), extra_prompt: extraPrompt, kp_data: kpData }),
       });
       const data = await res.json();
       if (data.roadmap) {
