@@ -240,6 +240,18 @@ export const KPGenerator = ({ onSendToProduction, onKpReady, onRoadmapReady, sav
     }
   };
 
+  // Кнопка "В производство" прямо из дорожной карты (без КП)
+  const handleSendRoadmapToProduction = () => {
+    if (!roadmapData) return;
+    onRoadmapReady?.(
+      roadmapData as unknown as Record<string, unknown>,
+      kpData as unknown as Record<string, unknown> | null,
+      getFilesText(),
+      savedMeta?.id || null
+    );
+    toast({ title: 'Передано в производство', description: 'Дорожная карта и ТЗ направлены в раздел Производство' });
+  };
+
   const pollJob = async (jobId: string, maxWaitMs = 180000): Promise<Record<string, unknown>> => {
     const start = Date.now();
     while (Date.now() - start < maxWaitMs) {
@@ -583,6 +595,15 @@ export const KPGenerator = ({ onSendToProduction, onKpReady, onRoadmapReady, sav
                         ) : (
                           <><Icon name="Factory" size={14} className="mr-1" />В производство</>
                         )}
+                      </Button>
+                    )}
+                    {roadmapData && !kpData && onRoadmapReady && (
+                      <Button
+                        size="sm"
+                        onClick={handleSendRoadmapToProduction}
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs"
+                      >
+                        <Icon name="Factory" size={14} className="mr-1" />В производство
                       </Button>
                     )}
                   </div>

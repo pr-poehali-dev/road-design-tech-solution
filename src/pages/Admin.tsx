@@ -94,17 +94,13 @@ const Admin = () => {
       ...(filesText ? { filesText } : {}),
       ...(kpId ? { kpId } : {}),
     }));
-    // Обновляем productionContext: если уже есть — обновляем карту; если нет, но есть КП — создаём
-    setProductionContext(prev => {
-      const effectiveKp = kpData || prev?.kpData;
-      if (!effectiveKp) return prev; // нет КП — не трогаем
-      return {
-        kpData: effectiveKp,
-        roadmapData,
-        filesText: filesText || prev?.filesText || '',
-        kpId: kpId || prev?.kpId || '',
-      };
-    });
+    // Всегда обновляем productionContext — дорожная карта важнее наличия КП
+    setProductionContext(prev => ({
+      kpData: kpData || prev?.kpData || {} as Record<string, unknown>,
+      roadmapData,
+      filesText: filesText || prev?.filesText || '',
+      kpId: kpId || prev?.kpId || '',
+    }));
   };
 
   const handleSendToProduction = (

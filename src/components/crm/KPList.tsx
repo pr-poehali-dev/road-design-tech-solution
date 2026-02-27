@@ -88,6 +88,87 @@ export const KPList = ({ onOpenKP, onSendToProduction }: KPListProps) => {
     }
   };
 
+  const exportRoadmapToWord = (roadmap: Record<string, unknown>, projectName: string) => {
+    type Phase = { id: number; name: string; duration: string; tasks: string[]; deliverables: string[]; responsible: string };
+    type Milestone = { month: number; week?: number; name: string; criteria: string };
+    type Risk = { risk: string; probability: string; impact: string; mitigation: string };
+
+    const phases = (roadmap.phases as Phase[] | undefined) || [];
+    const milestones = (roadmap.milestones as Milestone[] | undefined) || [];
+    const risks = (roadmap.risks as Risk[] | undefined) || [];
+
+    const phasesHtml = phases.map(p => `
+      <tr>
+        <td style="padding:6px 10px;border:1px solid #ddd;font-weight:bold">${p.id}. ${p.name}</td>
+        <td style="padding:6px 10px;border:1px solid #ddd;text-align:center">${p.duration}</td>
+        <td style="padding:6px 10px;border:1px solid #ddd">${(p.tasks || []).map(t => `• ${t}`).join('<br/>')}</td>
+        <td style="padding:6px 10px;border:1px solid #ddd">${(p.deliverables || []).map(d => `• ${d}`).join('<br/>')}</td>
+        <td style="padding:6px 10px;border:1px solid #ddd;color:#555">${p.responsible || ''}</td>
+      </tr>`).join('');
+
+    const milestonesHtml = milestones.map(m => `
+      <tr>
+        <td style="padding:6px 10px;border:1px solid #ddd;text-align:center">Мес. ${m.month ?? m.week ?? ''}</td>
+        <td style="padding:6px 10px;border:1px solid #ddd;font-weight:bold">${m.name}</td>
+        <td style="padding:6px 10px;border:1px solid #ddd;color:#555">${m.criteria}</td>
+      </tr>`).join('');
+
+    const risksHtml = risks.map(r => `
+      <tr>
+        <td style="padding:6px 10px;border:1px solid #ddd">${r.risk}</td>
+        <td style="padding:6px 10px;border:1px solid #ddd;text-align:center">${r.probability}</td>
+        <td style="padding:6px 10px;border:1px solid #ddd;text-align:center">${r.impact}</td>
+        <td style="padding:6px 10px;border:1px solid #ddd;color:#555">${r.mitigation}</td>
+      </tr>`).join('');
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+      <style>body{font-family:"Times New Roman",serif;font-size:12pt;color:#1a1a1a;margin:40px}
+      h1{font-size:18pt;color:#1e3a5f;margin:0 0 8px} h2{font-size:14pt;color:#1e3a5f;margin:20px 0 8px}
+      table{width:100%;border-collapse:collapse;margin:8px 0}
+      th{background:#1e3a5f;color:white;padding:8px 10px;border:1px solid #1e3a5f;text-align:left;font-size:11pt}
+      p{line-height:1.6}</style>
+    </head><body>
+      <h1>Дорожная карта ПИР</h1>
+      <h3 style="font-weight:normal;color:#333;margin:0 0 4px">${projectName}</h3>
+      <p style="color:#666;font-size:10pt">Общая продолжительность: ${roadmap.total_duration || ''} · Дата: ${new Date().toLocaleDateString('ru-RU')}</p>
+      <p style="border-left:3px solid #1e3a5f;padding-left:12px;color:#444;margin:16px 0">${roadmap.overview || ''}</p>
+      ${phases.length ? `<h2>Этапы реализации</h2>
+      <table><thead><tr>
+        <th>Этап</th><th style="width:100px">Срок</th><th>Задачи</th><th>Результаты</th><th>Ответственный</th>
+      </tr></thead><tbody>${phasesHtml}</tbody></table>` : ''}
+      ${milestones.length ? `<h2>Ключевые вехи</h2>
+      <table><thead><tr><th style="width:80px">Месяц</th><th>Веха</th><th>Критерии приёмки</th></tr></thead><tbody>${milestonesHtml}</tbody></table>` : ''}
+      ${risks.length ? `<h2>Риски и митигация</h2>
+      <table><thead><tr><th>Риск</th><th style="width:100px">Вероятность</th><th style="width:100px">Влияние</th><th>Митигация</th></tr></thead><tbody>${risksHtml}</tbody></table>` : ''}
+    </body></html>`;
+
+    const blob = new Blob(['\ufeff' + html], { type: 'application/msword;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Дорожная_карта_${projectName.slice(0, 30).replace(/[^а-яёА-ЯЁa-zA-Z0-9]/g, '_')}.doc`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportRoadmapToPDF = (roadmap: Record<string, unknown>, projectName: string) => {
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+      <style>@page{margin:2cm}body{font-family:"Times New Roman",serif;font-size:11pt}
+      h1{font-size:16pt;color:#1e3a5f}h2{font-size:13pt;color:#1e3a5f;border-bottom:1px solid #ccc;padding-bottom:4px}
+      table{width:100%;border-collapse:collapse}th{background:#1e3a5f;color:white;padding:6px;text-align:left;font-size:10pt}
+      td{padding:5px 8px;border:1px solid #ddd;font-size:10pt}</style>
+    </head><body>
+      <h1>Дорожная карта ПИР: ${projectName}</h1>
+      <p style="color:#666">Продолжительность: ${roadmap.total_duration} · ${new Date().toLocaleDateString('ru-RU')}</p>
+      <p style="border-left:3px solid #1e3a5f;padding-left:10px;color:#444">${roadmap.overview || ''}</p>
+    </body></html>`;
+    const win = window.open('', '_blank');
+    if (!win) return;
+    win.document.write(html);
+    win.document.close();
+    setTimeout(() => win.print(), 500);
+  };
+
   const handleSendToProduction = async (item: KPListItem) => {
     setSendingId(item.id);
     try {
@@ -196,20 +277,68 @@ export const KPList = ({ onOpenKP, onSendToProduction }: KPListProps) => {
               </div>
 
               {isExpanded && detail && expandedId === item.id && (
-                <div className="mt-4 pt-4 border-t border-slate-700/50">
-                  <div className="space-y-2">
-                    <p className="text-xs text-slate-400">{(detail.kp_data as { summary?: string }).summary}</p>
-                    {detail.roadmap_data && (
-                      <div className="bg-cyan-500/10 rounded-lg p-3 border border-cyan-500/20">
-                        <p className="text-xs text-cyan-400 font-medium">
-                          Дорожная карта: {(detail.roadmap_data as { total_duration?: string }).total_duration}
-                        </p>
-                        <p className="text-xs text-slate-400 mt-1">
-                          {(detail.roadmap_data as { overview?: string }).overview?.slice(0, 200)}...
-                        </p>
+                <div className="mt-4 pt-4 border-t border-slate-700/50 space-y-4">
+                  {/* Резюме КП */}
+                  {(detail.kp_data as { summary?: string }).summary && (
+                    <p className="text-xs text-slate-400 leading-relaxed">{(detail.kp_data as { summary?: string }).summary}</p>
+                  )}
+
+                  {/* Дорожная карта */}
+                  {detail.roadmap_data && (() => {
+                    const rm = detail.roadmap_data as Record<string, unknown>;
+                    type Phase = { id: number; name: string; duration: string; deliverables: string[] };
+                    type Milestone = { month?: number; week?: number; name: string };
+                    const phases = (rm.phases as Phase[] | undefined) || [];
+                    const milestones = (rm.milestones as Milestone[] | undefined) || [];
+                    return (
+                      <div className="bg-cyan-500/10 rounded-lg border border-cyan-500/20 overflow-hidden">
+                        <div className="flex items-center justify-between px-3 py-2 border-b border-cyan-500/20">
+                          <div>
+                            <span className="text-xs text-cyan-400 font-semibold">Дорожная карта ПИР</span>
+                            {rm.total_duration && <span className="text-xs text-slate-400 ml-2">· {rm.total_duration as string}</span>}
+                          </div>
+                          <div className="flex gap-1.5">
+                            <button
+                              onClick={() => exportRoadmapToPDF(rm, item.title)}
+                              className="text-xs text-orange-400 hover:text-orange-300 border border-orange-500/30 px-2 py-0.5 rounded transition-colors"
+                            >PDF</button>
+                            <button
+                              onClick={() => exportRoadmapToWord(rm, item.title)}
+                              className="text-xs text-blue-400 hover:text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded transition-colors"
+                            >Word</button>
+                          </div>
+                        </div>
+                        {rm.overview && (
+                          <p className="text-xs text-slate-300 px-3 py-2 border-b border-cyan-500/10">{rm.overview as string}</p>
+                        )}
+                        {phases.length > 0 && (
+                          <div className="px-3 py-2 space-y-2">
+                            {phases.map(p => (
+                              <div key={p.id} className="flex gap-2 items-start text-xs">
+                                <span className="bg-cyan-600/30 text-cyan-300 rounded px-1.5 py-0.5 shrink-0 font-medium">{p.id}</span>
+                                <div className="flex-1">
+                                  <span className="text-white font-medium">{p.name}</span>
+                                  <span className="text-slate-500 ml-1">· {p.duration}</span>
+                                  {p.deliverables?.length > 0 && (
+                                    <p className="text-slate-400 mt-0.5">{p.deliverables.join(' · ')}</p>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {milestones.length > 0 && (
+                          <div className="px-3 py-2 border-t border-cyan-500/10 flex flex-wrap gap-2">
+                            {milestones.map((m, i) => (
+                              <span key={i} className="text-xs bg-slate-700/50 text-slate-300 rounded px-2 py-0.5">
+                                Мес. {m.month ?? m.week} — {m.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    );
+                  })()}
                 </div>
               )}
             </CardContent>
