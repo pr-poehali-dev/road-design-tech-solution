@@ -60,6 +60,9 @@ const PartnerSystem = () => {
     const ref = params.get('ref');
     if (ref) {
       setFormData(prev => ({ ...prev, inviteCode: ref.toUpperCase() }));
+      setTimeout(() => {
+        document.getElementById('join')?.scrollIntoView({ behavior: 'smooth' });
+      }, 500);
     }
   }, []);
 
