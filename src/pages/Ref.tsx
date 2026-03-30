@@ -761,9 +761,16 @@ export default function Ref() {
     <div className="min-h-screen bg-[#060d1a] text-white font-sans">
       {/* ── HERO ──────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden min-h-screen flex flex-col justify-center px-6 py-24">
+        {/* фоновое изображение */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url(https://cdn.poehali.dev/projects/5adabe83-9a88-49bb-ba7c-144288d55800/bucket/781c541c-03f0-4ec8-936a-a9153f2278b4.jpg)" }}
+        />
+        {/* затемнение поверх фото */}
+        <div className="absolute inset-0 bg-[#060d1a]/75" />
         {/* фон-сетка */}
         <div
-          className="absolute inset-0 opacity-[0.04]"
+          className="absolute inset-0 opacity-[0.03]"
           style={{
             backgroundImage: "linear-gradient(#3b82f6 1px, transparent 1px), linear-gradient(90deg, #3b82f6 1px, transparent 1px)",
             backgroundSize: "48px 48px",
