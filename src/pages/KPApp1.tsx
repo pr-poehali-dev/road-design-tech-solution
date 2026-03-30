@@ -185,15 +185,15 @@ function GanttChart() {
   const CHART_PCT = "72%";
 
   return (
-    <div style={{ width:"100%", fontFamily:"'Segoe UI',Arial,sans-serif", fontSize:9, border:"1px solid #e2e8f0", borderRadius:8, overflow:"hidden" }}>
+    <div style={{ width:"100%", fontFamily:"'Segoe UI',Arial,sans-serif", fontSize:9, border:"1px solid #e2e8f0", borderRadius:8 }}>
       {/* Header */}
       <div style={{ display:"flex", background:"#0f172a" }}>
         <div style={{ width:LABEL_PCT, flexShrink:0, padding:"5px 8px", color:"#94a3b8", fontWeight:700, fontSize:8.5, borderRight:"1px solid #1e293b" }}>ЗАДАЧА / ПОДЭТАП</div>
-        <div style={{ flex:1, position:"relative", height:28 }}>
+        <div style={{ flex:1, position:"relative", height:32 }}>
           {TICKS.map(d => (
             <div key={d} style={{ position:"absolute", left:pct(d), top:0, height:"100%", display:"flex", flexDirection:"column", alignItems:"center" }}>
               <div style={{ width:1, height:8, background:"#334155" }}/>
-              <span style={{ fontSize:7, color:"#60a5fa", fontWeight:700, whiteSpace:"nowrap", marginTop:1 }}>Д{d}</span>
+              <span style={{ fontSize:7.5, color:"#60a5fa", fontWeight:700, whiteSpace:"nowrap", marginTop:2 }}>Д{d}</span>
             </div>
           ))}
           <div style={{ position:"absolute", left:pct(115), top:0, bottom:0, width:1.5, background:"#f59e0b", opacity:0.8 }}/>
@@ -219,23 +219,28 @@ function GanttChart() {
         const w = pct(Math.max(row.end! - row.start!, 0.5));
 
         return (
-          <div key={i} style={{ display:"flex", background:bg, borderTop:"1px solid #f1f5f9", minHeight:18 }}>
-            <div style={{ width:LABEL_PCT, flexShrink:0, padding:"3px 8px", borderRight:"1px solid #e2e8f0", color:"#334155", fontSize:8.5, lineHeight:1.3, display:"flex", alignItems:"center" }}>
+          <div key={i} style={{ display:"flex", background:bg, borderTop:"1px solid #f1f5f9" }}>
+            <div style={{ width:LABEL_PCT, flexShrink:0, padding:"4px 8px", borderRight:"1px solid #e2e8f0", color:"#334155", fontSize:8.5, lineHeight:1.4 }}>
               {row.label.length > 52 ? row.label.slice(0,52)+"…" : row.label}
             </div>
-            <div style={{ flex:1, position:"relative", minHeight:18 }}>
+            <div style={{ flex:1, position:"relative", height:22 }}>
               {/* grid lines */}
               {TICKS.map(d => (
-                <div key={d} style={{ position:"absolute", left:pct(d), top:0, bottom:0, width:1, background:"#e2e8f0", opacity:0.6 }}/>
+                <div key={d} style={{ position:"absolute", left:pct(d), top:0, bottom:0, width:1, background:"#e2e8f0" }}/>
               ))}
-              <div style={{ position:"absolute", left:pct(115), top:0, bottom:0, width:1.5, background:"#f59e0b", opacity:0.5 }}/>
-              <div style={{ position:"absolute", left:pct(200), top:0, bottom:0, width:1.5, background:"#22c55e", opacity:0.5 }}/>
+              <div style={{ position:"absolute", left:pct(115), top:0, bottom:0, width:2, background:"#f59e0b", opacity:0.6 }}/>
+              <div style={{ position:"absolute", left:pct(200), top:0, bottom:0, width:2, background:"#22c55e", opacity:0.6 }}/>
 
               {row.milestone ? (
-                <div style={{ position:"absolute", left:left, top:"50%", transform:"translate(-50%,-50%) rotate(45deg)", width:8, height:8, background:row.color, border:"1.5px solid #fff" }}/>
+                <div style={{ position:"absolute", left:left, top:"50%", transform:"translate(-50%,-50%) rotate(45deg)", width:9, height:9, background:row.color, border:"2px solid #fff", zIndex:2 }}/>
               ) : (
-                <div style={{ position:"absolute", left, top:"20%", width:w, height:"60%", background:row.color, borderRadius:3, opacity:0.85, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                  <span style={{ fontSize:6.5, color:"#fff", fontWeight:700, whiteSpace:"nowrap", padding:"0 3px" }}>
+                <div style={{
+                  position:"absolute", left, top:3, width:w, height:16,
+                  background:row.color, borderRadius:3,
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  overflow:"visible"
+                }}>
+                  <span style={{ fontSize:7, color:"#fff", fontWeight:700, whiteSpace:"nowrap", lineHeight:1 }}>
                     {row.start === row.end ? `Д${row.start}` : `${row.start}–${row.end}`}
                   </span>
                 </div>
@@ -498,12 +503,9 @@ export default function KPApp1() {
         {/* ═══════════════ СТРАНИЦА 1: ОБЛОЖКА + ВВОДНАЯ ЧАСТЬ ════════════ */}
         <div className="" style={{
           background:`linear-gradient(135deg, ${C.navy} 0%, #1e3a8a 55%, ${C.blue} 100%)`,
-          color:"#fff", padding:"36px 48px 28px", position:"relative", overflow:"hidden"
+          color:"#fff", padding:"28px 48px 24px"
         }}>
-          <div style={{ position:"absolute", top:-60, right:-60, width:280, height:280, borderRadius:"50%", background:"rgba(59,130,246,0.1)" }}/>
-          <div style={{ position:"absolute", bottom:-40, left:"35%", width:180, height:180, borderRadius:"50%", background:"rgba(255,255,255,0.04)" }}/>
-
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:24, position:"relative" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:24 }}>
             <div style={{ flex:1 }}>
               <div style={{ fontSize:9, letterSpacing:3, color:"#93c5fd", fontWeight:700, marginBottom:6, textTransform:"uppercase" }}>
                 Дорожная карта · Коммерческое предложение № 1114КП от 30.03.2026
