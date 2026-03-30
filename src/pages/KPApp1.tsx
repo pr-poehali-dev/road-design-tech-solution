@@ -169,120 +169,95 @@ const etaps = [
   { num:"7", name:"Сдача-приёмка", days:"После ГГЭ", result:"Подписанные Акты, ПСД передана" },
 ];
 
-/* ─────────────────── SVG ДИАГРАММА ГАНТА ──────────────────── */
-const LABEL_W = 260;
-const ROW_H = 22;
-const ROW_GAP = 2;
-const SECTION_HEAD = 18;
-const CHART_W = 680;
-const PAD_TOP = 34;
+/* ─────────────────── HTML ДИАГРАММА ГАНТА ──────────────────── */
+const TOTAL = 210;
+const TICKS = [0,10,20,30,45,55,85,115,130,150,176,200,210];
+
+function pct(d: number) { return `${(d / TOTAL * 100).toFixed(2)}%`; }
 
 function GanttChart() {
-  const allRows: { type: "section" | "task"; label: string; color: string; start?: number; end?: number; milestone?: boolean }[] = [];
+  const rows: { type: "section"|"task"; label: string; color: string; start?: number; end?: number; milestone?: boolean }[] = [];
   ganttSections.forEach(sec => {
-    allRows.push({ type: "section", label: sec.label, color: sec.color });
-    sec.tasks.forEach(t => allRows.push({ type: "task", label: t.label, color: sec.color, start: t.start, end: t.end, milestone: t.milestone }));
+    rows.push({ type:"section", label:sec.label, color:sec.color });
+    sec.tasks.forEach(t => rows.push({ type:"task", label:t.label, color:sec.color, start:t.start, end:t.end, milestone:t.milestone }));
   });
 
-  const totalH = PAD_TOP + allRows.reduce((acc, r) => acc + (r.type === "section" ? SECTION_HEAD : ROW_H) + ROW_GAP, 0) + 24;
-  const W = LABEL_W + CHART_W + 4;
-
-  const dayX = (d: number) => LABEL_W + (d / TOTAL) * CHART_W;
-
-  // tick days
-  const ticks = [0,10,20,30,45,55,85,115,130,150,176,200,210];
-
-  let curY = PAD_TOP;
+  const LABEL_PCT = "28%";
+  const CHART_PCT = "72%";
 
   return (
-    <svg
-      width={W}
-      height={totalH}
-      viewBox={`0 0 ${W} ${totalH}`}
-      preserveAspectRatio="xMidYMid meet"
-      style={{ display:"block", fontFamily:"'Segoe UI',Arial,sans-serif", maxWidth:"100%", height:"auto" }}
-    >
-      {/* Header bg */}
-      <rect x={0} y={0} width={W} height={PAD_TOP} fill="#1e293b" />
-      <rect x={0} y={0} width={LABEL_W} height={PAD_TOP} fill="#0f172a" />
-      <text x={LABEL_W/2} y={20} textAnchor="middle" fontSize={10} fill="#94a3b8" fontWeight={700}>ЗАДАЧА / ПОДЭТАП</text>
+    <div style={{ width:"100%", fontFamily:"'Segoe UI',Arial,sans-serif", fontSize:9, border:"1px solid #e2e8f0", borderRadius:8, overflow:"hidden" }}>
+      {/* Header */}
+      <div style={{ display:"flex", background:"#0f172a" }}>
+        <div style={{ width:LABEL_PCT, flexShrink:0, padding:"5px 8px", color:"#94a3b8", fontWeight:700, fontSize:8.5, borderRight:"1px solid #1e293b" }}>ЗАДАЧА / ПОДЭТАП</div>
+        <div style={{ flex:1, position:"relative", height:28 }}>
+          {TICKS.map(d => (
+            <div key={d} style={{ position:"absolute", left:pct(d), top:0, height:"100%", display:"flex", flexDirection:"column", alignItems:"center" }}>
+              <div style={{ width:1, height:8, background:"#334155" }}/>
+              <span style={{ fontSize:7, color:"#60a5fa", fontWeight:700, whiteSpace:"nowrap", marginTop:1 }}>Д{d}</span>
+            </div>
+          ))}
+          <div style={{ position:"absolute", left:pct(115), top:0, bottom:0, width:1.5, background:"#f59e0b", opacity:0.8 }}/>
+          <div style={{ position:"absolute", left:pct(200), top:0, bottom:0, width:1.5, background:"#22c55e", opacity:0.8 }}/>
+        </div>
+      </div>
 
-      {/* Tick marks */}
-      {ticks.map(d => {
-        const x = dayX(d);
-        return (
-          <g key={d}>
-            <line x1={x} y1={0} x2={x} y2={PAD_TOP} stroke="#334155" strokeWidth={1}/>
-            <text x={x} y={16} textAnchor="middle" fontSize={8} fill="#60a5fa" fontWeight={600}>Д{d}</text>
-          </g>
-        );
-      })}
-      <text x={LABEL_W + CHART_W/2} y={28} textAnchor="middle" fontSize={9} fill="#64748b">← 110 дней (корректировка ПД) → ← 90 дней (ГГЭ) → ← сдача →</text>
-
-      {/* Vertical day grid lines */}
-      {ticks.map(d => {
-        const x = dayX(d);
-        return <line key={`g${d}`} x1={x} y1={PAD_TOP} x2={x} y2={totalH} stroke="#1e293b" strokeWidth={0.7} strokeDasharray="3,3"/>;
-      })}
-
-      {/* Phase boundary at D115 */}
-      <line x1={dayX(115)} y1={PAD_TOP} x2={dayX(115)} y2={totalH} stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="5,3" opacity={0.7}/>
-      <line x1={dayX(200)} y1={PAD_TOP} x2={dayX(200)} y2={totalH} stroke="#22c55e" strokeWidth={1.5} strokeDasharray="5,3" opacity={0.7}/>
-
-      {allRows.map((row, i) => {
-        const y = curY;
-        const h = row.type === "section" ? SECTION_HEAD : ROW_H;
-        curY += h + ROW_GAP;
-
+      {/* Rows */}
+      {rows.map((row, i) => {
         if (row.type === "section") {
           return (
-            <g key={i}>
-              <rect x={0} y={y} width={W} height={h} fill={row.color} opacity={0.18}/>
-              <rect x={0} y={y} width={4} height={h} fill={row.color}/>
-              <text x={10} y={y + h/2 + 4} fontSize={9} fontWeight={800} fill={row.color} letterSpacing={0.5}>{row.label.toUpperCase()}</text>
-            </g>
+            <div key={i} style={{ display:"flex", background:row.color+"2e", borderTop:"1px solid "+row.color+"44" }}>
+              <div style={{ width:LABEL_PCT, flexShrink:0, padding:"4px 8px 4px 10px", borderLeft:`3px solid ${row.color}`, borderRight:"1px solid #e2e8f0" }}>
+                <span style={{ fontSize:8, fontWeight:800, color:row.color, letterSpacing:0.3 }}>{row.label.toUpperCase()}</span>
+              </div>
+              <div style={{ flex:1, position:"relative" }}/>
+            </div>
           );
         }
 
-        // task row
-        const bgFill = i % 2 === 0 ? "#f8fafc" : "#fff";
-        const x1 = dayX(row.start!);
-        const x2 = dayX(row.end!);
-        const barW = Math.max(x2 - x1, 2);
+        const bg = i % 2 === 0 ? "#f8fafc" : "#fff";
+        const left = pct(row.start!);
+        const w = pct(Math.max(row.end! - row.start!, 0.5));
 
         return (
-          <g key={i}>
-            <rect x={0} y={y} width={W} height={h} fill={bgFill}/>
-            {/* label */}
-            <text x={8} y={y + h/2 + 4} fontSize={8.5} fill="#334155">
-              {row.label.length > 46 ? row.label.slice(0,46)+"…" : row.label}
-            </text>
+          <div key={i} style={{ display:"flex", background:bg, borderTop:"1px solid #f1f5f9", minHeight:18 }}>
+            <div style={{ width:LABEL_PCT, flexShrink:0, padding:"3px 8px", borderRight:"1px solid #e2e8f0", color:"#334155", fontSize:8.5, lineHeight:1.3, display:"flex", alignItems:"center" }}>
+              {row.label.length > 52 ? row.label.slice(0,52)+"…" : row.label}
+            </div>
+            <div style={{ flex:1, position:"relative", minHeight:18 }}>
+              {/* grid lines */}
+              {TICKS.map(d => (
+                <div key={d} style={{ position:"absolute", left:pct(d), top:0, bottom:0, width:1, background:"#e2e8f0", opacity:0.6 }}/>
+              ))}
+              <div style={{ position:"absolute", left:pct(115), top:0, bottom:0, width:1.5, background:"#f59e0b", opacity:0.5 }}/>
+              <div style={{ position:"absolute", left:pct(200), top:0, bottom:0, width:1.5, background:"#22c55e", opacity:0.5 }}/>
 
-            {row.milestone ? (
-              /* Diamond */
-              <g transform={`translate(${x1},${y + h/2})`}>
-                <polygon points="0,-7 7,0 0,7 -7,0" fill={row.color} stroke="#fff" strokeWidth={1}/>
-              </g>
-            ) : (
-              <g>
-                <rect x={x1} y={y+3} width={barW} height={h-6} rx={3} fill={row.color} opacity={0.85}/>
-                {barW > 30 && (
-                  <text x={x1 + barW/2} y={y + h/2 + 3} textAnchor="middle" fontSize={7} fill="#fff" fontWeight={700}>
+              {row.milestone ? (
+                <div style={{ position:"absolute", left:left, top:"50%", transform:"translate(-50%,-50%) rotate(45deg)", width:8, height:8, background:row.color, border:"1.5px solid #fff" }}/>
+              ) : (
+                <div style={{ position:"absolute", left, top:"20%", width:w, height:"60%", background:row.color, borderRadius:3, opacity:0.85, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  <span style={{ fontSize:6.5, color:"#fff", fontWeight:700, whiteSpace:"nowrap", padding:"0 3px" }}>
                     {row.start === row.end ? `Д${row.start}` : `${row.start}–${row.end}`}
-                  </text>
-                )}
-              </g>
-            )}
-          </g>
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
         );
       })}
 
-      {/* Bottom axis */}
-      {ticks.map(d => {
-        const x = dayX(d);
-        return <text key={`bt${d}`} x={x} y={totalH-6} textAnchor="middle" fontSize={7.5} fill="#64748b">Д{d}</text>;
-      })}
-    </svg>
+      {/* Footer ticks */}
+      <div style={{ display:"flex", background:"#f8fafc", borderTop:"1px solid #e2e8f0" }}>
+        <div style={{ width:LABEL_PCT, flexShrink:0, padding:"3px 8px", borderRight:"1px solid #e2e8f0", fontSize:7.5, color:"#64748b" }}>
+          ← 110 дн. (ПД) ··· ← 90 дн. (ГГЭ) ··· ← сдача →
+        </div>
+        <div style={{ flex:1, position:"relative", height:16 }}>
+          {TICKS.map(d => (
+            <div key={d} style={{ position:"absolute", left:pct(d), top:2, fontSize:7, color:"#64748b", transform:"translateX(-50%)", whiteSpace:"nowrap" }}>Д{d}</div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -583,7 +558,7 @@ export default function KPApp1() {
           {/* ═══ СТРАНИЦА 2: ДИАГРАММА ГАНТА ══════════════════════════════ */}
           <div className="page-break">
             <SectionTitle color={C.blue}>2. Диаграмма Ганта · 210 календарных дней</SectionTitle>
-            <div style={{ background:"#fff", borderRadius:10, border:`1px solid ${C.border}`, padding:"8px 4px", boxShadow:"0 1px 8px rgba(0,0,0,0.06)" }}>
+            <div style={{ borderRadius:10, overflow:"hidden", boxShadow:"0 1px 8px rgba(0,0,0,0.06)" }}>
               <GanttChart/>
             </div>
             <div style={{ display:"flex", gap:16, flexWrap:"wrap", marginTop:8, fontSize:9 }}>
