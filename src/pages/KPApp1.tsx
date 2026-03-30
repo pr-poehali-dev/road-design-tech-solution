@@ -195,7 +195,13 @@ function GanttChart() {
   let curY = PAD_TOP;
 
   return (
-    <svg width="100%" viewBox={`0 0 ${W} ${totalH}`} preserveAspectRatio="xMidYMid meet" style={{ display:"block", fontFamily:"'Segoe UI',Arial,sans-serif" }}>
+    <svg
+      width={W}
+      height={totalH}
+      viewBox={`0 0 ${W} ${totalH}`}
+      preserveAspectRatio="xMidYMid meet"
+      style={{ display:"block", fontFamily:"'Segoe UI',Arial,sans-serif", maxWidth:"100%", height:"auto" }}
+    >
       {/* Header bg */}
       <rect x={0} y={0} width={W} height={PAD_TOP} fill="#1e293b" />
       <rect x={0} y={0} width={LABEL_W} height={PAD_TOP} fill="#0f172a" />
@@ -295,7 +301,7 @@ function StrategyFlow() {
   const startX = (W - totalUsed) / 2;
 
   return (
-    <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display:"block", fontFamily:"'Segoe UI',Arial,sans-serif" }}>
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display:"block", fontFamily:"'Segoe UI',Arial,sans-serif", maxWidth:"100%", height:"auto" }}>
       {phases.map((p, i) => {
         const x = startX + i * (boxW + gap);
         const y = (H - boxH) / 2;
@@ -341,7 +347,7 @@ function CycleFlow() {
   const sx = (W - totalUsed) / 2;
 
   return (
-    <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display:"block", fontFamily:"'Segoe UI',Arial,sans-serif" }}>
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display:"block", fontFamily:"'Segoe UI',Arial,sans-serif", maxWidth:"100%", height:"auto" }}>
       <defs>
         <marker id="arr2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
           <path d="M0,0 L0,6 L6,3 z" fill="#94a3b8"/>
@@ -382,7 +388,7 @@ function AcceptFlow() {
   const dh = 36;
 
   return (
-    <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display:"block", fontFamily:"'Segoe UI',Arial,sans-serif" }}>
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display:"block", fontFamily:"'Segoe UI',Arial,sans-serif", maxWidth:"100%", height:"auto" }}>
       <defs>
         <marker id="arr3" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
           <path d="M0,0 L0,6 L6,3 z" fill="#94a3b8"/>
@@ -478,7 +484,7 @@ export default function KPApp1() {
           html,body { font-size:8.5px; }
           .page-break { page-break-before: always; break-before: page; }
           .avoid-break { page-break-inside: avoid; break-inside: avoid; }
-          svg { overflow: visible !important; }
+          svg { overflow: visible !important; max-width: 100% !important; height: auto !important; }
           div { box-sizing: border-box; }
         }
         body { margin:0; }
