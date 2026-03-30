@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 /* ─────────────────────────── ЦВЕТА ─────────────────────────── */
 const C = {
@@ -446,44 +446,57 @@ function RiskBadge({ text }: { text: string }) {
 /* ══════════════════════ ГЛАВНЫЙ КОМПОНЕНТ ══════════════════════ */
 export default function KPApp1() {
   const printRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handlePDF = async () => {
+    if (!printRef.current) return;
+    setLoading(true);
+    try {
+      // @ts-expect-error no types
+      const html2pdf = (await import("html2pdf.js")).default;
+      await html2pdf()
+        .set({
+          margin: [6, 6, 6, 6],
+          filename: "KP_CTESC_Burachki_2026.pdf",
+          image: { type: "jpeg", quality: 0.97 },
+          html2canvas: { scale: 2, useCORS: true, logging: false },
+          jsPDF: { unit: "mm", format: "a3", orientation: "landscape" },
+          pagebreak: { mode: "avoid-all" },
+        })
+        .from(printRef.current)
+        .save();
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
       <style>{`
-        @media print {
-          body { margin:0; padding:0; background:#fff; }
-          .no-print { display:none !important; }
-          * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
-          @page { size:A4 landscape; margin:6mm 6mm 6mm 6mm; }
-          html,body { font-size:8.5px; }
-          .page-break { page-break-before: always; break-before: page; }
-          .avoid-break { page-break-inside: avoid; break-inside: avoid; }
-          svg { overflow: visible !important; max-width: 100% !important; height: auto !important; }
-          div { box-sizing: border-box; }
-        }
         body { margin:0; }
         table { border-collapse:collapse; }
       `}</style>
 
-      {/* PRINT BUTTON */}
-      <div className="no-print" style={{
+      {/* PDF BUTTON */}
+      <div style={{
         position:"fixed", top:16, right:16, zIndex:100,
         display:"flex", gap:10
       }}>
-        <button onClick={()=>window.print()} style={{
-          background:C.blue, color:"#fff", border:"none", borderRadius:8,
-          padding:"10px 22px", fontSize:13, fontWeight:700, cursor:"pointer",
-          boxShadow:"0 2px 12px rgba(30,64,175,0.35)", display:"flex", alignItems:"center", gap:8
+        <button onClick={handlePDF} disabled={loading} style={{
+          background: loading ? "#94a3b8" : C.blue, color:"#fff", border:"none", borderRadius:8,
+          padding:"10px 22px", fontSize:13, fontWeight:700, cursor: loading ? "wait" : "pointer",
+          boxShadow:"0 2px 12px rgba(30,64,175,0.35)", display:"flex", alignItems:"center", gap:8,
+          transition:"background 0.2s"
         }}>
-          <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-          Печать / PDF
+          <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          {loading ? "Генерация…" : "Скачать PDF"}
         </button>
       </div>
 
-      <div ref={printRef} style={{ background:"#f8fafc", minHeight:"100vh", fontFamily:"'Segoe UI',Arial,sans-serif", color:C.navy }}>
+      <div ref={printRef} style={{ background:"#fff", fontFamily:"'Segoe UI',Arial,sans-serif", color:C.navy }}>
 
         {/* ═══════════════ СТРАНИЦА 1: ОБЛОЖКА + ВВОДНАЯ ЧАСТЬ ════════════ */}
-        <div className="avoid-break" style={{
+        <div className="" style={{
           background:`linear-gradient(135deg, ${C.navy} 0%, #1e3a8a 55%, ${C.blue} 100%)`,
           color:"#fff", padding:"36px 48px 28px", position:"relative", overflow:"hidden"
         }}>
@@ -522,16 +535,16 @@ export default function KPApp1() {
           </div>
         </div>
 
-        <div style={{ padding:"24px 48px 32px", maxWidth:1200, margin:"0 auto" }}>
+        <div style={{ padding:"16px 32px 24px", maxWidth:1200, margin:"0 auto" }}>
 
           {/* ─── СТРАТЕГИЧЕСКАЯ БЛОК-СХЕМА ─── */}
           <SectionTitle color={C.blue}>1. Стратегическая дорожная карта</SectionTitle>
-          <div className="avoid-break" style={{ background:"#fff", borderRadius:10, border:`1px solid ${C.border}`, padding:"16px 12px", overflowX:"auto", boxShadow:"0 1px 6px rgba(0,0,0,0.05)", marginBottom:20 }}>
+          <div className="" style={{ background:"#fff", borderRadius:10, border:`1px solid ${C.border}`, padding:"16px 12px", overflowX:"auto", boxShadow:"0 1px 6px rgba(0,0,0,0.05)", marginBottom:20 }}>
             <StrategyFlow/>
           </div>
 
           {/* ─── НОРМАТИВНАЯ БАЗА + ПРОПУСКНАЯ СПОСОБНОСТЬ ─── */}
-          <div className="avoid-break" style={{ display:"grid", gridTemplateColumns:"1.6fr 1fr", gap:20, marginBottom:4 }}>
+          <div className="" style={{ display:"grid", gridTemplateColumns:"1.6fr 1fr", gap:20, marginBottom:4 }}>
             <div>
               <SectionTitle color={C.cyan}>1.1. Нормативно-правовая база</SectionTitle>
               <Table
@@ -555,7 +568,7 @@ export default function KPApp1() {
           </div>
 
           {/* ═══ СТРАНИЦА 2: ДИАГРАММА ГАНТА ══════════════════════════════ */}
-          <div className="page-break">
+          <div className="">
             <SectionTitle color={C.blue}>2. Диаграмма Ганта · 210 календарных дней</SectionTitle>
             <div style={{ borderRadius:10, overflow:"hidden", boxShadow:"0 1px 8px rgba(0,0,0,0.06)" }}>
               <GanttChart/>
@@ -577,9 +590,9 @@ export default function KPApp1() {
           </div>
 
           {/* ═══ СТРАНИЦА 3: СВОДНЫЙ ПЛАН + КОНТРОЛЬНЫЕ ТОЧКИ ════════════ */}
-          <div className="page-break">
+          <div className="">
             <div style={{ display:"grid", gridTemplateColumns:"1.5fr 1fr", gap:20 }}>
-              <div className="avoid-break">
+              <div className="">
                 <SectionTitle color={C.purple}>3. Сводный календарный план</SectionTitle>
                 <div style={{ borderRadius:8, border:`1px solid ${C.border}`, overflow:"hidden" }}>
                   <table style={{ width:"100%", borderCollapse:"collapse", fontSize:10 }}>
@@ -610,7 +623,7 @@ export default function KPApp1() {
                 </div>
               </div>
 
-              <div className="avoid-break">
+              <div className="">
                 <SectionTitle color={C.red}>Контрольные точки (КТ)</SectionTitle>
                 <div style={{ borderRadius:8, border:`1px solid ${C.border}`, overflow:"hidden" }}>
                   <table style={{ width:"100%", borderCollapse:"collapse", fontSize:10 }}>
@@ -638,7 +651,7 @@ export default function KPApp1() {
             </div>
 
             {/* ─── ОШИБКИ ПРЕДЫДУЩЕГО ПРОЕКТИРОВАНИЯ ─── */}
-            <div className="avoid-break" style={{ marginTop:20 }}>
+            <div className="" style={{ marginTop:20 }}>
               <SectionTitle color={C.red}>4. Ошибки предыдущего проектирования (ООО «ИС проект»)</SectionTitle>
               <Table
                 cols={["Выявленная проблема","Позиция","Предлагаемое решение"]}
@@ -649,7 +662,7 @@ export default function KPApp1() {
           </div>
 
           {/* ═══ СТРАНИЦА 4: УПРАВЛЕНИЕ РИСКАМИ ══════════════════════════ */}
-          <div className="page-break avoid-break">
+          <div className="">
             <SectionTitle color={C.amber}>5. Управление рисками</SectionTitle>
             <div style={{ borderRadius:8, border:`1px solid ${C.border}`, overflow:"hidden", marginBottom:20 }}>
               <table style={{ width:"100%", borderCollapse:"collapse", fontSize:10 }}>
@@ -715,13 +728,13 @@ export default function KPApp1() {
           </div>
 
           {/* ═══ СТРАНИЦА 5: ПОЛНЫЙ ЦИКЛ + КЛЮЧЕВЫЕ ПРЕИМУЩЕСТВА ════════ */}
-          <div className="page-break">
+          <div className="">
             <SectionTitle color={C.blue}>9. Полный цикл проектирования «под ключ»</SectionTitle>
-            <div className="avoid-break" style={{ background:"#fff", borderRadius:10, border:`1px solid ${C.border}`, padding:"16px 12px", overflowX:"auto", boxShadow:"0 1px 6px rgba(0,0,0,0.05)", marginBottom:20 }}>
+            <div className="" style={{ background:"#fff", borderRadius:10, border:`1px solid ${C.border}`, padding:"16px 12px", overflowX:"auto", boxShadow:"0 1px 6px rgba(0,0,0,0.05)", marginBottom:20 }}>
               <CycleFlow/>
             </div>
 
-            <div className="avoid-break">
+            <div className="">
               <SectionTitle color={C.purple}>10. Ключевые преимущества ООО «ЦТЭСК»</SectionTitle>
               <div style={{ display:"grid", gridTemplateColumns:"repeat(2, 1fr)", gap:14 }}>
                 {[
@@ -732,7 +745,7 @@ export default function KPApp1() {
                   { num:"5", title:"Гарантия результата", color:C.amber, text:'Результат имеет ценность ТОЛЬКО при получении положительного заключения ГГЭ (п. 1.4 Договора). Гарантийный срок на результат — 5 лет (п. 8.4 Договора). Страхование ответственности.' },
                   { num:"6", title:"Конфиденциальность и лицензия ФСБ", color:C.cyan, text:"Наличие лицензии ФСБ России на работу со сведениями, составляющими государственную тайну. Соблюдение режима конфиденциальности в соответствии с условиями Договора." },
                 ].map(a => (
-                  <div key={a.num} className="avoid-break" style={{ background:"#fff", border:`1.5px solid ${a.color}22`, borderRadius:10, padding:"12px 14px", boxShadow:"0 1px 4px rgba(0,0,0,0.05)" }}>
+                  <div key={a.num} className="" style={{ background:"#fff", border:`1.5px solid ${a.color}22`, borderRadius:10, padding:"12px 14px", boxShadow:"0 1px 4px rgba(0,0,0,0.05)" }}>
                     <div style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
                       <div style={{ minWidth:26, height:26, background:a.color, color:"#fff", borderRadius:6, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:800, flexShrink:0 }}>{a.num}</div>
                       <div>
@@ -746,7 +759,7 @@ export default function KPApp1() {
             </div>
 
             {/* ─── УСЛОВИЯ ОПЛАТЫ ─── */}
-            <div className="avoid-break" style={{ marginTop:20 }}>
+            <div className="" style={{ marginTop:20 }}>
               <SectionTitle color={C.green}>11. Условия оплаты и передачи результатов</SectionTitle>
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
                 <div>
@@ -777,7 +790,7 @@ export default function KPApp1() {
             </div>
 
             {/* ─── ЗАКЛЮЧИТЕЛЬНЫЕ ПОЛОЖЕНИЯ ─── */}
-            <div className="avoid-break" style={{ marginTop:20, background:`linear-gradient(135deg, ${C.navy}, #1e3a8a)`, borderRadius:12, padding:"18px 24px", color:"#fff" }}>
+            <div className="" style={{ marginTop:20, background:`linear-gradient(135deg, ${C.navy}, #1e3a8a)`, borderRadius:12, padding:"18px 24px", color:"#fff" }}>
               <div style={{ fontWeight:800, fontSize:13, color:"#93c5fd", marginBottom:10 }}>Заключительные положения</div>
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
                 <div style={{ fontSize:10, color:"#cbd5e1", lineHeight:1.7 }}>
