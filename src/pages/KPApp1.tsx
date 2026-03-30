@@ -195,7 +195,7 @@ function GanttChart() {
   let curY = PAD_TOP;
 
   return (
-    <svg width={W} height={totalH} style={{ display:"block", fontFamily:"'Segoe UI',Arial,sans-serif" }}>
+    <svg width="100%" viewBox={`0 0 ${W} ${totalH}`} preserveAspectRatio="xMidYMid meet" style={{ display:"block", fontFamily:"'Segoe UI',Arial,sans-serif" }}>
       {/* Header bg */}
       <rect x={0} y={0} width={W} height={PAD_TOP} fill="#1e293b" />
       <rect x={0} y={0} width={LABEL_W} height={PAD_TOP} fill="#0f172a" />
@@ -295,7 +295,7 @@ function StrategyFlow() {
   const startX = (W - totalUsed) / 2;
 
   return (
-    <svg width={W} height={H} style={{ display:"block", fontFamily:"'Segoe UI',Arial,sans-serif" }}>
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display:"block", fontFamily:"'Segoe UI',Arial,sans-serif" }}>
       {phases.map((p, i) => {
         const x = startX + i * (boxW + gap);
         const y = (H - boxH) / 2;
@@ -341,7 +341,7 @@ function CycleFlow() {
   const sx = (W - totalUsed) / 2;
 
   return (
-    <svg width={W} height={H} style={{ display:"block", fontFamily:"'Segoe UI',Arial,sans-serif" }}>
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display:"block", fontFamily:"'Segoe UI',Arial,sans-serif" }}>
       <defs>
         <marker id="arr2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
           <path d="M0,0 L0,6 L6,3 z" fill="#94a3b8"/>
@@ -382,7 +382,7 @@ function AcceptFlow() {
   const dh = 36;
 
   return (
-    <svg width={W} height={H} style={{ display:"block", fontFamily:"'Segoe UI',Arial,sans-serif" }}>
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display:"block", fontFamily:"'Segoe UI',Arial,sans-serif" }}>
       <defs>
         <marker id="arr3" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
           <path d="M0,0 L0,6 L6,3 z" fill="#94a3b8"/>
@@ -474,10 +474,12 @@ export default function KPApp1() {
           body { margin:0; padding:0; background:#fff; }
           .no-print { display:none !important; }
           * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
-          @page { size:A4 landscape; margin:8mm 8mm 8mm 8mm; }
-          html,body { font-size:9px; }
-          .page-break { page-break-before: always; }
-          .avoid-break { page-break-inside: avoid; }
+          @page { size:A4 landscape; margin:6mm 6mm 6mm 6mm; }
+          html,body { font-size:8.5px; }
+          .page-break { page-break-before: always; break-before: page; }
+          .avoid-break { page-break-inside: avoid; break-inside: avoid; }
+          svg { overflow: visible !important; }
+          div { box-sizing: border-box; }
         }
         body { margin:0; }
         table { border-collapse:collapse; }
@@ -573,12 +575,12 @@ export default function KPApp1() {
           </div>
 
           {/* ═══ СТРАНИЦА 2: ДИАГРАММА ГАНТА ══════════════════════════════ */}
-          <div className="page-break avoid-break">
+          <div className="page-break">
             <SectionTitle color={C.blue}>2. Диаграмма Ганта · 210 календарных дней</SectionTitle>
-            <div style={{ background:"#fff", borderRadius:10, border:`1px solid ${C.border}`, overflowX:"auto", padding:"8px 4px", boxShadow:"0 1px 8px rgba(0,0,0,0.06)" }}>
+            <div style={{ background:"#fff", borderRadius:10, border:`1px solid ${C.border}`, padding:"8px 4px", boxShadow:"0 1px 8px rgba(0,0,0,0.06)" }}>
               <GanttChart/>
             </div>
-            <div style={{ display:"flex", gap:16, flexWrap:"wrap", marginTop:10, fontSize:9 }}>
+            <div style={{ display:"flex", gap:16, flexWrap:"wrap", marginTop:8, fontSize:9 }}>
               <div style={{ display:"flex", alignItems:"center", gap:5 }}>
                 <div style={{ width:20, height:10, background:C.blue, borderRadius:2, opacity:0.85 }}/> Корр. ПД (Этапы 1–5)
               </div>
@@ -657,7 +659,7 @@ export default function KPApp1() {
 
             {/* ─── ОШИБКИ ПРЕДЫДУЩЕГО ПРОЕКТИРОВАНИЯ ─── */}
             <div className="avoid-break" style={{ marginTop:20 }}>
-              <SectionTitle color={C.red}>4. Ошибки предыдущего проектирования (ООО «ИС проект»), выявленные ООО «ЦТЭСК»</SectionTitle>
+              <SectionTitle color={C.red}>4. Ошибки предыдущего проектирования (ООО «ИС проект»)</SectionTitle>
               <Table
                 cols={["Выявленная проблема","Позиция","Предлагаемое решение"]}
                 rows={errors}
