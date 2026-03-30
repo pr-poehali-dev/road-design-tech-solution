@@ -36,6 +36,7 @@ const Achievements = lazyWithRetry(() => import("./pages/Achievements"));
 const Chat = lazyWithRetry(() => import("./pages/Chat"));
 const Valentine = lazyWithRetry(() => import("./pages/Valentine"));
 const KP1 = lazyWithRetry(() => import("./pages/KP1"));
+const KPApp = lazyWithRetry(() => import("./pages/KPApp"));
 
 const queryClient = new QueryClient();
 
@@ -127,6 +128,11 @@ const App = () => (
           <Route path="/kp1" element={
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
               <KP1 />
+            </Suspense>
+          } />
+          <Route path="/kpapp" element={
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
+              <KPApp />
             </Suspense>
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
