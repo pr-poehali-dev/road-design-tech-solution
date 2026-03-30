@@ -20,7 +20,6 @@ const PHASE_COLORS = ["#1e40af","#0891b2","#15803d","#7c3aed","#b45309","#dc2626
 
 /* ──────────────────── ДАННЫЕ ГАНТА ──────────────────────────── */
 // start/end — рабочие дни от 0
-const TOTAL = 210;
 const ganttSections: { label: string; color: string; tasks: { id: string; label: string; start: number; end: number; milestone?: boolean }[] }[] = [
   {
     label: "0. Подготовка", color: PHASE_COLORS[0],
