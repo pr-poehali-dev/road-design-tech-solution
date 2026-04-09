@@ -1,8 +1,7 @@
 import { useRef, useState } from "react";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 import { Button } from "@/components/ui/button";
 import Icon from "@/components/ui/icon";
+import { exportElementToPdf } from "@/lib/exportPdf";
 
 const LOGO_URL =
   "https://cdn.poehali.dev/projects/5adabe83-9a88-49bb-ba7c-144288d55800/bucket/7b630b71-f92c-4f6d-8d53-ab2b00971f22.png";
@@ -163,74 +162,21 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-async function toDataUrl(url: string): Promise<string> {
-  const res = await fetch(url);
-  const blob = await res.blob();
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.readAsDataURL(blob);
-  });
-}
-
 export default function Otchet() {
   const reportRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
-  const [logoB64, setLogoB64] = useState<string>(LOGO_URL);
-  const [stampB64, setStampB64] = useState<string>(STAMP_URL);
 
   const exportPDF = async () => {
     if (!reportRef.current) return;
     setExporting(true);
     try {
-      // Pre-load images as base64 so html2canvas can render them
-      const [logo, stamp] = await Promise.all([
-        toDataUrl(LOGO_URL),
-        toDataUrl(STAMP_URL),
-      ]);
-      setLogoB64(logo);
-      setStampB64(stamp);
-      // Wait for re-render with base64 images
-      await new Promise((r) => setTimeout(r, 300));
-
-      const el = reportRef.current!;
-      const canvas = await html2canvas(el, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-        windowWidth: 1123,
-      });
-      const imgData = canvas.toDataURL("image/jpeg", 0.95);
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      });
-      const pageW = 210;
-      const pageH = 297;
-      const canvasW = canvas.width;
-      const canvasH = canvas.height;
-      const imgW = pageW;
-      const imgH = (canvasH / canvasW) * imgW;
-      let remaining = imgH;
-      let page = 0;
-      while (remaining > 0) {
-        if (page > 0) pdf.addPage();
-        pdf.addImage(imgData, "JPEG", 0, -page * pageH, imgW, imgH, undefined, "FAST");
-        if (remaining > pageH) {
-          pdf.setFillColor(255, 255, 255);
-          pdf.rect(0, pageH, pageW, imgH, "F");
-        }
-        remaining -= pageH;
-        page++;
-      }
-      pdf.save(`ТехОтчет_ТМХ-ПТР_депо_Лобня_${DOC_NUM}.pdf`);
+      await exportElementToPdf(
+        reportRef.current,
+        `ТехОтчет_ТМХ-ПТР_депо_Лобня_${DOC_NUM}.pdf`,
+      );
     } catch (e) {
       console.error(e);
     }
-    setLogoB64(LOGO_URL);
-    setStampB64(STAMP_URL);
     setExporting(false);
   };
 
@@ -277,7 +223,7 @@ export default function Otchet() {
           {/* ── HEADER ── */}
           <div className="flex items-start justify-between mb-6 pb-5 border-b-2 border-gray-800">
             <div className="flex items-center gap-4">
-              <img src={logoB64} alt="Логотип" className="h-20 object-contain" />
+              <img src={LOGO_URL} alt="Логотип" className="h-20 object-contain" />
               <div>
                 <div className="font-bold text-base text-gray-900 leading-tight">
                   ООО «КАПСТРОЙ-ИНЖИНИРИНГ»
@@ -625,7 +571,7 @@ export default function Otchet() {
                 </div>
               </div>
               <div className="text-center">
-                <img src={stampB64} alt="Печать" className="h-32 w-32 object-contain opacity-90" />
+                <img src={STAMP_URL} alt="Печать" className="h-32 w-32 object-contain opacity-90" />
               </div>
             </div>
 
