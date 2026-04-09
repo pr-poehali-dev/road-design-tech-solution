@@ -163,15 +163,37 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
+async function toDataUrl(url: string): Promise<string> {
+  const res = await fetch(url);
+  const blob = await res.blob();
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.readAsDataURL(blob);
+  });
+}
+
 export default function Otchet() {
   const reportRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
+  const [logoB64, setLogoB64] = useState<string>(LOGO_URL);
+  const [stampB64, setStampB64] = useState<string>(STAMP_URL);
 
   const exportPDF = async () => {
     if (!reportRef.current) return;
     setExporting(true);
     try {
-      const el = reportRef.current;
+      // Pre-load images as base64 so html2canvas can render them
+      const [logo, stamp] = await Promise.all([
+        toDataUrl(LOGO_URL),
+        toDataUrl(STAMP_URL),
+      ]);
+      setLogoB64(logo);
+      setStampB64(stamp);
+      // Wait for re-render with base64 images
+      await new Promise((r) => setTimeout(r, 300));
+
+      const el = reportRef.current!;
       const canvas = await html2canvas(el, {
         scale: 2,
         useCORS: true,
@@ -207,6 +229,8 @@ export default function Otchet() {
     } catch (e) {
       console.error(e);
     }
+    setLogoB64(LOGO_URL);
+    setStampB64(STAMP_URL);
     setExporting(false);
   };
 
@@ -253,7 +277,7 @@ export default function Otchet() {
           {/* ── HEADER ── */}
           <div className="flex items-start justify-between mb-6 pb-5 border-b-2 border-gray-800">
             <div className="flex items-center gap-4">
-              <img src={LOGO_URL} alt="Логотип" className="h-20 object-contain" />
+              <img src={logoB64} alt="Логотип" className="h-20 object-contain" />
               <div>
                 <div className="font-bold text-base text-gray-900 leading-tight">
                   ООО «КАПСТРОЙ-ИНЖИНИРИНГ»
@@ -587,36 +611,38 @@ export default function Otchet() {
             строительно-монтажных работ без письменного согласия Исполнителя.
           </p>
 
-          {/* ── SIGNATURE ── */}
-          <div className="border-t-2 border-gray-800 pt-6 mt-8 flex items-end justify-between">
-            <div>
-              <p className="text-xs text-gray-600 mb-3">С уважением,</p>
-              <p className="text-xs text-gray-700">Директор</p>
-              <p className="text-xs font-bold text-gray-900">ООО «КАПСТРОЙ-ИНЖИНИРИНГ»</p>
-              <p className="text-xs text-gray-700 mt-2">Шумов Иван Викторович</p>
-              <div className="mt-6 text-xs text-gray-400">
-                <div>________________</div>
-                <div className="mt-1">(подпись)</div>
+          {/* ── SIGNATURE + FOOTER block (keep together, no page break inside) ── */}
+          <div style={{ pageBreakBefore: "always", breakBefore: "page" }}>
+            <div className="border-t-2 border-gray-800 pt-6 mt-4 flex items-end justify-between">
+              <div>
+                <p className="text-xs text-gray-600 mb-3">С уважением,</p>
+                <p className="text-xs text-gray-700">Директор</p>
+                <p className="text-xs font-bold text-gray-900">ООО «КАПСТРОЙ-ИНЖИНИРИНГ»</p>
+                <p className="text-xs text-gray-700 mt-2">Шумов Иван Викторович</p>
+                <div className="mt-6 text-xs text-gray-400">
+                  <div>________________</div>
+                  <div className="mt-1">(подпись)</div>
+                </div>
+              </div>
+              <div className="text-center">
+                <img src={stampB64} alt="Печать" className="h-32 w-32 object-contain opacity-90" />
               </div>
             </div>
-            <div className="text-center">
-              <img src={STAMP_URL} alt="Печать" className="h-32 w-32 object-contain opacity-90" />
+
+            {/* ── FOOTER ── */}
+            <div className="mt-6 pt-4 border-t border-gray-200 flex items-center justify-between text-xs text-gray-400">
+              <span>ООО «КАПСТРОЙ-ИНЖИНИРИНГ» · ИНН 7814795454</span>
+              <span>{DOC_NUM} · {DOC_DATE}</span>
             </div>
-          </div>
 
-          {/* ── FOOTER ── */}
-          <div className="mt-6 pt-4 border-t border-gray-200 flex items-center justify-between text-xs text-gray-400">
-            <span>ООО «КАПСТРОЙ-ИНЖИНИРИНГ» · ИНН 7814795454</span>
-            <span>{DOC_NUM} · {DOC_DATE}</span>
-          </div>
-
-          {/* ── FINAL WARNING ── */}
-          <div className="mt-4 bg-gray-100 border border-gray-300 rounded px-4 py-2 text-center">
-            <p className="text-xs text-gray-600">
-              <strong>Предупреждение:</strong> Настоящий документ является предварительным и защищён авторским правом.
-              Любое использование результатов расчёта без заключения договора и полной оплаты является нарушением
-              и будет оспорено в судебном порядке.
-            </p>
+            {/* ── FINAL WARNING ── */}
+            <div className="mt-4 bg-gray-100 border border-gray-300 rounded px-4 py-2 text-center">
+              <p className="text-xs text-gray-600">
+                <strong>Предупреждение:</strong> Настоящий документ является предварительным и защищён авторским правом.
+                Любое использование результатов расчёта без заключения договора и полной оплаты является нарушением
+                и будет оспорено в судебном порядке.
+              </p>
+            </div>
           </div>
         </div>
       </div>
