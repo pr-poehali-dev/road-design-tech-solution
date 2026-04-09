@@ -11,6 +11,9 @@ const STAMP_URL =
 const KP_NUM = "КП-011-2026";
 const KP_DATE = "09 апреля 2026 г.";
 const TOTAL = 1_980_000;
+const VAT_RATE = 22;
+const VAT = Math.round(TOTAL - TOTAL / (1 + VAT_RATE / 100)); // НДС в рублях
+const TOTAL_EX_VAT = TOTAL - VAT;                              // без НДС
 const ADV_PCT = 30;
 const ADV = Math.round(TOTAL * ADV_PCT / 100);      // 594 000
 const REST = TOTAL - ADV;                            // 1 386 000
@@ -130,54 +133,54 @@ export default function KpDepo() {
           <SectionTitle num="2" title="Стоимость услуг" />
           <div className="bg-indigo-50 border border-indigo-200 rounded p-4 mb-3">
             <div className="flex items-baseline justify-between">
-              <span className="text-xs text-gray-700">Твёрдая цена договора:</span>
+              <span className="text-xs text-gray-700">Твёрдая цена договора (с НДС {VAT_RATE}%):</span>
               <span className="text-xl font-bold text-indigo-800">{fmt(TOTAL)}</span>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              (Один миллион девятьсот восемьдесят тысяч рублей 00 копеек)
+              (Один миллион девятьсот восемьдесят тысяч рублей 00 копеек, включая НДС {VAT_RATE}%)
             </p>
-            <p className="text-xs text-indigo-700 font-semibold mt-2">
-              НДС не облагается — Исполнитель применяет упрощённую систему налогообложения (УСН).
-            </p>
+            <div className="mt-2 text-xs text-gray-700 space-y-0.5">
+              <div className="flex justify-between">
+                <span>В том числе НДС {VAT_RATE}%:</span>
+                <span className="font-semibold">{fmt(VAT)}</span>
+              </div>
+              <div className="flex justify-between border-t border-indigo-200 pt-1">
+                <span>Стоимость без НДС:</span>
+                <span className="font-semibold">{fmt(TOTAL_EX_VAT)}</span>
+              </div>
+            </div>
           </div>
           <p className="text-xs text-gray-700 leading-relaxed">
             Цена включает все расходы Исполнителя: оплату труда специалистов, командировочные расходы,
-            натурное обследование с тепловизионной съёмкой, камеральную обработку, подготовку технического
+            натурное обследование, камеральную обработку, подготовку технического
             отчёта в 3 (трёх) бумажных экземплярах и в электронном виде (PDF), согласование отчёта с Заказчиком,
             членство в СРО, все налоги, сборы и обязательные платежи.
           </p>
 
           {/* ── SECTION 3. PAYMENT ── */}
           <SectionTitle num="3" title="Условия оплаты" />
-          <div className="grid grid-cols-2 gap-4 mb-3">
-            <div className="border border-gray-300 rounded p-3">
-              <p className="text-xs font-bold text-gray-700 mb-2 border-b pb-1">Вариант 1 — Без аванса</p>
-              <p className="text-xs text-gray-800">
-                100% стоимости — <strong>{fmt(TOTAL)}</strong> — в течение 10 (десяти) рабочих дней
-                после подписания сторонами акта выполненных работ.
-              </p>
-            </div>
-            <div className="border-2 border-indigo-400 rounded p-3 bg-indigo-50">
-              <p className="text-xs font-bold text-indigo-800 mb-2 border-b border-indigo-300 pb-1">
-                Вариант 2 — С авансом {ADV_PCT}% ✓ (рекомендуемый)
+          <div className="mb-3">
+            <div className="border-2 border-indigo-400 rounded p-4 bg-indigo-50">
+              <p className="text-xs font-bold text-indigo-800 mb-3 border-b border-indigo-300 pb-2">
+                Предоплата {ADV_PCT}% + остаток после подписания акта
               </p>
               <table className="w-full text-xs">
                 <tbody>
                   <tr>
-                    <td className="py-0.5 text-gray-700">Аванс {ADV_PCT}% при подписании договора:</td>
-                    <td className="py-0.5 text-right font-bold text-indigo-800">{fmt(ADV)}</td>
+                    <td className="py-1 text-gray-700">Аванс {ADV_PCT}% при подписании договора:</td>
+                    <td className="py-1 text-right font-bold text-indigo-800">{fmt(ADV)}</td>
                   </tr>
                   <tr>
                     <td className="py-0.5 text-gray-500 text-[10px]">Срок оплаты аванса:</td>
-                    <td className="py-0.5 text-right text-gray-500 text-[10px]">5 рабочих дней</td>
+                    <td className="py-0.5 text-right text-gray-500 text-[10px]">5 рабочих дней с даты подписания договора</td>
                   </tr>
-                  <tr className="border-t border-indigo-200 mt-1">
-                    <td className="py-0.5 text-gray-700 pt-1">Остаток 70% после подписания акта:</td>
-                    <td className="py-0.5 text-right font-bold text-indigo-800">{fmt(REST)}</td>
+                  <tr className="border-t border-indigo-200">
+                    <td className="py-1 text-gray-700 pt-2">Остаток 70% после подписания акта:</td>
+                    <td className="py-1 text-right font-bold text-indigo-800">{fmt(REST)}</td>
                   </tr>
                   <tr>
                     <td className="py-0.5 text-gray-500 text-[10px]">Срок оплаты остатка:</td>
-                    <td className="py-0.5 text-right text-gray-500 text-[10px]">10 рабочих дней</td>
+                    <td className="py-0.5 text-right text-gray-500 text-[10px]">10 рабочих дней с даты подписания акта</td>
                   </tr>
                 </tbody>
               </table>
@@ -221,7 +224,6 @@ export default function KpDepo() {
             {[
               "Исполнитель является членом саморегулируемой организации в области архитектурно-строительного проектирования (выписка из реестра СРО прилагается к договору).",
               "Исполнитель имеет опыт выполнения аналогичных работ для промышленных предприятий (по запросу предоставляются референсы).",
-              "Ответственность Исполнителя застрахована на сумму 5 000 000 (Пять миллионов) рублей.",
             ].map((t, i) => (
               <li key={i} className="flex gap-2"><span>—</span><span>{t}</span></li>
             ))}
