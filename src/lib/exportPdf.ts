@@ -1,41 +1,43 @@
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
-async function toDataUrl(url: string): Promise<string> {
-  const res = await fetch(url);
-  const blob = await res.blob();
+async function imgToDataUrl(src: string): Promise<string> {
   return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.readAsDataURL(blob);
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth || img.width;
+      canvas.height = img.naturalHeight || img.height;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(img, 0, 0);
+      try {
+        resolve(canvas.toDataURL("image/png"));
+      } catch {
+        resolve(src);
+      }
+    };
+    img.onerror = () => resolve(src);
+    img.src = src + (src.includes("?") ? "&" : "?") + "_cb=" + Date.now();
   });
 }
 
-/**
- * Replaces all <img> src with base64 versions, runs html2canvas, then restores original srcs.
- * Returns the generated jsPDF instance (already saved).
- */
 export async function exportElementToPdf(
   el: HTMLElement,
   filename: string,
   windowWidth = 1123,
 ): Promise<void> {
-  // Collect all images and convert to base64
   const imgs = Array.from(el.querySelectorAll("img")) as HTMLImageElement[];
-  const origSrcs = imgs.map((img) => img.src);
+  const origSrcs = imgs.map((img) => img.getAttribute("src") || "");
 
   await Promise.all(
     imgs.map(async (img) => {
-      try {
-        img.src = await toDataUrl(img.src);
-      } catch {
-        // leave original if fetch fails
-      }
+      const dataUrl = await imgToDataUrl(img.src);
+      img.src = dataUrl;
     }),
   );
 
-  // Small pause for paint
-  await new Promise((r) => setTimeout(r, 200));
+  await new Promise((r) => setTimeout(r, 300));
 
   const canvas = await html2canvas(el, {
     scale: 2,
@@ -45,7 +47,6 @@ export async function exportElementToPdf(
     windowWidth,
   });
 
-  // Restore original srcs
   imgs.forEach((img, i) => {
     img.src = origSrcs[i];
   });

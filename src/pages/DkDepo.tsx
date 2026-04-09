@@ -41,13 +41,13 @@ const stages = [
       "Выезд двух инженеров-теплотехников на территорию депо Лобня",
       "Обмеры помещений: фактические геометрические размеры каждого цеха, высоты, площади ворот и окон",
       "Осмотр существующих систем отопления: тип приборов, схема разводки, состояние трубопроводов, параметры воздушно-отопительных агрегатов",
-      "Фотографирование, составление акта обследования",
+      "Фиксация результатов, составление акта обследования",
     ],
     customer: [
       "Обеспечение беспрепятственного доступа в цеха во время обследования",
       "Присутствие ответственного представителя Заказчика",
     ],
-    result: "Журнал обмеров, акт обследования, фотофиксация",
+    result: "Журнал обмеров, акт обследования, фиксация результатов",
   },
   {
     num: 3,
@@ -238,44 +238,64 @@ export default function DkDepo() {
 
           {/* ── GANTT ── */}
           <SectionTitle num="1" title="Календарный план (диаграмма Ганта)" />
-          <div className="mb-4 overflow-x-auto">
-            <div className="min-w-[600px]">
-              {/* Header */}
-              <div className="flex text-[10px] text-gray-500 mb-1 ml-40">
-                {Array.from({ length: 20 }, (_, i) => (
-                  <div key={i} className="flex-1 text-center border-l border-gray-200">{i + 1}</div>
-                ))}
-              </div>
-              <div className="flex text-[10px] text-gray-400 mb-2 ml-40">
-                {["Нед. 1", "", "", "", "Нед. 2", "", "", "", "Нед. 3", "", "", "", "Нед. 4", "", "", "", "", "", "", ""].map((w, i) => (
-                  <div key={i} className="flex-1 text-center">{w}</div>
-                ))}
-              </div>
-              {stages.map((s) => {
-                const startDay = parseInt(s.dayRange.replace("День ", "").replace("Дни ", "").split("–")[0]) - 1;
-                const endStr = s.dayRange.includes("–") ? s.dayRange.split("–")[1] : s.dayRange.replace("День ", "");
-                const endDay = parseInt(endStr);
-                const width = ((endDay - startDay) / 20) * 100;
-                const left = (startDay / 20) * 100;
-                const colors = ["bg-blue-500", "bg-amber-500", "bg-green-500", "bg-purple-500", "bg-cyan-500", "bg-orange-500", "bg-gray-500"];
-                return (
-                  <div key={s.num} className="flex items-center mb-1">
-                    <div className="w-40 shrink-0 text-[10px] text-gray-700 pr-2 text-right leading-tight">
-                      Эт. {s.num}: {s.title.length > 22 ? s.title.slice(0, 22) + "…" : s.title}
-                    </div>
-                    <div className="flex-1 h-5 bg-gray-100 rounded relative">
+          {(() => {
+            const TOTAL_DAYS = 20;
+            const colors = ["bg-blue-500", "bg-amber-500", "bg-green-500", "bg-purple-500", "bg-cyan-500", "bg-orange-500", "bg-gray-500"];
+            const parseRange = (dayRange: string) => {
+              const cleaned = dayRange.replace("День ", "").replace("Дни ", "");
+              if (cleaned.includes("–")) {
+                const parts = cleaned.split("–");
+                return { start: parseInt(parts[0]) - 1, end: parseInt(parts[1]) };
+              }
+              const d = parseInt(cleaned);
+              return { start: d - 1, end: d };
+            };
+            return (
+              <div className="mb-4">
+                <div className="flex">
+                  <div className="w-44 shrink-0" />
+                  <div className="flex-1 relative" style={{ height: 20 }}>
+                    {Array.from({ length: TOTAL_DAYS }, (_, i) => (
                       <div
-                        className={`absolute top-0 h-full rounded ${colors[s.num - 1]} flex items-center justify-center`}
-                        style={{ left: `${left}%`, width: `${width}%` }}
+                        key={i}
+                        className="absolute top-0 h-full flex items-center justify-center text-[9px] text-gray-500 border-l border-gray-200"
+                        style={{ left: `${(i / TOTAL_DAYS) * 100}%`, width: `${(1 / TOTAL_DAYS) * 100}%` }}
                       >
-                        <span className="text-[9px] text-white font-bold px-1 truncate">{s.days}</span>
+                        {i + 1}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {stages.map((s) => {
+                  const { start, end } = parseRange(s.dayRange);
+                  const left = (start / TOTAL_DAYS) * 100;
+                  const width = ((end - start) / TOTAL_DAYS) * 100;
+                  return (
+                    <div key={s.num} className="flex items-center mb-1.5">
+                      <div className="w-44 shrink-0 text-[10px] text-gray-700 pr-2 text-right leading-tight">
+                        Эт. {s.num}: {s.title.length > 24 ? s.title.slice(0, 24) + "…" : s.title}
+                      </div>
+                      <div className="flex-1 h-5 bg-gray-100 rounded relative">
+                        {Array.from({ length: TOTAL_DAYS }, (_, i) => (
+                          <div
+                            key={i}
+                            className="absolute top-0 h-full border-l border-gray-200"
+                            style={{ left: `${(i / TOTAL_DAYS) * 100}%` }}
+                          />
+                        ))}
+                        <div
+                          className={`absolute top-0 h-full rounded ${colors[s.num - 1]} flex items-center justify-center`}
+                          style={{ left: `${left}%`, width: `${width}%` }}
+                        >
+                          <span className="text-[9px] text-white font-bold px-1 truncate">{s.days}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
 
           {/* ── MILESTONES ── */}
           <SectionTitle num="2" title="Контрольные точки для Заказчика" />
