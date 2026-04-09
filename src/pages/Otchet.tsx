@@ -207,7 +207,7 @@ export default function Otchet() {
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div
           ref={reportRef}
-          className="bg-white shadow-lg"
+          className="bg-white shadow-lg text-gray-900"
           style={{ fontFamily: "Times New Roman, serif", padding: "30mm 25mm 25mm 30mm" }}
         >
           {/* ── WATERMARK BANNER ── */}
