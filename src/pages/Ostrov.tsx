@@ -2,7 +2,6 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import Icon from "@/components/ui/icon";
 import { exportElementToPdf } from "@/lib/exportPdf";
-import { useBlobUrl } from "@/hooks/useBlobUrl";
 
 const LOGO_URL =
   "https://cdn.poehali.dev/projects/5adabe83-9a88-49bb-ba7c-144288d55800/bucket/7b630b71-f92c-4f6d-8d53-ab2b00971f22.png";
@@ -67,8 +66,6 @@ const excluded = [
 export default function Ostrov() {
   const reportRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
-  const logoSrc = useBlobUrl(LOGO_URL);
-  const stampSrc = useBlobUrl(STAMP_URL);
 
   const handleExport = async () => {
     if (!reportRef.current) return;
@@ -87,7 +84,7 @@ export default function Ostrov() {
       <div className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={logoSrc} alt="Логотип" className="h-9 object-contain" />
+            <img src={LOGO_URL} alt="Логотип" className="h-9 object-contain" />
             <div>
               <div className="font-bold text-sm text-gray-900">ООО «КАПСТРОЙ-ИНЖИНИРИНГ»</div>
               <div className="text-xs text-gray-500">Коммерческое предложение · № {KP_NUM}</div>
@@ -114,7 +111,7 @@ export default function Ostrov() {
           {/* ── HEADER ── */}
           <div className="flex items-start justify-between mb-6 pb-5 border-b-2 border-indigo-700">
             <div className="flex items-center gap-4">
-              <img src={logoSrc} alt="Логотип" className="h-20 object-contain" />
+              <img src={LOGO_URL} alt="Логотип" className="h-20 object-contain" />
               <div>
                 <div className="font-bold text-base text-gray-900">ООО «КАПСТРОЙ-ИНЖИНИРИНГ»</div>
                 <div className="text-xs text-gray-600 mt-1">197341, г. Санкт-Петербург, Фермское шоссе, д. 12, лит. Ж, пом. 310-Н к3</div>
@@ -310,7 +307,7 @@ export default function Ostrov() {
               </div>
             </div>
             <div className="text-center">
-              <img src={stampSrc} alt="Печать" className="h-28 w-28 object-contain opacity-90" />
+              <img src={STAMP_URL} alt="Печать" className="h-28 w-28 object-contain opacity-90" />
             </div>
           </div>
 

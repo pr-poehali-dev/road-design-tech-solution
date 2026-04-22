@@ -1,51 +1,18 @@
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
-async function imgSrcToDataUrl(src: string): Promise<string> {
-  // Если уже blob: или data: — рисуем напрямую
-  if (src.startsWith("blob:") || src.startsWith("data:")) {
-    return drawImgToDataUrl(src);
-  }
-  // Для внешних URL: fetch → blob → objectURL → canvas (same-origin, без taint)
-  try {
-    const res = await fetch(src, { mode: "cors" });
-    const blob = await res.blob();
-    const objectUrl = URL.createObjectURL(blob);
-    const dataUrl = await drawImgToDataUrl(objectUrl);
-    URL.revokeObjectURL(objectUrl);
-    return dataUrl;
-  } catch {
-    // cors не сработал — пробуем no-cors через blob URL
-    try {
-      const res = await fetch(src, { mode: "no-cors" });
-      const blob = await res.blob();
-      if (blob.size === 0) return src;
-      const objectUrl = URL.createObjectURL(blob);
-      const dataUrl = await drawImgToDataUrl(objectUrl);
-      URL.revokeObjectURL(objectUrl);
-      return dataUrl;
-    } catch {
-      return src;
-    }
-  }
+interface ImgInfo {
+  el: HTMLImageElement;
+  src: string;
+  rect: DOMRect;
+  elRect: DOMRect;
 }
 
-function drawImgToDataUrl(src: string): Promise<string> {
-  return new Promise((resolve) => {
+function waitForImg(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
     const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.naturalWidth || img.width || 200;
-      canvas.height = img.naturalHeight || img.height || 200;
-      const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(img, 0, 0);
-      try {
-        resolve(canvas.toDataURL("image/png"));
-      } catch {
-        resolve(src);
-      }
-    };
-    img.onerror = () => resolve(src);
+    img.onload = () => resolve(img);
+    img.onerror = reject;
     img.src = src;
   });
 }
@@ -55,47 +22,55 @@ export async function exportElementToPdf(
   filename: string,
   windowWidth = 1123,
 ): Promise<void> {
+  const elRect = el.getBoundingClientRect();
+
+  // Собираем все <img> с их позициями ДО скрытия
   const imgs = Array.from(el.querySelectorAll("img")) as HTMLImageElement[];
-  const origSrcs = imgs.map((img) => img.getAttribute("src") || "");
+  const imgInfos: ImgInfo[] = imgs.map((img) => ({
+    el: img,
+    src: img.getAttribute("src") || img.src,
+    rect: img.getBoundingClientRect(),
+    elRect,
+  }));
 
-  // Конвертируем все картинки в data URL
-  await Promise.all(
-    imgs.map(async (img) => {
-      const dataUrl = await imgSrcToDataUrl(img.src);
-      img.src = dataUrl;
-    }),
-  );
+  // Скрываем изображения — заменяем на прозрачный блок той же размерности
+  imgInfos.forEach(({ el: img }) => {
+    img.style.visibility = "hidden";
+  });
 
-  // Ждём перерисовки
-  await new Promise((r) => setTimeout(r, 400));
+  await new Promise((r) => setTimeout(r, 100));
 
+  // Рендерим без изображений — canvas чистый, toDataURL работает
   const canvas = await html2canvas(el, {
     scale: 2,
     useCORS: false,
-    allowTaint: true,
+    allowTaint: false,
     backgroundColor: "#ffffff",
     windowWidth,
     logging: false,
   });
 
-  // Восстанавливаем оригинальные src
-  imgs.forEach((img, i) => {
-    img.src = origSrcs[i];
+  // Восстанавливаем видимость
+  imgInfos.forEach(({ el: img }) => {
+    img.style.visibility = "";
   });
-
-  const imgData = canvas.toDataURL("image/jpeg", 0.95);
-  const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
   const pageW = 210;
   const pageH = 297;
   const imgW = pageW;
   const imgH = (canvas.height / canvas.width) * imgW;
+  const scale = imgW / (canvas.width / 2); // mm per CSS px
+
+  const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+  // Добавляем фоновый рендер страниц
   let remaining = imgH;
   let page = 0;
+  const bgData = canvas.toDataURL("image/jpeg", 0.95);
 
   while (remaining > 0) {
     if (page > 0) pdf.addPage();
-    pdf.addImage(imgData, "JPEG", 0, -page * pageH, imgW, imgH, undefined, "FAST");
+    pdf.addImage(bgData, "JPEG", 0, -page * pageH, imgW, imgH, undefined, "FAST");
     if (remaining > pageH) {
       pdf.setFillColor(255, 255, 255);
       pdf.rect(0, pageH, pageW, imgH + 10, "F");
@@ -103,6 +78,38 @@ export async function exportElementToPdf(
     remaining -= pageH;
     page++;
   }
+
+  // Накладываем изображения через jsPDF поверх нужных страниц
+  await Promise.all(
+    imgInfos.map(async ({ src, rect, elRect: containerRect }) => {
+      if (!src || src.startsWith("data:") === false && src === "") return;
+
+      // Координаты изображения относительно контейнера в CSS px
+      const relTop = rect.top - containerRect.top;
+      const relLeft = rect.left - containerRect.left;
+      const relW = rect.width;
+      const relH = rect.height;
+
+      // Переводим в mm
+      const xMm = relLeft * scale;
+      const yMm = relTop * scale;
+      const wMm = relW * scale;
+      const hMm = relH * scale;
+
+      // Определяем страницу
+      const pageIndex = Math.floor(yMm / pageH);
+      const yOnPage = yMm - pageIndex * pageH;
+
+      try {
+        // Загружаем изображение через HTMLImageElement (без CORS canvas — просто для jsPDF)
+        await waitForImg(src);
+        pdf.setPage(pageIndex + 1);
+        pdf.addImage(src, "PNG", xMm, yOnPage, wMm, hMm, undefined, "FAST");
+      } catch {
+        // не удалось — пропускаем
+      }
+    }),
+  );
 
   pdf.save(filename);
 }
