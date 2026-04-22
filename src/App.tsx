@@ -45,6 +45,7 @@ const DkDepo = lazyWithRetry(() => import("./pages/DkDepo"));
 const PadlDk = lazyWithRetry(() => import("./pages/PadlDk"));
 const Ostrov = lazyWithRetry(() => import("./pages/Ostrov"));
 const DOstrov = lazyWithRetry(() => import("./pages/DOstrov"));
+const Refis = lazyWithRetry(() => import("./pages/Refis"));
 
 const queryClient = new QueryClient();
 
@@ -181,6 +182,11 @@ const App = () => (
           <Route path="/dostrov" element={
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
               <DOstrov />
+            </Suspense>
+          } />
+          <Route path="/refis" element={
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
+              <Refis />
             </Suspense>
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
