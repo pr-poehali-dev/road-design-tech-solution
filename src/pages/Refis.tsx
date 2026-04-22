@@ -278,6 +278,168 @@ export default function Refis() {
               </div>
             </div>
 
+            {/* ── OTHER PROJECTS ── */}
+            <SectionTitle>Иные реализованные проекты</SectionTitle>
+
+            <div className="space-y-5 mb-8">
+              {/* Project 2 */}
+              <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+                <div className="bg-blue-700 text-white px-5 py-4">
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    <Tag color="bg-white/20 text-white border border-white/30">Экологические изыскания</Tag>
+                    <Tag color="bg-white/20 text-white border border-white/30">Промышленный объект</Tag>
+                    <Tag color="bg-emerald-400/30 text-emerald-100 border border-emerald-300/30">Положительная экспертиза</Tag>
+                  </div>
+                  <h3 className="font-black text-base leading-snug">
+                    Экологические изыскания для реконструкции гаражно-технического комплекса
+                  </h3>
+                  <div className="text-blue-200 text-xs mt-1">Московская обл., Красногорский р-н, 26 км автомагистрали «Балтия»</div>
+                </div>
+                <div className="p-5">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    {[
+                      { label: "Услуга", value: "Инженерные изыскания", icon: "ClipboardList" },
+                      { label: "Срок выполнения", value: "Август 2022 — Май 2023 г.", icon: "Calendar" },
+                      { label: "Заказчик", value: "ООО «Гаражно-строительный комплекс»", icon: "Building" },
+                      { label: "Локация", value: "Красногорский р-н, Московская обл.", icon: "MapPin" },
+                    ].map(({ label, value, icon }) => (
+                      <div key={label} className="bg-gray-50 rounded-xl p-3">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <Icon name={icon} size={12} className="text-blue-600" />
+                          <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{label}</div>
+                        </div>
+                        <div className="text-xs font-semibold text-gray-900 leading-snug">{value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="relative h-40 rounded-xl overflow-hidden">
+                    <img
+                      src="https://cdn.poehali.dev/projects/5adabe83-9a88-49bb-ba7c-144288d55800/bucket/9cd4e5ef-ad52-479e-ad45-f328bc9531ac.png"
+                      alt="Гаражно-технический комплекс"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Project 3 */}
+              <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+                <div className="bg-teal-700 text-white px-5 py-4">
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    <Tag color="bg-white/20 text-white border border-white/30">Водоснабжение</Tag>
+                    <Tag color="bg-white/20 text-white border border-white/30">Инфраструктура</Tag>
+                    <Tag color="bg-white/20 text-white border border-white/30">Долгосрочный проект</Tag>
+                  </div>
+                  <h3 className="font-black text-base leading-snug">
+                    Комплексные работы и услуги по реконструкции систем водоснабжения и водоотведения
+                  </h3>
+                </div>
+                <div className="p-5">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    {[
+                      { label: "Услуга", value: "Инженерные изыскания", icon: "ClipboardList" },
+                      { label: "Срок выполнения", value: "2020–2024", icon: "Calendar" },
+                      { label: "Заказчик", value: "АО «ГСР ТЭЦ»", icon: "Building" },
+                      { label: "Локация", value: "—", icon: "MapPin" },
+                    ].map(({ label, value, icon }) => (
+                      <div key={label} className="bg-gray-50 rounded-xl p-3">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <Icon name={icon} size={12} className="text-teal-600" />
+                          <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{label}</div>
+                        </div>
+                        <div className="text-xs font-semibold text-gray-900 leading-snug">{value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="relative h-40 rounded-xl overflow-hidden">
+                    <img
+                      src="https://cdn.poehali.dev/projects/5adabe83-9a88-49bb-ba7c-144288d55800/bucket/f89c8dba-39aa-4340-950c-e0d8910a54c3.png"
+                      alt="Реконструкция систем водоснабжения"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Project 4 */}
+              <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+                <div className="bg-violet-700 text-white px-5 py-4">
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    <Tag color="bg-white/20 text-white border border-white/30">Благоустройство</Tag>
+                    <Tag color="bg-white/20 text-white border border-white/30">Жилая застройка</Tag>
+                    <Tag color="bg-white/20 text-white border border-white/30">Государственный заказ</Tag>
+                  </div>
+                  <h3 className="font-black text-base leading-snug">
+                    Проектно-изыскательные работы по комплексному благоустройству дворовых территорий
+                  </h3>
+                  <div className="text-violet-200 text-xs mt-1">г. Сосновый бор, ул. Молодёжная</div>
+                </div>
+                <div className="p-5">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    {[
+                      { label: "Услуга", value: "Инженерные изыскания", icon: "ClipboardList" },
+                      { label: "Срок выполнения", value: "Декабрь 2014 г. — Май 2015 г.", icon: "Calendar" },
+                      { label: "Заказчик", value: "Администрация Сосновоборского городского округа Ленинградской области", icon: "Building" },
+                      { label: "Локация", value: "г. Сосновый бор, ул. Молодёжная", icon: "MapPin" },
+                    ].map(({ label, value, icon }) => (
+                      <div key={label} className="bg-gray-50 rounded-xl p-3">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <Icon name={icon} size={12} className="text-violet-600" />
+                          <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{label}</div>
+                        </div>
+                        <div className="text-xs font-semibold text-gray-900 leading-snug">{value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="relative h-40 rounded-xl overflow-hidden">
+                    <img
+                      src="https://cdn.poehali.dev/projects/5adabe83-9a88-49bb-ba7c-144288d55800/bucket/b88e3dd0-4721-4de1-93a7-c931284ab894.png"
+                      alt="Благоустройство дворовых территорий"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Project 5 */}
+              <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+                <div className="bg-slate-700 text-white px-5 py-4">
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    <Tag color="bg-white/20 text-white border border-white/30">Здравоохранение</Tag>
+                    <Tag color="bg-white/20 text-white border border-white/30">Городская поликлиника</Tag>
+                  </div>
+                  <h3 className="font-black text-base leading-snug">
+                    Проведение инженерных изысканий для городской поликлиники
+                  </h3>
+                </div>
+                <div className="p-5">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    {[
+                      { label: "Услуга", value: "Инженерные изыскания", icon: "ClipboardList" },
+                      { label: "Срок выполнения", value: "Декабрь 2020 г.", icon: "Calendar" },
+                      { label: "Заказчик", value: "АО «ГСР ТЭЦ»", icon: "Building" },
+                      { label: "Локация", value: "—", icon: "MapPin" },
+                    ].map(({ label, value, icon }) => (
+                      <div key={label} className="bg-gray-50 rounded-xl p-3">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <Icon name={icon} size={12} className="text-slate-600" />
+                          <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{label}</div>
+                        </div>
+                        <div className="text-xs font-semibold text-gray-900 leading-snug">{value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="relative h-40 rounded-xl overflow-hidden">
+                    <img
+                      src="https://cdn.poehali.dev/projects/5adabe83-9a88-49bb-ba7c-144288d55800/bucket/dc75c4f6-d191-4378-9296-fe1a1922710d.png"
+                      alt="Городская поликлиника"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* ── RELEVANCE ── */}
             <SectionTitle>Почему этот опыт релевантен для Ладоги</SectionTitle>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8">
