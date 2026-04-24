@@ -89,6 +89,13 @@
 @media print {
   @page {
     margin: 10mm 12mm;
+    size: A4;
+    /* Убираем браузерные колонтитулы (URL, дата, номер страницы) */
+    marks: none;
+  }
+
+  @page :first {
+    margin-top: 10mm;
   }
 
   body {
