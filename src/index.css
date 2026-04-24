@@ -86,6 +86,36 @@
   }
 }
 
+@media print {
+  @page {
+    margin: 10mm 12mm;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background: white !important;
+  }
+
+  /* Убираем лишний пустой лист в конце */
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Скрываем ссылку poehali и любые сторонние виджеты */
+  a[href*="poehali"],
+  iframe,
+  [class*="chat"],
+  [class*="widget"],
+  [class*="badge"],
+  [id*="chat"],
+  [id*="widget"] {
+    display: none !important;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
