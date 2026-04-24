@@ -75,7 +75,7 @@ export default function KpSclad() {
                   <Tag color="bg-white/15 text-white border border-white/20">ОПО III класса</Tag>
                   <Tag color="bg-white/15 text-white border border-white/20">Сейсмичность 7 баллов</Tag>
                   <Tag color="bg-white/15 text-white border border-white/20">Новая очередь строительства</Tag>
-                  <Tag color="bg-amber-400/30 text-amber-100 border border-amber-300/30">УСН · без НДС</Tag>
+                  <Tag color="bg-emerald-400/30 text-emerald-100 border border-emerald-300/30">НДС 22% включён</Tag>
                 </div>
               </div>
               <div className="text-right shrink-0">
@@ -95,7 +95,7 @@ export default function KpSclad() {
                 { icon: "Banknote", value: "31 млн руб.", label: "фиксированная цена", color: "bg-emerald-600" },
                 { icon: "FileStack", value: "4 вида работ", label: "полный комплекс ПИР", color: "bg-blue-700" },
                 { icon: "ShieldCheck", value: "Экспертиза", label: "входит в стоимость", color: "bg-violet-700" },
-                { icon: "Percent", value: "УСН", label: "НДС не облагается", color: "bg-slate-700" },
+                { icon: "Receipt", value: "НДС 22%", label: "включён в цену", color: "bg-slate-700" },
               ].map(({ icon, value, label, color }) => (
                 <div key={label} className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col items-center text-center shadow-sm">
                   <div className={`w-10 h-10 rounded-full ${color} flex items-center justify-center mb-2`}>
@@ -167,14 +167,14 @@ export default function KpSclad() {
               {/* Total */}
               <div className="grid grid-cols-[32px_1fr_140px] px-4 py-4 bg-blue-700 items-center">
                 <div />
-                <div className="text-sm font-black text-white">Итого (без НДС, УСН)</div>
+                <div className="text-sm font-black text-white">Итого с НДС 22%</div>
                 <div className="text-xl font-black text-white text-right tabular-nums">31 000 000</div>
               </div>
             </div>
             <div className="flex flex-col gap-2 mb-2">
-              <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 flex items-center gap-2 text-xs text-amber-900">
-                <Icon name="Info" size={13} className="text-amber-600 shrink-0" />
-                <span><strong>НДС не облагается</strong> — упрощённая система налогообложения (УСН).</span>
+              <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-2.5 flex items-center gap-2 text-xs text-blue-900">
+                <Icon name="Info" size={13} className="text-blue-600 shrink-0" />
+                <span>Цена <strong>31 000 000 руб. включает НДС 22%</strong> (в т.ч. НДС ≈ 5 590 164 руб.).</span>
               </div>
               <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2.5 flex items-center gap-2 text-xs text-emerald-900">
                 <Icon name="CheckCircle" size={13} className="text-emerald-600 shrink-0" />
@@ -220,7 +220,7 @@ export default function KpSclad() {
 
             {/* ── VALIDITY ── */}
             <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mb-8 text-[10px] text-gray-600 leading-relaxed">
-              Настоящее коммерческое предложение является офертой. Стоимость работ <strong>фиксированная</strong> и не подлежит одностороннему изменению. Цена указана без НДС в соответствии с применяемой Исполнителем упрощённой системой налогообложения (УСН).
+              Настоящее коммерческое предложение является офертой. Стоимость работ <strong>фиксированная</strong> и не подлежит одностороннему изменению. Цена <strong>31 000 000 руб. включает НДС 22%</strong>.
             </div>
 
             {/* ── SIGNATURE ── */}
