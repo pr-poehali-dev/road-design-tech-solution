@@ -52,6 +52,7 @@ const KpKymzas = lazyWithRetry(() => import("./pages/KpKymzas"));
 const DKymzas = lazyWithRetry(() => import("./pages/DKymzas"));
 const KpSclad = lazyWithRetry(() => import("./pages/KpSclad"));
 const DSclad = lazyWithRetry(() => import("./pages/DSclad"));
+const KPsyr = lazyWithRetry(() => import("./pages/KPsyr"));
 
 const queryClient = new QueryClient();
 
@@ -223,6 +224,11 @@ const App = () => (
           <Route path="/kpygol" element={
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
               <KpYgol />
+            </Suspense>
+          } />
+          <Route path="/kpsyr" element={
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
+              <KPsyr />
             </Suspense>
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
