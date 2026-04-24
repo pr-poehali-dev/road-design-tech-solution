@@ -49,6 +49,7 @@ const Refis = lazyWithRetry(() => import("./pages/Refis"));
 const KpYgol = lazyWithRetry(() => import("./pages/KpYgol"));
 const DYgol = lazyWithRetry(() => import("./pages/DYgol"));
 const KpKymzas = lazyWithRetry(() => import("./pages/KpKymzas"));
+const DKymzas = lazyWithRetry(() => import("./pages/DKymzas"));
 
 const queryClient = new QueryClient();
 
@@ -190,6 +191,11 @@ const App = () => (
           <Route path="/refis" element={
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
               <Refis />
+            </Suspense>
+          } />
+          <Route path="/dkymzas" element={
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
+              <DKymzas />
             </Suspense>
           } />
           <Route path="/kpkymzas" element={
