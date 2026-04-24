@@ -240,7 +240,7 @@ export default function DYgol() {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-2 text-xs">
               {[
                 { label: "Номер ТЗ", value: "7032_УООС" },
-                { label: "Заказчик", value: "АО «ЦОФ Кузнецкая» / ООО «Распадская угольная компания»" },
+                { label: "Заказчик", value: "АО «ЦОФ Кузнецкая» / «Распадская угольная компания»" },
                 { label: "Исполнитель", value: "ООО «Капстрой-Инжиниринг»" },
                 { label: "Общая стоимость", value: "25 000 000 руб. (с НДС 22%)" },
                 { label: "Срок финиша", value: "15.11.2026 (жёсткий)" },
@@ -534,29 +534,6 @@ export default function DYgol() {
                 <div key={i} className={`grid grid-cols-[220px_1fr] px-4 py-3 border-b border-gray-100 last:border-0 ${i % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
                   <div className="text-xs font-bold text-gray-800 pr-3 leading-snug">{r.field}</div>
                   <div className="text-xs text-gray-500 italic">{r.fill}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* ── APPENDICES ── */}
-            <SectionTitle icon="Paperclip">Раздел 8. Приложения к дорожной карте</SectionTitle>
-            <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-8">
-              <div className="grid grid-cols-[32px_180px_1fr] text-[9px] font-black text-gray-400 uppercase tracking-wider bg-gray-50 px-4 py-2 border-b border-gray-200">
-                <div>№</div>
-                <div>Приложение</div>
-                <div>Содержание</div>
-              </div>
-              {[
-                { n: 1, title: "Шаблон программы лабораторных исследований", content: "Перечень определяемых веществ, методы, ГОСТы" },
-                { n: 2, title: "Шаблон программы апробации", content: "Схема площадки, точки отбора, частота мониторинга" },
-                { n: 3, title: "Перечень НДТ (предварительный)", content: "5–7 технологий из справочников ИТС" },
-                { n: 4, title: "Схема взаимодействия с экспертизами", content: "Органы, сроки, ответственные" },
-                { n: 5, title: "Матрица ответственности (RACI)", content: "Кто делает, кто утверждает, кого информируют" },
-              ].map((r, i) => (
-                <div key={r.n} className={`grid grid-cols-[32px_180px_1fr] px-4 py-3 border-b border-gray-100 last:border-0 items-center ${i % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
-                  <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-[9px] font-black">{r.n}</div>
-                  <div className="text-xs font-semibold text-gray-800 pr-3 leading-snug">{r.title}</div>
-                  <div className="text-xs text-gray-600 leading-snug">{r.content}</div>
                 </div>
               ))}
             </div>
