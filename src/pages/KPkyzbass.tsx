@@ -209,7 +209,7 @@ function GanttChart() {
   const COL_W = 6; // px per day
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm bg-white">
+    <div className="rounded-xl border border-gray-200 shadow-sm bg-white">
       <div style={{ minWidth: TOTAL_DAYS * COL_W + 240 }}>
         {/* Month header */}
         <div className="flex bg-gray-800 text-white sticky top-0 z-10">
@@ -324,7 +324,7 @@ function GanttChart() {
 
 export default function KPkyzbass() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50">
       {/* Sticky nav */}
       <div className="sticky top-0 z-50 bg-white border-b shadow-sm print:hidden">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -403,7 +403,9 @@ export default function KPkyzbass() {
             <SectionTitle icon="BarChart2">Дорожная карта — Диаграмма Ганта (120 к.д.)</SectionTitle>
 
             {/* Ганта */}
-            <GanttChart />
+            <div className="gantt-print-wrapper overflow-x-auto">
+              <GanttChart />
+            </div>
 
             {/* Ключевые точки под диаграммой */}
             <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -554,29 +556,6 @@ export default function KPkyzbass() {
               </div>
             </div>
 
-            {/* ── ПОЧЕМУ МЫ ── */}
-            <SectionTitle icon="Award">Почему это предложение профессиональное</SectionTitle>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8">
-              {[
-                { icon: "Search",      title: "Понимание объекта",      text: "Детализировали КНС, аэротенки, иловые карты, сбросной коллектор" },
-                { icon: "BookOpen",    title: "Знание нормативки",      text: "Ссылаемся на 87-ПП, 509-ПП, ГОСТ Р 59057, ТЕР Кемерово" },
-                { icon: "Eye",         title: "Прозрачность",           text: "Чётко делим «что входит / что не входит»" },
-                { icon: "ShieldCheck", title: "Управление рисками",     text: "Показываем зоны ответственности и контрольные точки" },
-                { icon: "Zap",         title: "Параллельные работы",    text: "ПД и ОВОС выполняются одновременно — сжатые сроки" },
-                { icon: "Leaf",        title: "Экология на первом месте","text": "ОВОС, рыбоохрана, рекультивация выделены в отдельные блоки" },
-              ].map(({ icon, title, text }) => (
-                <div key={title} className="flex items-start gap-3 border border-gray-200 rounded-xl p-4 bg-white shadow-sm">
-                  <div className="w-9 h-9 rounded-xl bg-blue-700 flex items-center justify-center shrink-0">
-                    <Icon name={icon} size={16} className="text-white" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-black text-gray-900">{title}</div>
-                    <div className="text-[10px] text-gray-600 mt-0.5 leading-snug">{text}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
             {/* ── ПОДПИСИ ── */}
             <div className="border-t-2 border-gray-800 pt-6 flex items-end justify-between">
               <div>
@@ -602,9 +581,30 @@ export default function KPkyzbass() {
 
       <style>{`
         @media print {
-          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; }
           .print\\:hidden { display: none !important; }
-          @page { margin: 12mm; size: A4 landscape; }
+          @page { margin: 8mm; size: A4 landscape; }
+
+          /* Нет пустого листа в конце */
+          html, body { height: auto !important; overflow: visible !important; }
+
+          /* Диаграмма Ганта — масштабирование чтобы влезла по ширине */
+          .gantt-print-wrapper {
+            overflow: visible !important;
+            width: 100% !important;
+          }
+          .gantt-print-wrapper > div {
+            transform: scale(0.52);
+            transform-origin: top left;
+            width: calc(100% / 0.52) !important;
+          }
+
+          /* Убираем тени и скругления для экономии места */
+          .shadow-lg, .shadow-sm, .shadow { box-shadow: none !important; }
+          .rounded-2xl, .rounded-xl { border-radius: 4px !important; }
+
+          /* Переносы страниц */
+          .page-break-before { page-break-before: always; }
         }
       `}</style>
     </div>
