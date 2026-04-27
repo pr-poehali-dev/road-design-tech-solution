@@ -508,6 +508,78 @@ export default function KPkyzbass() {
               ))}
             </div>
 
+            {/* ── ДОППАСХОДЫ ── */}
+            <SectionTitle icon="Receipt">Дополнительные расходы Заказчика (для КП)</SectionTitle>
+            <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-6">
+              <div className="grid grid-cols-[32px_1fr_160px_160px] bg-gray-800 text-white text-[9px] font-black uppercase tracking-wider px-0">
+                <div className="px-3 py-2 border-r border-gray-700">№</div>
+                <div className="px-3 py-2 border-r border-gray-700">Пункт</div>
+                <div className="px-3 py-2 border-r border-gray-700 text-center">Диапазон (₽)</div>
+                <div className="px-3 py-2 text-center">Кто платит</div>
+              </div>
+              {[
+                { n: 1, item: "Публикации в СМИ", range: "30 000 – 50 000", who: "Заказчик", note: "Сильно варьируется в зависимости от каналов публикации" },
+                { n: 2, item: "Государственная экологическая экспертиза (ГЭЭ)", range: "500 000 – 800 000", who: "Заказчик", note: "" },
+                { n: 3, item: "Госпошлина за экспертизу (если применимо)", range: "30 000 – 50 000", who: "Заказчик", note: "" },
+                { n: 4, item: "Плата за согласования (Росрыболовство и др.)", range: "0 – 15 000", who: "Заказчик", note: "" },
+                { n: 5, item: "Санитарно-эпидемиологическая экспертиза", range: "30 000 – 50 000", who: "Заказчик", note: "при необходимости" },
+                { n: 6, item: "Дополнительные циклы экспертизы (не по нашей вине)", range: "50 000 – 150 000", who: "Заказчик", note: "" },
+              ].map((r, i) => (
+                <div key={r.n} className={`grid grid-cols-[32px_1fr_160px_160px] border-b border-gray-100 ${i % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
+                  <div className="px-3 py-2.5 text-[10px] text-gray-400 font-bold border-r border-gray-100 flex items-center">{r.n}</div>
+                  <div className="px-3 py-2.5 border-r border-gray-100 flex flex-col justify-center">
+                    <span className="text-[10px] text-gray-800 leading-snug">{r.item}</span>
+                    {r.note && <span className="text-[9px] text-gray-400 mt-0.5">{r.note}</span>}
+                  </div>
+                  <div className="px-3 py-2.5 border-r border-gray-100 flex items-center justify-center text-[10px] font-semibold text-gray-800 tabular-nums text-center">{r.range}</div>
+                  <div className="px-3 py-2.5 flex items-center justify-center text-[10px] text-gray-600 text-center">{r.who}</div>
+                </div>
+              ))}
+              <div className="grid grid-cols-[32px_1fr_160px_160px] bg-amber-50 border-t-2 border-amber-300">
+                <div className="col-span-2 px-3 py-3 flex items-center gap-2">
+                  <Icon name="AlertTriangle" size={12} className="text-amber-600 shrink-0" />
+                  <span className="text-[10px] font-black text-amber-900 uppercase tracking-wide">Рекомендуемый резерв</span>
+                </div>
+                <div className="col-span-2 px-3 py-3 flex items-center justify-center text-sm font-black text-amber-800 tabular-nums">630 000 – 1 100 000 ₽</div>
+              </div>
+            </div>
+
+            {/* ── ДЕМОНТАЖ ── */}
+            <SectionTitle icon="Hammer">Ориентировочная стоимость демонтажа</SectionTitle>
+            <div className="border border-orange-200 rounded-xl overflow-hidden shadow-sm mb-8">
+              <div className="bg-orange-600 px-4 py-2">
+                <span className="text-[9px] font-black text-white uppercase tracking-wider">Справочно — оплачивается Заказчиком отдельно</span>
+              </div>
+              <div className="grid grid-cols-[1fr_180px] bg-gray-50 text-[9px] font-black uppercase tracking-wider text-gray-400 px-0 border-b border-gray-200">
+                <div className="px-4 py-2 border-r border-gray-200">Статья расходов</div>
+                <div className="px-4 py-2 text-right">Сумма (₽)</div>
+              </div>
+              {[
+                { label: "Демонтаж стальных резервуаров (100 тонн × 25 000 ₽/т)", value: "2 500 000" },
+                { label: "Демонтаж ЖБИ (иловые площадки, КНС, колодцы)", value: "1 200 000" },
+                { label: "Демонтаж трубопроводов, оборудования", value: "500 000" },
+                { label: "Очистка резервуаров от остатков ила (с вывозом)", value: "800 000" },
+                { label: "Вывоз и утилизация ила (опасные отходы)", value: "1 500 000" },
+                { label: "Вывоз строительного мусора (бетон, грунт)", value: "1 200 000" },
+                { label: "Аренда спецтехники (экскаваторы, краны)", value: "600 000" },
+                { label: "Зарплата бригады (8 чел × 2 мес)", value: "1 600 000" },
+                { label: "Лицензия, допуски, экологический контроль", value: "300 000" },
+                { label: "Непредвиденные (20%)", value: "2 000 000" },
+              ].map((r, i) => (
+                <div key={r.label} className={`grid grid-cols-[1fr_180px] border-b border-gray-100 ${i % 2 === 0 ? "bg-white" : "bg-orange-50/30"}`}>
+                  <div className="px-4 py-2.5 text-[10px] text-gray-700 leading-snug border-r border-gray-100">{r.label}</div>
+                  <div className="px-4 py-2.5 text-[10px] font-semibold text-gray-900 text-right tabular-nums">{r.value}</div>
+                </div>
+              ))}
+              <div className="grid grid-cols-[1fr_180px] bg-orange-600">
+                <div className="px-4 py-3 flex items-center gap-2">
+                  <Icon name="Wrench" size={12} className="text-white shrink-0" />
+                  <span className="text-xs font-black text-white">ИТОГО ДЕМОНТАЖ (реалистично)</span>
+                </div>
+                <div className="px-4 py-3 text-right text-base font-black text-white tabular-nums">≈ 12 200 000 ₽</div>
+              </div>
+            </div>
+
             {/* ── НЕ ВХОДИТ ── */}
             <SectionTitle icon="XCircle">Что не входит в стоимость</SectionTitle>
             <div className="border border-red-200 rounded-xl overflow-hidden shadow-sm mb-8">
