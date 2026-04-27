@@ -204,118 +204,106 @@ function SectionTitle({ icon, children }: { icon: string; children: React.ReactN
   );
 }
 
-/* Мини-шкала Ганта — горизонтальные полосы + месячные метки */
+/* Ганта: ширина сетки = 100% минус колонка названий (200px).
+   Каждый день = (100% / TOTAL_DAYS). Всё через left/width в % → нет горизонтального скролла. */
 function GanttChart() {
-  const COL_W = 6; // px per day
+  const pct = (days: number) => `${(days / TOTAL_DAYS) * 100}%`;
 
   return (
-    <div className="rounded-xl border border-gray-200 shadow-sm bg-white">
-      <div style={{ minWidth: TOTAL_DAYS * COL_W + 240 }}>
-        {/* Month header */}
-        <div className="flex bg-gray-800 text-white sticky top-0 z-10">
-          <div className="w-[240px] shrink-0 px-3 py-2 text-[9px] font-black uppercase tracking-wider text-gray-300 border-r border-gray-700">
-            Этап / Работа
-          </div>
-          <div className="relative flex-1" style={{ height: 28 }}>
-            {MONTH_MARKS.map((m) => (
-              <div
-                key={m.col}
-                className="absolute top-0 h-full flex items-center justify-start pl-1.5 border-l border-gray-600 text-[9px] font-bold text-gray-300"
-                style={{ left: m.col * COL_W }}
-              >
-                {m.label}
-              </div>
-            ))}
-            {/* Day 120 marker */}
-            <div
-              className="absolute top-0 h-full border-l border-emerald-400 border-dashed"
-              style={{ left: 119 * COL_W }}
-            />
-          </div>
+    <div className="rounded-xl border border-gray-200 shadow-sm bg-white w-full">
+      {/* Month header */}
+      <div className="flex bg-gray-800 text-white">
+        <div className="w-[200px] shrink-0 px-3 py-2 text-[9px] font-black uppercase tracking-wider text-gray-300 border-r border-gray-700">
+          Этап / Работа
         </div>
-
-        {/* Rows */}
-        {SECTIONS.map((sec, si) => (
-          <div key={sec.title}>
-            {/* Section header row */}
-            <div className="flex border-b border-gray-100 bg-gray-50">
-              <div className={`w-[240px] shrink-0 px-3 py-1.5 flex items-center gap-2 border-r border-gray-200`}>
-                <div className={`w-2 h-2 rounded-full ${sec.accent} shrink-0`} />
-                <span className="text-[9px] font-black uppercase tracking-wider text-gray-600">{sec.title}</span>
-              </div>
-              <div className="flex-1 relative" style={{ height: 24 }}>
-                {/* month gridlines */}
-                {MONTH_MARKS.map((m) => (
-                  <div
-                    key={m.col}
-                    className="absolute top-0 h-full border-l border-gray-100"
-                    style={{ left: m.col * COL_W }}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Task rows */}
-            {sec.tasks.map((task) => (
-              <div key={task.id} className={`flex border-b border-gray-50 ${si % 2 === 0 ? "bg-white" : "bg-gray-50/40"}`}>
-                <div className="w-[240px] shrink-0 px-3 py-1.5 flex items-center gap-1.5 border-r border-gray-100">
-                  {task.milestone ? (
-                    <Icon name="Flag" size={9} className="text-gray-500 shrink-0" />
-                  ) : (
-                    <div className={`w-1.5 h-1.5 rounded-sm ${task.color} shrink-0`} />
-                  )}
-                  <span className="text-[8.5px] text-gray-700 leading-tight">{task.label}</span>
-                </div>
-                <div className="flex-1 relative" style={{ height: 24 }}>
-                  {/* month gridlines */}
-                  {MONTH_MARKS.map((m) => (
-                    <div
-                      key={m.col}
-                      className="absolute top-0 h-full border-l border-gray-100"
-                      style={{ left: m.col * COL_W }}
-                    />
-                  ))}
-                  {/* Bar */}
-                  {task.milestone ? (
-                    <div
-                      className={`absolute top-1/2 -translate-y-1/2 w-3 h-3 rotate-45 ${task.color} opacity-90 z-10`}
-                      style={{ left: task.start * COL_W + task.len * COL_W / 2 - 6 }}
-                    />
-                  ) : (
-                    <div
-                      className={`absolute top-1.5 bottom-1.5 ${task.color} opacity-90 rounded-sm`}
-                      style={{ left: task.start * COL_W, width: task.len * COL_W - 1 }}
-                    />
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        ))}
-
-        {/* Legend */}
-        <div className="flex items-center gap-4 px-4 py-2 bg-gray-50 border-t border-gray-200 flex-wrap">
-          {[
-            { color: "bg-blue-500",    label: "Изыскания" },
-            { color: "bg-violet-600",  label: "Проектирование" },
-            { color: "bg-teal-500",    label: "ОВОС" },
-            { color: "bg-amber-500",   label: "Согласования" },
-            { color: "bg-orange-500",  label: "Экспертиза" },
-            { color: "bg-emerald-600", label: "Финал" },
-          ].map(({ color, label }) => (
-            <div key={label} className="flex items-center gap-1.5">
-              <div className={`w-3 h-2 rounded-sm ${color}`} />
-              <span className="text-[8px] text-gray-500">{label}</span>
+        <div className="relative flex-1" style={{ height: 28 }}>
+          {MONTH_MARKS.map((m) => (
+            <div
+              key={m.col}
+              className="absolute top-0 h-full flex items-center justify-start pl-1.5 border-l border-gray-600 text-[9px] font-bold text-gray-300"
+              style={{ left: pct(m.col) }}
+            >
+              {m.label}
             </div>
           ))}
-          <div className="flex items-center gap-1.5 ml-auto">
-            <div className="w-2 h-2 rotate-45 bg-gray-700" />
-            <span className="text-[8px] text-gray-500">Контрольная точка</span>
+          {/* Финальный маркер — день 120 */}
+          <div
+            className="absolute top-0 h-full border-l-2 border-emerald-400 border-dashed"
+            style={{ left: "99.5%" }}
+          />
+        </div>
+      </div>
+
+      {/* Rows */}
+      {SECTIONS.map((sec, si) => (
+        <div key={sec.title}>
+          {/* Section header */}
+          <div className="flex border-b border-gray-100 bg-gray-50">
+            <div className="w-[200px] shrink-0 px-3 py-1.5 flex items-center gap-2 border-r border-gray-200">
+              <div className={`w-2 h-2 rounded-full ${sec.accent} shrink-0`} />
+              <span className="text-[9px] font-black uppercase tracking-wider text-gray-600">{sec.title}</span>
+            </div>
+            <div className="relative flex-1" style={{ height: 22 }}>
+              {MONTH_MARKS.map((m) => (
+                <div key={m.col} className="absolute top-0 h-full border-l border-gray-100" style={{ left: pct(m.col) }} />
+              ))}
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-4 border-t-2 border-dashed border-emerald-500" />
-            <span className="text-[8px] text-gray-500">День 120 — финал</span>
+
+          {/* Task rows */}
+          {sec.tasks.map((task) => (
+            <div key={task.id} className={`flex border-b border-gray-50 ${si % 2 === 0 ? "bg-white" : "bg-gray-50/40"}`}>
+              <div className="w-[200px] shrink-0 px-3 py-1 flex items-center gap-1.5 border-r border-gray-100">
+                {task.milestone ? (
+                  <Icon name="Flag" size={9} className="text-gray-500 shrink-0" />
+                ) : (
+                  <div className={`w-1.5 h-1.5 rounded-sm ${task.color} shrink-0`} />
+                )}
+                <span className="text-[8.5px] text-gray-700 leading-tight">{task.label}</span>
+              </div>
+              <div className="relative flex-1" style={{ height: 22 }}>
+                {MONTH_MARKS.map((m) => (
+                  <div key={m.col} className="absolute top-0 h-full border-l border-gray-100" style={{ left: pct(m.col) }} />
+                ))}
+                {task.milestone ? (
+                  <div
+                    className={`absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rotate-45 ${task.color} opacity-90 z-10`}
+                    style={{ left: `calc(${pct(task.start + task.len / 2)} - 5px)` }}
+                  />
+                ) : (
+                  <div
+                    className={`absolute top-1 bottom-1 ${task.color} opacity-90 rounded-sm`}
+                    style={{ left: pct(task.start), width: `calc(${pct(task.len)} - 1px)` }}
+                  />
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      ))}
+
+      {/* Legend */}
+      <div className="flex items-center gap-3 px-4 py-2 bg-gray-50 border-t border-gray-200 flex-wrap">
+        {[
+          { color: "bg-blue-500",    label: "Изыскания" },
+          { color: "bg-violet-600",  label: "Проектирование" },
+          { color: "bg-teal-500",    label: "ОВОС" },
+          { color: "bg-amber-500",   label: "Согласования" },
+          { color: "bg-orange-500",  label: "Экспертиза" },
+          { color: "bg-emerald-600", label: "Финал" },
+        ].map(({ color, label }) => (
+          <div key={label} className="flex items-center gap-1">
+            <div className={`w-3 h-2 rounded-sm ${color}`} />
+            <span className="text-[8px] text-gray-500">{label}</span>
           </div>
+        ))}
+        <div className="flex items-center gap-1 ml-auto">
+          <div className="w-2 h-2 rotate-45 bg-gray-700" />
+          <span className="text-[8px] text-gray-500">Контрольная точка</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-4 border-t-2 border-dashed border-emerald-500" />
+          <span className="text-[8px] text-gray-500">День 120 — финал</span>
         </div>
       </div>
     </div>
@@ -403,7 +391,7 @@ export default function KPkyzbass() {
             <SectionTitle icon="BarChart2">Дорожная карта — Диаграмма Ганта (120 к.д.)</SectionTitle>
 
             {/* Ганта */}
-            <div className="gantt-print-wrapper overflow-x-auto">
+            <div className="gantt-print-wrapper">
               <GanttChart />
             </div>
 
@@ -588,15 +576,12 @@ export default function KPkyzbass() {
           /* Нет пустого листа в конце */
           html, body { height: auto !important; overflow: visible !important; }
 
-          /* Диаграмма Ганта — масштабирование чтобы влезла по ширине */
+          /* Диаграмма Ганта — резиновая, занимает всю ширину */
           .gantt-print-wrapper {
-            overflow: visible !important;
             width: 100% !important;
           }
           .gantt-print-wrapper > div {
-            transform: scale(0.52);
-            transform-origin: top left;
-            width: calc(100% / 0.52) !important;
+            width: 100% !important;
           }
 
           /* Убираем тени и скругления для экономии места */
