@@ -574,7 +574,7 @@ export default function KPkyzbass() {
               <div className="grid grid-cols-[1fr_180px] bg-orange-600">
                 <div className="px-4 py-3 flex items-center gap-2">
                   <Icon name="Wrench" size={12} className="text-white shrink-0" />
-                  <span className="text-xs font-black text-white">ИТОГО ДЕМОНТАЖ (реалистично)</span>
+                  <span className="text-xs font-black text-white">ИТОГО ДЕМОНТАЖ</span>
                 </div>
                 <div className="px-4 py-3 text-right text-base font-black text-white tabular-nums">≈ 12 200 000 ₽</div>
               </div>
