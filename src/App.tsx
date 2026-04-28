@@ -56,6 +56,7 @@ const KPsyr = lazyWithRetry(() => import("./pages/KPsyr"));
 const KPkyzbass = lazyWithRetry(() => import("./pages/KPkyzbass"));
 const KpLeyaka = lazyWithRetry(() => import("./pages/KpLeyaka"));
 const KpLgbd = lazyWithRetry(() => import("./pages/KpLgbd"));
+const KpFerm = lazyWithRetry(() => import("./pages/KpFerm"));
 
 const queryClient = new QueryClient();
 
@@ -247,6 +248,11 @@ const App = () => (
           <Route path="/kplgbd" element={
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
               <KpLgbd />
+            </Suspense>
+          } />
+          <Route path="/kpferm" element={
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
+              <KpFerm />
             </Suspense>
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
