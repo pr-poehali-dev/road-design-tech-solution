@@ -18,8 +18,8 @@ const STAGES = [
   { n: 8, title: "Оформление отчёта", sum: 30_000 },
 ];
 
-const TOTAL_EX_VAT = 490_000;
-const VAT = 107_800;
+const TOTAL_EX_VAT = 489_344;
+const VAT = 107_656;
 const TOTAL = 597_000;
 
 const RESULTS = [
@@ -197,7 +197,7 @@ export default function KpShefran() {
             </p>
             <div className="text-[10px] text-gray-600 space-y-0.5 leading-relaxed">
               <p><strong className="text-gray-800">Кому:</strong> СПб ГКУ «Дирекция транспортного строительства»</p>
-              <p><strong className="text-gray-800">Исх. №:</strong> _____ от 28.04.2026</p>
+              <p><strong className="text-gray-800">Исх. №:</strong> 280426 от 28.04.2026</p>
             </div>
           </div>
           <div className="no-print ml-4 flex-shrink-0">
@@ -270,7 +270,7 @@ export default function KpShefran() {
                 <td className="border border-slate-200 px-2 py-2 text-right font-bold text-gray-700 whitespace-nowrap">{fmt(TOTAL_EX_VAT)}</td>
               </tr>
               <tr className="bg-slate-50">
-                <td colSpan={2} className="border border-slate-200 px-2 py-2 font-semibold text-gray-700">НДС 20%</td>
+                <td colSpan={2} className="border border-slate-200 px-2 py-2 font-semibold text-gray-700">НДС 22%</td>
                 <td className="border border-slate-200 px-2 py-2 text-right font-bold text-gray-700 whitespace-nowrap">{fmt(VAT)}</td>
               </tr>
               <tr style={{ background: "#f0f9ff" }}>
@@ -285,10 +285,10 @@ export default function KpShefran() {
         <div className="mt-4 mb-5 p-4 rounded-2xl border-2 border-[#1e3a5f20] bg-[#f8fafc]">
           <div className="inline-block text-white font-black px-8 py-3 rounded-full shadow-md mb-2 text-base"
             style={{ background: NAVY }}>
-            597 000 ₽ — итоговая цена с НДС 20%
+            597 000 ₽ — итоговая цена с НДС 22%
           </div>
           <p className="text-[10px] text-gray-600">
-            <strong>Пятьсот девяносто семь тысяч рублей</strong>, в том числе НДС 20% — 107 800 руб.
+            <strong>Пятьсот девяносто семь тысяч рублей</strong>, в том числе НДС 22% — 107 656 руб.
           </p>
         </div>
 
@@ -328,25 +328,6 @@ export default function KpShefran() {
               <p className="text-[13px] font-black" style={{ color: NAVY }}>{item.value}</p>
             </div>
           ))}
-        </div>
-
-        {/* М.П. / Подпись */}
-        <div className="mt-6 pt-5 border-t border-gray-200 grid grid-cols-2 gap-8 print-avoid">
-          <div>
-            <p className="text-[10px] text-gray-500 mb-6">От исполнителя:</p>
-            <div className="border-b border-gray-300 mb-1" />
-            <p className="text-[9px] text-gray-400">Подпись / ФИО / Должность</p>
-          </div>
-          <div>
-            <p className="text-[10px] text-gray-500 mb-6">От заказчика:</p>
-            <div className="border-b border-gray-300 mb-1" />
-            <p className="text-[9px] text-gray-400">Подпись / ФИО / Должность</p>
-          </div>
-        </div>
-        <div className="mt-4">
-          <div className="w-24 h-24 border-2 border-dashed border-gray-200 rounded-full flex items-center justify-center">
-            <p className="text-[9px] text-gray-300 font-bold">М.П.</p>
-          </div>
         </div>
 
         {/* ===== ЧАСТЬ 2: ДОРОЖНАЯ КАРТА ===== */}
@@ -438,7 +419,7 @@ export default function KpShefran() {
             </thead>
             <tbody>
               {[
-                ["Итоговая цена (с НДС 20%)", "597 000 руб."],
+                ["Итоговая цена (с НДС 22%)", "597 000 руб."],
                 ["Длительность работ", "8–10 недель"],
                 ["Количество узлов и сечений", "6 + примыкания к ЗСД"],
                 ["Горизонт прогноза", "20 лет (2028, 2046)"],
@@ -455,13 +436,32 @@ export default function KpShefran() {
         </div>
 
         {/* Footer */}
-        <div className="mt-8 pt-5 border-t border-gray-200 print-avoid">
+        <div className="mt-8 pt-5 border-t border-gray-200">
           <p className="text-[10px] text-gray-500 leading-relaxed">
             КП действительно <strong>30 календарных дней</strong> с даты направления. После подписания договора предоставляем детальный WBS-план.
           </p>
           <p className="text-[10px] text-gray-400 mt-2">
             <strong>Организация:</strong> Капстрой Инжиниринг &nbsp;·&nbsp; Опыт транспортных изысканий в Санкт-Петербурге
           </p>
+        </div>
+
+        {/* М.П. / Подписи — в конце */}
+        <div className="mt-8 pt-5 border-t border-gray-200 grid grid-cols-2 gap-8">
+          <div>
+            <p className="text-[10px] text-gray-500 mb-6">От исполнителя:</p>
+            <div className="border-b border-gray-300 mb-1" />
+            <p className="text-[9px] text-gray-400">Подпись / ФИО / Должность</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-gray-500 mb-6">От заказчика:</p>
+            <div className="border-b border-gray-300 mb-1" />
+            <p className="text-[9px] text-gray-400">Подпись / ФИО / Должность</p>
+          </div>
+        </div>
+        <div className="mt-4">
+          <div className="w-24 h-24 border-2 border-dashed border-gray-200 rounded-full flex items-center justify-center">
+            <p className="text-[9px] text-gray-300 font-bold">М.П.</p>
+          </div>
         </div>
 
       </div>
