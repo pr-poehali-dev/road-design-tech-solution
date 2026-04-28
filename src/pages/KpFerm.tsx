@@ -241,23 +241,31 @@ export default function KpFerm() {
     <div className="min-h-screen bg-[#f0f4f8] py-8 px-4">
       <style>{`
         @media print {
-          @page { margin: 15mm 12mm; size: A4; }
+          @page { margin: 10mm 10mm; size: A4; }
           body { background: white !important; }
           .no-print { display: none !important; }
           .print-break { page-break-before: always; }
           .print-avoid { page-break-inside: avoid; }
+          .print-header { margin-bottom: 4px !important; }
+          .print-header h1 { font-size: 14px !important; margin-bottom: 2px !important; }
+          .print-header p { font-size: 8px !important; line-height: 1.3 !important; }
+          .print-badges { display: none !important; }
+          .print-price { padding: 6px 16px !important; font-size: 13px !important; border-radius: 8px !important; }
+          .print-price-note { display: none !important; }
+          .print-logo { height: 28px !important; }
+          .print-gold-bar { margin-bottom: 4px !important; }
         }
       `}</style>
 
       <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-lg p-8 print:shadow-none print:rounded-none print:p-0">
 
         {/* Header */}
-        <div className="flex items-start justify-between mb-6 print-avoid">
+        <div className="flex items-start justify-between mb-4 print-header">
           <div className="flex-1">
-            <div className="flex items-center gap-3 mb-3">
-              <img src={LOGO_URL} alt="Логотип" className="h-10 object-contain" />
+            <div className="flex items-center gap-3 mb-2">
+              <img src={LOGO_URL} alt="Логотип" className="h-10 object-contain print-logo" />
             </div>
-            <div className="h-1 w-12 rounded-full mb-4" style={{ background: GOLD }} />
+            <div className="h-1 w-12 rounded-full mb-3 print-gold-bar" style={{ background: GOLD }} />
             <h1 className="text-xl font-black text-[#1e3a5f] leading-tight mb-2">
               Коммерческое предложение & Дорожная карта
             </h1>
@@ -279,7 +287,7 @@ export default function KpFerm() {
         </div>
 
         {/* Badges */}
-        <div className="flex flex-wrap gap-2 mb-6 print-avoid">
+        <div className="flex flex-wrap gap-2 mb-4 print-badges">
           {["ОКН-подход", "Фиксированная цена", "Сопровождение КГИОП/КГА/ГАТИ", "ГИКЭ + экспертиза"].map(b => (
             <span key={b} className="text-[10px] font-bold px-3 py-1 rounded-full border"
               style={{ color: "#7b4a0e", borderColor: "#b8860b40", background: "#b8860b10" }}>
@@ -289,17 +297,17 @@ export default function KpFerm() {
         </div>
 
         {/* Price badge */}
-        <div className="print-avoid">
-          <div className="inline-block text-white text-xl font-black px-8 py-4 rounded-full shadow-md mb-2"
+        <div className="mb-4">
+          <div className="inline-block text-white font-black px-8 py-4 rounded-full shadow-md mb-1 text-xl print-price"
             style={{ background: "#1e3a5f" }}>
             8 500 000 ₽ — фиксированная цена, всё включено
           </div>
-          <p className="text-[10px] text-gray-400 ml-2">Без скрытых платежей и доплат за замечания</p>
+          <p className="text-[10px] text-gray-400 ml-2 print-price-note">Без скрытых платежей и доплат за замечания</p>
         </div>
 
         {/* Section 1 — КП по этапам + структура стоимости */}
         <SectionTitle num={1}>Детализированное КП (по этапам)</SectionTitle>
-        <div style={{ pageBreakInside: "avoid" }}>
+        <div>
           <div className="overflow-x-auto">
             <table className="w-full text-[10px] border-collapse">
               <thead>
