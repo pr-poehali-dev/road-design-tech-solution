@@ -167,14 +167,17 @@ export default function KpShefran() {
     <div className="min-h-screen bg-[#f0f4f8] py-8 px-4">
       <style>{`
         @media print {
-          @page { margin: 10mm 10mm; size: A4; }
-          body { background: white !important; }
+          @page { margin: 12mm 12mm; size: A4; }
+          body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .no-print { display: none !important; }
-          .print-break { page-break-before: always; }
-          .print-avoid { page-break-inside: avoid; }
+          .print-break { page-break-before: always; break-before: page; }
+          .print-avoid { page-break-inside: avoid; break-inside: avoid; }
           .print-header h1 { font-size: 13px !important; margin-bottom: 2px !important; }
           .print-header p, .print-header div { font-size: 8px !important; line-height: 1.3 !important; }
           .print-logo { height: 26px !important; }
+          table { border-collapse: collapse !important; }
+          td, th { border: 1px solid #cbd5e1 !important; }
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
       `}</style>
 
@@ -445,22 +448,85 @@ export default function KpShefran() {
           </p>
         </div>
 
-        {/* М.П. / Подписи — в конце */}
-        <div className="mt-8 pt-5 border-t border-gray-200 grid grid-cols-2 gap-8">
-          <div>
-            <p className="text-[10px] text-gray-500 mb-6">От исполнителя:</p>
-            <div className="border-b border-gray-300 mb-1" />
-            <p className="text-[9px] text-gray-400">Подпись / ФИО / Должность</p>
-          </div>
-          <div>
-            <p className="text-[10px] text-gray-500 mb-6">От заказчика:</p>
-            <div className="border-b border-gray-300 mb-1" />
-            <p className="text-[9px] text-gray-400">Подпись / ФИО / Должность</p>
-          </div>
-        </div>
-        <div className="mt-4">
-          <div className="w-24 h-24 border-2 border-dashed border-gray-200 rounded-full flex items-center justify-center">
-            <p className="text-[9px] text-gray-300 font-bold">М.П.</p>
+        {/* Подписи и печать */}
+        <div className="mt-8 pt-6 border-t-2 border-gray-200">
+          <div className="grid grid-cols-2 gap-12">
+
+            {/* Исполнитель */}
+            <div>
+              <p className="text-[10px] font-bold text-gray-600 uppercase tracking-wide mb-4">Исполнитель</p>
+              <div className="flex items-start gap-4">
+                {/* Печать Капстрой */}
+                <div className="relative flex-shrink-0 w-24 h-24">
+                  <svg viewBox="0 0 100 100" width="96" height="96" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="46" fill="none" stroke="#1e3a5f" strokeWidth="2.5"/>
+                    <circle cx="50" cy="50" r="38" fill="none" stroke="#1e3a5f" strokeWidth="1"/>
+                    <path id="topArc" d="M 12,50 A 38,38 0 0,1 88,50" fill="none" stroke="none"/>
+                    <path id="botArc" d="M 88,50 A 38,38 0 0,1 12,50" fill="none" stroke="none"/>
+                    <text fontSize="8.5" fontWeight="700" fill="#1e3a5f" letterSpacing="1.5">
+                      <textPath href="#topArc" startOffset="50%" textAnchor="middle">КАПСТРОЙ ИНЖИНИРИНГ</textPath>
+                    </text>
+                    <text fontSize="7" fill="#1e3a5f" letterSpacing="0.5">
+                      <textPath href="#botArc" startOffset="50%" textAnchor="middle">Санкт-Петербург</textPath>
+                    </text>
+                    <text x="50" y="46" textAnchor="middle" fontSize="9" fontWeight="900" fill="#1e3a5f">КАПСТРОЙ</text>
+                    <text x="50" y="57" textAnchor="middle" fontSize="7" fontWeight="700" fill="#b8860b">ИНЖИНИРИНГ</text>
+                    <text x="50" y="68" textAnchor="middle" fontSize="6" fill="#1e3a5f">М.П.</text>
+                  </svg>
+                </div>
+                <div className="flex-1 pt-1">
+                  <div className="space-y-5">
+                    <div>
+                      <div className="border-b border-gray-400 mb-1 w-full" style={{ minWidth: "140px" }}/>
+                      <p className="text-[8px] text-gray-500">Подпись</p>
+                    </div>
+                    <div>
+                      <div className="border-b border-gray-400 mb-1 w-full"/>
+                      <p className="text-[8px] text-gray-500">ФИО / Должность</p>
+                    </div>
+                    <div>
+                      <div className="border-b border-gray-400 mb-1 w-full"/>
+                      <p className="text-[8px] text-gray-500">Дата</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 text-[9px] text-gray-500 leading-relaxed">
+                <p><strong className="text-gray-700">ООО «Капстрой Инжиниринг»</strong></p>
+                <p>г. Санкт-Петербург</p>
+              </div>
+            </div>
+
+            {/* Заказчик */}
+            <div>
+              <p className="text-[10px] font-bold text-gray-600 uppercase tracking-wide mb-4">Заказчик</p>
+              <div className="flex items-start gap-4">
+                <div className="w-24 h-24 flex-shrink-0 border-2 border-dashed border-gray-200 rounded-full flex items-center justify-center">
+                  <p className="text-[8px] text-gray-300 font-bold text-center leading-tight">М.П.<br/>заказчика</p>
+                </div>
+                <div className="flex-1 pt-1">
+                  <div className="space-y-5">
+                    <div>
+                      <div className="border-b border-gray-400 mb-1 w-full"/>
+                      <p className="text-[8px] text-gray-500">Подпись</p>
+                    </div>
+                    <div>
+                      <div className="border-b border-gray-400 mb-1 w-full"/>
+                      <p className="text-[8px] text-gray-500">ФИО / Должность</p>
+                    </div>
+                    <div>
+                      <div className="border-b border-gray-400 mb-1 w-full"/>
+                      <p className="text-[8px] text-gray-500">Дата</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 text-[9px] text-gray-500 leading-relaxed">
+                <p><strong className="text-gray-700">СПб ГКУ «Дирекция транспортного строительства»</strong></p>
+                <p>г. Санкт-Петербург</p>
+              </div>
+            </div>
+
           </div>
         </div>
 
