@@ -199,10 +199,10 @@ function GanttFerm() {
   );
 }
 
-function PieChart() {
+function PieChartWide() {
   const total = PIE_DATA.reduce((s, d) => s + d.value, 0);
   let cum = -90;
-  const cx = 80, cy = 80, r = 68;
+  const cx = 100, cy = 100, r = 88;
   const toRad = (a: number) => (a * Math.PI) / 180;
   const segments = PIE_DATA.map(d => {
     const angle = (d.value / total) * 360;
@@ -215,18 +215,18 @@ function PieChart() {
     return { ...d, path: `M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${angle > 180 ? 1 : 0} 1 ${x2},${y2} Z` };
   });
   return (
-    <div className="flex flex-col md:flex-row items-center gap-6">
-      <svg viewBox="0 0 160 160" className="w-36 h-36 shrink-0">
+    <div className="flex flex-row items-center gap-8">
+      <svg viewBox="0 0 200 200" style={{ width: "180px", height: "180px", flexShrink: 0 }}>
         {segments.map((s, i) => (
           <path key={i} d={s.path} fill={s.hex} stroke="white" strokeWidth="1.5" />
         ))}
       </svg>
-      <div className="grid grid-cols-1 gap-y-1.5">
+      <div className="flex-1 grid grid-cols-2 gap-x-6 gap-y-2">
         {PIE_DATA.map(d => (
           <div key={d.label} className="flex items-center gap-2 text-[10px] text-gray-700">
             <div className="w-3 h-3 rounded-sm shrink-0" style={{ background: d.hex }} />
             <span className="font-semibold">{d.label}</span>
-            <span className="text-gray-400 ml-auto pl-3">{fmt(d.value)}</span>
+            <span className="text-gray-400 ml-auto pl-2 whitespace-nowrap">{fmt(d.value)}</span>
           </div>
         ))}
       </div>
@@ -297,51 +297,53 @@ export default function KpFerm() {
           <p className="text-[10px] text-gray-400 ml-2">Без скрытых платежей и доплат за замечания</p>
         </div>
 
-        {/* Section 1 — КП по этапам */}
+        {/* Section 1 — КП по этапам + структура стоимости */}
         <SectionTitle num={1}>Детализированное КП (по этапам)</SectionTitle>
-        <div className="print-avoid overflow-x-auto">
-          <table className="w-full text-[10px] border-collapse">
-            <thead>
-              <tr style={{ background: "#eef2ff" }}>
-                <th className="border border-slate-200 px-2 py-2 text-left font-bold text-gray-700 w-6">№</th>
-                <th className="border border-slate-200 px-2 py-2 text-left font-bold text-gray-700">Этап / Услуга</th>
-                <th className="border border-slate-200 px-2 py-2 text-right font-bold text-gray-700 whitespace-nowrap">Стоимость</th>
-                <th className="border border-slate-200 px-2 py-2 text-left font-bold text-gray-700">Результат</th>
-              </tr>
-            </thead>
-            <tbody>
-              {STAGES.map(s => (
-                <tr key={s.n} className="hover:bg-slate-50">
-                  <td className="border border-slate-200 px-2 py-2 text-gray-500 font-bold">{s.n}</td>
-                  <td className="border border-slate-200 px-2 py-2 text-gray-700">
-                    <span className="font-semibold">{s.title}</span>
-                    {s.detail && <span className="text-gray-400 block">{s.detail}</span>}
-                  </td>
-                  <td className="border border-slate-200 px-2 py-2 text-right font-bold text-[#1e3a5f] whitespace-nowrap">
-                    {fmt(s.sum)}
-                  </td>
-                  <td className="border border-slate-200 px-2 py-2 text-gray-600">{s.result}</td>
+        <div style={{ pageBreakInside: "avoid" }}>
+          <div className="overflow-x-auto">
+            <table className="w-full text-[10px] border-collapse">
+              <thead>
+                <tr style={{ background: "#eef2ff" }}>
+                  <th className="border border-slate-200 px-2 py-2 text-left font-bold text-gray-700 w-6">№</th>
+                  <th className="border border-slate-200 px-2 py-2 text-left font-bold text-gray-700">Этап / Услуга</th>
+                  <th className="border border-slate-200 px-2 py-2 text-right font-bold text-gray-700 whitespace-nowrap">Стоимость</th>
+                  <th className="border border-slate-200 px-2 py-2 text-left font-bold text-gray-700">Результат</th>
                 </tr>
-              ))}
-              <tr style={{ background: "#f0f9ff" }}>
-                <td colSpan={2} className="border border-slate-200 px-2 py-2 font-black text-gray-800">
-                  ИТОГО — фиксированная цена
-                </td>
-                <td className="border border-slate-200 px-2 py-2 text-right font-black text-lg whitespace-nowrap" style={{ color: "#1e3a5f" }}>
-                  {fmt(TOTAL)}
-                </td>
-                <td className="border border-slate-200 px-2 py-2 text-[#1e3a5f] font-semibold">
-                  Без доплат за замечания / доработки
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {STAGES.map(s => (
+                  <tr key={s.n} className="hover:bg-slate-50">
+                    <td className="border border-slate-200 px-2 py-2 text-gray-500 font-bold">{s.n}</td>
+                    <td className="border border-slate-200 px-2 py-2 text-gray-700">
+                      <span className="font-semibold">{s.title}</span>
+                      {s.detail && <span className="text-gray-400 block">{s.detail}</span>}
+                    </td>
+                    <td className="border border-slate-200 px-2 py-2 text-right font-bold text-[#1e3a5f] whitespace-nowrap">
+                      {fmt(s.sum)}
+                    </td>
+                    <td className="border border-slate-200 px-2 py-2 text-gray-600">{s.result}</td>
+                  </tr>
+                ))}
+                <tr style={{ background: "#f0f9ff" }}>
+                  <td colSpan={2} className="border border-slate-200 px-2 py-2 font-black text-gray-800">
+                    ИТОГО — фиксированная цена
+                  </td>
+                  <td className="border border-slate-200 px-2 py-2 text-right font-black text-lg whitespace-nowrap" style={{ color: "#1e3a5f" }}>
+                    {fmt(TOTAL)}
+                  </td>
+                  <td className="border border-slate-200 px-2 py-2 text-[#1e3a5f] font-semibold">
+                    Без доплат за замечания / доработки
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-        {/* Pie */}
-        <div className="mt-4 p-4 rounded-2xl border border-[#e2edf2] bg-[#f8fafc] print-avoid">
-          <p className="text-[10px] font-bold text-gray-600 mb-3 uppercase tracking-wide">Структура стоимости</p>
-          <PieChart />
+          {/* Pie — на одном листе с таблицей */}
+          <div className="mt-4 p-4 rounded-2xl border border-[#e2edf2] bg-[#f8fafc]">
+            <p className="text-[10px] font-bold text-gray-600 mb-3 uppercase tracking-wide">Структура стоимости</p>
+            <PieChartWide />
+          </div>
         </div>
 
         {/* Section 3 — Диаграмма Ганта */}
