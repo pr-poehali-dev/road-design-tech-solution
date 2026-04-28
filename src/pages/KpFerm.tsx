@@ -299,18 +299,7 @@ export default function KpFerm() {
 
         {/* Section 1 — Обоснование */}
         <SectionTitle num={1}>Обоснование цены — почему 8,5 млн?</SectionTitle>
-        <div className="grid md:grid-cols-2 gap-4 print-avoid">
-          <div className="bg-[#f8fafc] border border-[#e2edf2] rounded-2xl p-4">
-            <p className="text-[11px] font-bold text-gray-700 mb-2">Рыночный коридор (СПб, 2026)</p>
-            <ul className="text-[10px] text-gray-600 space-y-1">
-              <li>• Базовый уровень (риск заказчика): 4–5 млн</li>
-              <li>• Профессиональный (согласования + ГИКЭ): 6–7,5 млн</li>
-              <li className="font-bold text-[#1e3a5f]">• ОКН-премиум (фикс. цена "под ключ"): 8–9,5 млн</li>
-            </ul>
-            <p className="text-[10px] text-gray-500 mt-2">
-              Цена 8,5 млн — в верхней границе нормы, гарантирует экспертизу и снятие рисков.
-            </p>
-          </div>
+        <div className="print-avoid">
           <div className="bg-[#f8fafc] border border-[#e2edf2] rounded-2xl p-4">
             <p className="text-[11px] font-bold text-gray-700 mb-2">Факторы стоимости для ЗРЗ / 1905 г.</p>
             <ul className="text-[10px] text-gray-600 space-y-1">
