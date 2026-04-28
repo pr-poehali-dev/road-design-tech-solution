@@ -443,21 +443,23 @@ export default function KpShefran() {
           <p className="text-[11px] font-bold text-gray-700 uppercase tracking-wide mb-3">Условия оплаты</p>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="bg-[#f0f4f8] rounded-xl p-4 flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-[#1e3a5f] flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-bold text-[15px]">30%</span>
+              <div className="w-14 h-14 rounded-full bg-[#1e3a5f] flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-bold text-[14px]">30%</span>
               </div>
               <div>
                 <p className="text-[11px] font-semibold text-gray-800">Предоплата</p>
-                <p className="text-[9px] text-gray-500 mt-0.5">При подписании договора</p>
+                <p className="text-[13px] font-bold text-[#1e3a5f] mt-0.5">179 100 ₽</p>
+                <p className="text-[9px] text-gray-500">При подписании договора</p>
               </div>
             </div>
             <div className="bg-[#f0f4f8] rounded-xl p-4 flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-[#b8860b] flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-bold text-[15px]">70%</span>
+              <div className="w-14 h-14 rounded-full bg-[#b8860b] flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-bold text-[14px]">70%</span>
               </div>
               <div>
                 <p className="text-[11px] font-semibold text-gray-800">По факту</p>
-                <p className="text-[9px] text-gray-500 mt-0.5">После сдачи и приёмки работ</p>
+                <p className="text-[13px] font-bold text-[#b8860b] mt-0.5">417 900 ₽</p>
+                <p className="text-[9px] text-gray-500">После сдачи и приёмки работ</p>
               </div>
             </div>
           </div>
