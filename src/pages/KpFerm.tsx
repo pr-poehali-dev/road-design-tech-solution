@@ -297,19 +297,8 @@ export default function KpFerm() {
           <p className="text-[10px] text-gray-400 ml-2">Без скрытых платежей и доплат за замечания</p>
         </div>
 
-        {/* Section 1 — Обоснование */}
-        <SectionTitle num={1}>Обоснование цены — почему 8,5 млн?</SectionTitle>
-        <div className="print-avoid">
-          <div className="bg-[#f8fafc] border border-[#e2edf2] rounded-2xl p-4">
-            <p className="text-[11px] font-bold text-gray-700 mb-2">Факторы стоимости для ЗРЗ / 1905 г.</p>
-            <ul className="text-[10px] text-gray-600 space-y-1">
-              {COST_ITEMS.map((item, i) => <li key={i}>• {item}</li>)}
-            </ul>
-          </div>
-        </div>
-
-        {/* Section 2 — КП по этапам */}
-        <SectionTitle num={2}>Детализированное КП (по этапам)</SectionTitle>
+        {/* Section 1 — КП по этапам */}
+        <SectionTitle num={1}>Детализированное КП (по этапам)</SectionTitle>
         <div className="print-avoid overflow-x-auto">
           <table className="w-full text-[10px] border-collapse">
             <thead>
