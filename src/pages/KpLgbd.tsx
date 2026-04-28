@@ -85,8 +85,8 @@ function GanttChart() {
     { label: "6. ПМТ", start: 12, span: 2, color: GANTT_COLORS[5] },
     { label: "7. Сводка ДПТЛО", start: 14, span: 1, color: GANTT_COLORS[6] },
     { label: "8. Согласования", start: 15, span: 4, color: GANTT_COLORS[7] },
-    { label: "9. Обсуждения", start: 19, span: 3, color: GANTT_COLORS[8] },
-    { label: "10. Утверждение", start: 22, span: 2, color: GANTT_COLORS[9] },
+    { label: "9. Обсужд.", start: 19, span: 3, color: GANTT_COLORS[8] },
+    { label: "10. Утвержд.", start: 22, span: 2, color: GANTT_COLORS[9] },
   ];
   const weeks = Array.from({ length: TOTAL_WEEKS }, (_, i) => i + 1);
   return (
@@ -428,20 +428,11 @@ export default function KpLgbd() {
               {/* 3. УСЛОВИЯ ОПЛАТЫ */}
               <SectionTitle num="3">Условия оплаты</SectionTitle>
               <div className="border border-gray-200 rounded-xl overflow-hidden mb-6">
-                <div className="bg-blue-50 border-b border-blue-200 px-4 py-2 text-[10px] font-black text-blue-700 uppercase tracking-widest">
-                  Вариант A — Рекомендуемый (для госзаказчика)
-                </div>
-                <div className="px-5 py-4 bg-white text-sm text-gray-700">
-                  <span className="font-bold">Постоплата 100%</span> — в течение 15 рабочих дней после утверждения ДПТЛО
-                </div>
-                <div className="bg-amber-50 border-t border-b border-amber-200 px-4 py-2 text-[10px] font-black text-amber-700 uppercase tracking-widest">
-                  Вариант Б — Альтернативный (аванс 30% + 70%)
-                </div>
-                <div className="grid text-xs" style={{ gridTemplateColumns: "1fr 70px 160px 1fr" }}>
-                  <div className="px-4 py-2 font-black text-[10px] text-gray-500 uppercase bg-gray-50">Платёж</div>
-                  <div className="px-3 py-2 font-black text-[10px] text-gray-500 uppercase bg-gray-50 text-center">%</div>
-                  <div className="px-3 py-2 font-black text-[10px] text-gray-500 uppercase bg-gray-50 text-right">Сумма (с НДС)</div>
-                  <div className="px-4 py-2 font-black text-[10px] text-gray-500 uppercase bg-gray-50">Срок</div>
+                <div className="grid bg-gray-100 text-[10px] font-black text-gray-500 uppercase tracking-wider" style={{ gridTemplateColumns: "1fr 70px 160px 1fr" }}>
+                  <div className="px-4 py-2">Платёж</div>
+                  <div className="px-3 py-2 text-center">%</div>
+                  <div className="px-3 py-2 text-right">Сумма (с НДС)</div>
+                  <div className="px-4 py-2">Срок</div>
                 </div>
                 {[
                   { name: "Аванс", pct: "30%", sum: "376 980,00", term: "В течение 5 рабочих дней после подписания договора", color: "bg-blue-50" },
