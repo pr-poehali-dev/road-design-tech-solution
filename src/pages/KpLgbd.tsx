@@ -77,62 +77,104 @@ function SectionTitle({ num, children }: { num?: string; children: React.ReactNo
 
 function GanttChart() {
   const ganttData = [
-    { label: "1. Оргстарт", start: 0, span: 1, color: GANTT_COLORS[0] },
-    { label: "2. Сбор данных", start: 1, span: 2, color: GANTT_COLORS[1] },
-    { label: "3. Изыскания", start: 3, span: 2, color: GANTT_COLORS[2] },
-    { label: "4. Транспорт. расчёты", start: 5, span: 4, color: GANTT_COLORS[3] },
-    { label: "5. ППТ", start: 9, span: 3, color: GANTT_COLORS[4] },
-    { label: "6. ПМТ", start: 12, span: 2, color: GANTT_COLORS[5] },
-    { label: "7. Сводка ДПТЛО", start: 14, span: 1, color: GANTT_COLORS[6] },
-    { label: "8. Согласования", start: 15, span: 4, color: GANTT_COLORS[7] },
-    { label: "9. Обсужд.", start: 19, span: 3, color: GANTT_COLORS[8] },
-    { label: "10. Утвержд.", start: 22, span: 2, color: GANTT_COLORS[9] },
+    { label: "1. Оргстарт", start: 0, span: 1, hex: "#3b82f6" },
+    { label: "2. Сбор данных", start: 1, span: 2, hex: "#6366f1" },
+    { label: "3. Изыскания", start: 3, span: 2, hex: "#8b5cf6" },
+    { label: "4. Транспорт. расчёты", start: 5, span: 4, hex: "#a855f7" },
+    { label: "5. ППТ", start: 9, span: 3, hex: "#d946ef" },
+    { label: "6. ПМТ", start: 12, span: 2, hex: "#ec4899" },
+    { label: "7. Сводка ДПТЛО", start: 14, span: 1, hex: "#f43f5e" },
+    { label: "8. Согласования", start: 15, span: 4, hex: "#f97316" },
+    { label: "9. Обсуждения", start: 19, span: 3, hex: "#f59e0b" },
+    { label: "10. Утверждение", start: 22, span: 2, hex: "#14b8a6" },
   ];
-  const weeks = Array.from({ length: TOTAL_WEEKS }, (_, i) => i + 1);
+
+  const labelW = 130;
+  const rowH = 22;
+  const rowGap = 4;
+  const headerH = 18;
+  const footerH = 18;
+  const totalCols = 24;
+  const svgW = 700;
+  const chartW = svgW - labelW;
+  const colW = chartW / totalCols;
+  const totalH = headerH + ganttData.length * (rowH + rowGap) + footerH + 4;
+
   return (
-    <div className="overflow-x-auto">
-      <div style={{ minWidth: "700px" }}>
-        <div className="grid mb-1" style={{ gridTemplateColumns: "160px repeat(24, 1fr)" }}>
-          <div className="text-[8px] font-bold text-gray-400 uppercase px-1">Этап</div>
-          {weeks.map(w => (
-            <div key={w} className={`text-center text-[8px] font-bold ${w % 4 === 0 ? "text-blue-500" : "text-gray-400"}`}>
-              {w % 2 === 0 ? w : ""}
-            </div>
-          ))}
-        </div>
-        <div className="space-y-1.5">
-          {ganttData.map((row, i) => (
-            <div key={i} className="grid items-center" style={{ gridTemplateColumns: "160px repeat(24, 1fr)" }}>
-              <div className="text-[10px] text-gray-700 font-semibold pr-1 truncate leading-tight" title={row.label}>{row.label}</div>
-              {weeks.map((_, wi) => {
-                const active = wi >= row.start && wi < row.start + row.span;
-                const isFirst = wi === row.start;
-                const isLast = wi === row.start + row.span - 1;
-                return (
-                  <div key={wi} className="h-4 px-px">
-                    {active ? (
-                      <div className={`h-full ${row.color} opacity-90 ${isFirst ? "rounded-l-full" : ""} ${isLast ? "rounded-r-full" : ""} flex items-center justify-center`}>
-                        {isFirst && row.span >= 2 && <span className="text-[7px] text-white font-bold px-0.5 truncate">{row.span}н</span>}
-                      </div>
-                    ) : (
-                      <div className="h-full bg-gray-100 rounded-sm" />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-        <div className="grid mt-2" style={{ gridTemplateColumns: "160px repeat(24, 1fr)" }}>
-          <div />
-          {weeks.map(w => (
-            <div key={w} className={`text-center text-[7px] ${w % 4 === 0 ? "text-blue-400 font-bold" : "text-gray-300"}`}>
-              {w % 4 === 0 ? `${w}н` : ""}
-            </div>
-          ))}
-        </div>
-        <div className="text-[9px] text-gray-400 mt-1">Нед. 1 = май 2026 · Нед. 24 = октябрь 2026 · Предельный срок: 12.01.2027</div>
-      </div>
+    <div className="w-full">
+      <svg
+        viewBox={`0 0 ${svgW} ${totalH}`}
+        width="100%"
+        style={{ display: "block" }}
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {/* Header: week numbers */}
+        {Array.from({ length: totalCols }, (_, i) => {
+          const x = labelW + i * colW + colW / 2;
+          const show = (i + 1) % 2 === 0;
+          const bold = (i + 1) % 4 === 0;
+          return show ? (
+            <text key={i} x={x} y={headerH - 4} textAnchor="middle"
+              fontSize="7" fontWeight={bold ? "700" : "400"}
+              fill={bold ? "#3b82f6" : "#9ca3af"}>
+              {i + 1}
+            </text>
+          ) : null;
+        })}
+
+        {/* Rows */}
+        {ganttData.map((row, i) => {
+          const y = headerH + i * (rowH + rowGap);
+          const barX = labelW + row.start * colW + 1;
+          const barW = row.span * colW - 2;
+          const r = rowH / 2;
+          return (
+            <g key={i}>
+              {/* Background cells */}
+              {Array.from({ length: totalCols }, (_, ci) => (
+                <rect key={ci}
+                  x={labelW + ci * colW + 1} y={y}
+                  width={colW - 2} height={rowH}
+                  rx="2" fill="#f3f4f6" />
+              ))}
+              {/* Label */}
+              <text x={labelW - 6} y={y + rowH / 2 + 1} textAnchor="end"
+                dominantBaseline="middle" fontSize="9" fontWeight="600" fill="#374151">
+                {row.label}
+              </text>
+              {/* Bar */}
+              <rect x={barX} y={y} width={barW} height={rowH}
+                rx={r} fill={row.hex} opacity="0.92" />
+              {/* Bar label */}
+              {row.span >= 2 && (
+                <text x={barX + barW / 2} y={y + rowH / 2 + 1}
+                  textAnchor="middle" dominantBaseline="middle"
+                  fontSize="7" fontWeight="700" fill="white">
+                  {row.span}н
+                </text>
+              )}
+            </g>
+          );
+        })}
+
+        {/* Footer: week markers */}
+        {Array.from({ length: totalCols }, (_, i) => {
+          if ((i + 1) % 4 !== 0) return null;
+          const x = labelW + i * colW + colW / 2;
+          const footerY = headerH + ganttData.length * (rowH + rowGap) + 12;
+          return (
+            <text key={i} x={x} y={footerY} textAnchor="middle"
+              fontSize="7" fontWeight="700" fill="#60a5fa">
+              {i + 1}н
+            </text>
+          );
+        })}
+
+        {/* Footer note */}
+        <text x={labelW} y={totalH - 2} fontSize="7" fill="#9ca3af">
+          Нед. 1 = май 2026 · Нед. 24 = октябрь 2026 · Предельный срок: 12.01.2027
+        </text>
+      </svg>
     </div>
   );
 }
