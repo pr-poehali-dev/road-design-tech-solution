@@ -438,8 +438,33 @@ export default function KpShefran() {
           </table>
         </div>
 
-        {/* Footer */}
+        {/* Условия оплаты */}
         <div className="mt-8 pt-5 border-t border-gray-200">
+          <p className="text-[11px] font-bold text-gray-700 uppercase tracking-wide mb-3">Условия оплаты</p>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="bg-[#f0f4f8] rounded-xl p-4 flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-[#1e3a5f] flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-bold text-[15px]">30%</span>
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold text-gray-800">Предоплата</p>
+                <p className="text-[9px] text-gray-500 mt-0.5">При подписании договора</p>
+              </div>
+            </div>
+            <div className="bg-[#f0f4f8] rounded-xl p-4 flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-[#b8860b] flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-bold text-[15px]">70%</span>
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold text-gray-800">По факту</p>
+                <p className="text-[9px] text-gray-500 mt-0.5">После сдачи и приёмки работ</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-4 pt-4 border-t border-gray-100">
           <p className="text-[10px] text-gray-500 leading-relaxed">
             КП действительно <strong>30 календарных дней</strong> с даты направления. После подписания договора предоставляем детальный WBS-план.
           </p>
