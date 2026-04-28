@@ -507,14 +507,8 @@ export default function KpLgbd() {
                 ))}
               </div>
 
-              {/* ДК-2: Диаграмма Ганта */}
-              <SectionTitle num="2">Диаграмма Ганта (24 недели)</SectionTitle>
-              <div className="border border-gray-200 rounded-xl p-5 mb-6">
-                <GanttChart />
-              </div>
-
-              {/* ДК-3: Пошаговый план */}
-              <SectionTitle num="3">Пошаговый план</SectionTitle>
+              {/* ДК-2: Пошаговый план */}
+              <SectionTitle num="2">Пошаговый план</SectionTitle>
               <div className="border border-gray-200 rounded-xl overflow-hidden mb-6">
                 <div className="grid bg-gray-100 text-[10px] font-black text-gray-500 uppercase tracking-wider" style={{ gridTemplateColumns: "44px 1fr 70px 110px" }}>
                   <div className="px-3 py-2 text-center">№</div>
