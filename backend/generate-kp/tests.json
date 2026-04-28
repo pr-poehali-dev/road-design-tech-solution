@@ -14,6 +14,20 @@
         "action": "ping"
       },
       "expectedStatus": 200
+    },
+    {
+      "name": "DeepSeek чат — первое сообщение",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "deepseek_chat",
+        "messages": [
+          {"role": "user", "content": "Нужно КП на транспортное обследование перекрёстка в СПб"}
+        ]
+      },
+      "expectedStatus": 200,
+      "expectedBody": {"message": "string"},
+      "bodyMatcher": "partial"
     }
   ]
 }

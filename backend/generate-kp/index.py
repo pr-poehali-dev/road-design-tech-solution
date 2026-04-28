@@ -1054,6 +1054,84 @@ def process_job_async(job_id: str, action: str, combined_text: str, extra_prompt
             conn.close()
 
 
+DEEPSEEK_SYSTEM_PROMPT = """Ты — опытный инженер-сметчик и специалист по проектно-изыскательским работам компании. 
+Веди диалог с пользователем, уточняй детали проекта и формируй структуру коммерческого предложения (КП).
+
+Когда накоплено достаточно информации (минимум название проекта + 2-3 этапа работ), добавь в конец ответа JSON в тегах:
+
+<<<KP_JSON>>>
+{
+  "client": "Название клиента/организации",
+  "project": "Название проекта",
+  "stages": [
+    {"n": 1, "title": "Название этапа", "sum": 50000},
+    {"n": 2, "title": "Другой этап", "sum": 80000}
+  ],
+  "results": [
+    {"what": "Описание результата", "fmt": ".pdf", "qty": "1 экз."}
+  ],
+  "timeline": "Срок выполнения",
+  "notes": "Дополнительные условия"
+}
+<<<END_KP_JSON>>>
+
+Правила: русский язык, суммы числом в рублях, JSON добавляй при наличии достаточных данных и при каждом обновлении."""
+
+
+def handle_deepseek_chat(body: dict, cors_headers: dict) -> dict:
+    """Синхронный вызов DeepSeek R1 через OpenRouter для генерации КП в диалоге"""
+    import httpx as _httpx
+    api_key = os.environ.get('OPENROUTER_API_KEY', '')
+    if not api_key:
+        return {'statusCode': 500, 'headers': cors_headers, 'body': json.dumps({'error': 'OPENROUTER_API_KEY не настроен'})}
+
+    messages = body.get('messages', [])
+    if not messages:
+        return {'statusCode': 400, 'headers': cors_headers, 'body': json.dumps({'error': 'messages обязателен'})}
+
+    payload = {
+        'model': 'deepseek/deepseek-r1',
+        'messages': [{'role': 'system', 'content': DEEPSEEK_SYSTEM_PROMPT}] + messages,
+        'temperature': 0.7,
+        'max_tokens': 3000,
+    }
+
+    with _httpx.Client(timeout=55) as client:
+        resp = client.post(
+            'https://openrouter.ai/api/v1/chat/completions',
+            headers={
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json',
+                'HTTP-Referer': 'https://poehali.dev',
+                'X-Title': 'DEAD SPACE KP Chat',
+            },
+            json=payload
+        )
+
+    if resp.status_code != 200:
+        return {'statusCode': resp.status_code, 'headers': cors_headers, 'body': json.dumps({'error': f'OpenRouter: {resp.text[:300]}'})}
+
+    data = resp.json()
+    assistant_message = data['choices'][0]['message']['content']
+
+    kp_json = None
+    clean_message = assistant_message
+    if '<<<KP_JSON>>>' in assistant_message and '<<<END_KP_JSON>>>' in assistant_message:
+        start = assistant_message.index('<<<KP_JSON>>>') + len('<<<KP_JSON>>>')
+        end = assistant_message.index('<<<END_KP_JSON>>>')
+        try:
+            kp_json = json.loads(assistant_message[start:end].strip())
+        except Exception:
+            kp_json = None
+        clean_message = assistant_message[:assistant_message.index('<<<KP_JSON>>>')].strip()
+
+    return {
+        'statusCode': 200,
+        'headers': cors_headers,
+        'body': json.dumps({'message': clean_message, 'kp_json': kp_json}, ensure_ascii=False)
+    }
+
+
 def handler(event: dict, context) -> dict:
     """Генерация КП через ИИ — асинхронная очередь (start_job → check_job) чтобы обойти таймаут"""
 
@@ -1083,6 +1161,10 @@ def handler(event: dict, context) -> dict:
 
     if action == 'ping':
         return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'status': 'ok'})}
+
+    # DeepSeek чат — синхронный, без очереди
+    if action == 'deepseek_chat':
+        return handle_deepseek_chat(body, CORS)
 
     # Проверка статуса задачи
     if action == 'check_job':

@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { WarehouseDesigner } from '@/components/crm/WarehouseDesigner';
 import { KPGenerator } from '@/components/crm/KPGenerator';
 import { KPList } from '@/components/crm/KPList';
+import { AIKPGenerator } from '@/components/crm/AIKPGenerator';
 
 const Admin = () => {
   const { toast } = useToast();
@@ -162,7 +163,7 @@ const Admin = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-10 lg:w-auto bg-slate-900/50 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+          <TabsList className="grid w-full grid-cols-11 lg:w-auto bg-slate-900/50 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
             <TabsTrigger value="dashboard" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.5)]">
               <Icon name="LayoutDashboard" size={16} className="mr-2" />
               Дашборд
@@ -202,6 +203,10 @@ const Admin = () => {
             <TabsTrigger value="kp-list" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-[0_0_15px_rgba(139,92,246,0.5)]">
               <Icon name="Archive" size={16} className="mr-2" />
               Все КП
+            </TabsTrigger>
+            <TabsTrigger value="ai-kp" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-[0_0_15px_rgba(16,185,129,0.5)]">
+              <Icon name="BrainCircuit" size={16} className="mr-2" />
+              DeepSeek
             </TabsTrigger>
           </TabsList>
 
@@ -248,6 +253,14 @@ const Admin = () => {
 
           <TabsContent value="kp-list" className="space-y-6">
             <KPList onSendToProduction={handleSendToProduction} />
+          </TabsContent>
+
+          <TabsContent value="ai-kp" className="space-y-4">
+            <div>
+              <h2 className="text-lg font-bold text-cyan-300">DeepSeek — генератор КП</h2>
+              <p className="text-sm text-gray-400">Опишите проект в чате — ИИ задаст уточняющие вопросы и сформирует структуру КП с суммами</p>
+            </div>
+            <AIKPGenerator />
           </TabsContent>
         </Tabs>
       </main>
