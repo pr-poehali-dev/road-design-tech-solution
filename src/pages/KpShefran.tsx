@@ -18,8 +18,8 @@ const STAGES = [
   { n: 8, title: "Оформление отчёта", sum: 31_167 },
 ];
 
-const TOTAL_EX_VAT = 416_667;
-const VAT = 83_333;
+const TOTAL_EX_VAT = 409_836;
+const VAT = 90_164;
 const TOTAL = 500_000;
 
 const RESULTS = [
@@ -263,7 +263,7 @@ export default function KpShefran() {
                 <td className="border border-slate-200 px-2 py-2 text-right font-bold text-gray-700 whitespace-nowrap">{fmt(TOTAL_EX_VAT)}</td>
               </tr>
               <tr className="bg-slate-50">
-                <td colSpan={2} className="border border-slate-200 px-2 py-2 font-semibold text-gray-700">НДС 20%</td>
+                <td colSpan={2} className="border border-slate-200 px-2 py-2 font-semibold text-gray-700">НДС 22%</td>
                 <td className="border border-slate-200 px-2 py-2 text-right font-bold text-gray-700 whitespace-nowrap">{fmt(VAT)}</td>
               </tr>
               <tr style={{ background: "#f0f9ff" }}>
@@ -278,10 +278,10 @@ export default function KpShefran() {
         <div className="mt-4 mb-5 p-4 rounded-2xl border-2 border-[#1e3a5f20] bg-[#f8fafc]">
           <div className="inline-block text-white font-black px-8 py-3 rounded-full shadow-md mb-2 text-base"
             style={{ background: NAVY }}>
-            500 000 ₽ — итоговая цена с НДС 20%
+            500 000 ₽ — итоговая цена с НДС 22%
           </div>
           <p className="text-[10px] text-gray-600">
-            <strong>Пятьсот тысяч рублей</strong>, в том числе НДС 20% — 83 333 руб.
+            <strong>Пятьсот тысяч рублей</strong>, в том числе НДС 22% — 90 164 руб.
           </p>
         </div>
 
