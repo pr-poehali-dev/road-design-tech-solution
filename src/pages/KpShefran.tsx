@@ -49,13 +49,12 @@ const NORMS = [
 ];
 
 const ROADMAP = [
-  { weeks: "1–2", period: "Май 2026", step: "Социально-экономическая характеристика района", action: "Аналитики", result: "Описание района, транспортная ситуация" },
-  { weeks: "1–2", period: "Май 2026", step: "Сбор данных о существующем транспорте", action: "Аналитики", result: "База данных транспортных потоков" },
-  { weeks: "3–4", period: "Июнь 2026", step: "Натурное транспортное обследование (6 точек)", action: "Полевая бригада", result: "Замеры интенсивности, состава потока" },
-  { weeks: "5–6", period: "Июнь 2026", step: "Прогноз интенсивности на 20 лет (2028, 2046)", action: "Транспортные моделисты", result: "Прогнозные матрицы, схемы потоков" },
-  { weeks: "7–8", period: "Июль 2026", step: "Расчёт по узлам и сечениям (6 точек)", action: "Инженеры-транспортники", result: "Таблицы V/C, LOS, загрузки" },
-  { weeks: "9–10", period: "Июль–Август 2026", step: "Определение категории дороги + экономика + отчёт", action: "ГИП, оформители", result: "Финальный отчёт, ТЭО" },
-  { weeks: "10", period: "Август 2026", step: "Сдача заказчику", action: "Акт приёма-передачи", result: "Полный пакет документации" },
+  { weeks: "6–8 мая", period: "Май 2026", step: "Социально-экономическая характеристика района + сбор транспортных данных", action: "Аналитики", result: "Описание района, база данных транспортных потоков" },
+  { weeks: "8–10 мая", period: "Май 2026", step: "Натурное транспортное обследование (6 точек)", action: "Полевая бригада", result: "Замеры интенсивности, состав потока" },
+  { weeks: "10–13 мая", period: "Май 2026", step: "Прогноз интенсивности на 20 лет (2028, 2046) + расчёт по узлам и сечениям", action: "Транспортные моделисты, инженеры", result: "Прогнозные матрицы, таблицы V/C, LOS" },
+  { weeks: "13–16 мая", period: "Май 2026", step: "Определение категории дороги + расчёт экономической эффективности", action: "Инженеры-транспортники, ГИП", result: "Категория дороги, ТЭО" },
+  { weeks: "16–19 мая", period: "Май 2026", step: "Оформление отчёта и проверка", action: "ГИП, оформители", result: "Финальный отчёт, комплект документации" },
+  { weeks: "20 мая", period: "Май 2026", step: "Сдача заказчику", action: "Акт приёма-передачи", result: "Полный пакет документации" },
 ];
 
 function fmt(n: number) {
@@ -75,23 +74,23 @@ function SectionTitle({ num, children }: { num?: string | number; children: Reac
 }
 
 function GanttShefran() {
+  // 15 рабочих дней: 6–20 мая 2026 (колонки = дни)
+  const days = [6,7,8,9,10,12,13,14,15,16,19,20]; // рабочие дни мая (без вых.)
   const rows = [
-    { label: "Соц.-эконом. хар-ка", start: 0, span: 2, hex: NAVY },
-    { label: "Сбор трансп. данных", start: 0, span: 2, hex: "#2c5282" },
-    { label: "Натурное обследование", start: 2, span: 2, hex: GOLD },
-    { label: "Прогноз 20 лет", start: 4, span: 2, hex: "#d4a017" },
-    { label: "Узлы и сечения", start: 6, span: 2, hex: "#2c5282" },
-    { label: "Категория + экономика", start: 8, span: 1, hex: NAVY },
-    { label: "Оформление отчёта", start: 9, span: 1, hex: "#4a7abf" },
+    { label: "Соц.-эконом. хар-ка", start: 0, span: 3, hex: NAVY },
+    { label: "Сбор трансп. данных", start: 0, span: 3, hex: "#2c5282" },
+    { label: "Натурное обследование", start: 3, span: 2, hex: GOLD },
+    { label: "Прогноз 20 лет + узлы", start: 5, span: 3, hex: "#d4a017" },
+    { label: "Категория + экономика", start: 8, span: 2, hex: "#2c5282" },
+    { label: "Оформление + сдача", start: 10, span: 2, hex: NAVY },
   ];
 
-  const months = ["Май", "Июнь", "Июль", "Август"];
-  const labelW = 150;
+  const labelW = 160;
   const rowH = 22;
   const rowGap = 5;
-  const headerH = 28;
+  const headerH = 32;
   const footerH = 22;
-  const totalCols = 10;
+  const totalCols = days.length;
   const svgW = 680;
   const chartW = svgW - labelW;
   const colW = chartW / totalCols;
@@ -100,21 +99,15 @@ function GanttShefran() {
   return (
     <div className="w-full">
       <svg viewBox={`0 0 ${svgW} ${totalH}`} width="100%" style={{ display: "block" }} xmlns="http://www.w3.org/2000/svg">
-        {/* Month labels */}
-        {months.map((m, i) => {
-          const colIdx = i * 2.5;
-          const x = labelW + colIdx * colW;
-          return (
-            <text key={i} x={x + 2} y={14} fontSize="8" fontWeight="700" fill={GOLD}>{m} 2026</text>
-          );
-        })}
+        {/* Заголовок — месяц */}
+        <text x={labelW + 2} y={13} fontSize="8" fontWeight="700" fill={GOLD}>МАЙ 2026</text>
 
-        {/* Week numbers */}
-        {Array.from({ length: totalCols }, (_, i) => {
+        {/* День месяца */}
+        {days.map((d, i) => {
           const x = labelW + i * colW + colW / 2;
           return (
-            <text key={i} x={x} y={headerH - 4} textAnchor="middle" fontSize="7" fontWeight="600" fill="#9ca3af">
-              н{i + 1}
+            <text key={i} x={x} y={headerH - 4} textAnchor="middle" fontSize="8" fontWeight="600" fill="#9ca3af">
+              {d}
             </text>
           );
         })}
@@ -133,27 +126,24 @@ function GanttShefran() {
                 {row.label}
               </text>
               <rect x={barX} y={y} width={barW} height={rowH} rx={r} fill={row.hex} opacity="0.93" />
-              <text x={barX + barW / 2} y={y + rowH / 2 + 1} textAnchor="middle" dominantBaseline="middle" fontSize="7" fontWeight="700" fill="white">
-                {row.span}н
-              </text>
             </g>
           );
         })}
 
-        {/* Milestone — сдача */}
+        {/* Milestone — сдача 20 мая */}
         {(() => {
-          const mX = labelW + 10 * colW - 6;
+          const mX = labelW + totalCols * colW - 6;
           const mY = headerH + rows.length * (rowH + rowGap) + 4;
           return (
             <g>
               <polygon points={`${mX},${mY} ${mX + 8},${mY + 8} ${mX},${mY + 16} ${mX - 8},${mY + 8}`} fill={GOLD} />
-              <text x={mX + 14} y={mY + 10} fontSize="8" fontWeight="700" fill={GOLD}>Сдача заказчику — Август 2026</text>
+              <text x={mX + 14} y={mY + 10} fontSize="8" fontWeight="700" fill={GOLD}>Сдача заказчику — 20 мая 2026</text>
             </g>
           );
         })()}
 
         <text x={labelW} y={totalH - 2} fontSize="7" fill="#9ca3af">
-          Старт: май 2026 · Финиш: август 2026 · Общий срок: 8–10 недель
+          Старт: 6 мая 2026 · Финиш: 20 мая 2026 · Общий срок: 15 дней
         </text>
       </svg>
     </div>
@@ -273,7 +263,7 @@ export default function KpShefran() {
                 <td className="border border-slate-200 px-2 py-2 text-right font-bold text-gray-700 whitespace-nowrap">{fmt(TOTAL_EX_VAT)}</td>
               </tr>
               <tr className="bg-slate-50">
-                <td colSpan={2} className="border border-slate-200 px-2 py-2 font-semibold text-gray-700">НДС 22%</td>
+                <td colSpan={2} className="border border-slate-200 px-2 py-2 font-semibold text-gray-700">НДС 20%</td>
                 <td className="border border-slate-200 px-2 py-2 text-right font-bold text-gray-700 whitespace-nowrap">{fmt(VAT)}</td>
               </tr>
               <tr style={{ background: "#f0f9ff" }}>
@@ -288,10 +278,10 @@ export default function KpShefran() {
         <div className="mt-4 mb-5 p-4 rounded-2xl border-2 border-[#1e3a5f20] bg-[#f8fafc]">
           <div className="inline-block text-white font-black px-8 py-3 rounded-full shadow-md mb-2 text-base"
             style={{ background: NAVY }}>
-            597 000 ₽ — итоговая цена с НДС 22%
+            500 000 ₽ — итоговая цена с НДС 20%
           </div>
           <p className="text-[10px] text-gray-600">
-            <strong>Пятьсот девяносто семь тысяч рублей</strong>, в том числе НДС 22% — 107 656 руб.
+            <strong>Пятьсот тысяч рублей</strong>, в том числе НДС 20% — 83 333 руб.
           </p>
         </div>
 
@@ -322,9 +312,9 @@ export default function KpShefran() {
         <SectionTitle num={3}>Сроки выполнения</SectionTitle>
         <div className="grid grid-cols-3 gap-3 mb-5">
           {[
-            { label: "Общий срок", value: "8–10 недель" },
-            { label: "Старт", value: "Май 2026" },
-            { label: "Финиш", value: "Август 2026" },
+            { label: "Общий срок", value: "15 дней" },
+            { label: "Старт", value: "6 мая 2026" },
+            { label: "Финиш", value: "20 мая 2026" },
           ].map((item, i) => (
             <div key={i} className="p-3 rounded-xl border border-[#e2edf2] bg-[#f8fafc] text-center">
               <p className="text-[9px] uppercase tracking-wide text-gray-500 font-bold mb-1">{item.label}</p>
@@ -343,7 +333,7 @@ export default function KpShefran() {
             <h1 className="text-xl font-black leading-tight mb-1" style={{ color: NAVY }}>
               Дорожная карта
             </h1>
-            <p className="text-[11px] text-gray-500">выполнения экономических изысканий · 8–10 недель · 597 000 ₽ с НДС</p>
+            <p className="text-[11px] text-gray-500">выполнения экономических изысканий · 15 дней · 500 000 ₽ с НДС</p>
           </div>
         </div>
 
