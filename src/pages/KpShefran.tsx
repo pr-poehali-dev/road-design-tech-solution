@@ -412,8 +412,8 @@ export default function KpShefran() {
             </thead>
             <tbody>
               {[
-                ["Итоговая цена (с НДС 22%)", "597 000 руб."],
-                ["Длительность работ", "8–10 недель"],
+                ["Итоговая цена (с НДС 22%)", "500 000 руб."],
+                ["Длительность работ", "15 дней (6–20 мая 2026)"],
                 ["Количество узлов и сечений", "6 + примыкания к ЗСД"],
                 ["Горизонт прогноза", "20 лет (2028, 2046)"],
                 ["Административный район", "Василеостровский р-н, Санкт-Петербург"],
@@ -438,7 +438,7 @@ export default function KpShefran() {
               </div>
               <div>
                 <p className="text-[11px] font-semibold text-gray-800">Предоплата</p>
-                <p className="text-[13px] font-bold text-[#1e3a5f] mt-0.5">179 100 ₽</p>
+                <p className="text-[13px] font-bold text-[#1e3a5f] mt-0.5">150 000 ₽</p>
                 <p className="text-[9px] text-gray-500">При подписании договора</p>
               </div>
             </div>
@@ -448,7 +448,7 @@ export default function KpShefran() {
               </div>
               <div>
                 <p className="text-[11px] font-semibold text-gray-800">По факту</p>
-                <p className="text-[13px] font-bold text-[#b8860b] mt-0.5">417 900 ₽</p>
+                <p className="text-[13px] font-bold text-[#b8860b] mt-0.5">350 000 ₽</p>
                 <p className="text-[9px] text-gray-500">После сдачи и приёмки работ</p>
               </div>
             </div>
