@@ -1,6 +1,11 @@
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import Icon from "@/components/ui/icon";
+import {
+  BarChart, Bar, LineChart, Line, RadarChart, Radar, PolarGrid,
+  PolarAngleAxis, PolarRadiusAxis, XAxis, YAxis, CartesianGrid,
+  Tooltip, Legend, ResponsiveContainer,
+} from "recharts";
 
 const NAVY = "#1e3c72";
 const RED = "#e31e24";
@@ -272,6 +277,133 @@ export default function KpAbonement() {
               <div className="text-[9px] mt-1" style={{ color: c.highlight ? RED : "gray" }}>{c.risk}</div>
             </div>
           ))}
+        </div>
+
+        {/* Графики и диаграммы */}
+        <SectionTitle num="1.3">Графики и диаграммы</SectionTitle>
+
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          {/* График 1: Стоимость в месяц */}
+          <div className="bg-[#f8fafc] rounded-xl p-3 border border-slate-200">
+            <p className="text-[10px] font-bold text-gray-700 mb-2">Стоимость в месяц (тыс. ₽ с НДС) — 6 мес.</p>
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={[
+                { name: "Помесячно", value: 418.2 },
+                { name: "50% пред.", value: 376.38 },
+                { name: "70% пред.", value: 355.47 },
+                { name: "100% пред.", value: 313.65 },
+              ]} margin={{ top: 4, right: 4, left: -10, bottom: 4 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" tick={{ fontSize: 8 }} />
+                <YAxis tick={{ fontSize: 8 }} />
+                <Tooltip formatter={(v: number) => [`${v} тыс. ₽`, "В месяц"]} />
+                <Bar dataKey="value" radius={[4,4,0,0]}
+                  fill={NAVY}
+                  label={false}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+            <p className="text-[8.5px] text-gray-500 mt-1">✅ При 100% предоплате — минимальный платёж 313 650 ₽/мес. Экономия 55% к разовому контракту.</p>
+          </div>
+
+          {/* График 2: Снижение цены при росте предоплаты */}
+          <div className="bg-[#f8fafc] rounded-xl p-3 border border-slate-200">
+            <p className="text-[10px] font-bold text-gray-700 mb-2">Снижение цены при росте предоплаты (6 мес., тыс. ₽)</p>
+            <ResponsiveContainer width="100%" height={180}>
+              <LineChart data={[
+                { name: "0% (помес.)", value: 2509.2 },
+                { name: "50%", value: 2258.28 },
+                { name: "70%", value: 2132.82 },
+                { name: "100%", value: 1881.9 },
+              ]} margin={{ top: 4, right: 4, left: -10, bottom: 4 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" tick={{ fontSize: 8 }} />
+                <YAxis tick={{ fontSize: 8 }} />
+                <Tooltip formatter={(v: number) => [`${v} тыс. ₽`, "Общая стоимость"]} />
+                <Line type="monotone" dataKey="value" stroke={RED} strokeWidth={2} dot={{ r: 4, fill: RED }} />
+              </LineChart>
+            </ResponsiveContainer>
+            <p className="text-[8.5px] text-gray-500 mt-1">Максимальная скидка: 25% при 100% предоплате на 6 месяцев.</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          {/* График 3: Долгосрочный контракт */}
+          <div className="bg-[#f8fafc] rounded-xl p-3 border border-slate-200">
+            <p className="text-[10px] font-bold text-gray-700 mb-2">Цена/мес. при долгосрочном контракте (100% пред.)</p>
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={[
+                { name: "3 месяца", value: 414.72 },
+                { name: "6 месяцев", value: 313.65 },
+                { name: "12 месяцев", value: 209.1 },
+              ]} margin={{ top: 4, right: 4, left: -10, bottom: 4 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" tick={{ fontSize: 8 }} />
+                <YAxis tick={{ fontSize: 8 }} />
+                <Tooltip formatter={(v: number) => [`${v} тыс. ₽`, "В месяц"]} />
+                <Bar dataKey="value" radius={[4,4,0,0]} fill="#10b981" />
+              </BarChart>
+            </ResponsiveContainer>
+            <p className="text-[8.5px] text-gray-500 mt-1">🏆 При оплате на год — 209 100 ₽/мес. Экономия 49% к 3-месячному абонементу.</p>
+          </div>
+
+          {/* График 4: Радар — глубина проработки ТЗ */}
+          <div className="bg-[#f8fafc] rounded-xl p-3 border border-slate-200">
+            <p className="text-[10px] font-bold text-gray-700 mb-2">Глубина проработки ТЗ (оценка)</p>
+            <ResponsiveContainer width="100%" height={180}>
+              <RadarChart data={[
+                { subject: "Идентификация", once: 5, sub: 5 },
+                { subject: "Расчёт класса", once: 4, sub: 5 },
+                { subject: "Оптимизация", once: 3, sub: 5 },
+                { subject: "Снижение класса", once: 2, sub: 5 },
+                { subject: "Сопровожд. РТН", once: 1, sub: 5 },
+                { subject: "Актуализация", once: 1, sub: 4 },
+              ]}>
+                <PolarGrid />
+                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 7 }} />
+                <PolarRadiusAxis angle={30} domain={[0, 5]} tick={{ fontSize: 7 }} />
+                <Radar name="Разовый контракт" dataKey="once" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.2} />
+                <Radar name="Абонемент 6 мес." dataKey="sub" stroke={RED} fill={RED} fillOpacity={0.2} />
+                <Legend wrapperStyle={{ fontSize: 8 }} />
+              </RadarChart>
+            </ResponsiveContainer>
+            <p className="text-[8.5px] text-gray-500 mt-1">Абонемент закрывает все 6 направлений ТЗ на максимальную глубину.</p>
+          </div>
+        </div>
+
+        {/* Сводная таблица вариантов оплаты */}
+        <div className="mb-4">
+          <p className="text-[10px] font-bold text-gray-700 mb-2">Сравнение вариантов оплаты (6 месяцев, с НДС 22%)</p>
+          <table className="w-full text-[9.5px] border-collapse">
+            <thead>
+              <tr style={{ background: NAVY }}>
+                <th className="border border-[#3a5a8f] px-2 py-2 text-left text-white font-bold">Вариант оплаты</th>
+                <th className="border border-[#3a5a8f] px-2 py-2 text-right text-white font-bold">Общая стоимость</th>
+                <th className="border border-[#3a5a8f] px-2 py-2 text-right text-white font-bold">Экономия к помесячной</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { label: "Помесячная", total: "2 509 200 ₽", save: "—", hi: false },
+                { label: "50% предоплата", total: "2 258 280 ₽", save: "250 920 ₽", hi: false },
+                { label: "70% предоплата", total: "2 132 820 ₽", save: "376 380 ₽", hi: false },
+                { label: "100% предоплата", total: "1 881 900 ₽", save: "627 300 ₽", hi: true },
+              ].map((r, i) => (
+                <tr key={i} style={r.hi ? { background: "#fff0f0" } : i % 2 === 0 ? { background: "white" } : { background: "#f8fafc" }}>
+                  <td className="border border-slate-200 px-2 py-2 font-semibold" style={r.hi ? { color: RED } : {}}>{r.hi && "⭐ "}{r.label}</td>
+                  <td className="border border-slate-200 px-2 py-2 text-right font-bold" style={r.hi ? { color: RED } : {}}>{r.total}</td>
+                  <td className="border border-slate-200 px-2 py-2 text-right" style={r.hi ? { color: RED, fontWeight: "bold" } : {}}>{r.save}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="bg-[#eef2ff] border border-[#c7d9f5] rounded-xl p-3 mb-4">
+          <p className="text-[10px] text-gray-700">
+            <strong>Вывод:</strong> Абонементная модель — единственный способ реализовать ТЗ №04-ПК в полном объёме с учётом необходимости систематических консультаций, итеративной оптимизации и понижения класса опасности ХОПО.
+            Экономия на 6-месячном абонементе при 100% предоплате достигает <strong style={{ color: RED }}>627 300 руб.</strong> по сравнению с помесячной оплатой.
+          </p>
         </div>
 
         {/* Раздел 2 — Стоимость */}
