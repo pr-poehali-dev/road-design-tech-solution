@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useInView, useAnimation, AnimatePresence } from "framer-motion";
 import Icon from "@/components/ui/icon";
 import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 // ─── ДАННЫЕ ──────────────────────────────────────────────────────────────────
 
@@ -830,147 +831,84 @@ export default function Ref() {
 
   async function exportToPDF() {
     setPdfLoading(true);
+    try {
+      const doc = new jsPDF({ orientation: "portrait", unit: "px", format: "a4" });
+      const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
+      const CARDS_PER_PAGE = 4;
 
-    // Загружаем TTF-шрифт с поддержкой кириллицы
-    const loadCyrillicFont = async (): Promise<string> => {
-      try {
-        // PT Sans — есть кириллица, распространён
-        const resp = await fetch(
-          "https://fonts.gstatic.com/s/ptsans/v17/jizaRExUiTo99u79D0-ExdGM.ttf"
-        );
-        const buf = await resp.arrayBuffer();
-        const bytes = new Uint8Array(buf);
-        let binary = "";
-        const chunk = 8192;
-        for (let i = 0; i < bytes.byteLength; i += chunk) {
-          binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+      for (let i = 0; i < filtered.length; i += CARDS_PER_PAGE) {
+        if (i > 0) doc.addPage();
+
+        const chunk = filtered.slice(i, i + CARDS_PER_PAGE);
+
+        // Рендерим HTML-блок с карточками через html2canvas
+        const wrapper = document.createElement("div");
+        wrapper.style.cssText = `
+          position:fixed; left:-9999px; top:0;
+          width:794px; background:#060d1a; padding:20px;
+          font-family: Arial, sans-serif;
+        `;
+
+        // Шапка страницы
+        const header = document.createElement("div");
+        header.style.cssText = "display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #1e3a5f;";
+        const cat = activeFilter === "Все" ? "Все категории" : activeFilter;
+        header.innerHTML = `
+          <span style="color:#6478b4;font-size:13px;font-weight:600;">ДЭОД — Реализованные проекты</span>
+          <span style="color:#50c87e;font-size:12px;">${cat}</span>
+          <span style="color:#6478b4;font-size:12px;">Стр. ${Math.floor(i / CARDS_PER_PAGE) + 1} / ${Math.ceil(filtered.length / CARDS_PER_PAGE)}</span>
+        `;
+        wrapper.appendChild(header);
+
+        // Сетка карточек 2×2
+        const grid = document.createElement("div");
+        grid.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:12px;";
+
+        for (const c of chunk) {
+          const card = document.createElement("div");
+          card.style.cssText = "background:#0f1932;border:1px solid #28406e;border-radius:10px;overflow:hidden;";
+          card.innerHTML = `
+            <img src="${c.img}" crossorigin="anonymous"
+              style="width:100%;height:140px;object-fit:cover;display:block;" />
+            <div style="padding:12px;">
+              <div style="color:#5087dc;font-size:10px;font-weight:700;text-transform:uppercase;margin-bottom:4px;">${c.type}</div>
+              <div style="color:#e6ebff;font-size:13px;font-weight:700;margin-bottom:4px;line-height:1.3;">${c.title}</div>
+              <div style="color:#788098;font-size:10px;margin-bottom:6px;">${c.location} · ${c.year}</div>
+              <div style="color:#a0aac8;font-size:10px;margin-bottom:6px;">› ${c.items[0]}</div>
+              <div style="color:#5a6e96;font-size:10px;border-top:1px solid #1e2e4a;padding-top:6px;margin-top:2px;">
+                <span style="color:#8090b4;">Заказчик:</span> ${c.client}
+              </div>
+            </div>
+          `;
+          grid.appendChild(card);
         }
-        return btoa(binary);
-      } catch {
-        return "";
+        wrapper.appendChild(grid);
+        document.body.appendChild(wrapper);
+
+        const canvas = await html2canvas(wrapper, {
+          scale: 1.5,
+          useCORS: true,
+          backgroundColor: "#060d1a",
+          logging: false,
+        });
+        document.body.removeChild(wrapper);
+
+        const imgData = canvas.toDataURL("image/jpeg", 0.92);
+        const ratio = canvas.width / canvas.height;
+        const imgW = pageW;
+        const imgH = imgW / ratio;
+
+        doc.addImage(imgData, "JPEG", 0, 0, imgW, Math.min(imgH, pageH));
       }
-    };
 
-    const fontB64 = await loadCyrillicFont();
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-
-    if (fontB64) {
-      doc.addFileToVFS("PTSans.ttf", fontB64);
-      doc.addFont("PTSans.ttf", "PTSans", "normal");
-      doc.setFont("PTSans");
+      const filename = activeFilter === "Все" ? "DEOD_Портфолио.pdf" : `DEOD_${activeFilter}.pdf`;
+      doc.save(filename);
+    } catch (e) {
+      console.error("PDF error:", e);
+    } finally {
+      setPdfLoading(false);
     }
-
-    const pageW = 210;
-    const pageH = 297;
-    const margin = 14;
-    const colW = (pageW - margin * 2 - 6) / 2;
-
-    const loadImage = (url: string): Promise<string> =>
-      new Promise((resolve) => {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext("2d")!;
-          ctx.drawImage(img, 0, 0);
-          resolve(canvas.toDataURL("image/jpeg", 0.75));
-        };
-        img.onerror = () => resolve("");
-        img.src = url;
-      });
-
-    const setF = (size: number) => {
-      doc.setFontSize(size);
-      if (fontB64) doc.setFont("PTSans");
-    };
-
-    const addPageHeader = (pageNum: number) => {
-      doc.setFillColor(6, 13, 26);
-      doc.rect(0, 0, pageW, 12, "F");
-      setF(8);
-      doc.setTextColor(100, 120, 180);
-      doc.text("ДЭОД — Реализованные проекты", margin, 8);
-      const label = activeFilter === "Все" ? "Все категории" : activeFilter;
-      doc.setTextColor(80, 180, 120);
-      doc.text(label, pageW / 2, 8, { align: "center" });
-      doc.setTextColor(100, 120, 180);
-      doc.text(`Стр. ${pageNum}`, pageW - margin, 8, { align: "right" });
-    };
-
-    const CARD_H = 72;
-    const IMG_H = 32;
-    const rowsPerPage = Math.floor((pageH - 20 - margin) / (CARD_H + 4));
-    const cardsPerPage = rowsPerPage * 2;
-
-    let pageNum = 1;
-
-    for (let i = 0; i < filtered.length; i += cardsPerPage) {
-      if (i > 0) { doc.addPage(); pageNum++; }
-      addPageHeader(pageNum);
-
-      const chunk = filtered.slice(i, i + cardsPerPage);
-      for (let j = 0; j < chunk.length; j++) {
-        const c = chunk[j];
-        const col = j % 2;
-        const row = Math.floor(j / 2);
-        const x = margin + col * (colW + 6);
-        const y = 16 + row * (CARD_H + 4);
-
-        doc.setFillColor(15, 25, 50);
-        doc.roundedRect(x, y, colW, CARD_H, 3, 3, "F");
-        doc.setDrawColor(40, 60, 100);
-        doc.roundedRect(x, y, colW, CARD_H, 3, 3, "S");
-
-        const imgData = await loadImage(c.img);
-        if (imgData) {
-          doc.addImage(imgData, "JPEG", x, y, colW, IMG_H, undefined, "FAST");
-          doc.setFillColor(0, 0, 0, 0.5);
-        }
-
-        const textX = x + 3;
-        let textY = y + IMG_H + 5;
-
-        setF(7);
-        doc.setTextColor(80, 140, 220);
-        doc.text(c.type.toUpperCase(), textX, textY);
-        textY += 4;
-
-        setF(8.5);
-        doc.setTextColor(230, 235, 255);
-        const titleLines = doc.splitTextToSize(c.title, colW - 6);
-        doc.text(titleLines.slice(0, 2), textX, textY);
-        textY += titleLines.slice(0, 2).length * 4;
-
-        setF(6.5);
-        doc.setTextColor(120, 130, 160);
-        doc.text(`${c.location}  ·  ${c.year}`, textX, textY);
-        textY += 4;
-
-        setF(6.5);
-        doc.setTextColor(160, 170, 200);
-        const firstItem = doc.splitTextToSize(`› ${c.items[0]}`, colW - 6);
-        doc.text(firstItem.slice(0, 2), textX, textY);
-        textY += firstItem.slice(0, 2).length * 3.5;
-
-        setF(6);
-        doc.setTextColor(90, 110, 150);
-        doc.text(`Заказчик: ${c.client}`, textX, Math.min(textY, y + CARD_H - 3));
-      }
-    }
-
-    setF(7);
-    doc.setTextColor(80, 100, 150);
-    const total = doc.getNumberOfPages();
-    for (let p = 1; p <= total; p++) {
-      doc.setPage(p);
-      doc.text(`${filtered.length} проект${filtered.length === 1 ? "" : filtered.length < 5 ? "а" : "ов"} · deod.ru`, pageW / 2, pageH - 5, { align: "center" });
-    }
-
-    const filename = activeFilter === "Все" ? "DEOD_Портфолио.pdf" : `DEOD_${activeFilter}.pdf`;
-    doc.save(filename);
-    setPdfLoading(false);
   }
 
   return (
