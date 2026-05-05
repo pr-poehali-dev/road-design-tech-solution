@@ -4,6 +4,8 @@
 """
 import json
 import os
+import base64
+import urllib.request
 from datetime import datetime
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -99,6 +101,11 @@ def handler(event: dict, context) -> dict:
         elif '/admin/broadcast' in path and method == 'POST':
             return handle_admin_broadcast(event)
         
+        # ========== IMAGE PROXY ==========
+
+        elif '/image-proxy' in path and method == 'GET':
+            return handle_image_proxy(params)
+
         return error_response('Endpoint not found', 404)
         
     except Exception as e:
@@ -739,6 +746,24 @@ def handle_admin_broadcast(event):
     return success_response({'status': 'sent'})
 
 # ========== HELPER FUNCTIONS ==========
+
+def handle_image_proxy(params):
+    url = params.get("url", "")
+    if not url:
+        return error_response("url param required", 400)
+    if "poehali.dev" not in url:
+        return error_response("forbidden", 403)
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        data = resp.read()
+        content_type = resp.headers.get("Content-Type", "image/png").split(";")[0]
+    b64 = base64.b64encode(data).decode("utf-8")
+    return {
+        "statusCode": 200,
+        "headers": {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"},
+        "body": json.dumps({"dataUrl": f"data:{content_type};base64,{b64}"}),
+    }
+
 
 def success_response(data: dict) -> dict:
     """Успешный ответ"""
