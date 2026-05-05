@@ -5,6 +5,8 @@ import { exportElementToPdf } from "@/lib/exportPdf";
 
 const LOGO_URL =
   "https://cdn.poehali.dev/projects/5adabe83-9a88-49bb-ba7c-144288d55800/bucket/7b630b71-f92c-4f6d-8d53-ab2b00971f22.png";
+const STAMP_URL =
+  "https://cdn.poehali.dev/projects/5adabe83-9a88-49bb-ba7c-144288d55800/bucket/28ef465a-8d37-462f-9a36-4d59c5b0a662.png";
 
 const KP_NUM = "КП-014-2026";
 const KP_DATE = "05 мая 2026 г.";
@@ -343,15 +345,49 @@ export default function KpSm() {
             </div>
 
             {/* Реквизиты */}
-            <div className="mt-8 border-t border-gray-200 pt-5 text-xs text-gray-400 flex justify-between">
+            <div className="mt-8 border border-gray-200 rounded-lg p-5 bg-gray-50 text-xs text-gray-600">
+              <div className="font-bold text-gray-800 text-sm mb-3">Реквизиты исполнителя</div>
+              <div className="grid grid-cols-2 gap-x-8 gap-y-1">
+                <div><span className="text-gray-400">Полное наименование:</span> ООО «КАПСТРОЙ-ИНЖИНИРИНГ»</div>
+                <div><span className="text-gray-400">ОГРН:</span> 1217800122649</div>
+                <div><span className="text-gray-400">ИНН:</span> 7814795454</div>
+                <div><span className="text-gray-400">КПП:</span> 781401001</div>
+                <div className="col-span-2"><span className="text-gray-400">Юридический адрес:</span> 197341, г. Санкт-Петербург, Фермское шоссе, д. 12, лит. Ж, пом. 310-Н к3</div>
+                <div><span className="text-gray-400">Банк:</span> ПАО «Сбербанк»</div>
+                <div><span className="text-gray-400">БИК:</span> 044030653</div>
+                <div><span className="text-gray-400">Расч. счёт:</span> 40702810655040010501</div>
+                <div><span className="text-gray-400">Корр. счёт:</span> 30101810500000000653</div>
+              </div>
+            </div>
+
+            {/* Подпись и печать */}
+            <div className="mt-8 border-t-2 border-gray-800 pt-6 flex items-end justify-between">
               <div>
-                <div className="font-semibold text-gray-600 mb-1">ООО «КАПСТРОЙ-ИНЖИНИРИНГ»</div>
-                <div>ИНН / КПП: уточнить у менеджера</div>
+                <p className="text-xs text-gray-500 mb-2">С уважением,</p>
+                <p className="text-sm text-gray-700">Генеральный директор</p>
+                <p className="text-sm font-bold text-gray-900">ООО «КАПСТРОЙ-ИНЖИНИРИНГ»</p>
+                <p className="text-sm text-gray-700 mt-1">Шумов Иван Викторович</p>
+                <div className="mt-8 text-xs text-gray-400">
+                  <div className="w-48 border-b border-gray-400" />
+                  <div className="mt-1">(подпись)</div>
+                </div>
+              </div>
+              <div className="text-center">
+                <img src={STAMP_URL} alt="Печать" className="h-36 w-36 object-contain opacity-90" />
               </div>
               <div className="text-right">
-                <div>{KP_NUM} от {KP_DATE}</div>
-                <div className="mt-1">Подготовлено: Отдел проектирования ЭОМ</div>
+                <p className="text-xs text-gray-500 mb-2">Заказчик подтверждает:</p>
+                <p className="text-sm text-gray-700">Должность, ФИО</p>
+                <div className="mt-8 text-xs text-gray-400">
+                  <div className="w-48 border-b border-gray-400 ml-auto" />
+                  <div className="mt-1 text-right">(подпись / дата)</div>
+                </div>
               </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-gray-200 flex items-center justify-between text-xs text-gray-400">
+              <span>ООО «КАПСТРОЙ-ИНЖИНИРИНГ» · ИНН 7814795454</span>
+              <span>{KP_NUM} · {KP_DATE}</span>
             </div>
           </div>
         </div>
