@@ -830,7 +830,35 @@ export default function Ref() {
 
   async function exportToPDF() {
     setPdfLoading(true);
+
+    // Загружаем TTF-шрифт с поддержкой кириллицы
+    const loadCyrillicFont = async (): Promise<string> => {
+      try {
+        // PT Sans — есть кириллица, распространён
+        const resp = await fetch(
+          "https://fonts.gstatic.com/s/ptsans/v17/jizaRExUiTo99u79D0-ExdGM.ttf"
+        );
+        const buf = await resp.arrayBuffer();
+        const bytes = new Uint8Array(buf);
+        let binary = "";
+        const chunk = 8192;
+        for (let i = 0; i < bytes.byteLength; i += chunk) {
+          binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+        }
+        return btoa(binary);
+      } catch {
+        return "";
+      }
+    };
+
+    const fontB64 = await loadCyrillicFont();
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+    if (fontB64) {
+      doc.addFileToVFS("PTSans.ttf", fontB64);
+      doc.addFont("PTSans.ttf", "PTSans", "normal");
+      doc.setFont("PTSans");
+    }
 
     const pageW = 210;
     const pageH = 297;
@@ -853,10 +881,15 @@ export default function Ref() {
         img.src = url;
       });
 
+    const setF = (size: number) => {
+      doc.setFontSize(size);
+      if (fontB64) doc.setFont("PTSans");
+    };
+
     const addPageHeader = (pageNum: number) => {
       doc.setFillColor(6, 13, 26);
       doc.rect(0, 0, pageW, 12, "F");
-      doc.setFontSize(8);
+      setF(8);
       doc.setTextColor(100, 120, 180);
       doc.text("ДЭОД — Реализованные проекты", margin, 8);
       const label = activeFilter === "Все" ? "Все категории" : activeFilter;
@@ -899,35 +932,35 @@ export default function Ref() {
         const textX = x + 3;
         let textY = y + IMG_H + 5;
 
-        doc.setFontSize(7);
+        setF(7);
         doc.setTextColor(80, 140, 220);
         doc.text(c.type.toUpperCase(), textX, textY);
         textY += 4;
 
-        doc.setFontSize(8.5);
+        setF(8.5);
         doc.setTextColor(230, 235, 255);
         const titleLines = doc.splitTextToSize(c.title, colW - 6);
         doc.text(titleLines.slice(0, 2), textX, textY);
         textY += titleLines.slice(0, 2).length * 4;
 
-        doc.setFontSize(6.5);
+        setF(6.5);
         doc.setTextColor(120, 130, 160);
         doc.text(`${c.location}  ·  ${c.year}`, textX, textY);
         textY += 4;
 
-        doc.setFontSize(6.5);
+        setF(6.5);
         doc.setTextColor(160, 170, 200);
         const firstItem = doc.splitTextToSize(`› ${c.items[0]}`, colW - 6);
         doc.text(firstItem.slice(0, 2), textX, textY);
         textY += firstItem.slice(0, 2).length * 3.5;
 
-        doc.setFontSize(6);
+        setF(6);
         doc.setTextColor(90, 110, 150);
         doc.text(`Заказчик: ${c.client}`, textX, Math.min(textY, y + CARD_H - 3));
       }
     }
 
-    doc.setFontSize(7);
+    setF(7);
     doc.setTextColor(80, 100, 150);
     const total = doc.getNumberOfPages();
     for (let p = 1; p <= total; p++) {
