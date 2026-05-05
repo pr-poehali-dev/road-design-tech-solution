@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useInView, useAnimation, AnimatePresence } from "framer-motion";
 import Icon from "@/components/ui/icon";
+import jsPDF from "jspdf";
 
 // ─── ДАННЫЕ ──────────────────────────────────────────────────────────────────
 
@@ -822,9 +823,122 @@ function FlowDiagram() {
 export default function Ref() {
   const [activeCase, setActiveCase] = useState(0);
   const [activeFilter, setActiveFilter] = useState("Все");
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   const filters = ["Все", "Социальные объекты", "Медицина", "Культура и молодёжь", "Промышленные объекты", "Дороги и транспорт", "Линейные объекты", "Канализации и очистные сооружения"];
   const filtered = activeFilter === "Все" ? CASES : CASES.filter((c) => c.type === activeFilter);
+
+  async function exportToPDF() {
+    setPdfLoading(true);
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+    const pageW = 210;
+    const pageH = 297;
+    const margin = 14;
+    const colW = (pageW - margin * 2 - 6) / 2;
+
+    const loadImage = (url: string): Promise<string> =>
+      new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d")!;
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL("image/jpeg", 0.75));
+        };
+        img.onerror = () => resolve("");
+        img.src = url;
+      });
+
+    const addPageHeader = (pageNum: number) => {
+      doc.setFillColor(6, 13, 26);
+      doc.rect(0, 0, pageW, 12, "F");
+      doc.setFontSize(8);
+      doc.setTextColor(100, 120, 180);
+      doc.text("ДЭОД — Реализованные проекты", margin, 8);
+      const label = activeFilter === "Все" ? "Все категории" : activeFilter;
+      doc.setTextColor(80, 180, 120);
+      doc.text(label, pageW / 2, 8, { align: "center" });
+      doc.setTextColor(100, 120, 180);
+      doc.text(`Стр. ${pageNum}`, pageW - margin, 8, { align: "right" });
+    };
+
+    const CARD_H = 72;
+    const IMG_H = 32;
+    const rowsPerPage = Math.floor((pageH - 20 - margin) / (CARD_H + 4));
+    const cardsPerPage = rowsPerPage * 2;
+
+    let pageNum = 1;
+
+    for (let i = 0; i < filtered.length; i += cardsPerPage) {
+      if (i > 0) { doc.addPage(); pageNum++; }
+      addPageHeader(pageNum);
+
+      const chunk = filtered.slice(i, i + cardsPerPage);
+      for (let j = 0; j < chunk.length; j++) {
+        const c = chunk[j];
+        const col = j % 2;
+        const row = Math.floor(j / 2);
+        const x = margin + col * (colW + 6);
+        const y = 16 + row * (CARD_H + 4);
+
+        doc.setFillColor(15, 25, 50);
+        doc.roundedRect(x, y, colW, CARD_H, 3, 3, "F");
+        doc.setDrawColor(40, 60, 100);
+        doc.roundedRect(x, y, colW, CARD_H, 3, 3, "S");
+
+        const imgData = await loadImage(c.img);
+        if (imgData) {
+          doc.addImage(imgData, "JPEG", x, y, colW, IMG_H, undefined, "FAST");
+          doc.setFillColor(0, 0, 0, 0.5);
+        }
+
+        const textX = x + 3;
+        let textY = y + IMG_H + 5;
+
+        doc.setFontSize(7);
+        doc.setTextColor(80, 140, 220);
+        doc.text(c.type.toUpperCase(), textX, textY);
+        textY += 4;
+
+        doc.setFontSize(8.5);
+        doc.setTextColor(230, 235, 255);
+        const titleLines = doc.splitTextToSize(c.title, colW - 6);
+        doc.text(titleLines.slice(0, 2), textX, textY);
+        textY += titleLines.slice(0, 2).length * 4;
+
+        doc.setFontSize(6.5);
+        doc.setTextColor(120, 130, 160);
+        doc.text(`${c.location}  ·  ${c.year}`, textX, textY);
+        textY += 4;
+
+        doc.setFontSize(6.5);
+        doc.setTextColor(160, 170, 200);
+        const firstItem = doc.splitTextToSize(`› ${c.items[0]}`, colW - 6);
+        doc.text(firstItem.slice(0, 2), textX, textY);
+        textY += firstItem.slice(0, 2).length * 3.5;
+
+        doc.setFontSize(6);
+        doc.setTextColor(90, 110, 150);
+        doc.text(`Заказчик: ${c.client}`, textX, Math.min(textY, y + CARD_H - 3));
+      }
+    }
+
+    doc.setFontSize(7);
+    doc.setTextColor(80, 100, 150);
+    const total = doc.getNumberOfPages();
+    for (let p = 1; p <= total; p++) {
+      doc.setPage(p);
+      doc.text(`${filtered.length} проект${filtered.length === 1 ? "" : filtered.length < 5 ? "а" : "ов"} · deod.ru`, pageW / 2, pageH - 5, { align: "center" });
+    }
+
+    const filename = activeFilter === "Все" ? "DEOD_Портфолио.pdf" : `DEOD_${activeFilter}.pdf`;
+    doc.save(filename);
+    setPdfLoading(false);
+  }
 
   return (
     <div className="min-h-screen bg-[#060d1a] text-white font-sans">
@@ -1043,9 +1157,17 @@ export default function Ref() {
             <div className="text-center mb-12">
               <div className="text-green-400 text-sm font-semibold uppercase tracking-widest mb-3">Портфолио</div>
               <h2 className="text-4xl md:text-5xl font-black mb-4">Реализованные проекты</h2>
-              <p className="text-slate-400 text-lg max-w-xl mx-auto">
+              <p className="text-slate-400 text-lg max-w-xl mx-auto mb-6">
                 500+ объектов по всей России — школы, больницы, промышленность, инфраструктура
               </p>
+              <button
+                onClick={exportToPDF}
+                disabled={pdfLoading}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-blue-900/40"
+              >
+                <Icon name={pdfLoading ? "Loader2" : "FileDown"} size={16} className={pdfLoading ? "animate-spin" : ""} />
+                {pdfLoading ? "Формируем PDF…" : `Скачать PDF (${filtered.length} проект${filtered.length === 1 ? "" : filtered.length < 5 ? "а" : "ов"})`}
+              </button>
             </div>
           </FadeIn>
 
