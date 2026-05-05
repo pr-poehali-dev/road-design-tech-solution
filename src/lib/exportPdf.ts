@@ -1,14 +1,10 @@
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
-/**
- * Загружаем изображение через fetch и конвертируем в data URL (base64).
- * Это обходит CORS-ограничения canvas — браузер сам делает запрос,
- * а мы подставляем src уже как data: URI до рендера html2canvas.
- */
-async function toDataUrl(src: string): Promise<string> {
+async function urlToDataUrl(src: string): Promise<string | null> {
   try {
-    const res = await fetch(src);
+    const res = await fetch(src, { mode: "cors", cache: "force-cache" });
+    if (!res.ok) return null;
     const blob = await res.blob();
     return await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
@@ -17,37 +13,16 @@ async function toDataUrl(src: string): Promise<string> {
       reader.readAsDataURL(blob);
     });
   } catch {
-    return src; // fallback — оставляем как есть
+    return null;
   }
 }
 
-/**
- * Заменяет src всех <img> внутри элемента на base64 data URL,
- * возвращает функцию восстановления оригинальных src.
- */
-async function inlineImages(el: HTMLElement): Promise<() => void> {
-  const imgs = Array.from(el.querySelectorAll("img")) as HTMLImageElement[];
-  const originals: { img: HTMLImageElement; src: string }[] = [];
-
-  await Promise.all(
-    imgs.map(async (img) => {
-      const originalSrc = img.getAttribute("data-original-src") || img.src;
-      // пропускаем уже инлайновые
-      if (originalSrc.startsWith("data:")) return;
-      const dataUrl = await toDataUrl(originalSrc);
-      originals.push({ img, src: img.src });
-      img.src = dataUrl;
-    }),
-  );
-
-  // ждём перерисовки
-  await new Promise((r) => setTimeout(r, 100));
-
-  return () => {
-    originals.forEach(({ img, src }) => {
-      img.src = src;
-    });
-  };
+function waitImgLoad(img: HTMLImageElement): Promise<void> {
+  return new Promise((resolve) => {
+    if (img.complete && img.naturalWidth > 0) { resolve(); return; }
+    img.onload = () => resolve();
+    img.onerror = () => resolve();
+  });
 }
 
 export async function exportElementToPdf(
@@ -55,20 +30,43 @@ export async function exportElementToPdf(
   filename: string,
   windowWidth = 1123,
 ): Promise<void> {
-  // Инлайним все внешние картинки → base64
-  const restore = await inlineImages(el);
+  const imgs = Array.from(el.querySelectorAll("img")) as HTMLImageElement[];
+
+  // Сохраняем оригинальные src и заменяем на base64
+  const origSrcs: string[] = [];
+  await Promise.all(
+    imgs.map(async (img, i) => {
+      const src = img.getAttribute("src") || img.src;
+      origSrcs[i] = src;
+      if (src.startsWith("data:")) return;
+      const dataUrl = await urlToDataUrl(src);
+      if (dataUrl) {
+        img.setAttribute("src", dataUrl);
+        await waitImgLoad(img);
+      } else {
+        // если fetch не сработал — скрываем картинку чтобы не tainting canvas
+        img.style.display = "none";
+      }
+    }),
+  );
+
+  // Небольшая пауза для перерисовки
+  await new Promise((r) => setTimeout(r, 80));
 
   const canvas = await html2canvas(el, {
     scale: 2,
     useCORS: false,
-    allowTaint: true,
+    allowTaint: false,
     backgroundColor: "#ffffff",
     windowWidth,
     logging: false,
   });
 
-  // Возвращаем оригинальные src
-  restore();
+  // Восстанавливаем оригинальные src
+  imgs.forEach((img, i) => {
+    img.setAttribute("src", origSrcs[i]);
+    img.style.display = "";
+  });
 
   const pageW = 210;
   const pageH = 297;
@@ -77,9 +75,9 @@ export async function exportElementToPdf(
 
   const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
+  const bgData = canvas.toDataURL("image/jpeg", 0.95);
   let remaining = imgH;
   let page = 0;
-  const bgData = canvas.toDataURL("image/jpeg", 0.95);
 
   while (remaining > 0) {
     if (page > 0) pdf.addPage();
