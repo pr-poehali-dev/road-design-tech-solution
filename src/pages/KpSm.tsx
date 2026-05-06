@@ -219,13 +219,19 @@ export default function KpSm() {
             {/* Объект */}
             <div className="mt-6 mb-5 bg-blue-50 border border-blue-200 rounded-lg p-4 grid grid-cols-2 gap-x-8 gap-y-1.5 text-sm">
               <div><span className="text-gray-500">Объект:</span> <span className="font-semibold">Москва, ул. Жукова, 30</span></div>
-              <div><span className="text-gray-500">Площадь:</span> <span className="font-semibold">1 200 м²</span></div>
+              <div><span className="text-gray-500">Площадь:</span> <span className="font-semibold">2 523 м²</span></div>
               <div><span className="text-gray-500">Высота потолков:</span> <span className="font-semibold">6 м</span></div>
               <div><span className="text-gray-500">Стадия:</span> <span className="font-semibold">РД (рабочая документация)</span></div>
               <div><span className="text-gray-500">Категория надёжности:</span> <span className="font-semibold">2-я</span></div>
               <div><span className="text-gray-500">Система заземления:</span> <span className="font-semibold">TN-C (без перехода на TN-S)</span></div>
               <div><span className="text-gray-500">Согласование:</span> <span className="font-semibold">только с Заказчиком</span></div>
               <div><span className="text-gray-500">Молниезащита / слаботочные:</span> <span className="font-semibold text-gray-400">не требуются</span></div>
+            </div>
+
+            {/* Вводная информация */}
+            <div className="mb-5 bg-gray-50 border border-gray-200 rounded-lg px-5 py-3 text-sm text-gray-700 leading-relaxed">
+              По итогам обследования объекта <strong>27.04.2026&nbsp;г.</strong> нами был полностью оценен объём проектных работ.
+              На основании данного отчёта было сформировано текущее коммерческое предложение.
             </div>
 
             {/* 1. Состав РД */}
@@ -424,6 +430,21 @@ export default function KpSm() {
                   <div><span className="text-gray-400">Банк:</span> ПАО «Сбербанк»</div>
                   <div><span className="text-gray-400">БИК:</span> 044030653</div>
                   <div><span className="text-gray-400">Р/с:</span> 40702810655040010501</div>
+                </div>
+              </div>
+
+              {/* О группе компаний */}
+              <div className="bg-blue-50 px-5 py-2.5 border-b border-gray-200 text-xs text-gray-600">
+                Наша группа компаний имеет представительство в&nbsp;г.&nbsp;Москва в&nbsp;лице двух юридических лиц:{" "}
+                <strong className="text-gray-800">ООО «Ситиэксперт»</strong> и&nbsp;<strong className="text-gray-800">ООО «ЕМС.3»</strong>.
+              </div>
+
+              <div className="bg-white px-5 py-3 border-b border-gray-200">
+                <div className="font-bold text-gray-800 text-xs uppercase tracking-wide mb-2">Контактное лицо</div>
+                <div className="grid grid-cols-3 gap-x-6 gap-y-0.5 text-xs text-gray-600">
+                  <div><span className="text-gray-400">ФИО:</span> Шаховский Павел Александрович</div>
+                  <div><span className="text-gray-400">Телефон:</span> +7 903-749-37-08</div>
+                  <div><span className="text-gray-400">E-mail:</span> p.shahovski@emc3.ru</div>
                 </div>
               </div>
 
