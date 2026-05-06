@@ -86,7 +86,7 @@ const NEEDED = [
 const API_URL = "https://functions.poehali.dev/48de52d9-7a27-4110-b87b-d00e64ff6c66";
 
 async function imgToBase64(url: string): Promise<string> {
-  const res = await fetch(`${API_URL}/image-proxy?url=${encodeURIComponent(url)}`);
+  const res = await fetch(`${API_URL}?action=image-proxy&url=${encodeURIComponent(url)}`);
   const data = await res.json();
   if (data.dataUrl) return data.dataUrl;
   throw new Error("image-proxy: no dataUrl");

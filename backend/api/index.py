@@ -103,7 +103,7 @@ def handler(event: dict, context) -> dict:
         
         # ========== IMAGE PROXY ==========
 
-        elif '/image-proxy' in path and method == 'GET':
+        elif params.get('action') == 'image-proxy' and method == 'GET':
             return handle_image_proxy(params)
 
         return error_response('Endpoint not found', 404)
