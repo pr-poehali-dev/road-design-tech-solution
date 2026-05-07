@@ -121,8 +121,19 @@ export default function EvgenKozlov() {
   useEffect(() => {
     if (stage === 5) {
       setShowConfetti(true);
-      const t = setInterval(() => setCounter((c) => c + 1), 50);
-      setTimeout(() => clearInterval(t), 5000);
+      let speed = 50;
+      let current = 0;
+      const tick = () => {
+        current += 1;
+        setCounter(current);
+        if (current < 1000) {
+          speed = Math.max(5, 50 - current * 0.04);
+          setTimeout(tick, speed);
+        } else {
+          setCounter(-1); // -1 = infinity mode
+        }
+      };
+      setTimeout(tick, speed);
     }
   }, [stage]);
 
@@ -207,10 +218,15 @@ export default function EvgenKozlov() {
             <p className="text-gray-200 text-sm leading-relaxed px-2">{typed}</p>
 
             <div
-              className="text-6xl font-black py-4"
+              className="text-6xl font-black py-4 transition-all duration-300"
               style={{ color: current.accent, textShadow: `0 0 40px ${current.accent}` }}
             >
-              {counter > 0 ? `+${counter.toLocaleString()} 💸` : ""}
+              {counter === -1 ? (
+                <div className="space-y-1">
+                  <div className="text-7xl">∞ 💸</div>
+                  <div className="text-lg font-normal text-gray-400 tracking-widest">да похуй сколько лет</div>
+                </div>
+              ) : counter > 0 ? `+${counter.toLocaleString()} 💸` : ""}
             </div>
 
             <div className="border rounded-xl p-5 text-left space-y-3" style={{ borderColor: current.accent + "55", backgroundColor: current.accent + "11" }}>
