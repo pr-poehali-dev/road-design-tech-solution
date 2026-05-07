@@ -174,7 +174,6 @@ export default function KpSochi() {
         {/* КОМУ */}
         <div className="mb-4 text-sm">
           <div><span className="font-semibold">Кому:</span> ООО «Обер Хутор» КЭЦ «Моя Россия»</div>
-          <div className="mt-1">Уважаемая <span className="font-semibold">Елена Сергеевна!</span></div>
         </div>
 
         {/* ВВОДНЫЙ ТЕКСТ */}
