@@ -166,9 +166,19 @@ export default function KpSochi() {
         <div className="h-[2px] bg-gray-800 mb-4" />
 
         {/* РЕКВИЗИТЫ */}
-        <div className="mb-4 text-sm">
-          <div><span className="font-semibold">От:</span> ООО «Капстрой Инжиниринг»</div>
-          <div><span className="font-semibold">ИНН/КПП:</span> __________________</div>
+        <div className="mb-4 border border-gray-200 rounded p-3 bg-gray-50 text-xs">
+          <div className="font-bold text-sm text-gray-800 mb-2">Реквизиты исполнителя</div>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-0.5">
+            <div><span className="text-gray-500">Полное наименование:</span> ООО «КАПСТРОЙ-ИНЖИНИРИНГ»</div>
+            <div><span className="text-gray-500">ОГРН:</span> 1217800122649</div>
+            <div><span className="text-gray-500">ИНН:</span> 7814795454</div>
+            <div><span className="text-gray-500">КПП:</span> 781401001</div>
+            <div className="col-span-2"><span className="text-gray-500">Юридический адрес:</span> 197341, г. Санкт-Петербург, Фермское шоссе, д. 12, лит. Ж, пом. 310-Н к3</div>
+            <div><span className="text-gray-500">Банк:</span> ПАО «Сбербанк»</div>
+            <div><span className="text-gray-500">БИК:</span> 044030653</div>
+            <div><span className="text-gray-500">Расч. счёт:</span> 40702810655040010501</div>
+            <div><span className="text-gray-500">Корр. счёт:</span> 30101810500000000653</div>
+          </div>
         </div>
 
         {/* КОМУ */}
