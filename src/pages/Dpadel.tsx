@@ -159,16 +159,6 @@ const risks = [
     levelColor: "text-red-400",
   },
   {
-    icon: "Landmark",
-    color: COLORS.red,
-    bg: "bg-red-950/40",
-    border: "border-red-500/40",
-    title: "КГИОП",
-    text: "Пункт 6.5 опасен. Любое упоминание — немедленно к руководителю.",
-    level: "Критично",
-    levelColor: "text-red-400",
-  },
-  {
     icon: "Clock",
     color: COLORS.yellow,
     bg: "bg-yellow-950/40",
@@ -255,45 +245,43 @@ export default function Dpadel() {
             График платежей
           </h3>
           <div className="flex flex-col md:flex-row gap-6 items-center">
-            <div className="w-full md:w-72 h-52">
+            <div className="shrink-0 w-48 h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={paymentData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={55}
-                    outerRadius={90}
+                    innerRadius={52}
+                    outerRadius={88}
                     dataKey="value"
                     paddingAngle={3}
+                    label={false}
                   >
                     {paymentData.map((entry, index) => (
                       <Cell key={index} fill={entry.color} />
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number) => `${value.toLocaleString("ru-RU")} руб.`}
+                    formatter={(value: number) => [`${value.toLocaleString("ru-RU")} руб.`, ""]}
                     contentStyle={{ backgroundColor: "#111827", border: "1px solid #374151", borderRadius: 8 }}
                     itemStyle={{ color: "#fff" }}
-                  />
-                  <Legend
-                    formatter={(value) => <span style={{ color: "#9ca3af", fontSize: 12 }}>{value}</span>}
                   />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex-1 space-y-3">
+            <div className="flex-1 space-y-3 w-full">
               {paymentData.map((p, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
-                  <div className="flex-1">
-                    <div className="flex justify-between items-baseline">
-                      <span className="text-sm text-gray-300 print-muted">{p.name.replace("\n", " ")}</span>
-                      <span className="text-sm font-semibold text-white print-text">{p.value.toLocaleString("ru-RU")} ₽</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-baseline gap-2">
+                      <span className="text-sm text-gray-300 print-muted truncate">{p.name.replace("\n", " ")}</span>
+                      <span className="text-sm font-semibold text-white print-text whitespace-nowrap">{p.value.toLocaleString("ru-RU")} ₽</span>
                     </div>
                     <div className="mt-1 h-1.5 bg-gray-800 rounded-full">
                       <div
-                        className="h-1.5 rounded-full transition-all"
+                        className="h-1.5 rounded-full"
                         style={{ width: `${(p.value / 1750000) * 100}%`, backgroundColor: p.color }}
                       />
                     </div>
