@@ -64,6 +64,8 @@ const KpSochi = lazyWithRetry(() => import("./pages/KpSochi"));
 const DkSochi = lazyWithRetry(() => import("./pages/DkSochi"));
 const EvgenKozlov = lazyWithRetry(() => import("./pages/EvgenKozlov"));
 const Dpadel = lazyWithRetry(() => import("./pages/Dpadel"));
+const Abipkyzbas = lazyWithRetry(() => import("./pages/Abipkyzbas"));
+const CSTKkyz = lazyWithRetry(() => import("./pages/CSTKkyz"));
 
 const queryClient = new QueryClient();
 
@@ -295,6 +297,16 @@ const App = () => (
           <Route path="/dpadel" element={
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
               <Dpadel />
+            </Suspense>
+          } />
+          <Route path="/abipkyzbas" element={
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
+              <Abipkyzbas />
+            </Suspense>
+          } />
+          <Route path="/CSTKkyz" element={
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
+              <CSTKkyz />
             </Suspense>
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
