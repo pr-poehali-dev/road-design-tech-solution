@@ -109,9 +109,9 @@ const STAGES = [
 ];
 
 const PAYMENTS = [
-  { n: 1, pct: "30%", stage: "Аванс", sum: "1 950 000", basis: "Подписание договора" },
-  { n: 2, pct: "30%", stage: "Промежуточный платёж", sum: "1 950 000", basis: "Акт сдачи инженерных изысканий" },
-  { n: 3, pct: "40%", stage: "Финальный платёж", sum: "2 600 000", basis: "Подписание итогового акта + передача документации" },
+  { n: 1, pct: "30%", stage: "Аванс", sum: "2 040 000", basis: "Подписание договора" },
+  { n: 2, pct: "30%", stage: "Промежуточный платёж", sum: "2 040 000", basis: "Акт сдачи инженерных изысканий" },
+  { n: 3, pct: "40%", stage: "Финальный платёж", sum: "2 720 000", basis: "Подписание итогового акта + передача документации" },
 ];
 
 export default function CSTKkyz() {
@@ -165,9 +165,9 @@ export default function CSTKkyz() {
                   <div className="text-xs font-semibold text-slate-700 mb-0.5">13 мая 2026 г.</div>
                   <div className="text-[9px] text-slate-400">г. Санкт-Петербург</div>
                   <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-lg px-5 py-3 text-center">
-                    <div className="text-[9px] text-emerald-600 uppercase tracking-wider">Стоимость (с НДС 20%)</div>
-                    <div className="text-2xl font-black text-slate-900">6 500 000 ₽</div>
-                    <div className="text-[9px] text-slate-400 mt-0.5">без НДС: 5 416 667 ₽</div>
+                    <div className="text-[9px] text-emerald-600 uppercase tracking-wider">Стоимость (с НДС 5%)</div>
+                    <div className="text-2xl font-black text-slate-900">6 800 000 ₽</div>
+                    <div className="text-[9px] text-slate-400 mt-0.5">без НДС: 6 476 190 ₽</div>
                   </div>
                 </div>
               </div>
@@ -179,7 +179,7 @@ export default function CSTKkyz() {
             {/* SUMMARY */}
             <div className="grid grid-cols-4 gap-3 mb-8">
               {[
-                { icon: "Banknote", label: "Стоимость (с НДС)", value: "6 500 000 ₽", accent: "text-emerald-600" },
+                { icon: "Banknote", label: "Стоимость (с НДС)", value: "6 800 000 ₽", accent: "text-emerald-600" },
                 { icon: "Calendar", label: "Срок выполнения", value: "150 к.д.", accent: "text-slate-700" },
                 { icon: "Lock",     label: "Тип цены", value: "Фиксированная", accent: "text-slate-700" },
                 { icon: "MapPin",   label: "Объект", value: "г. Кемерово", accent: "text-slate-700" },
@@ -232,8 +232,8 @@ export default function CSTKkyz() {
                   <div className="px-4 py-2 text-right">Сумма (руб.)</div>
                 </div>
                 {[
-                  { label: "Стоимость без НДС", value: "5 416 667" },
-                  { label: "НДС 20%", value: "1 083 333" },
+                  { label: "Стоимость без НДС", value: "6 476 190" },
+                  { label: "НДС 5%", value: "323 810" },
                 ].map(({ label, value }, i) => (
                   <div key={label} className={`grid grid-cols-[1fr_200px] border-b border-slate-100 ${i % 2 === 0 ? "bg-white" : "bg-slate-50"}`}>
                     <div className="px-4 py-3 text-xs text-slate-600">{label}</div>
@@ -241,8 +241,8 @@ export default function CSTKkyz() {
                   </div>
                 ))}
                 <div className="grid grid-cols-[1fr_200px] bg-emerald-600">
-                  <div className="px-4 py-3 text-sm font-black text-white">ИТОГО К ОПЛАТЕ (с НДС)</div>
-                  <div className="px-4 py-3 text-right text-lg font-black text-white tabular-nums">6 500 000</div>
+                  <div className="px-4 py-3 text-sm font-black text-white">ИТОГО К ОПЛАТЕ (с НДС 5%)</div>
+                  <div className="px-4 py-3 text-right text-lg font-black text-white tabular-nums">6 800 000</div>
                 </div>
               </div>
               <div className="mt-2 flex items-start gap-1.5 text-[10px] text-slate-400">
