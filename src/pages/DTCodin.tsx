@@ -593,7 +593,7 @@ export default function DTCodin() {
                     </div>
                   </div>
                   <div className="bg-gradient-to-br from-red-50 to-rose-50 border border-red-200 rounded-xl px-4 py-3 text-center w-full">
-                    <div className="text-[8px] text-red-500 uppercase tracking-wider mb-0.5">Стоимость с НДС 20%</div>
+                    <div className="text-[8px] text-red-500 uppercase tracking-wider mb-0.5">Стоимость с НДС 22%</div>
                     <div className="text-2xl font-black text-slate-900">1 400 000 ₽</div>
                     <div className="text-[9px] text-slate-400">без НДС: 1 147 540,98 ₽</div>
                   </div>
@@ -816,7 +816,7 @@ export default function DTCodin() {
                   <div className="px-3 py-2.5 text-center">№</div>
                   <div className="px-4 py-2.5">Этап / состав работ</div>
                   <div className="px-4 py-2.5 text-center">Срок</div>
-                  <div className="px-4 py-2.5 text-right">Сумма с НДС, ₽</div>
+                  <div className="px-4 py-2.5 text-right">Сумма с НДС 22%, ₽</div>
                 </div>
                 {COST_ROWS.map(({ n, name, duration, sum }, i) => (
                   <div key={n} className={`grid border-b border-slate-100 items-start ${i % 2 === 0 ? "bg-white" : "bg-slate-50/60"}`} style={{ gridTemplateColumns: "44px 1fr 220px 130px" }}>
@@ -828,7 +828,7 @@ export default function DTCodin() {
                 ))}
                 <div className="grid bg-red-600" style={{ gridTemplateColumns: "44px 1fr 220px 130px" }}>
                   <div className="px-3 py-3" />
-                  <div className="px-4 py-3 text-sm font-black text-white">ИТОГО К ОПЛАТЕ (с НДС 20%)</div>
+                  <div className="px-4 py-3 text-sm font-black text-white">ИТОГО К ОПЛАТЕ (с НДС 22%)</div>
                   <div className="px-4 py-3 text-[10px] text-red-200 text-center">Один миллион четыреста тысяч рублей</div>
                   <div className="px-4 py-3 text-right text-lg font-black text-white tabular-nums">1 400 000</div>
                 </div>
@@ -839,7 +839,7 @@ export default function DTCodin() {
                   <div className="text-base font-black text-slate-800 tabular-nums">1 147 540,98 ₽</div>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                  <div className="text-[9px] text-slate-400 uppercase tracking-wider mb-1">НДС 20%</div>
+                  <div className="text-[9px] text-slate-400 uppercase tracking-wider mb-1">НДС 22%</div>
                   <div className="text-base font-black text-slate-800 tabular-nums">252 459,02 ₽</div>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
