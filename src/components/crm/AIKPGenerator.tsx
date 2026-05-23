@@ -183,8 +183,10 @@ export function AIKPGenerator() {
   const [kpData, setKpData] = useState<KpData | null>(null);
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const [uploadingFiles, setUploadingFiles] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dragCounterRef = useRef(0);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -202,19 +204,20 @@ export function AIKPGenerator() {
       reader.readAsDataURL(slice);
     });
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+  const processFiles = async (files: File[]) => {
     if (!files.length) return;
     setUploadingFiles(true);
 
     const pending: AttachedFile[] = [];
     for (const file of files) {
       const isImage = file.type.startsWith('image/');
-      const truncated = file.size > MAX_FILE_BYTES;
+      const truncated = !isImage && file.size > MAX_FILE_BYTES;
       const b64 = await readFileChunk(file);
+      // Для скриншотов из буфера без имени даём автоимя
+      const name = file.name || `скриншот_${Date.now()}.png`;
       pending.push({
-        name: file.name + (truncated && !isImage ? ` (первые 4 МБ из ${formatSize(file.size)})` : ''),
-        type: file.type,
+        name: name + (truncated ? ` (первые 4 МБ из ${formatSize(file.size)})` : ''),
+        type: file.type || 'application/octet-stream',
         size: file.size,
         b64,
         parsed: isImage,
@@ -254,6 +257,11 @@ export function AIKPGenerator() {
     }
 
     setUploadingFiles(false);
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    await processFiles(files);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -324,12 +332,60 @@ export function AIKPGenerator() {
     setAttachedFiles([]);
   };
 
+  // Обработка вставки из буфера (Ctrl+V / скриншоты)
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = Array.from(e.clipboardData.items);
+    const fileItems = items.filter(it => it.kind === 'file');
+    if (!fileItems.length) return;
+    e.preventDefault();
+    const files = fileItems.map(it => it.getAsFile()).filter(Boolean) as File[];
+    processFiles(files);
+  };
+
+  // Drag-and-drop handlers
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    dragCounterRef.current++;
+    if (e.dataTransfer.types.includes('Files')) setIsDragging(true);
+  };
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) setIsDragging(false);
+  };
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); };
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    dragCounterRef.current = 0;
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length) processFiles(files);
+  };
+
   const ACCEPTED = '.pdf,.doc,.docx,.xls,.xlsx,.csv,.png,.jpg,.jpeg,.webp';
 
   return (
     <div className="flex gap-6 h-[calc(100vh-200px)] min-h-[600px]">
       {/* Левая панель — чат */}
-      <div className="flex flex-col flex-1 bg-slate-900/60 border border-cyan-500/20 rounded-2xl overflow-hidden">
+      <div
+        className={`flex flex-col flex-1 bg-slate-900/60 border rounded-2xl overflow-hidden relative transition-colors ${
+          isDragging ? 'border-cyan-400 bg-cyan-950/40' : 'border-cyan-500/20'
+        }`}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
+        {/* Drag overlay */}
+        {isDragging && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-sm rounded-2xl pointer-events-none">
+            <div className="w-20 h-20 rounded-2xl bg-cyan-500/20 border-2 border-dashed border-cyan-400 flex items-center justify-center mb-3">
+              <Icon name="Upload" size={32} className="text-cyan-400" />
+            </div>
+            <p className="text-lg font-bold text-cyan-300">Отпустите файлы</p>
+            <p className="text-sm text-cyan-500 mt-1">PDF, Word, Excel, изображения</p>
+          </div>
+        )}
         {/* Хедер */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-cyan-500/20 bg-slate-900/80">
           <div className="flex items-center gap-2">
@@ -491,7 +547,8 @@ export function AIKPGenerator() {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKey}
-              placeholder="Опишите проект или прикрепите файлы ТЗ... (Ctrl+Enter — отправить)"
+              onPaste={handlePaste}
+              placeholder="Опишите проект… или перетащите / вставьте файлы (Ctrl+V)"
               className="flex-1 resize-none bg-slate-800/80 border-slate-700 text-gray-200 placeholder:text-gray-600 focus:border-cyan-500/50 min-h-[60px] max-h-[120px]"
               rows={2}
             />
@@ -512,12 +569,14 @@ export function AIKPGenerator() {
               </span>
             ) : (
               <>
-                <span>Ctrl+Enter для отправки</span>
+                <span>Ctrl+Enter — отправить</span>
                 <span className="text-slate-700">·</span>
                 <span className="flex items-center gap-1">
-                  <Icon name="Paperclip" size={10} className="text-slate-600" />
-                  PDF, Word, Excel, CSV, JPG, PNG
+                  <Icon name="Upload" size={10} className="text-slate-600" />
+                  Перетащи или вставь Ctrl+V
                 </span>
+                <span className="text-slate-700">·</span>
+                <span className="text-slate-600">PDF · Word · Excel · Фото</span>
               </>
             )}
           </p>
