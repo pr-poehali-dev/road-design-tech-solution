@@ -1072,28 +1072,15 @@ def process_job_async(job_id: str, action: str, combined_text: str, extra_prompt
             conn.close()
 
 
-DEEPSEEK_SYSTEM_PROMPT = """Ты — опытный инженер-сметчик и специалист по проектно-изыскательским работам компании. 
-Веди диалог с пользователем, уточняй детали проекта и формируй структуру коммерческого предложения (КП).
+DEEPSEEK_SYSTEM_PROMPT = """Ты — эксперт по КП для инжиниринговой компании. Формируй коммерческие предложения кратко и точно.
 
-Когда накоплено достаточно информации (минимум название проекта + 2-3 этапа работ), добавь в конец ответа JSON в тегах:
+Когда есть название проекта и хоть какие-то данные об объёме — СРАЗУ добавляй JSON:
 
 <<<KP_JSON>>>
-{
-  "client": "Название клиента/организации",
-  "project": "Название проекта",
-  "stages": [
-    {"n": 1, "title": "Название этапа", "sum": 50000},
-    {"n": 2, "title": "Другой этап", "sum": 80000}
-  ],
-  "results": [
-    {"what": "Описание результата", "fmt": ".pdf", "qty": "1 экз."}
-  ],
-  "timeline": "Срок выполнения",
-  "notes": "Дополнительные условия"
-}
+{"client":"Заказчик","project":"Проект","stages":[{"n":1,"title":"Этап","sum":100000}],"results":[{"what":"Результат","fmt":"PDF","qty":"1 экз."}],"timeline":"30 дней","notes":""}
 <<<END_KP_JSON>>>
 
-Правила: русский язык, суммы числом в рублях, JSON добавляй при наличии достаточных данных и при каждом обновлении."""
+ПРАВИЛА: русский язык. Суммы в рублях. Не задавай много вопросов — формируй КП на основе имеющихся данных, уточняй по ходу. JSON обновляй при каждом ответе."""
 
 
 ROADMAP_CHAT_PROMPT = """Ты — опытный проект-менеджер и инженер. Веди диалог с пользователем, уточняй детали проекта и формируй подробную дорожную карту реализации.
@@ -1224,11 +1211,11 @@ def handle_deepseek_chat(body: dict, cors_headers: dict) -> dict:
     payload = {
         'model': 'deepseek/deepseek-chat',
         'messages': [{'role': 'system', 'content': system_prompt}] + chat_messages,
-        'temperature': 0.7,
-        'max_tokens': 5000,
+        'temperature': 0.5,
+        'max_tokens': 1800,
     }
 
-    with _httpx.Client(timeout=20) as client:
+    with _httpx.Client(timeout=28) as client:
         resp = client.post(
             'https://openrouter.ai/api/v1/chat/completions',
             headers={
