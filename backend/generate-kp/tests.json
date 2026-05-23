@@ -16,7 +16,7 @@
       "expectedStatus": 200
     },
     {
-      "name": "DeepSeek чат — первое сообщение",
+      "name": "DeepSeek чат — запуск job",
       "method": "POST",
       "path": "/",
       "body": {
@@ -26,7 +26,7 @@
         ]
       },
       "expectedStatus": 200,
-      "expectedBody": {"message": "string"},
+      "expectedBody": {"job_id": "string", "status": "pending"},
       "bodyMatcher": "partial"
     }
   ]

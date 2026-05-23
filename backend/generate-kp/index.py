@@ -1133,11 +1133,81 @@ ROADMAP_CHAT_PROMPT = """Ты — опытный проект-менеджер �
 - Учитывай параллельное выполнение задач где возможно"""
 
 
-def handle_deepseek_chat(body: dict, cors_headers: dict) -> dict:
-    """Синхронный вызов DeepSeek R1 через OpenRouter для генерации КП в диалоге.
-    Поддерживает загрузку файлов: PDF, DOCX, XLSX, CSV, изображения (base64).
-    """
+def _run_deepseek_chat_job(job_id: str, body: dict):
+    """Выполняется в фоновом потоке — вызывает DeepSeek и сохраняет результат в kp_jobs."""
     import httpx as _httpx
+    conn = None
+    try:
+        api_key = os.environ.get('OPENROUTER_API_KEY', '')
+        messages = body.get('messages', [])
+        company_details = body.get('company_details', '')
+        company_vat = body.get('company_vat', '')
+        mode = body.get('mode', 'kp')
+        files_text = body.get('files_text', '')
+
+        company_block = ''
+        if company_details:
+            company_block = f'\n\n═══ ИСПОЛНИТЕЛЬ (РЕКВИЗИТЫ) ═══\n{company_details}\nСтавка НДС: {company_vat}\nВСЕ суммы указывай {("с учётом " + company_vat) if company_vat else "без НДС"}'
+
+        chat_messages = list(messages)
+        if files_text:
+            last_text = chat_messages[-1].get('content', '') if chat_messages else ''
+            combined = f'{last_text}\n\nСОДЕРЖИМОЕ ФАЙЛОВ:\n{files_text[:12000]}'.strip()
+            chat_messages[-1] = {'role': 'user', 'content': combined}
+
+        system_prompt = (ROADMAP_CHAT_PROMPT if mode == 'roadmap' else DEEPSEEK_SYSTEM_PROMPT) + company_block
+
+        with _httpx.Client(timeout=55) as client:
+            resp = client.post(
+                'https://openrouter.ai/api/v1/chat/completions',
+                headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json',
+                         'HTTP-Referer': 'https://poehali.dev', 'X-Title': 'DEAD SPACE KP Chat'},
+                json={'model': 'deepseek/deepseek-chat', 'messages': [{'role': 'system', 'content': system_prompt}] + chat_messages,
+                      'temperature': 0.5, 'max_tokens': 2000}
+            )
+
+        if resp.status_code != 200:
+            raise Exception(f'OpenRouter HTTP {resp.status_code}: {resp.text[:200]}')
+
+        assistant_message = resp.json()['choices'][0]['message']['content']
+
+        # Парсим KP_JSON
+        kp_json = None
+        roadmap_json = None
+        clean_message = assistant_message
+
+        if '<<<KP_JSON>>>' in assistant_message and '<<<END_KP_JSON>>>' in assistant_message:
+            s = assistant_message.index('<<<KP_JSON>>>') + len('<<<KP_JSON>>>')
+            e = assistant_message.index('<<<END_KP_JSON>>>')
+            try: kp_json = json.loads(assistant_message[s:e].strip())
+            except Exception: pass
+            clean_message = assistant_message[:assistant_message.index('<<<KP_JSON>>>')].strip()
+
+        if '<<<ROADMAP_JSON>>>' in assistant_message and '<<<END_ROADMAP_JSON>>>' in assistant_message:
+            s = assistant_message.index('<<<ROADMAP_JSON>>>') + len('<<<ROADMAP_JSON>>>')
+            e = assistant_message.index('<<<END_ROADMAP_JSON>>>')
+            try: roadmap_json = json.loads(assistant_message[s:e].strip())
+            except Exception: pass
+            clean_message = assistant_message[:assistant_message.index('<<<ROADMAP_JSON>>>')].strip()
+
+        result = json.dumps({'message': clean_message, 'kp_json': kp_json, 'roadmap_json': roadmap_json}, ensure_ascii=False)
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("UPDATE kp_jobs SET status='done', result=%s, updated_at=NOW() WHERE id=%s", (result, job_id))
+        conn.commit()
+    except Exception as e:
+        try:
+            if conn is None: conn = get_db()
+            cur = conn.cursor()
+            cur.execute("UPDATE kp_jobs SET status='error', error=%s, updated_at=NOW() WHERE id=%s", (str(e), job_id))
+            conn.commit()
+        except Exception: pass
+    finally:
+        if conn: conn.close()
+
+
+def handle_deepseek_chat(body: dict, cors_headers: dict) -> dict:
+    """Асинхронный запуск DeepSeek через очередь в БД — обходит таймаут платформы."""
     api_key = os.environ.get('OPENROUTER_API_KEY', '')
     if not api_key:
         return {'statusCode': 500, 'headers': cors_headers, 'body': json.dumps({'error': 'OPENROUTER_API_KEY не настроен'})}
@@ -1146,125 +1216,25 @@ def handle_deepseek_chat(body: dict, cors_headers: dict) -> dict:
     if not messages:
         return {'statusCode': 400, 'headers': cors_headers, 'body': json.dumps({'error': 'messages обязателен'})}
 
-    company_details = body.get('company_details', '')
-    company_vat = body.get('company_vat', '')
-    mode = body.get('mode', 'kp')  # 'kp' или 'roadmap'
-    company_block = ''
-    if company_details:
-        company_block = f'\n\n═══ ИСПОЛНИТЕЛЬ (РЕКВИЗИТЫ) ═══\n{company_details}\nСтавка НДС: {company_vat}\nВСЕ суммы указывай {("с учётом " + company_vat) if company_vat else "без НДС"}'
+    # Создаём job в БД и запускаем фоновый поток
+    # Сразу возвращаем job_id — фронт поллингует check_job
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO kp_jobs (action, status, input_data, created_at, updated_at) VALUES (%s, %s, %s, NOW(), NOW()) RETURNING id",
+        ('deepseek_chat', 'pending', json.dumps(body, ensure_ascii=False))
+    )
+    job_id = str(cur.fetchone()[0])
+    conn.commit()
+    conn.close()
 
-    # --- Обработка загруженных файлов ---
-    # files_text — уже извлечённый текст (парсинг PDF/Word/Excel сделан заранее)
-    # files_b64  — изображения, описываем через vision-модель отдельным вызовом
-    files_text = body.get('files_text', '')
-    files_b64 = body.get('files_b64', []) or []
-
-    # Описываем каждое изображение через vision-модель (gemini-flash — дёшево и быстро)
-    image_descriptions = []
-    for f in files_b64:
-        ftype = f.get('type', '')
-        data_b64 = f.get('data', '')
-        name = f.get('name', 'изображение')
-        if not data_b64:
-            continue
-        if not (ftype.startswith('image/') or name.lower().endswith(('.jpg', '.jpeg', '.png', '.webp'))):
-            continue
-        mime = ftype if ftype.startswith('image/') else 'image/jpeg'
-        try:
-            vision_payload = {
-                'model': 'google/gemini-flash-1.5',
-                'messages': [{
-                    'role': 'user',
-                    'content': [
-                        {'type': 'text', 'text': 'Подробно опиши содержимое этого изображения на русском языке. Если это документ, таблица, чертёж или техническое задание — извлеки все данные, цифры, текст, названия. Если это скриншот — опиши всё что видишь.'},
-                        {'type': 'image_url', 'image_url': {'url': f'data:{mime};base64,{data_b64}'}}
-                    ]
-                }],
-                'max_tokens': 1500,
-            }
-            with _httpx.Client(timeout=20) as vc:
-                vr = vc.post(
-                    'https://openrouter.ai/api/v1/chat/completions',
-                    headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
-                    json=vision_payload
-                )
-            if vr.status_code == 200:
-                desc = vr.json()['choices'][0]['message']['content']
-                image_descriptions.append(f'=== ИЗОБРАЖЕНИЕ: {name} ===\n{desc}')
-            else:
-                image_descriptions.append(f'=== ИЗОБРАЖЕНИЕ: {name} === [не удалось описать: {vr.status_code}]')
-        except Exception as e:
-            image_descriptions.append(f'=== ИЗОБРАЖЕНИЕ: {name} === [ошибка описания: {e}]')
-
-    # Собираем весь контекст в единый текстовый блок
-    all_context_parts = []
-    if files_text:
-        all_context_parts.append(files_text[:12000])
-    if image_descriptions:
-        all_context_parts.extend(image_descriptions)
-
-    # Добавляем контекст в последнее сообщение пользователя
-    chat_messages = list(messages)
-    if all_context_parts:
-        context_block = '\n\n'.join(all_context_parts)
-        last_user_text = chat_messages[-1].get('content', '') if chat_messages else ''
-        combined = f'{last_user_text}\n\nСОДЕРЖИМОЕ ЗАГРУЖЕННЫХ ФАЙЛОВ:\n{context_block}'.strip()
-        chat_messages[-1] = {'role': 'user', 'content': combined}
-
-    if mode == 'roadmap':
-        system_prompt = ROADMAP_CHAT_PROMPT + company_block
-    else:
-        system_prompt = DEEPSEEK_SYSTEM_PROMPT + company_block
-
-    payload = {
-        'model': 'deepseek/deepseek-chat',
-        'messages': [{'role': 'system', 'content': system_prompt}] + chat_messages,
-        'temperature': 0.5,
-        'max_tokens': 1800,
-    }
-
-    with _httpx.Client(timeout=28) as client:
-        resp = client.post(
-            'https://openrouter.ai/api/v1/chat/completions',
-            headers={
-                'Authorization': f'Bearer {api_key}',
-                'Content-Type': 'application/json',
-                'HTTP-Referer': 'https://poehali.dev',
-                'X-Title': 'DEAD SPACE KP Chat',
-            },
-            json=payload
-        )
-
-    if resp.status_code != 200:
-        return {'statusCode': resp.status_code, 'headers': cors_headers, 'body': json.dumps({'error': f'OpenRouter: {resp.text[:300]}'})}
-
-    data = resp.json()
-    assistant_message = data['choices'][0]['message']['content']
-
-    kp_json = None
-    roadmap_json = None
-    clean_message = assistant_message
-
-    # Парсим KP_JSON
-    if '<<<KP_JSON>>>' in assistant_message and '<<<END_KP_JSON>>>' in assistant_message:
-        s = assistant_message.index('<<<KP_JSON>>>') + len('<<<KP_JSON>>>')
-        e = assistant_message.index('<<<END_KP_JSON>>>')
-        try: kp_json = json.loads(assistant_message[s:e].strip())
-        except Exception: kp_json = None
-        clean_message = assistant_message[:assistant_message.index('<<<KP_JSON>>>')].strip()
-
-    # Парсим ROADMAP_JSON
-    if '<<<ROADMAP_JSON>>>' in assistant_message and '<<<END_ROADMAP_JSON>>>' in assistant_message:
-        s = assistant_message.index('<<<ROADMAP_JSON>>>') + len('<<<ROADMAP_JSON>>>')
-        e = assistant_message.index('<<<END_ROADMAP_JSON>>>')
-        try: roadmap_json = json.loads(assistant_message[s:e].strip())
-        except Exception: roadmap_json = None
-        clean_message = assistant_message[:assistant_message.index('<<<ROADMAP_JSON>>>')].strip()
+    t = threading.Thread(target=_run_deepseek_chat_job, args=(job_id, body), daemon=True)
+    t.start()
 
     return {
         'statusCode': 200,
         'headers': cors_headers,
-        'body': json.dumps({'message': clean_message, 'kp_json': kp_json, 'roadmap_json': roadmap_json}, ensure_ascii=False)
+        'body': json.dumps({'job_id': job_id, 'status': 'pending'})
     }
 
 

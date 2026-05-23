@@ -480,14 +480,9 @@ export function AIKPGenerator() {
     setLoadingSeconds(0);
     timerRef.current = setInterval(() => setLoadingSeconds(s => s + 1), 1000);
 
-    const controller = new AbortController();
-    abortRef.current = controller;
-    const timeoutId = setTimeout(() => controller.abort(), 90000);
-
     try {
       const resp = await fetch(API_URL, {
         method: 'POST',
-        signal: controller.signal,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'deepseek_chat',
@@ -497,22 +492,40 @@ export function AIKPGenerator() {
           mode,
         }),
       });
-      clearTimeout(timeoutId);
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const data = await resp.json();
-      if (data.error) throw new Error(data.error);
-      setMessages(prev => [...prev, { role: 'assistant', content: data.message || 'Готово.' }]);
-      if (data.kp_json) {
-        const kp = data.kp_json as KpData;
-        const hasData = (kp.project && kp.project !== '' && kp.project !== 'Проект') ||
-          (kp.stages || []).some(s => s.sum > 0 && s.title !== '');
-        if (hasData) setKpData(kp);
+      const startData = await resp.json();
+      if (startData.error) throw new Error(startData.error);
+
+      const jobId = startData.job_id;
+      if (!jobId) throw new Error('Не получен job_id');
+
+      const deadline = Date.now() + 90000;
+      while (Date.now() < deadline) {
+        await new Promise(r => setTimeout(r, 2000));
+        const pollResp = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'check_job', job_id: jobId }),
+        });
+        if (!pollResp.ok) continue;
+        const poll = await pollResp.json();
+        if (poll.status === 'done' && poll.data) {
+          const data = poll.data;
+          setMessages(prev => [...prev, { role: 'assistant', content: data.message || 'Готово.' }]);
+          if (data.kp_json) {
+            const kp = data.kp_json as KpData;
+            const hasData = (kp.project && kp.project !== '' && kp.project !== 'Проект') ||
+              (kp.stages || []).some((s: KpStage) => s.sum > 0 && s.title !== '');
+            if (hasData) setKpData(kp);
+          }
+          if (data.roadmap_json) setRoadmapData(data.roadmap_json);
+          break;
+        }
+        if (poll.status === 'error') throw new Error(poll.error || 'Ошибка генерации');
       }
-      if (data.roadmap_json) setRoadmapData(data.roadmap_json);
+      if (Date.now() >= deadline) throw new Error('Время ожидания истекло');
     } catch (err) {
-      clearTimeout(timeoutId);
-      const isAbort = err instanceof DOMException && err.name === 'AbortError';
-      setMessages(prev => [...prev, { role: 'assistant', content: isAbort ? 'Время ожидания истекло. Попробуйте ещё раз.' : `Ошибка: ${err instanceof Error ? err.message : 'неизвестная'}` }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: `Ошибка: ${err instanceof Error ? err.message : 'неизвестная'}` }]);
     } finally {
       if (timerRef.current) clearInterval(timerRef.current);
       setLoadingSeconds(0);
@@ -654,15 +667,10 @@ export function AIKPGenerator() {
     setLoadingSeconds(0);
     timerRef.current = setInterval(() => setLoadingSeconds(s => s + 1), 1000);
 
-    // AbortController — отмена по таймауту 50 сек
-    const controller = new AbortController();
-    abortRef.current = controller;
-    const timeoutId = setTimeout(() => controller.abort(), 90000);
-
     try {
+      // Шаг 1: запускаем job (backend сразу отвечает job_id, не ждёт DeepSeek)
       const resp = await fetch(API_URL, {
         method: 'POST',
-        signal: controller.signal,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'deepseek_chat',
@@ -673,35 +681,48 @@ export function AIKPGenerator() {
           mode,
         }),
       });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const startData = await resp.json();
+      if (startData.error) throw new Error(startData.error);
 
-      clearTimeout(timeoutId);
+      const jobId = startData.job_id;
+      if (!jobId) throw new Error('Не получен job_id от сервера');
 
-      if (!resp.ok) {
-        const errText = await resp.text().catch(() => '');
-        throw new Error(`HTTP ${resp.status}: ${errText.slice(0, 200)}`);
+      // Шаг 2: поллинг каждые 2 сек до готовности (макс 90 сек)
+      const deadline = Date.now() + 90000;
+      while (Date.now() < deadline) {
+        await new Promise(r => setTimeout(r, 2000));
+
+        const pollResp = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'check_job', job_id: jobId }),
+        });
+        if (!pollResp.ok) continue;
+        const poll = await pollResp.json();
+
+        if (poll.status === 'done' && poll.data) {
+          const data = poll.data;
+          const aiText = data.message || 'Готово.';
+          setMessages(prev => [...prev, { role: 'assistant', content: aiText }]);
+          if (data.kp_json) {
+            const kp = data.kp_json as KpData;
+            const hasData = (kp.project && kp.project !== '' && kp.project !== 'Проект') ||
+              (kp.stages || []).some((s: KpStage) => s.sum > 0 && s.title !== '');
+            if (hasData) setKpData(kp);
+          }
+          if (data.roadmap_json) setRoadmapData(data.roadmap_json);
+          break;
+        }
+        if (poll.status === 'error') {
+          throw new Error(poll.error || 'Ошибка генерации');
+        }
+        // pending — продолжаем поллинг
       }
+      if (Date.now() >= deadline) throw new Error('Время ожидания истекло (90 сек). Попробуйте ещё раз.');
 
-      const data = await resp.json();
-      if (data.error) throw new Error(data.error);
-
-      const aiText = data.message || 'Готово.';
-      setMessages(prev => [...prev, { role: 'assistant', content: aiText }]);
-
-      if (data.kp_json) {
-        // Фильтруем: берём только если есть хоть один этап с суммой > 0 или название проекта
-        const kp = data.kp_json as KpData;
-        const hasData = (kp.project && kp.project !== 'Проект' && kp.project !== '') ||
-          (kp.stages || []).some(s => s.sum > 0 && s.title !== '');
-        if (hasData) setKpData(kp);
-      }
-      if (data.roadmap_json) setRoadmapData(data.roadmap_json);
     } catch (err) {
-      clearTimeout(timeoutId);
-      const isAbort = err instanceof DOMException && err.name === 'AbortError';
-      const msg = isAbort
-        ? 'Превышено время ожидания (50 сек). Попробуйте упростить запрос или уменьшить файлы.'
-        : `Ошибка: ${err instanceof Error ? err.message : 'неизвестная ошибка'}`;
-      setMessages(prev => [...prev, { role: 'assistant', content: msg }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: `Ошибка: ${err instanceof Error ? err.message : 'неизвестная'}` }]);
     } finally {
       if (timerRef.current) clearInterval(timerRef.current);
       setLoadingSeconds(0);
