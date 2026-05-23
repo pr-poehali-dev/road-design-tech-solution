@@ -80,6 +80,24 @@ def extract_text_from_docx(data: bytes) -> str:
         return f'[Ошибка чтения DOCX: {e}]'
 
 
+def extract_text_from_excel(data: bytes) -> str:
+    try:
+        import openpyxl
+        wb = openpyxl.load_workbook(io.BytesIO(data), read_only=True, data_only=True)
+        parts = []
+        for sheet_name in wb.sheetnames:
+            ws = wb[sheet_name]
+            parts.append(f'\n[Лист: {sheet_name}]')
+            for row in ws.iter_rows(values_only=True):
+                cells = [str(c) if c is not None else '' for c in row]
+                non_empty = [c for c in cells if c.strip()]
+                if non_empty:
+                    parts.append(' | '.join(cells).strip(' |'))
+        return '\n'.join(parts)
+    except Exception as e:
+        return f'[Ошибка чтения Excel: {e}]'
+
+
 PRICE_LIST = [
     {"code": "ОП-ОКС.БЗУ", "name": "Благоустройство земельного участка (БЗУ под ключ)", "unit": "га", "price_per_unit": 500000, "min_order_sum": 500000, "special_rules": "Округление площади: 1.1–1.4 как 1 га; 1.5–1.9 как 2 га"},
     {"code": "ОП-ППТ понижающие условия", "name": "ППТ, гос, понижающие условия", "unit": "га", "price_per_unit": 215000, "special_rules": "Коэффициент 0.15 для понижающих условий"},
@@ -1079,7 +1097,9 @@ DEEPSEEK_SYSTEM_PROMPT = """Ты — опытный инженер-сметчи�
 
 
 def handle_deepseek_chat(body: dict, cors_headers: dict) -> dict:
-    """Синхронный вызов DeepSeek R1 через OpenRouter для генерации КП в диалоге"""
+    """Синхронный вызов DeepSeek R1 через OpenRouter для генерации КП в диалоге.
+    Поддерживает загрузку файлов: PDF, DOCX, XLSX, CSV, изображения (base64).
+    """
     import httpx as _httpx
     api_key = os.environ.get('OPENROUTER_API_KEY', '')
     if not api_key:
@@ -1089,11 +1109,67 @@ def handle_deepseek_chat(body: dict, cors_headers: dict) -> dict:
     if not messages:
         return {'statusCode': 400, 'headers': cors_headers, 'body': json.dumps({'error': 'messages обязателен'})}
 
+    # --- Обработка загруженных файлов ---
+    files_b64 = body.get('files_b64', [])
+    extracted_texts = []
+    image_contents = []
+
+    for f in files_b64:
+        name = f.get('name', 'файл')
+        ftype = f.get('type', '')
+        data_b64 = f.get('data', '')
+        if not data_b64:
+            continue
+        raw = base64.b64decode(data_b64)
+
+        if 'pdf' in ftype:
+            text = extract_text_from_pdf(raw)
+            extracted_texts.append(f'=== ФАЙЛ: {name} (PDF) ===\n{text}\n')
+        elif 'word' in ftype or 'document' in ftype or name.endswith('.docx') or name.endswith('.doc'):
+            text = extract_text_from_docx(raw)
+            extracted_texts.append(f'=== ФАЙЛ: {name} (Word) ===\n{text}\n')
+        elif 'sheet' in ftype or 'excel' in ftype or name.endswith('.xlsx') or name.endswith('.xls'):
+            text = extract_text_from_excel(raw)
+            extracted_texts.append(f'=== ФАЙЛ: {name} (Excel) ===\n{text}\n')
+        elif 'csv' in ftype or name.endswith('.csv'):
+            try:
+                text = raw.decode('utf-8', errors='replace')
+            except Exception:
+                text = '[Ошибка чтения CSV]'
+            extracted_texts.append(f'=== ФАЙЛ: {name} (CSV) ===\n{text}\n')
+        elif ftype.startswith('image/') or name.lower().endswith(('.jpg', '.jpeg', '.png', '.webp')):
+            # Изображения передаём как vision-контент (поддерживается OpenRouter)
+            mime = ftype if ftype.startswith('image/') else 'image/jpeg'
+            image_contents.append({
+                'type': 'image_url',
+                'image_url': {'url': f'data:{mime};base64,{data_b64}'}
+            })
+
+    # Добавляем извлечённый текст в последнее сообщение пользователя
+    chat_messages = list(messages)
+    if extracted_texts or image_contents:
+        file_block = '\n\n'.join(extracted_texts)
+        last_user_text = chat_messages[-1].get('content', '') if chat_messages else ''
+
+        if image_contents:
+            # Мультимодальный формат для изображений
+            content_parts = []
+            if last_user_text:
+                content_parts.append({'type': 'text', 'text': last_user_text})
+            if file_block:
+                content_parts.append({'type': 'text', 'text': f'\n\nСОДЕРЖИМОЕ ЗАГРУЖЕННЫХ ДОКУМЕНТОВ:\n{file_block[:12000]}'})
+            content_parts.extend(image_contents)
+            chat_messages[-1] = {'role': 'user', 'content': content_parts}
+        elif file_block:
+            # Только текстовые файлы — добавляем текст
+            combined = f'{last_user_text}\n\nСОДЕРЖИМОЕ ЗАГРУЖЕННЫХ ДОКУМЕНТОВ:\n{file_block[:14000]}'.strip()
+            chat_messages[-1] = {'role': 'user', 'content': combined}
+
     payload = {
         'model': 'deepseek/deepseek-r1',
-        'messages': [{'role': 'system', 'content': DEEPSEEK_SYSTEM_PROMPT}] + messages,
+        'messages': [{'role': 'system', 'content': DEEPSEEK_SYSTEM_PROMPT}] + chat_messages,
         'temperature': 0.7,
-        'max_tokens': 3000,
+        'max_tokens': 4000,
     }
 
     with _httpx.Client(timeout=55) as client:

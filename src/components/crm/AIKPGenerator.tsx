@@ -33,11 +33,40 @@ interface KpData {
   notes?: string;
 }
 
+interface AttachedFile {
+  name: string;
+  type: string;
+  size: number;
+  b64: string;
+}
+
 const NAVY = '#1e3a5f';
 const GOLD = '#b8860b';
 
 function formatMoney(n: number) {
   return n.toLocaleString('ru-RU') + ' ₽';
+}
+
+function formatSize(bytes: number) {
+  if (bytes < 1024) return bytes + ' Б';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' КБ';
+  return (bytes / 1024 / 1024).toFixed(1) + ' МБ';
+}
+
+function fileIcon(type: string) {
+  if (type.includes('pdf')) return 'FileText';
+  if (type.includes('word') || type.includes('document')) return 'FileType2';
+  if (type.includes('sheet') || type.includes('excel') || type.includes('csv')) return 'Table2';
+  if (type.includes('image')) return 'Image';
+  return 'Paperclip';
+}
+
+function fileColor(type: string) {
+  if (type.includes('pdf')) return 'text-red-400';
+  if (type.includes('word') || type.includes('document')) return 'text-blue-400';
+  if (type.includes('sheet') || type.includes('excel') || type.includes('csv')) return 'text-green-400';
+  if (type.includes('image')) return 'text-purple-400';
+  return 'text-gray-400';
 }
 
 function KPPreview({ kp }: { kp: KpData }) {
@@ -49,7 +78,6 @@ function KPPreview({ kp }: { kp: KpData }) {
 
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden text-sm font-sans">
-      {/* Шапка */}
       <div className="px-6 py-4" style={{ background: NAVY }}>
         <p className="text-white/60 text-xs uppercase tracking-widest mb-1">Коммерческое предложение</p>
         <h2 className="text-white text-lg font-bold leading-tight">{kp.project || 'Проект'}</h2>
@@ -57,7 +85,6 @@ function KPPreview({ kp }: { kp: KpData }) {
       </div>
 
       <div className="px-6 py-4 space-y-4">
-        {/* Этапы */}
         {(kp.stages || []).length > 0 && (
           <div>
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Состав работ</p>
@@ -82,7 +109,6 @@ function KPPreview({ kp }: { kp: KpData }) {
           </div>
         )}
 
-        {/* Итого */}
         {total > 0 && (
           <div className="rounded-xl p-3 space-y-1" style={{ background: '#f0f4f8' }}>
             <div className="flex justify-between text-xs text-gray-500">
@@ -98,7 +124,6 @@ function KPPreview({ kp }: { kp: KpData }) {
           </div>
         )}
 
-        {/* Оплата */}
         {total > 0 && (
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-xl p-3 text-center" style={{ background: '#f0f4f8' }}>
@@ -114,7 +139,6 @@ function KPPreview({ kp }: { kp: KpData }) {
           </div>
         )}
 
-        {/* Результаты */}
         {(kp.results || []).length > 0 && (
           <div>
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Результаты</p>
@@ -129,7 +153,6 @@ function KPPreview({ kp }: { kp: KpData }) {
           </div>
         )}
 
-        {/* Сроки и примечания */}
         <div className="grid grid-cols-2 gap-3 text-xs">
           {kp.timeline && (
             <div className="rounded-lg p-2.5" style={{ background: '#f0f4f8' }}>
@@ -154,19 +177,56 @@ export function AIKPGenerator() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [kpData, setKpData] = useState<KpData | null>(null);
+  const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    setUploadingFiles(true);
+
+    const results: AttachedFile[] = [];
+    for (const file of files) {
+      const b64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve(result.split(',')[1]);
+        };
+        reader.readAsDataURL(file);
+      });
+      results.push({ name: file.name, type: file.type, size: file.size, b64 });
+    }
+
+    setAttachedFiles(prev => [...prev, ...results]);
+    setUploadingFiles(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeFile = (idx: number) => {
+    setAttachedFiles(prev => prev.filter((_, i) => i !== idx));
+  };
+
   const sendMessage = async () => {
     const text = input.trim();
-    if (!text || loading) return;
+    if ((!text && attachedFiles.length === 0) || loading) return;
 
-    const newMessages: Message[] = [...messages, { role: 'user', content: text }];
+    const fileNames = attachedFiles.map(f => f.name).join(', ');
+    const userText = text
+      ? (attachedFiles.length > 0 ? `${text}\n\n📎 Прикреплены файлы: ${fileNames}` : text)
+      : `📎 Загружены файлы для анализа: ${fileNames}`;
+
+    const newMessages: Message[] = [...messages, { role: 'user', content: userText }];
     setMessages(newMessages);
     setInput('');
+    const filesToSend = [...attachedFiles];
+    setAttachedFiles([]);
     setLoading(true);
 
     try {
@@ -175,14 +235,17 @@ export function AIKPGenerator() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'deepseek_chat',
-          messages: newMessages,
+          messages: newMessages.map(m => ({ role: m.role, content: m.content })),
+          files_b64: filesToSend.map(f => ({
+            name: f.name,
+            type: f.type,
+            data: f.b64,
+          })),
         }),
       });
       const data = await resp.json();
       setMessages(prev => [...prev, { role: 'assistant', content: data.message || '...' }]);
-      if (data.kp_json) {
-        setKpData(data.kp_json);
-      }
+      if (data.kp_json) setKpData(data.kp_json);
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Ошибка соединения. Попробуйте ещё раз.' }]);
     } finally {
@@ -198,18 +261,25 @@ export function AIKPGenerator() {
     setMessages([]);
     setKpData(null);
     setInput('');
+    setAttachedFiles([]);
   };
+
+  const ACCEPTED = '.pdf,.doc,.docx,.xls,.xlsx,.csv,.png,.jpg,.jpeg,.webp';
 
   return (
     <div className="flex gap-6 h-[calc(100vh-200px)] min-h-[600px]">
       {/* Левая панель — чат */}
       <div className="flex flex-col flex-1 bg-slate-900/60 border border-cyan-500/20 rounded-2xl overflow-hidden">
-        {/* Хедер чата */}
+        {/* Хедер */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-cyan-500/20 bg-slate-900/80">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
             <span className="text-sm font-semibold text-cyan-300">DeepSeek R1</span>
             <Badge variant="outline" className="text-xs border-cyan-500/30 text-cyan-400">AI-КП</Badge>
+            <Badge variant="outline" className="text-xs border-purple-500/30 text-purple-400">
+              <Icon name="Paperclip" size={10} className="mr-1" />
+              PDF · Word · Excel · Фото
+            </Badge>
           </div>
           <Button variant="ghost" size="sm" onClick={clearChat} className="text-gray-400 hover:text-white">
             <Icon name="Trash2" size={14} className="mr-1" />
@@ -222,12 +292,13 @@ export function AIKPGenerator() {
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-center gap-3 text-gray-500">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-purple-600/20 flex items-center justify-center border border-cyan-500/20">
-                <Icon name="MessageSquare" size={28} className="text-cyan-400" />
+                <Icon name="BrainCircuit" size={28} className="text-cyan-400" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-400">Опишите проект</p>
-                <p className="text-xs text-gray-600 mt-1">DeepSeek задаст уточняющие вопросы<br />и сформирует структуру КП</p>
+                <p className="text-sm font-medium text-gray-400">Опишите проект или загрузите файлы</p>
+                <p className="text-xs text-gray-600 mt-1">DeepSeek проанализирует ТЗ, чертежи, таблицы<br />и автоматически сформирует КП с суммами</p>
               </div>
+              {/* Подсказки */}
               <div className="grid grid-cols-1 gap-2 mt-2 w-full max-w-sm">
                 {[
                   'Нужно КП на транспортное обследование перекрёстка',
@@ -243,6 +314,15 @@ export function AIKPGenerator() {
                   </button>
                 ))}
               </div>
+              {/* Drag-and-drop зона */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full max-w-sm mt-1 rounded-xl border-2 border-dashed border-slate-700 hover:border-cyan-500/50 p-4 flex flex-col items-center gap-1.5 transition-all group"
+              >
+                <Icon name="Upload" size={20} className="text-slate-600 group-hover:text-cyan-500 transition-colors" />
+                <p className="text-xs text-slate-600 group-hover:text-cyan-400 transition-colors">Загрузить ТЗ, PDF, Word, Excel, фото</p>
+                <p className="text-[10px] text-slate-700">pdf · doc · docx · xls · xlsx · csv · jpg · png</p>
+              </button>
             </div>
           )}
 
@@ -271,7 +351,7 @@ export function AIKPGenerator() {
               <div className="bg-slate-800 border border-slate-700 rounded-2xl rounded-bl-sm px-4 py-3">
                 <div className="flex items-center gap-1.5 text-cyan-400 text-xs mb-2">
                   <Icon name="Sparkles" size={12} />
-                  DeepSeek R1
+                  DeepSeek R1 анализирует{attachedFiles.length > 0 ? ' файлы' : ''}...
                 </div>
                 <div className="flex gap-1">
                   {[0, 1, 2].map(i => (
@@ -284,26 +364,79 @@ export function AIKPGenerator() {
           <div ref={bottomRef} />
         </div>
 
+        {/* Прикреплённые файлы */}
+        {attachedFiles.length > 0 && (
+          <div className="px-4 py-2 border-t border-cyan-500/10 bg-slate-900/60">
+            <div className="flex flex-wrap gap-2">
+              {attachedFiles.map((f, i) => (
+                <div key={i} className="flex items-center gap-1.5 bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs max-w-[200px]">
+                  <Icon name={fileIcon(f.type)} size={12} className={fileColor(f.type)} />
+                  <span className="text-gray-300 truncate flex-1">{f.name}</span>
+                  <span className="text-gray-600 shrink-0">{formatSize(f.size)}</span>
+                  <button onClick={() => removeFile(i)} className="text-gray-600 hover:text-red-400 transition-colors shrink-0 ml-0.5">
+                    <Icon name="X" size={11} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Инпут */}
         <div className="px-4 py-3 border-t border-cyan-500/20 bg-slate-900/80">
           <div className="flex gap-2 items-end">
+            {/* Кнопка прикрепить файл */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept={ACCEPTED}
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingFiles || loading}
+              className="text-gray-400 hover:text-cyan-300 hover:bg-slate-800 h-[60px] px-3 border border-slate-700 rounded-xl relative"
+              title="Прикрепить файл (PDF, Word, Excel, изображение)"
+            >
+              {uploadingFiles
+                ? <Icon name="Loader2" size={18} className="animate-spin" />
+                : <Icon name="Paperclip" size={18} />
+              }
+              {attachedFiles.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-cyan-500 text-[9px] text-white font-bold flex items-center justify-center">
+                  {attachedFiles.length}
+                </span>
+              )}
+            </Button>
+
             <Textarea
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKey}
-              placeholder="Опишите проект или задайте вопрос... (Ctrl+Enter — отправить)"
+              placeholder="Опишите проект или прикрепите файлы ТЗ... (Ctrl+Enter — отправить)"
               className="flex-1 resize-none bg-slate-800/80 border-slate-700 text-gray-200 placeholder:text-gray-600 focus:border-cyan-500/50 min-h-[60px] max-h-[120px]"
               rows={2}
             />
             <Button
               onClick={sendMessage}
-              disabled={loading || !input.trim()}
+              disabled={loading || (!input.trim() && attachedFiles.length === 0)}
               className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white h-[60px] px-4"
             >
               <Icon name={loading ? 'Loader2' : 'Send'} size={18} className={loading ? 'animate-spin' : ''} />
             </Button>
           </div>
-          <p className="text-xs text-gray-600 mt-1.5">Ctrl+Enter для отправки</p>
+          <p className="text-xs text-gray-600 mt-1.5 flex items-center gap-2">
+            <span>Ctrl+Enter для отправки</span>
+            <span className="text-slate-700">·</span>
+            <span className="flex items-center gap-1">
+              <Icon name="Paperclip" size={10} className="text-slate-600" />
+              PDF, Word, Excel, CSV, JPG, PNG
+            </span>
+          </p>
         </div>
       </div>
 
@@ -325,6 +458,19 @@ export function AIKPGenerator() {
             <div>
               <p className="text-sm font-medium text-slate-500">Превью КП</p>
               <p className="text-xs text-slate-600 mt-1">Появится автоматически<br />когда DeepSeek соберёт данные</p>
+            </div>
+            <div className="mt-2 space-y-1.5 text-left w-full">
+              {[
+                { icon: 'FileText', color: 'text-red-400', label: 'PDF — техзадания, договоры' },
+                { icon: 'FileType2', color: 'text-blue-400', label: 'Word — описания, ТЗ' },
+                { icon: 'Table2', color: 'text-green-400', label: 'Excel — сметы, объёмы' },
+                { icon: 'Image', color: 'text-purple-400', label: 'Фото — чертежи, планы' },
+              ].map(({ icon, color, label }) => (
+                <div key={label} className="flex items-center gap-2 text-xs text-slate-600">
+                  <Icon name={icon} size={12} className={color} />
+                  <span>{label}</span>
+                </div>
+              ))}
             </div>
           </div>
         )}
