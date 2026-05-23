@@ -468,11 +468,57 @@ export function AIKPGenerator() {
     setTimeout(() => { win.print(); win.close(); }, 400);
   };
 
-  const regenerateDoc = () => {
+  const regenerateDoc = async () => {
+    if (loading) return;
     const prompt = mode === 'kp'
-      ? 'Сформируй полное коммерческое предложение на основе нашего обсуждения. Включи все этапы, суммы, сроки и результаты.'
-      : 'Сформируй подробную дорожную карту проекта на основе нашего обсуждения. Включи все этапы, подэтапы, сроки, ответственных и вехи. Добавь диаграмму Ганта.';
-    setInput(prompt);
+      ? 'Сформируй полное коммерческое предложение на основе нашего обсуждения. Включи все этапы работ с суммами, сроки и результаты.'
+      : 'Сформируй подробную дорожную карту на основе нашего обсуждения. Все этапы, подэтапы, сроки, ответственные, вехи.';
+
+    const newMessages: Message[] = [...messages, { role: 'user', content: prompt }];
+    setMessages(newMessages);
+    setLoading(true);
+    setLoadingSeconds(0);
+    timerRef.current = setInterval(() => setLoadingSeconds(s => s + 1), 1000);
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const timeoutId = setTimeout(() => controller.abort(), 90000);
+
+    try {
+      const resp = await fetch(API_URL, {
+        method: 'POST',
+        signal: controller.signal,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'deepseek_chat',
+          messages: newMessages,
+          company_details: company.details,
+          company_vat: company.vat,
+          mode,
+        }),
+      });
+      clearTimeout(timeoutId);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+      if (data.error) throw new Error(data.error);
+      setMessages(prev => [...prev, { role: 'assistant', content: data.message || 'Готово.' }]);
+      if (data.kp_json) {
+        const kp = data.kp_json as KpData;
+        const hasData = (kp.project && kp.project !== '' && kp.project !== 'Проект') ||
+          (kp.stages || []).some(s => s.sum > 0 && s.title !== '');
+        if (hasData) setKpData(kp);
+      }
+      if (data.roadmap_json) setRoadmapData(data.roadmap_json);
+    } catch (err) {
+      clearTimeout(timeoutId);
+      const isAbort = err instanceof DOMException && err.name === 'AbortError';
+      setMessages(prev => [...prev, { role: 'assistant', content: isAbort ? 'Время ожидания истекло. Попробуйте ещё раз.' : `Ошибка: ${err instanceof Error ? err.message : 'неизвестная'}` }]);
+    } finally {
+      if (timerRef.current) clearInterval(timerRef.current);
+      setLoadingSeconds(0);
+      setLoading(false);
+      abortRef.current = null;
+    }
   };
 
   useEffect(() => {
@@ -638,8 +684,16 @@ export function AIKPGenerator() {
       const data = await resp.json();
       if (data.error) throw new Error(data.error);
 
-      setMessages(prev => [...prev, { role: 'assistant', content: data.message || 'Готово.' }]);
-      if (data.kp_json) setKpData(data.kp_json);
+      const aiText = data.message || 'Готово.';
+      setMessages(prev => [...prev, { role: 'assistant', content: aiText }]);
+
+      if (data.kp_json) {
+        // Фильтруем: берём только если есть хоть один этап с суммой > 0 или название проекта
+        const kp = data.kp_json as KpData;
+        const hasData = (kp.project && kp.project !== 'Проект' && kp.project !== '') ||
+          (kp.stages || []).some(s => s.sum > 0 && s.title !== '');
+        if (hasData) setKpData(kp);
+      }
       if (data.roadmap_json) setRoadmapData(data.roadmap_json);
     } catch (err) {
       clearTimeout(timeoutId);
