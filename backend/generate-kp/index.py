@@ -1253,42 +1253,43 @@ def handler(event: dict, context) -> dict:
         total_chars = 0
         MAX_CHARS_PER_FILE = 15000
 
+        OCR_PROMPT = (
+            'Это изображение технического документа, скан, фото или скриншот. '
+            'Выполни:\n'
+            '1. Извлеки ВЕСЬ текст дословно (OCR)\n'
+            '2. Опиши таблицы, схемы, чертежи\n'
+            '3. Укажи все числа, размеры, характеристики\n'
+            '4. Печати, подписи, реквизиты — тоже укажи\n'
+            'Отвечай на русском языке.'
+        )
+        # Пробуем модели по очереди — первая доступная выигрывает
+        OCR_MODELS = [
+            'google/gemini-2.0-flash-001',
+            'google/gemini-flash-1.5-8b',
+            'openai/gpt-4o-mini',
+        ]
+
         def ocr_image(data_b64: str, mime: str, fname: str) -> str:
-            """Распознаёт текст и описывает изображение через Gemini Flash."""
-            try:
-                vision_payload = {
-                    'model': 'google/gemini-flash-1.5',
-                    'messages': [{
-                        'role': 'user',
-                        'content': [
-                            {
-                                'type': 'text',
-                                'text': (
-                                    'Это изображение из технического документа, скан, фото или скриншот. '
-                                    'Выполни следующее:\n'
-                                    '1. Извлеки ВЕСЬ текст с изображения дословно (OCR)\n'
-                                    '2. Опиши все таблицы, схемы, графики, чертежи\n'
-                                    '3. Укажи все числа, размеры, характеристики\n'
-                                    '4. Если есть печати, подписи, реквизиты — укажи их\n'
-                                    'Ответ давай на русском языке. Сначала весь извлечённый текст, затем описание.'
-                                )
-                            },
-                            {'type': 'image_url', 'image_url': {'url': f'data:{mime};base64,{data_b64}'}}
-                        ]
-                    }],
-                    'max_tokens': 2000,
-                }
-                with _httpx.Client(timeout=20) as vc:
-                    vr = vc.post(
-                        'https://openrouter.ai/api/v1/chat/completions',
-                        headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
-                        json=vision_payload
-                    )
-                if vr.status_code == 200:
-                    return vr.json()['choices'][0]['message']['content']
-                return f'[OCR ошибка {vr.status_code}: {vr.text[:200]}]'
-            except Exception as e:
-                return f'[OCR исключение: {e}]'
+            """Распознаёт текст с изображения через vision-модели (с fallback)."""
+            content = [
+                {'type': 'text', 'text': OCR_PROMPT},
+                {'type': 'image_url', 'image_url': {'url': f'data:{mime};base64,{data_b64}'}}
+            ]
+            last_err = ''
+            for model in OCR_MODELS:
+                try:
+                    with _httpx.Client(timeout=15) as vc:
+                        vr = vc.post(
+                            'https://openrouter.ai/api/v1/chat/completions',
+                            headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+                            json={'model': model, 'messages': [{'role': 'user', 'content': content}], 'max_tokens': 2000}
+                        )
+                    if vr.status_code == 200:
+                        return vr.json()['choices'][0]['message']['content']
+                    last_err = f'{model}: HTTP {vr.status_code} — {vr.text[:150]}'
+                except Exception as e:
+                    last_err = f'{model}: {e}'
+            return f'[OCR не удался. Последняя ошибка: {last_err}]'
 
         for f in files_b64:
             name = f.get('name', 'файл')
