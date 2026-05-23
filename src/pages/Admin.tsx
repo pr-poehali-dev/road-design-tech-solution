@@ -29,7 +29,13 @@ const Admin = () => {
   });
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showProjectCard, setShowProjectCard] = useState(false);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('admin_active_tab') || 'dashboard';
+  });
+  const handleTabChange = (tab: string) => {
+    localStorage.setItem('admin_active_tab', tab);
+    setActiveTab(tab);
+  };
   const [productionContext, setProductionContext] = useState<{
     kpData: Record<string, unknown>;
     roadmapData: Record<string, unknown> | null;
@@ -63,7 +69,7 @@ const Admin = () => {
 
   const handleSelectLeadForWork = (lead: Lead) => {
     setSelectedLead(lead);
-    setActiveTab('production');
+    handleTabChange('production');
   };
 
   const handleGenerateSpec = async (_data: Record<string, unknown>) => {
@@ -112,7 +118,7 @@ const Admin = () => {
   ) => {
     setProductionContext({ kpData, roadmapData, filesText, kpId });
     setKpContext({ kpData, roadmapData, filesText, kpId });
-    setActiveTab('production');
+    handleTabChange('production');
   };
 
 
@@ -162,7 +168,7 @@ const Admin = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
           <TabsList className="grid w-full grid-cols-11 lg:w-auto bg-slate-900/50 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
             <TabsTrigger value="dashboard" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-[0_0_15px_rgba(6,182,212,0.5)]">
               <Icon name="LayoutDashboard" size={16} className="mr-2" />
