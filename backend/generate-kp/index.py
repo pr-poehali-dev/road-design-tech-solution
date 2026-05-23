@@ -1244,7 +1244,11 @@ def handler(event: dict, context) -> dict:
     if action == 'parse_files':
         import httpx as _httpx
         api_key = os.environ.get('OPENROUTER_API_KEY', '')
+        if not api_key:
+            return {'statusCode': 500, 'headers': CORS, 'body': json.dumps({'error': 'OPENROUTER_API_KEY не настроен'})}
         files_b64 = body.get('files_b64', [])
+        if not files_b64:
+            return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'error': 'files_b64 пустой'})}
         results = []
         total_chars = 0
         MAX_CHARS_PER_FILE = 15000

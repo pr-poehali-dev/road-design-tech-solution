@@ -224,16 +224,29 @@ export function AIKPGenerator() {
       const isImage = file.type.startsWith('image/') || /\.(png|jpe?g|webp|gif|bmp|tiff)$/i.test(file.name || '');
       const limit = isImage ? MAX_IMG_BYTES : MAX_FILE_BYTES;
       const truncated = file.size > limit;
-      const b64 = await new Promise<string>((resolve) => {
-        const slice = truncated ? file.slice(0, limit) : file;
-        const reader = new FileReader();
-        reader.onload = () => resolve((reader.result as string).split(',')[1]);
-        reader.readAsDataURL(slice);
-      });
+
+      let b64 = '';
+      try {
+        b64 = await new Promise<string>((resolve, reject) => {
+          const slice = truncated ? file.slice(0, limit) : file;
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = reader.result as string;
+            const idx = result.indexOf(',');
+            resolve(idx !== -1 ? result.slice(idx + 1) : '');
+          };
+          reader.onerror = () => reject(new Error('Ошибка чтения файла'));
+          reader.readAsDataURL(slice);
+        });
+      } catch (e) { void e; }
+
+      if (!b64 || b64.length < 10) continue;
+
       const name = file.name || `скриншот_${Date.now()}.png`;
+      const mime = file.type || (isImage ? 'image/png' : 'application/octet-stream');
       pending.push({
         name: name + (truncated ? ` (сжато до ${formatSize(limit)})` : ''),
-        type: file.type || (isImage ? 'image/png' : 'application/octet-stream'),
+        type: mime,
         size: file.size,
         b64,
         parsed: false,
