@@ -180,6 +180,7 @@ export function AIKPGenerator() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingSeconds, setLoadingSeconds] = useState(0);
   const [kpData, setKpData] = useState<KpData | null>(null);
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const [uploadingFiles, setUploadingFiles] = useState(false);
@@ -187,6 +188,8 @@ export function AIKPGenerator() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounterRef = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -298,26 +301,52 @@ export function AIKPGenerator() {
       }
     }
 
+    // Запускаем таймер
+    setLoadingSeconds(0);
+    timerRef.current = setInterval(() => setLoadingSeconds(s => s + 1), 1000);
+
+    // AbortController — отмена по таймауту 50 сек
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const timeoutId = setTimeout(() => controller.abort(), 50000);
+
     try {
       const resp = await fetch(API_URL, {
         method: 'POST',
+        signal: controller.signal,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'deepseek_chat',
           messages: newMessages.map(m => ({ role: m.role, content: m.content })),
-          // Передаём только текст — никакого base64 для тяжёлых файлов
           files_text: extractedTexts.join('\n\n'),
-          // Изображения — base64 (обычно небольшие)
           files_b64: imageFiles.length > 0 ? imageFiles : undefined,
         }),
       });
+
+      clearTimeout(timeoutId);
+
+      if (!resp.ok) {
+        const errText = await resp.text().catch(() => '');
+        throw new Error(`HTTP ${resp.status}: ${errText.slice(0, 200)}`);
+      }
+
       const data = await resp.json();
-      setMessages(prev => [...prev, { role: 'assistant', content: data.message || '...' }]);
+      if (data.error) throw new Error(data.error);
+
+      setMessages(prev => [...prev, { role: 'assistant', content: data.message || 'Готово.' }]);
       if (data.kp_json) setKpData(data.kp_json);
-    } catch {
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Ошибка соединения. Попробуйте ещё раз.' }]);
+    } catch (err) {
+      clearTimeout(timeoutId);
+      const isAbort = err instanceof DOMException && err.name === 'AbortError';
+      const msg = isAbort
+        ? 'Превышено время ожидания (50 сек). Попробуйте упростить запрос или уменьшить файлы.'
+        : `Ошибка: ${err instanceof Error ? err.message : 'неизвестная ошибка'}`;
+      setMessages(prev => [...prev, { role: 'assistant', content: msg }]);
     } finally {
+      if (timerRef.current) clearInterval(timerRef.current);
+      setLoadingSeconds(0);
       setLoading(false);
+      abortRef.current = null;
     }
   };
 
@@ -472,16 +501,33 @@ export function AIKPGenerator() {
 
           {loading && (
             <div className="flex justify-start">
-              <div className="bg-slate-800 border border-slate-700 rounded-2xl rounded-bl-sm px-4 py-3">
-                <div className="flex items-center gap-1.5 text-cyan-400 text-xs mb-2">
-                  <Icon name="Sparkles" size={12} />
-                  DeepSeek R1 анализирует{attachedFiles.length > 0 ? ' файлы' : ''}...
+              <div className="bg-slate-800 border border-slate-700 rounded-2xl rounded-bl-sm px-4 py-3 min-w-[200px]">
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <div className="flex items-center gap-1.5 text-cyan-400 text-xs">
+                    <Icon name="Sparkles" size={12} />
+                    DeepSeek думает...
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-500 tabular-nums">{loadingSeconds}с</span>
+                    <button
+                      onClick={() => abortRef.current?.abort()}
+                      className="text-[10px] text-slate-600 hover:text-red-400 transition-colors border border-slate-700 rounded px-1.5 py-0.5"
+                    >
+                      Отмена
+                    </button>
+                  </div>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-1 mb-1">
                   {[0, 1, 2].map(i => (
                     <div key={i} className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
                   ))}
                 </div>
+                {loadingSeconds > 15 && (
+                  <p className="text-[10px] text-slate-600 mt-1">Анализирую документы, чуть подождите...</p>
+                )}
+                {loadingSeconds > 30 && (
+                  <p className="text-[10px] text-amber-600 mt-0.5">Запрос сложный, ещё немного...</p>
+                )}
               </div>
             </div>
           )}

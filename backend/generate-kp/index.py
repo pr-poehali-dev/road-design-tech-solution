@@ -1146,13 +1146,13 @@ def handle_deepseek_chat(body: dict, cors_headers: dict) -> dict:
             chat_messages[-1] = {'role': 'user', 'content': combined}
 
     payload = {
-        'model': 'deepseek/deepseek-r1',
+        'model': 'deepseek/deepseek-chat',
         'messages': [{'role': 'system', 'content': DEEPSEEK_SYSTEM_PROMPT}] + chat_messages,
         'temperature': 0.7,
         'max_tokens': 4000,
     }
 
-    with _httpx.Client(timeout=55) as client:
+    with _httpx.Client(timeout=25) as client:
         resp = client.post(
             'https://openrouter.ai/api/v1/chat/completions',
             headers={
