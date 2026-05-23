@@ -1110,40 +1110,62 @@ def handle_deepseek_chat(body: dict, cors_headers: dict) -> dict:
         return {'statusCode': 400, 'headers': cors_headers, 'body': json.dumps({'error': 'messages обязателен'})}
 
     # --- Обработка загруженных файлов ---
-    # files_text — уже извлечённый текст (парсинг был сделан заранее на /parse_files)
-    # files_b64  — только изображения (передаются как vision)
+    # files_text — уже извлечённый текст (парсинг PDF/Word/Excel сделан заранее)
+    # files_b64  — изображения, описываем через vision-модель отдельным вызовом
     files_text = body.get('files_text', '')
     files_b64 = body.get('files_b64', []) or []
-    image_contents = []
 
+    # Описываем каждое изображение через vision-модель (gemini-flash — дёшево и быстро)
+    image_descriptions = []
     for f in files_b64:
         ftype = f.get('type', '')
         data_b64 = f.get('data', '')
+        name = f.get('name', 'изображение')
         if not data_b64:
             continue
-        if ftype.startswith('image/') or f.get('name', '').lower().endswith(('.jpg', '.jpeg', '.png', '.webp')):
-            mime = ftype if ftype.startswith('image/') else 'image/jpeg'
-            image_contents.append({
-                'type': 'image_url',
-                'image_url': {'url': f'data:{mime};base64,{data_b64}'}
-            })
+        if not (ftype.startswith('image/') or name.lower().endswith(('.jpg', '.jpeg', '.png', '.webp'))):
+            continue
+        mime = ftype if ftype.startswith('image/') else 'image/jpeg'
+        try:
+            vision_payload = {
+                'model': 'google/gemini-flash-1.5',
+                'messages': [{
+                    'role': 'user',
+                    'content': [
+                        {'type': 'text', 'text': 'Подробно опиши содержимое этого изображения на русском языке. Если это документ, таблица, чертёж или техническое задание — извлеки все данные, цифры, текст, названия. Если это скриншот — опиши всё что видишь.'},
+                        {'type': 'image_url', 'image_url': {'url': f'data:{mime};base64,{data_b64}'}}
+                    ]
+                }],
+                'max_tokens': 1500,
+            }
+            with _httpx.Client(timeout=20) as vc:
+                vr = vc.post(
+                    'https://openrouter.ai/api/v1/chat/completions',
+                    headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+                    json=vision_payload
+                )
+            if vr.status_code == 200:
+                desc = vr.json()['choices'][0]['message']['content']
+                image_descriptions.append(f'=== ИЗОБРАЖЕНИЕ: {name} ===\n{desc}')
+            else:
+                image_descriptions.append(f'=== ИЗОБРАЖЕНИЕ: {name} === [не удалось описать: {vr.status_code}]')
+        except Exception as e:
+            image_descriptions.append(f'=== ИЗОБРАЖЕНИЕ: {name} === [ошибка описания: {e}]')
+
+    # Собираем весь контекст в единый текстовый блок
+    all_context_parts = []
+    if files_text:
+        all_context_parts.append(files_text[:12000])
+    if image_descriptions:
+        all_context_parts.extend(image_descriptions)
 
     # Добавляем контекст в последнее сообщение пользователя
     chat_messages = list(messages)
-    if files_text or image_contents:
+    if all_context_parts:
+        context_block = '\n\n'.join(all_context_parts)
         last_user_text = chat_messages[-1].get('content', '') if chat_messages else ''
-
-        if image_contents:
-            content_parts = []
-            if last_user_text:
-                content_parts.append({'type': 'text', 'text': last_user_text})
-            if files_text:
-                content_parts.append({'type': 'text', 'text': f'\n\nСОДЕРЖИМОЕ ЗАГРУЖЕННЫХ ДОКУМЕНТОВ:\n{files_text[:12000]}'})
-            content_parts.extend(image_contents)
-            chat_messages[-1] = {'role': 'user', 'content': content_parts}
-        elif files_text:
-            combined = f'{last_user_text}\n\nСОДЕРЖИМОЕ ЗАГРУЖЕННЫХ ДОКУМЕНТОВ:\n{files_text[:14000]}'.strip()
-            chat_messages[-1] = {'role': 'user', 'content': combined}
+        combined = f'{last_user_text}\n\nСОДЕРЖИМОЕ ЗАГРУЖЕННЫХ ФАЙЛОВ:\n{context_block}'.strip()
+        chat_messages[-1] = {'role': 'user', 'content': combined}
 
     payload = {
         'model': 'deepseek/deepseek-chat',
@@ -1152,7 +1174,7 @@ def handle_deepseek_chat(body: dict, cors_headers: dict) -> dict:
         'max_tokens': 4000,
     }
 
-    with _httpx.Client(timeout=25) as client:
+    with _httpx.Client(timeout=20) as client:
         resp = client.post(
             'https://openrouter.ai/api/v1/chat/completions',
             headers={

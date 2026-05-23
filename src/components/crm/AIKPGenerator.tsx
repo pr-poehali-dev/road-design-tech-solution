@@ -308,7 +308,7 @@ export function AIKPGenerator() {
     // AbortController — отмена по таймауту 50 сек
     const controller = new AbortController();
     abortRef.current = controller;
-    const timeoutId = setTimeout(() => controller.abort(), 50000);
+    const timeoutId = setTimeout(() => controller.abort(), 90000);
 
     try {
       const resp = await fetch(API_URL, {
