@@ -1110,59 +1110,39 @@ def handle_deepseek_chat(body: dict, cors_headers: dict) -> dict:
         return {'statusCode': 400, 'headers': cors_headers, 'body': json.dumps({'error': 'messages обязателен'})}
 
     # --- Обработка загруженных файлов ---
-    files_b64 = body.get('files_b64', [])
-    extracted_texts = []
+    # files_text — уже извлечённый текст (парсинг был сделан заранее на /parse_files)
+    # files_b64  — только изображения (передаются как vision)
+    files_text = body.get('files_text', '')
+    files_b64 = body.get('files_b64', []) or []
     image_contents = []
 
     for f in files_b64:
-        name = f.get('name', 'файл')
         ftype = f.get('type', '')
         data_b64 = f.get('data', '')
         if not data_b64:
             continue
-        raw = base64.b64decode(data_b64)
-
-        if 'pdf' in ftype:
-            text = extract_text_from_pdf(raw)
-            extracted_texts.append(f'=== ФАЙЛ: {name} (PDF) ===\n{text}\n')
-        elif 'word' in ftype or 'document' in ftype or name.endswith('.docx') or name.endswith('.doc'):
-            text = extract_text_from_docx(raw)
-            extracted_texts.append(f'=== ФАЙЛ: {name} (Word) ===\n{text}\n')
-        elif 'sheet' in ftype or 'excel' in ftype or name.endswith('.xlsx') or name.endswith('.xls'):
-            text = extract_text_from_excel(raw)
-            extracted_texts.append(f'=== ФАЙЛ: {name} (Excel) ===\n{text}\n')
-        elif 'csv' in ftype or name.endswith('.csv'):
-            try:
-                text = raw.decode('utf-8', errors='replace')
-            except Exception:
-                text = '[Ошибка чтения CSV]'
-            extracted_texts.append(f'=== ФАЙЛ: {name} (CSV) ===\n{text}\n')
-        elif ftype.startswith('image/') or name.lower().endswith(('.jpg', '.jpeg', '.png', '.webp')):
-            # Изображения передаём как vision-контент (поддерживается OpenRouter)
+        if ftype.startswith('image/') or f.get('name', '').lower().endswith(('.jpg', '.jpeg', '.png', '.webp')):
             mime = ftype if ftype.startswith('image/') else 'image/jpeg'
             image_contents.append({
                 'type': 'image_url',
                 'image_url': {'url': f'data:{mime};base64,{data_b64}'}
             })
 
-    # Добавляем извлечённый текст в последнее сообщение пользователя
+    # Добавляем контекст в последнее сообщение пользователя
     chat_messages = list(messages)
-    if extracted_texts or image_contents:
-        file_block = '\n\n'.join(extracted_texts)
+    if files_text or image_contents:
         last_user_text = chat_messages[-1].get('content', '') if chat_messages else ''
 
         if image_contents:
-            # Мультимодальный формат для изображений
             content_parts = []
             if last_user_text:
                 content_parts.append({'type': 'text', 'text': last_user_text})
-            if file_block:
-                content_parts.append({'type': 'text', 'text': f'\n\nСОДЕРЖИМОЕ ЗАГРУЖЕННЫХ ДОКУМЕНТОВ:\n{file_block[:12000]}'})
+            if files_text:
+                content_parts.append({'type': 'text', 'text': f'\n\nСОДЕРЖИМОЕ ЗАГРУЖЕННЫХ ДОКУМЕНТОВ:\n{files_text[:12000]}'})
             content_parts.extend(image_contents)
             chat_messages[-1] = {'role': 'user', 'content': content_parts}
-        elif file_block:
-            # Только текстовые файлы — добавляем текст
-            combined = f'{last_user_text}\n\nСОДЕРЖИМОЕ ЗАГРУЖЕННЫХ ДОКУМЕНТОВ:\n{file_block[:14000]}'.strip()
+        elif files_text:
+            combined = f'{last_user_text}\n\nСОДЕРЖИМОЕ ЗАГРУЖЕННЫХ ДОКУМЕНТОВ:\n{files_text[:14000]}'.strip()
             chat_messages[-1] = {'role': 'user', 'content': combined}
 
     payload = {
@@ -1237,6 +1217,40 @@ def handler(event: dict, context) -> dict:
 
     if action == 'ping':
         return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'status': 'ok'})}
+
+    # Парсинг файлов — только извлечение текста, без ИИ
+    if action == 'parse_files':
+        files_b64 = body.get('files_b64', [])
+        results = []
+        total_chars = 0
+        MAX_CHARS_PER_FILE = 15000
+        for f in files_b64:
+            name = f.get('name', 'файл')
+            ftype = f.get('type', '')
+            data_b64 = f.get('data', '')
+            if not data_b64:
+                results.append({'name': name, 'text': '[Пустой файл]', 'error': True})
+                continue
+            try:
+                raw = base64.b64decode(data_b64)
+                if 'pdf' in ftype or name.lower().endswith('.pdf'):
+                    text = extract_text_from_pdf(raw)
+                elif 'word' in ftype or 'document' in ftype or name.lower().endswith(('.docx', '.doc')):
+                    text = extract_text_from_docx(raw)
+                elif 'sheet' in ftype or 'excel' in ftype or name.lower().endswith(('.xlsx', '.xls')):
+                    text = extract_text_from_excel(raw)
+                elif 'csv' in ftype or name.lower().endswith('.csv'):
+                    text = raw.decode('utf-8', errors='replace')
+                elif ftype.startswith('image/') or name.lower().endswith(('.jpg', '.jpeg', '.png', '.webp')):
+                    text = f'[Изображение: {name} — будет передано в ИИ напрямую]'
+                else:
+                    text = raw.decode('utf-8', errors='replace')
+                text = text[:MAX_CHARS_PER_FILE]
+                total_chars += len(text)
+                results.append({'name': name, 'text': text, 'chars': len(text), 'error': False})
+            except Exception as e:
+                results.append({'name': name, 'text': f'[Ошибка: {e}]', 'error': True})
+        return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'files': results, 'total_chars': total_chars}, ensure_ascii=False)}
 
     # DeepSeek чат — синхронный, без очереди
     if action == 'deepseek_chat':

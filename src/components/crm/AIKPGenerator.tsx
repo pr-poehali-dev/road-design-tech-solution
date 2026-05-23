@@ -37,7 +37,11 @@ interface AttachedFile {
   name: string;
   type: string;
   size: number;
-  b64: string;
+  b64: string;         // только для изображений
+  text?: string;       // извлечённый текст (для PDF/Word/Excel/CSV)
+  parsed: boolean;     // уже обработан на backend
+  parsing?: boolean;   // идёт парсинг
+  error?: boolean;
 }
 
 const NAVY = '#1e3a5f';
@@ -191,20 +195,47 @@ export function AIKPGenerator() {
     if (!files.length) return;
     setUploadingFiles(true);
 
-    const results: AttachedFile[] = [];
+    // Читаем base64
+    const pending: AttachedFile[] = [];
     for (const file of files) {
       const b64 = await new Promise<string>((resolve) => {
         const reader = new FileReader();
-        reader.onload = () => {
-          const result = reader.result as string;
-          resolve(result.split(',')[1]);
-        };
+        reader.onload = () => resolve((reader.result as string).split(',')[1]);
         reader.readAsDataURL(file);
       });
-      results.push({ name: file.name, type: file.type, size: file.size, b64 });
+      const isImage = file.type.startsWith('image/');
+      pending.push({ name: file.name, type: file.type, size: file.size, b64, parsed: isImage, parsing: !isImage });
+    }
+    setAttachedFiles(prev => [...prev, ...pending]);
+
+    // Парсим текстовые файлы на backend (по одному чтобы не превышать лимит)
+    for (const f of pending) {
+      if (f.parsed) continue; // изображения не парсим
+      try {
+        const resp = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'parse_files',
+            files_b64: [{ name: f.name, type: f.type, data: f.b64 }],
+          }),
+        });
+        const data = await resp.json();
+        const parsed = data.files?.[0];
+        setAttachedFiles(prev => prev.map(af =>
+          af.name === f.name && af.parsing
+            ? { ...af, text: parsed?.text || '[Не удалось извлечь текст]', parsed: true, parsing: false, error: parsed?.error }
+            : af
+        ));
+      } catch {
+        setAttachedFiles(prev => prev.map(af =>
+          af.name === f.name && af.parsing
+            ? { ...af, text: '[Ошибка парсинга]', parsed: true, parsing: false, error: true }
+            : af
+        ));
+      }
     }
 
-    setAttachedFiles(prev => [...prev, ...results]);
     setUploadingFiles(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -215,7 +246,8 @@ export function AIKPGenerator() {
 
   const sendMessage = async () => {
     const text = input.trim();
-    if ((!text && attachedFiles.length === 0) || loading) return;
+    const stillParsing = attachedFiles.some(f => f.parsing);
+    if ((!text && attachedFiles.length === 0) || loading || stillParsing) return;
 
     const fileNames = attachedFiles.map(f => f.name).join(', ');
     const userText = text
@@ -229,6 +261,18 @@ export function AIKPGenerator() {
     setAttachedFiles([]);
     setLoading(true);
 
+    // Собираем извлечённый текст (без base64!) и изображения отдельно
+    const extractedTexts: string[] = [];
+    const imageFiles: { name: string; type: string; data: string }[] = [];
+
+    for (const f of filesToSend) {
+      if (f.type.startsWith('image/')) {
+        imageFiles.push({ name: f.name, type: f.type, data: f.b64 });
+      } else if (f.text) {
+        extractedTexts.push(`=== ${f.name} ===\n${f.text}`);
+      }
+    }
+
     try {
       const resp = await fetch(API_URL, {
         method: 'POST',
@@ -236,11 +280,10 @@ export function AIKPGenerator() {
         body: JSON.stringify({
           action: 'deepseek_chat',
           messages: newMessages.map(m => ({ role: m.role, content: m.content })),
-          files_b64: filesToSend.map(f => ({
-            name: f.name,
-            type: f.type,
-            data: f.b64,
-          })),
+          // Передаём только текст — никакого base64 для тяжёлых файлов
+          files_text: extractedTexts.join('\n\n'),
+          // Изображения — base64 (обычно небольшие)
+          files_b64: imageFiles.length > 0 ? imageFiles : undefined,
         }),
       });
       const data = await resp.json();
@@ -369,10 +412,24 @@ export function AIKPGenerator() {
           <div className="px-4 py-2 border-t border-cyan-500/10 bg-slate-900/60">
             <div className="flex flex-wrap gap-2">
               {attachedFiles.map((f, i) => (
-                <div key={i} className="flex items-center gap-1.5 bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs max-w-[200px]">
-                  <Icon name={fileIcon(f.type)} size={12} className={fileColor(f.type)} />
+                <div key={i} className={`flex items-center gap-1.5 border rounded-lg px-2.5 py-1.5 text-xs max-w-[220px] transition-colors ${
+                  f.error ? 'bg-red-900/30 border-red-700/50' :
+                  f.parsing ? 'bg-slate-800 border-cyan-700/50 animate-pulse' :
+                  'bg-slate-800 border-slate-700'
+                }`}>
+                  {f.parsing
+                    ? <Icon name="Loader2" size={12} className="text-cyan-400 animate-spin shrink-0" />
+                    : <Icon name={fileIcon(f.type)} size={12} className={f.error ? 'text-red-400' : fileColor(f.type)} />
+                  }
                   <span className="text-gray-300 truncate flex-1">{f.name}</span>
-                  <span className="text-gray-600 shrink-0">{formatSize(f.size)}</span>
+                  {f.parsing
+                    ? <span className="text-cyan-600 shrink-0 text-[9px]">парсинг...</span>
+                    : f.error
+                      ? <span className="text-red-500 shrink-0 text-[9px]">ошибка</span>
+                      : f.text
+                        ? <span className="text-green-600 shrink-0 text-[9px]">{(f.text.length / 1000).toFixed(0)}к симв.</span>
+                        : <span className="text-gray-600 shrink-0">{formatSize(f.size)}</span>
+                  }
                   <button onClick={() => removeFile(i)} className="text-gray-600 hover:text-red-400 transition-colors shrink-0 ml-0.5">
                     <Icon name="X" size={11} />
                   </button>
@@ -423,19 +480,29 @@ export function AIKPGenerator() {
             />
             <Button
               onClick={sendMessage}
-              disabled={loading || (!input.trim() && attachedFiles.length === 0)}
-              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white h-[60px] px-4"
+              disabled={loading || (!input.trim() && attachedFiles.length === 0) || attachedFiles.some(f => f.parsing)}
+              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white h-[60px] px-4 disabled:opacity-40"
+              title={attachedFiles.some(f => f.parsing) ? 'Подождите — файлы ещё обрабатываются...' : 'Отправить'}
             >
               <Icon name={loading ? 'Loader2' : 'Send'} size={18} className={loading ? 'animate-spin' : ''} />
             </Button>
           </div>
           <p className="text-xs text-gray-600 mt-1.5 flex items-center gap-2">
-            <span>Ctrl+Enter для отправки</span>
-            <span className="text-slate-700">·</span>
-            <span className="flex items-center gap-1">
-              <Icon name="Paperclip" size={10} className="text-slate-600" />
-              PDF, Word, Excel, CSV, JPG, PNG
-            </span>
+            {attachedFiles.some(f => f.parsing) ? (
+              <span className="text-cyan-600 flex items-center gap-1">
+                <Icon name="Loader2" size={10} className="animate-spin" />
+                Извлекаю текст из файлов, подождите...
+              </span>
+            ) : (
+              <>
+                <span>Ctrl+Enter для отправки</span>
+                <span className="text-slate-700">·</span>
+                <span className="flex items-center gap-1">
+                  <Icon name="Paperclip" size={10} className="text-slate-600" />
+                  PDF, Word, Excel, CSV, JPG, PNG
+                </span>
+              </>
+            )}
           </p>
         </div>
       </div>
