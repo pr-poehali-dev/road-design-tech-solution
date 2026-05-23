@@ -262,13 +262,20 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="ai-kp" className="space-y-4">
+            {/* placeholder — сам компонент рендерится ниже всегда */}
+          </TabsContent>
+        </Tabs>
+
+        {/* AIKPGenerator всегда смонтирован — скрывается когда не активен */}
+        <div className={activeTab === 'ai-kp' ? 'block' : 'hidden'}>
+          <div className="space-y-4">
             <div>
               <h2 className="text-lg font-bold text-cyan-300">DeepSeek — генератор КП</h2>
               <p className="text-sm text-gray-400">Опишите проект в чате — ИИ задаст уточняющие вопросы и сформирует структуру КП с суммами</p>
             </div>
             <AIKPGenerator />
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
       </main>
 
       <ProjectCard

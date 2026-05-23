@@ -176,12 +176,19 @@ function KPPreview({ kp }: { kp: KpData }) {
   );
 }
 
+const LS_MESSAGES = 'aikp_messages';
+const LS_KPDATA = 'aikp_kpdata';
+
 export function AIKPGenerator() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    try { return JSON.parse(localStorage.getItem(LS_MESSAGES) || '[]'); } catch { return []; }
+  });
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingSeconds, setLoadingSeconds] = useState(0);
-  const [kpData, setKpData] = useState<KpData | null>(null);
+  const [kpData, setKpData] = useState<KpData | null>(() => {
+    try { return JSON.parse(localStorage.getItem(LS_KPDATA) || 'null'); } catch { return null; }
+  });
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const [uploadingFiles, setUploadingFiles] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -190,6 +197,15 @@ export function AIKPGenerator() {
   const dragCounterRef = useRef(0);
   const abortRef = useRef<AbortController | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Сохраняем messages и kpData в localStorage при каждом изменении
+  useEffect(() => {
+    try { localStorage.setItem(LS_MESSAGES, JSON.stringify(messages)); } catch (e) { void e; }
+  }, [messages]);
+
+  useEffect(() => {
+    try { localStorage.setItem(LS_KPDATA, JSON.stringify(kpData)); } catch (e) { void e; }
+  }, [kpData]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -367,6 +383,7 @@ export function AIKPGenerator() {
     setKpData(null);
     setInput('');
     setAttachedFiles([]);
+    try { localStorage.removeItem(LS_MESSAGES); localStorage.removeItem(LS_KPDATA); } catch (e) { void e; }
   };
 
   // Обработка вставки из буфера (Ctrl+V / скриншоты)
