@@ -190,27 +190,42 @@ export function AIKPGenerator() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Максимальный размер файла для отправки на backend (4 MB)
+  const MAX_FILE_BYTES = 4 * 1024 * 1024;
+
+  const readFileChunk = (file: File): Promise<string> =>
+    new Promise((resolve) => {
+      // Берём только первые MAX_FILE_BYTES байт чтобы не превысить лимит запроса
+      const slice = file.size > MAX_FILE_BYTES ? file.slice(0, MAX_FILE_BYTES) : file;
+      const reader = new FileReader();
+      reader.onload = () => resolve((reader.result as string).split(',')[1]);
+      reader.readAsDataURL(slice);
+    });
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
     setUploadingFiles(true);
 
-    // Читаем base64
     const pending: AttachedFile[] = [];
     for (const file of files) {
-      const b64 = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve((reader.result as string).split(',')[1]);
-        reader.readAsDataURL(file);
-      });
       const isImage = file.type.startsWith('image/');
-      pending.push({ name: file.name, type: file.type, size: file.size, b64, parsed: isImage, parsing: !isImage });
+      const truncated = file.size > MAX_FILE_BYTES;
+      const b64 = await readFileChunk(file);
+      pending.push({
+        name: file.name + (truncated && !isImage ? ` (первые 4 МБ из ${formatSize(file.size)})` : ''),
+        type: file.type,
+        size: file.size,
+        b64,
+        parsed: isImage,
+        parsing: !isImage,
+      });
     }
     setAttachedFiles(prev => [...prev, ...pending]);
 
-    // Парсим текстовые файлы на backend (по одному чтобы не превышать лимит)
+    // Парсим текстовые файлы на backend по одному
     for (const f of pending) {
-      if (f.parsed) continue; // изображения не парсим
+      if (f.parsed) continue;
       try {
         const resp = await fetch(API_URL, {
           method: 'POST',
@@ -220,6 +235,7 @@ export function AIKPGenerator() {
             files_b64: [{ name: f.name, type: f.type, data: f.b64 }],
           }),
         });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const data = await resp.json();
         const parsed = data.files?.[0];
         setAttachedFiles(prev => prev.map(af =>
@@ -227,10 +243,11 @@ export function AIKPGenerator() {
             ? { ...af, text: parsed?.text || '[Не удалось извлечь текст]', parsed: true, parsing: false, error: parsed?.error }
             : af
         ));
-      } catch {
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'ошибка';
         setAttachedFiles(prev => prev.map(af =>
           af.name === f.name && af.parsing
-            ? { ...af, text: '[Ошибка парсинга]', parsed: true, parsing: false, error: true }
+            ? { ...af, text: `[Ошибка: ${msg}]`, parsed: true, parsing: false, error: true }
             : af
         ));
       }
@@ -423,9 +440,9 @@ export function AIKPGenerator() {
                   }
                   <span className="text-gray-300 truncate flex-1">{f.name}</span>
                   {f.parsing
-                    ? <span className="text-cyan-600 shrink-0 text-[9px]">парсинг...</span>
+                    ? <span className="text-cyan-600 shrink-0 text-[9px]">читаю...</span>
                     : f.error
-                      ? <span className="text-red-500 shrink-0 text-[9px]">ошибка</span>
+                      ? <span className="text-red-500 shrink-0 text-[9px]" title={f.text}>файл велик</span>
                       : f.text
                         ? <span className="text-green-600 shrink-0 text-[9px]">{(f.text.length / 1000).toFixed(0)}к симв.</span>
                         : <span className="text-gray-600 shrink-0">{formatSize(f.size)}</span>
