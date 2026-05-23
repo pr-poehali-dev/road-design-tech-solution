@@ -1240,12 +1240,52 @@ def handler(event: dict, context) -> dict:
     if action == 'ping':
         return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'status': 'ok'})}
 
-    # Парсинг файлов — только извлечение текста, без ИИ
+    # Парсинг файлов — извлечение текста + OCR изображений через Gemini Vision
     if action == 'parse_files':
+        import httpx as _httpx
+        api_key = os.environ.get('OPENROUTER_API_KEY', '')
         files_b64 = body.get('files_b64', [])
         results = []
         total_chars = 0
         MAX_CHARS_PER_FILE = 15000
+
+        def ocr_image(data_b64: str, mime: str, fname: str) -> str:
+            """Распознаёт текст и описывает изображение через Gemini Flash."""
+            try:
+                vision_payload = {
+                    'model': 'google/gemini-flash-1.5',
+                    'messages': [{
+                        'role': 'user',
+                        'content': [
+                            {
+                                'type': 'text',
+                                'text': (
+                                    'Это изображение из технического документа, скан, фото или скриншот. '
+                                    'Выполни следующее:\n'
+                                    '1. Извлеки ВЕСЬ текст с изображения дословно (OCR)\n'
+                                    '2. Опиши все таблицы, схемы, графики, чертежи\n'
+                                    '3. Укажи все числа, размеры, характеристики\n'
+                                    '4. Если есть печати, подписи, реквизиты — укажи их\n'
+                                    'Ответ давай на русском языке. Сначала весь извлечённый текст, затем описание.'
+                                )
+                            },
+                            {'type': 'image_url', 'image_url': {'url': f'data:{mime};base64,{data_b64}'}}
+                        ]
+                    }],
+                    'max_tokens': 2000,
+                }
+                with _httpx.Client(timeout=20) as vc:
+                    vr = vc.post(
+                        'https://openrouter.ai/api/v1/chat/completions',
+                        headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+                        json=vision_payload
+                    )
+                if vr.status_code == 200:
+                    return vr.json()['choices'][0]['message']['content']
+                return f'[OCR ошибка {vr.status_code}: {vr.text[:200]}]'
+            except Exception as e:
+                return f'[OCR исключение: {e}]'
+
         for f in files_b64:
             name = f.get('name', 'файл')
             ftype = f.get('type', '')
@@ -1254,22 +1294,27 @@ def handler(event: dict, context) -> dict:
                 results.append({'name': name, 'text': '[Пустой файл]', 'error': True})
                 continue
             try:
-                raw = base64.b64decode(data_b64)
-                if 'pdf' in ftype or name.lower().endswith('.pdf'):
-                    text = extract_text_from_pdf(raw)
-                elif 'word' in ftype or 'document' in ftype or name.lower().endswith(('.docx', '.doc')):
-                    text = extract_text_from_docx(raw)
-                elif 'sheet' in ftype or 'excel' in ftype or name.lower().endswith(('.xlsx', '.xls')):
-                    text = extract_text_from_excel(raw)
-                elif 'csv' in ftype or name.lower().endswith('.csv'):
-                    text = raw.decode('utf-8', errors='replace')
-                elif ftype.startswith('image/') or name.lower().endswith(('.jpg', '.jpeg', '.png', '.webp')):
-                    text = f'[Изображение: {name} — будет передано в ИИ напрямую]'
+                is_image = ftype.startswith('image/') or name.lower().endswith(('.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.tiff'))
+                if is_image:
+                    mime = ftype if ftype.startswith('image/') else 'image/png'
+                    text = ocr_image(data_b64, mime, name)
+                    is_error = text.startswith('[OCR')
                 else:
-                    text = raw.decode('utf-8', errors='replace')
+                    raw = base64.b64decode(data_b64)
+                    if 'pdf' in ftype or name.lower().endswith('.pdf'):
+                        text = extract_text_from_pdf(raw)
+                    elif 'word' in ftype or 'document' in ftype or name.lower().endswith(('.docx', '.doc')):
+                        text = extract_text_from_docx(raw)
+                    elif 'sheet' in ftype or 'excel' in ftype or name.lower().endswith(('.xlsx', '.xls')):
+                        text = extract_text_from_excel(raw)
+                    elif 'csv' in ftype or name.lower().endswith('.csv'):
+                        text = raw.decode('utf-8', errors='replace')
+                    else:
+                        text = raw.decode('utf-8', errors='replace')
+                    is_error = False
                 text = text[:MAX_CHARS_PER_FILE]
                 total_chars += len(text)
-                results.append({'name': name, 'text': text, 'chars': len(text), 'error': False})
+                results.append({'name': name, 'text': text, 'chars': len(text), 'error': is_error, 'ocr': is_image})
             except Exception as e:
                 results.append({'name': name, 'text': f'[Ошибка: {e}]', 'error': True})
         return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'files': results, 'total_chars': total_chars}, ensure_ascii=False)}

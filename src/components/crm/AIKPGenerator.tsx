@@ -229,18 +229,17 @@ export function AIKPGenerator() {
 
     const pending: AttachedFile[] = [];
     for (const file of files) {
-      const isImage = file.type.startsWith('image/');
+      const isImage = file.type.startsWith('image/') || /\.(png|jpe?g|webp|gif|bmp|tiff)$/i.test(file.name || '');
       const truncated = !isImage && file.size > MAX_FILE_BYTES;
       const b64 = await readFileChunk(file);
-      // Для скриншотов из буфера без имени даём автоимя
       const name = file.name || `скриншот_${Date.now()}.png`;
       pending.push({
         name: name + (truncated ? ` (первые 4 МБ из ${formatSize(file.size)})` : ''),
-        type: file.type || 'application/octet-stream',
+        type: file.type || (isImage ? 'image/png' : 'application/octet-stream'),
         size: file.size,
         b64,
-        parsed: isImage,
-        parsing: !isImage,
+        parsed: false,   // все файлы теперь парсятся — включая изображения (OCR)
+        parsing: true,
       });
     }
     setAttachedFiles(prev => [...prev, ...pending]);
@@ -307,13 +306,12 @@ export function AIKPGenerator() {
 
     // Собираем извлечённый текст (без base64!) и изображения отдельно
     const extractedTexts: string[] = [];
-    const imageFiles: { name: string; type: string; data: string }[] = [];
 
     for (const f of filesToSend) {
-      if (f.type.startsWith('image/')) {
-        imageFiles.push({ name: f.name, type: f.type, data: f.b64 });
-      } else if (f.text) {
-        extractedTexts.push(`=== ${f.name} ===\n${f.text}`);
+      if (f.text) {
+        // Для изображений — OCR текст уже получен при парсинге
+        const label = f.type.startsWith('image/') ? `ИЗОБРАЖЕНИЕ (OCR): ${f.name}` : f.name;
+        extractedTexts.push(`=== ${label} ===\n${f.text}`);
       }
     }
 
@@ -335,7 +333,6 @@ export function AIKPGenerator() {
           action: 'deepseek_chat',
           messages: newMessages.map(m => ({ role: m.role, content: m.content })),
           files_text: extractedTexts.join('\n\n'),
-          files_b64: imageFiles.length > 0 ? imageFiles : undefined,
         }),
       });
 
@@ -567,11 +564,16 @@ export function AIKPGenerator() {
                   }
                   <span className="text-gray-300 truncate flex-1">{f.name}</span>
                   {f.parsing
-                    ? <span className="text-cyan-600 shrink-0 text-[9px]">читаю...</span>
+                    ? <span className="text-cyan-600 shrink-0 text-[9px]">
+                        {f.type.startsWith('image/') ? 'OCR...' : 'читаю...'}
+                      </span>
                     : f.error
-                      ? <span className="text-red-500 shrink-0 text-[9px]" title={f.text}>файл велик</span>
+                      ? <span className="text-red-500 shrink-0 text-[9px]" title={f.text}>ошибка</span>
                       : f.text
-                        ? <span className="text-green-600 shrink-0 text-[9px]">{(f.text.length / 1000).toFixed(0)}к симв.</span>
+                        ? <span className="text-green-600 shrink-0 text-[9px]">
+                            {f.type.startsWith('image/') ? '✓OCR' : ''}
+                            {(f.text.length / 1000).toFixed(0)}к
+                          </span>
                         : <span className="text-gray-600 shrink-0">{formatSize(f.size)}</span>
                   }
                   <button onClick={() => removeFile(i)} className="text-gray-600 hover:text-red-400 transition-colors shrink-0 ml-0.5">
