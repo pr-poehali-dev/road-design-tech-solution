@@ -95,6 +95,16 @@ interface KpData {
   notes?: string;
 }
 
+interface RoadmapTask { code: string; title: string; duration: string; responsible?: string; items?: string[]; milestone?: boolean; }
+interface RoadmapPhase { code: string; title: string; duration: string; responsible?: string; tasks: RoadmapTask[]; color?: string; }
+interface RoadmapData {
+  title?: string;
+  client?: string;
+  phases?: RoadmapPhase[];
+  milestones?: { code: string; title: string; day: string }[];
+  notes?: string;
+}
+
 interface AttachedFile {
   name: string;
   type: string;
@@ -135,22 +145,41 @@ function fileColor(type: string) {
   return 'text-gray-400';
 }
 
-function KPPreview({ kp }: { kp: KpData }) {
+function KPPreview({ kp, company, printRef }: { kp: KpData; company: Company; printRef: React.RefObject<HTMLDivElement> }) {
+  const vatRate = company.id === 'kapstroy' ? 22 : company.id === 'ctesc' ? 5 : 0;
   const total = (kp.stages || []).reduce((s, st) => s + st.sum, 0);
-  const vat = Math.round(total * 20 / 120);
-  const exVat = total - vat;
-  const p30 = Math.round(total * 0.3);
-  const p70 = total - p30;
+  const vatAmount = vatRate > 0 ? Math.round(total * vatRate / (100 + vatRate)) : 0;
+  const exVat = total - vatAmount;
+  const p50 = Math.round(total * 0.5);
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden text-sm font-sans">
+    <div ref={printRef} className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden text-sm font-sans">
+      {/* Шапка */}
       <div className="px-6 py-4" style={{ background: NAVY }}>
-        <p className="text-white/60 text-xs uppercase tracking-widest mb-1">Коммерческое предложение</p>
-        <h2 className="text-white text-lg font-bold leading-tight">{kp.project || 'Проект'}</h2>
-        {kp.client && <p className="text-cyan-300 text-xs mt-1">{kp.client}</p>}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1">
+            {company.logo && <img src={company.logo} alt={company.short} className="h-7 object-contain mb-2 brightness-0 invert opacity-90" />}
+            <p className="text-white/60 text-[10px] uppercase tracking-widest mb-1">Коммерческое предложение</p>
+            <h2 className="text-white text-base font-bold leading-snug">{kp.project || 'Проект'}</h2>
+            {kp.client && <p className="text-cyan-300 text-xs mt-1">Заказчик: {kp.client}</p>}
+          </div>
+          {company.stamp && <img src={company.stamp} alt="Печать" className="h-14 w-14 object-contain opacity-80 shrink-0" />}
+        </div>
       </div>
 
       <div className="px-6 py-4 space-y-4">
+        {/* Исполнитель */}
+        <div className="rounded-xl p-3 text-xs space-y-0.5" style={{ background: '#f0f4f8' }}>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Исполнитель</p>
+          <p className="font-bold text-gray-800">{company.full}</p>
+          {company.details.split('\n').slice(1, 4).map((line, i) => (
+            <p key={i} className="text-gray-500">{line}</p>
+          ))}
+          {vatRate === 0 && <p className="text-green-600 font-medium">УСН — без НДС</p>}
+          {vatRate > 0 && <p className="text-blue-600 font-medium">НДС {vatRate}%</p>}
+        </div>
+
+        {/* Состав работ */}
         {(kp.stages || []).length > 0 && (
           <div>
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Состав работ</p>
@@ -175,36 +204,41 @@ function KPPreview({ kp }: { kp: KpData }) {
           </div>
         )}
 
+        {/* Итого */}
         {total > 0 && (
           <div className="rounded-xl p-3 space-y-1" style={{ background: '#f0f4f8' }}>
-            <div className="flex justify-between text-xs text-gray-500">
-              <span>Без НДС</span><span>{formatMoney(exVat)}</span>
-            </div>
-            <div className="flex justify-between text-xs text-gray-500">
-              <span>НДС 20%</span><span>{formatMoney(vat)}</span>
-            </div>
+            {vatRate > 0 && <>
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>Без НДС</span><span>{formatMoney(exVat)}</span>
+              </div>
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>НДС {vatRate}%</span><span>{formatMoney(vatAmount)}</span>
+              </div>
+            </>}
             <div className="flex justify-between font-bold text-sm pt-1 border-t border-gray-300">
-              <span style={{ color: NAVY }}>Итого</span>
+              <span style={{ color: NAVY }}>Итого{vatRate > 0 ? ' с НДС' : ' (без НДС)'}</span>
               <span style={{ color: NAVY }}>{formatMoney(total)}</span>
             </div>
           </div>
         )}
 
+        {/* Оплата */}
         {total > 0 && (
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-xl p-3 text-center" style={{ background: '#f0f4f8' }}>
-              <div className="w-10 h-10 rounded-full mx-auto mb-1.5 flex items-center justify-center text-white text-xs font-bold" style={{ background: NAVY }}>30%</div>
+              <div className="w-10 h-10 rounded-full mx-auto mb-1.5 flex items-center justify-center text-white text-xs font-bold" style={{ background: NAVY }}>50%</div>
               <p className="text-xs font-semibold text-gray-700">Предоплата</p>
-              <p className="text-sm font-bold mt-0.5" style={{ color: NAVY }}>{formatMoney(p30)}</p>
+              <p className="text-sm font-bold mt-0.5" style={{ color: NAVY }}>{formatMoney(p50)}</p>
             </div>
             <div className="rounded-xl p-3 text-center" style={{ background: '#f0f4f8' }}>
-              <div className="w-10 h-10 rounded-full mx-auto mb-1.5 flex items-center justify-center text-white text-xs font-bold" style={{ background: GOLD }}>70%</div>
+              <div className="w-10 h-10 rounded-full mx-auto mb-1.5 flex items-center justify-center text-white text-xs font-bold" style={{ background: GOLD }}>50%</div>
               <p className="text-xs font-semibold text-gray-700">По факту</p>
-              <p className="text-sm font-bold mt-0.5" style={{ color: GOLD }}>{formatMoney(p70)}</p>
+              <p className="text-sm font-bold mt-0.5" style={{ color: GOLD }}>{formatMoney(total - p50)}</p>
             </div>
           </div>
         )}
 
+        {/* Результаты */}
         {(kp.results || []).length > 0 && (
           <div>
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Результаты</p>
@@ -219,6 +253,7 @@ function KPPreview({ kp }: { kp: KpData }) {
           </div>
         )}
 
+        {/* Сроки / Примечания */}
         <div className="grid grid-cols-2 gap-3 text-xs">
           {kp.timeline && (
             <div className="rounded-lg p-2.5" style={{ background: '#f0f4f8' }}>
@@ -233,6 +268,133 @@ function KPPreview({ kp }: { kp: KpData }) {
             </div>
           )}
         </div>
+
+        {/* Подпись */}
+        <div className="border-t border-gray-200 pt-3 flex items-end justify-between">
+          <div className="text-xs text-gray-500 space-y-0.5">
+            <p className="font-medium text-gray-700">{company.full}</p>
+            {company.details.split('\n').filter(l => l.includes('ИНН') || l.includes('директор')).map((l, i) => (
+              <p key={i}>{l}</p>
+            ))}
+          </div>
+          {company.stamp && <img src={company.stamp} alt="Печать" className="h-12 w-12 object-contain opacity-70" />}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const PHASE_COLORS = ['bg-slate-600','bg-blue-600','bg-violet-600','bg-cyan-600','bg-amber-600','bg-red-600','bg-emerald-600','bg-orange-600'];
+
+function RoadmapPreview({ rm, company, printRef }: { rm: RoadmapData; company: Company; printRef: React.RefObject<HTMLDivElement> }) {
+  const phases = rm.phases || [];
+  return (
+    <div ref={printRef} className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden text-sm font-sans">
+      <div className="px-6 py-4" style={{ background: NAVY }}>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            {company.logo && <img src={company.logo} alt={company.short} className="h-7 object-contain mb-2 brightness-0 invert opacity-90" />}
+            <p className="text-white/60 text-[10px] uppercase tracking-widest mb-1">Дорожная карта проекта</p>
+            <h2 className="text-white text-base font-bold leading-snug">{rm.title || 'Дорожная карта'}</h2>
+            {rm.client && <p className="text-cyan-300 text-xs mt-1">Заказчик: {rm.client}</p>}
+          </div>
+          {company.stamp && <img src={company.stamp} alt="Печать" className="h-14 w-14 object-contain opacity-80 shrink-0" />}
+        </div>
+      </div>
+
+      <div className="px-6 py-4 space-y-4">
+        {/* Вехи */}
+        {(rm.milestones || []).length > 0 && (
+          <div>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Ключевые вехи</p>
+            <div className="space-y-1.5">
+              {rm.milestones!.map((m, i) => (
+                <div key={i} className="flex items-center gap-2 text-xs">
+                  <div className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[9px] font-bold shrink-0">{m.code}</div>
+                  <span className="text-gray-700 flex-1">{m.title}</span>
+                  <span className="text-gray-400 shrink-0">{m.day}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Диаграмма Ганта */}
+        {phases.length > 0 && (
+          <div>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Диаграмма Ганта</p>
+            <div className="space-y-1">
+              {phases.map((ph, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className="text-[10px] text-gray-600 w-28 shrink-0 truncate">{ph.code}</div>
+                  <div className="flex-1 bg-gray-100 rounded h-5 overflow-hidden">
+                    <div
+                      className={`h-full ${PHASE_COLORS[i % PHASE_COLORS.length]} flex items-center px-2`}
+                      style={{ width: `${Math.max(15, 100 / phases.length * (i * 0.3 + 1))}%` }}
+                    >
+                      <span className="text-[9px] text-white font-medium truncate">{ph.duration}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Этапы */}
+        {phases.map((ph, i) => (
+          <div key={i} className="rounded-xl overflow-hidden border border-gray-200">
+            <div className={`px-4 py-2 flex items-center justify-between ${PHASE_COLORS[i % PHASE_COLORS.length]}`}>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black text-white bg-white/20 px-2 py-0.5 rounded">{ph.code}</span>
+                <span className="text-xs font-bold text-white">{ph.title}</span>
+              </div>
+              <span className="text-[10px] text-white/80">{ph.duration}</span>
+            </div>
+            {(ph.tasks || []).length > 0 && (
+              <div className="divide-y divide-gray-100">
+                {ph.tasks.map((t, j) => (
+                  <div key={j} className={`px-4 py-2 ${t.milestone ? 'bg-amber-50' : j % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}`}>
+                    <div className="flex items-start gap-2">
+                      <span className={`text-[10px] font-bold shrink-0 pt-0.5 ${t.milestone ? 'text-amber-600' : 'text-gray-400'}`}>{t.code}</span>
+                      <div className="flex-1">
+                        <span className={`text-xs ${t.milestone ? 'font-bold text-amber-800' : 'text-gray-700'}`}>
+                          {t.milestone && '⚑ '}{t.title}
+                        </span>
+                        {(t.items || []).length > 0 && (
+                          <ul className="mt-1 space-y-0.5">
+                            {t.items!.map((item, k) => (
+                              <li key={k} className="flex items-start gap-1.5">
+                                <span className="text-gray-300 mt-1">•</span>
+                                <span className="text-[10px] text-gray-500">{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-gray-400 shrink-0">{t.duration}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+
+        {rm.notes && (
+          <div className="rounded-lg p-3 bg-amber-50 border border-amber-200 text-xs text-amber-800">{rm.notes}</div>
+        )}
+
+        {/* Подпись */}
+        <div className="border-t border-gray-200 pt-3 flex items-end justify-between">
+          <div className="text-xs text-gray-500 space-y-0.5">
+            <p className="font-medium text-gray-700">{company.full}</p>
+            {company.details.split('\n').filter(l => l.includes('ИНН') || l.includes('директор')).map((l, i2) => (
+              <p key={i2}>{l}</p>
+            ))}
+          </div>
+          {company.stamp && <img src={company.stamp} alt="Печать" className="h-12 w-12 object-contain opacity-70" />}
+        </div>
       </div>
     </div>
   );
@@ -240,12 +402,18 @@ function KPPreview({ kp }: { kp: KpData }) {
 
 const LS_MESSAGES = 'aikp_messages';
 const LS_KPDATA = 'aikp_kpdata';
+const LS_RMDATA = 'aikp_rmdata';
+const LS_MODE = 'aikp_mode';
 
 export function AIKPGenerator() {
   const [selectedCompany, setSelectedCompany] = useState<string>(() =>
     localStorage.getItem(LS_COMPANY) || 'kapstroy'
   );
   const company = COMPANIES.find(c => c.id === selectedCompany) || COMPANIES[0];
+
+  const [mode, setMode] = useState<'kp' | 'roadmap'>(() =>
+    (localStorage.getItem(LS_MODE) as 'kp' | 'roadmap') || 'kp'
+  );
 
   const [messages, setMessages] = useState<Message[]>(() => {
     try { return JSON.parse(localStorage.getItem(LS_MESSAGES) || '[]'); } catch { return []; }
@@ -256,23 +424,56 @@ export function AIKPGenerator() {
   const [kpData, setKpData] = useState<KpData | null>(() => {
     try { return JSON.parse(localStorage.getItem(LS_KPDATA) || 'null'); } catch { return null; }
   });
+  const [roadmapData, setRoadmapData] = useState<RoadmapData | null>(() => {
+    try { return JSON.parse(localStorage.getItem(LS_RMDATA) || 'null'); } catch { return null; }
+  });
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const [uploadingFiles, setUploadingFiles] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const printRef = useRef<HTMLDivElement>(null);
   const dragCounterRef = useRef(0);
   const abortRef = useRef<AbortController | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Сохраняем messages и kpData в localStorage при каждом изменении
   useEffect(() => {
     try { localStorage.setItem(LS_MESSAGES, JSON.stringify(messages)); } catch (e) { void e; }
   }, [messages]);
-
   useEffect(() => {
     try { localStorage.setItem(LS_KPDATA, JSON.stringify(kpData)); } catch (e) { void e; }
   }, [kpData]);
+  useEffect(() => {
+    try { localStorage.setItem(LS_RMDATA, JSON.stringify(roadmapData)); } catch (e) { void e; }
+  }, [roadmapData]);
+  useEffect(() => {
+    try { localStorage.setItem(LS_MODE, mode); } catch (e) { void e; }
+  }, [mode]);
+
+  const printDocument = () => {
+    const el = printRef.current;
+    if (!el) return;
+    const win = window.open('', '_blank');
+    if (!win) return;
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>КП</title>
+      <style>
+        body{margin:0;font-family:Arial,sans-serif;background:#fff}
+        @media print{body{margin:0}}
+        img{max-width:100%}
+        table{border-collapse:collapse;width:100%}
+        td,th{padding:4px 6px}
+      </style></head><body>${el.innerHTML}</body></html>`);
+    win.document.close();
+    win.focus();
+    setTimeout(() => { win.print(); win.close(); }, 400);
+  };
+
+  const regenerateDoc = () => {
+    const prompt = mode === 'kp'
+      ? 'Сформируй полное коммерческое предложение на основе нашего обсуждения. Включи все этапы, суммы, сроки и результаты.'
+      : 'Сформируй подробную дорожную карту проекта на основе нашего обсуждения. Включи все этапы, подэтапы, сроки, ответственных и вехи. Добавь диаграмму Ганта.';
+    setInput(prompt);
+  };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -423,6 +624,7 @@ export function AIKPGenerator() {
           files_text: extractedTexts.join('\n\n'),
           company_details: company.details,
           company_vat: company.vat,
+          mode,
         }),
       });
 
@@ -438,6 +640,7 @@ export function AIKPGenerator() {
 
       setMessages(prev => [...prev, { role: 'assistant', content: data.message || 'Готово.' }]);
       if (data.kp_json) setKpData(data.kp_json);
+      if (data.roadmap_json) setRoadmapData(data.roadmap_json);
     } catch (err) {
       clearTimeout(timeoutId);
       const isAbort = err instanceof DOMException && err.name === 'AbortError';
@@ -468,9 +671,14 @@ export function AIKPGenerator() {
   const clearChat = () => {
     setMessages([]);
     setKpData(null);
+    setRoadmapData(null);
     setInput('');
     setAttachedFiles([]);
-    try { localStorage.removeItem(LS_MESSAGES); localStorage.removeItem(LS_KPDATA); } catch (e) { void e; }
+    try {
+      localStorage.removeItem(LS_MESSAGES);
+      localStorage.removeItem(LS_KPDATA);
+      localStorage.removeItem(LS_RMDATA);
+    } catch (e) { void e; }
   };
 
   // Обработка вставки из буфера (Ctrl+V / скриншоты)
@@ -584,20 +792,53 @@ export function AIKPGenerator() {
           </div>
         )}
         {/* Хедер */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-cyan-500/20 bg-slate-900/80">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-sm font-semibold text-cyan-300">DeepSeek R1</span>
-            <Badge variant="outline" className="text-xs border-cyan-500/30 text-cyan-400">AI-КП</Badge>
-            <Badge variant="outline" className="text-xs border-purple-500/30 text-purple-400">
-              <Icon name="Paperclip" size={10} className="mr-1" />
-              PDF · Word · Excel · Фото
-            </Badge>
+        <div className="flex flex-col border-b border-cyan-500/20 bg-slate-900/80">
+          {/* Строка 1: режим + очистить */}
+          <div className="flex items-center justify-between px-4 pt-3 pb-2 gap-2">
+            {/* Переключатель режима */}
+            <div className="flex items-center gap-1 bg-slate-800 rounded-xl p-1">
+              <button
+                onClick={() => setMode('kp')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  mode === 'kp' ? 'bg-cyan-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Icon name="FileText" size={12} />
+                КП
+              </button>
+              <button
+                onClick={() => setMode('roadmap')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  mode === 'roadmap' ? 'bg-violet-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Icon name="Map" size={12} />
+                Дорожная карта
+              </button>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              <span className="text-xs text-cyan-400 font-medium">DeepSeek</span>
+              <Button variant="ghost" size="sm" onClick={clearChat} className="text-gray-500 hover:text-white h-7 px-2 ml-1">
+                <Icon name="Trash2" size={13} />
+              </Button>
+            </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={clearChat} className="text-gray-400 hover:text-white">
-            <Icon name="Trash2" size={14} className="mr-1" />
-            Очистить
-          </Button>
+          {/* Строка 2: кнопка сформировать */}
+          <div className="px-4 pb-2">
+            <button
+              onClick={regenerateDoc}
+              disabled={loading}
+              className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold transition-all ${
+                mode === 'roadmap'
+                  ? 'bg-violet-600/20 border border-violet-500/40 text-violet-300 hover:bg-violet-600/40'
+                  : 'bg-cyan-600/20 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-600/40'
+              }`}
+            >
+              <Icon name="Sparkles" size={13} />
+              {mode === 'kp' ? 'Сформировать КП' : 'Сформировать дорожную карту'}
+            </button>
+          </div>
         </div>
 
         {/* Сообщения */}
@@ -802,37 +1043,48 @@ export function AIKPGenerator() {
         </div>
       </div>
 
-      {/* Правая панель — превью КП */}
-      <div className="w-[380px] flex-shrink-0 overflow-y-auto">
-        {kpData ? (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
-                <Icon name="CheckCircle" size={12} className="mr-1" />
-                КП сформировано
-              </Badge>
-            </div>
-            <KPPreview kp={kpData} />
+      {/* Правая панель — превью */}
+      <div className="w-[400px] flex-shrink-0 flex flex-col gap-3 overflow-y-auto">
+        {/* Шапка правой панели */}
+        {(kpData || roadmapData) && (
+          <div className="flex items-center justify-between">
+            <Badge className={`text-xs ${mode === 'roadmap' ? 'bg-violet-500/20 text-violet-400 border-violet-500/30' : 'bg-green-500/20 text-green-400 border-green-500/30'}`}>
+              <Icon name="CheckCircle" size={12} className="mr-1" />
+              {mode === 'roadmap' ? 'Дорожная карта готова' : 'КП сформировано'}
+            </Badge>
+            <Button
+              size="sm"
+              onClick={printDocument}
+              className="bg-slate-700 hover:bg-slate-600 text-white gap-1.5 text-xs h-7"
+            >
+              <Icon name="Printer" size={12} />
+              Скачать PDF
+            </Button>
           </div>
-        ) : (
-          <div className="h-full flex flex-col items-center justify-center text-center gap-3 bg-slate-900/40 rounded-2xl border border-dashed border-slate-700 p-8">
-            <Icon name="FileText" size={40} className="text-slate-600" />
+        )}
+
+        {/* Содержимое */}
+        {mode === 'kp' && kpData && (
+          <KPPreview kp={kpData} company={company} printRef={printRef} />
+        )}
+        {mode === 'roadmap' && roadmapData && (
+          <RoadmapPreview rm={roadmapData} company={company} printRef={printRef} />
+        )}
+        {mode === 'kp' && !kpData && (
+          <div className="flex-1 flex flex-col items-center justify-center text-center gap-3 bg-slate-900/40 rounded-2xl border border-dashed border-slate-700 p-8 min-h-[300px]">
+            <Icon name="FileText" size={36} className="text-slate-600" />
             <div>
               <p className="text-sm font-medium text-slate-500">Превью КП</p>
-              <p className="text-xs text-slate-600 mt-1">Появится автоматически<br />когда DeepSeek соберёт данные</p>
+              <p className="text-xs text-slate-600 mt-1">Нажми «Сформировать КП» или опиши проект в чате</p>
             </div>
-            <div className="mt-2 space-y-1.5 text-left w-full">
-              {[
-                { icon: 'FileText', color: 'text-red-400', label: 'PDF — техзадания, договоры' },
-                { icon: 'FileType2', color: 'text-blue-400', label: 'Word — описания, ТЗ' },
-                { icon: 'Table2', color: 'text-green-400', label: 'Excel — сметы, объёмы' },
-                { icon: 'Image', color: 'text-purple-400', label: 'Фото — чертежи, планы' },
-              ].map(({ icon, color, label }) => (
-                <div key={label} className="flex items-center gap-2 text-xs text-slate-600">
-                  <Icon name={icon} size={12} className={color} />
-                  <span>{label}</span>
-                </div>
-              ))}
+          </div>
+        )}
+        {mode === 'roadmap' && !roadmapData && (
+          <div className="flex-1 flex flex-col items-center justify-center text-center gap-3 bg-slate-900/40 rounded-2xl border border-dashed border-violet-700/30 p-8 min-h-[300px]">
+            <Icon name="Map" size={36} className="text-violet-700" />
+            <div>
+              <p className="text-sm font-medium text-slate-500">Дорожная карта</p>
+              <p className="text-xs text-slate-600 mt-1">Нажми «Сформировать дорожную карту»</p>
             </div>
           </div>
         )}

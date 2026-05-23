@@ -1096,6 +1096,48 @@ DEEPSEEK_SYSTEM_PROMPT = """Ты — опытный инженер-сметчи�
 Правила: русский язык, суммы числом в рублях, JSON добавляй при наличии достаточных данных и при каждом обновлении."""
 
 
+ROADMAP_CHAT_PROMPT = """Ты — опытный проект-менеджер и инженер. Веди диалог с пользователем, уточняй детали проекта и формируй подробную дорожную карту реализации.
+
+Когда накоплено достаточно информации (проект + хотя бы 2–3 этапа), добавляй в конец ответа JSON дорожной карты в тегах:
+
+<<<ROADMAP_JSON>>>
+{
+  "title": "Название проекта",
+  "client": "Заказчик",
+  "milestones": [
+    {"code": "M1", "title": "Описание вехи", "day": "День 30"}
+  ],
+  "phases": [
+    {
+      "code": "Эт.1",
+      "title": "Название этапа",
+      "duration": "5 раб. дней",
+      "responsible": "Подрядчик",
+      "tasks": [
+        {
+          "code": "1.1",
+          "title": "Название задачи",
+          "duration": "2 дня",
+          "responsible": "Подрядчик",
+          "items": ["Подзадача 1", "Подзадача 2"],
+          "milestone": false
+        }
+      ]
+    }
+  ],
+  "notes": "Дополнительные условия и примечания"
+}
+<<<END_ROADMAP_JSON>>>
+
+Правила:
+- Русский язык
+- Минимум 4–6 этапов с детальными подзадачами
+- Каждый этап должен иметь чёткие сроки и ответственных
+- Вехи (milestones) — ключевые точки контроля
+- Обновляй JSON при каждом уточнении данных
+- Учитывай параллельное выполнение задач где возможно"""
+
+
 def handle_deepseek_chat(body: dict, cors_headers: dict) -> dict:
     """Синхронный вызов DeepSeek R1 через OpenRouter для генерации КП в диалоге.
     Поддерживает загрузку файлов: PDF, DOCX, XLSX, CSV, изображения (base64).
@@ -1111,9 +1153,10 @@ def handle_deepseek_chat(body: dict, cors_headers: dict) -> dict:
 
     company_details = body.get('company_details', '')
     company_vat = body.get('company_vat', '')
+    mode = body.get('mode', 'kp')  # 'kp' или 'roadmap'
     company_block = ''
     if company_details:
-        company_block = f'\n\n═══ ИСПОЛНИТЕЛЬ (РЕКВИЗИТЫ) ═══\n{company_details}\nСтавка НДС: {company_vat}\nВСЕ суммы в КП указывай {("с учётом " + company_vat) if company_vat else "без НДС"}'
+        company_block = f'\n\n═══ ИСПОЛНИТЕЛЬ (РЕКВИЗИТЫ) ═══\n{company_details}\nСтавка НДС: {company_vat}\nВСЕ суммы указывай {("с учётом " + company_vat) if company_vat else "без НДС"}'
 
     # --- Обработка загруженных файлов ---
     # files_text — уже извлечённый текст (парсинг PDF/Word/Excel сделан заранее)
@@ -1173,13 +1216,16 @@ def handle_deepseek_chat(body: dict, cors_headers: dict) -> dict:
         combined = f'{last_user_text}\n\nСОДЕРЖИМОЕ ЗАГРУЖЕННЫХ ФАЙЛОВ:\n{context_block}'.strip()
         chat_messages[-1] = {'role': 'user', 'content': combined}
 
-    system_prompt = DEEPSEEK_SYSTEM_PROMPT + company_block
+    if mode == 'roadmap':
+        system_prompt = ROADMAP_CHAT_PROMPT + company_block
+    else:
+        system_prompt = DEEPSEEK_SYSTEM_PROMPT + company_block
 
     payload = {
         'model': 'deepseek/deepseek-chat',
         'messages': [{'role': 'system', 'content': system_prompt}] + chat_messages,
         'temperature': 0.7,
-        'max_tokens': 4000,
+        'max_tokens': 5000,
     }
 
     with _httpx.Client(timeout=20) as client:
@@ -1201,20 +1247,29 @@ def handle_deepseek_chat(body: dict, cors_headers: dict) -> dict:
     assistant_message = data['choices'][0]['message']['content']
 
     kp_json = None
+    roadmap_json = None
     clean_message = assistant_message
+
+    # Парсим KP_JSON
     if '<<<KP_JSON>>>' in assistant_message and '<<<END_KP_JSON>>>' in assistant_message:
-        start = assistant_message.index('<<<KP_JSON>>>') + len('<<<KP_JSON>>>')
-        end = assistant_message.index('<<<END_KP_JSON>>>')
-        try:
-            kp_json = json.loads(assistant_message[start:end].strip())
-        except Exception:
-            kp_json = None
+        s = assistant_message.index('<<<KP_JSON>>>') + len('<<<KP_JSON>>>')
+        e = assistant_message.index('<<<END_KP_JSON>>>')
+        try: kp_json = json.loads(assistant_message[s:e].strip())
+        except Exception: kp_json = None
         clean_message = assistant_message[:assistant_message.index('<<<KP_JSON>>>')].strip()
+
+    # Парсим ROADMAP_JSON
+    if '<<<ROADMAP_JSON>>>' in assistant_message and '<<<END_ROADMAP_JSON>>>' in assistant_message:
+        s = assistant_message.index('<<<ROADMAP_JSON>>>') + len('<<<ROADMAP_JSON>>>')
+        e = assistant_message.index('<<<END_ROADMAP_JSON>>>')
+        try: roadmap_json = json.loads(assistant_message[s:e].strip())
+        except Exception: roadmap_json = None
+        clean_message = assistant_message[:assistant_message.index('<<<ROADMAP_JSON>>>')].strip()
 
     return {
         'statusCode': 200,
         'headers': cors_headers,
-        'body': json.dumps({'message': clean_message, 'kp_json': kp_json}, ensure_ascii=False)
+        'body': json.dumps({'message': clean_message, 'kp_json': kp_json, 'roadmap_json': roadmap_json}, ensure_ascii=False)
     }
 
 
