@@ -7,6 +7,68 @@ import func2url from '../../../backend/func2url.json';
 
 const API_URL = func2url['generate-kp'];
 
+const LOGO_KI = 'https://cdn.poehali.dev/projects/5adabe83-9a88-49bb-ba7c-144288d55800/bucket/7b630b71-f92c-4f6d-8d53-ab2b00971f22.png';
+const STAMP_KI = 'https://cdn.poehali.dev/projects/5adabe83-9a88-49bb-ba7c-144288d55800/bucket/28ef465a-8d37-462f-9a36-4d59c5b0a662.png';
+
+interface Company {
+  id: string;
+  short: string;
+  full: string;
+  color: string;
+  vat: string;
+  details: string;
+  logo?: string;
+  stamp?: string;
+}
+
+const COMPANIES: Company[] = [
+  {
+    id: 'kapstroy',
+    short: 'Капстрой-Инжиниринг',
+    full: 'ООО «КАПСТРОЙ-ИНЖИНИРИНГ»',
+    color: 'border-red-500 bg-red-500/10 text-red-300',
+    vat: 'НДС 22%',
+    logo: LOGO_KI,
+    stamp: STAMP_KI,
+    details: `Исполнитель: ООО «КАПСТРОЙ-ИНЖИНИРИНГ»
+ИНН: 7814795454 | КПП: 781401001 | ОГРН: 1217800122649
+Адрес: 197341, г. Санкт-Петербург, Фермское шоссе, д. 12, литер Ж, пом. 310-Н к3
+Генеральный директор: Шумов Иван Викторович
+НДС: 22% (включается в стоимость)
+Условия оплаты: 50% предоплата, 50% по результату`,
+  },
+  {
+    id: 'sppi',
+    short: 'СППИ',
+    full: 'ООО «СППИ»',
+    color: 'border-blue-500 bg-blue-500/10 text-blue-300',
+    vat: 'УСН, без НДС',
+    details: `Исполнитель: ООО «СППИ» (Общество с ограниченной ответственностью «СППИ»)
+ИНН: 7817120160 | КПП: 781701001 | ОГРН: 1227800038707
+Адрес: 190005, г. Санкт-Петербург, наб. реки Фонтанки, д. 136, лит. А, пом. 1-Н, офис 4, р.м. 6
+Генеральный директор: Демидов Дмитрий Николаевич (на основании Устава)
+Банк: ООО «Банк Точка», БИК 044525104
+Р/с: 40702810101500123505 | К/с: 30101810745374525104
+Коммерческий директор: Зленко Денис, тел.: +7 911 530-20-20
+Email: info@sppi.ooo
+ОКВЭД: 71.11 (Деятельность в области архитектуры)
+Налогообложение: УСН — НДС не облагается, цены указываются без НДС`,
+  },
+  {
+    id: 'ctesc',
+    short: 'ЦТЭ и СК',
+    full: 'ООО «Центр Технической экспертизы и строительного контроля»',
+    color: 'border-emerald-500 bg-emerald-500/10 text-emerald-300',
+    vat: 'НДС 5%',
+    details: `Исполнитель: ООО «Центр Технической экспертизы и строительного контроля»
+ИНН: 4703175805 | КПП: 781401001
+Адрес: 197341, г. Санкт-Петербург, Фермское шоссе, д. 12, литер Ж, пом. 307-Н
+НДС: 5% (включается в стоимость)`,
+  },
+];
+
+const LS_COMPANY = 'aikp_company';
+
 interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -180,6 +242,11 @@ const LS_MESSAGES = 'aikp_messages';
 const LS_KPDATA = 'aikp_kpdata';
 
 export function AIKPGenerator() {
+  const [selectedCompany, setSelectedCompany] = useState<string>(() =>
+    localStorage.getItem(LS_COMPANY) || 'kapstroy'
+  );
+  const company = COMPANIES.find(c => c.id === selectedCompany) || COMPANIES[0];
+
   const [messages, setMessages] = useState<Message[]>(() => {
     try { return JSON.parse(localStorage.getItem(LS_MESSAGES) || '[]'); } catch { return []; }
   });
@@ -354,6 +421,8 @@ export function AIKPGenerator() {
           action: 'deepseek_chat',
           messages: newMessages.map(m => ({ role: m.role, content: m.content })),
           files_text: extractedTexts.join('\n\n'),
+          company_details: company.details,
+          company_vat: company.vat,
         }),
       });
 
@@ -437,7 +506,63 @@ export function AIKPGenerator() {
   const ACCEPTED = '.pdf,.doc,.docx,.xls,.xlsx,.csv,.png,.jpg,.jpeg,.webp';
 
   return (
-    <div className="flex gap-6 h-[calc(100vh-200px)] min-h-[600px]">
+    <div className="space-y-4">
+
+    {/* ── ВЫБОР КОМПАНИИ ── */}
+    <div className="bg-slate-900/60 border border-cyan-500/20 rounded-2xl px-5 py-4">
+      <div className="flex items-center gap-2 mb-3">
+        <Icon name="Building2" size={14} className="text-cyan-400" />
+        <span className="text-sm font-semibold text-cyan-300">От кого формируется КП</span>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        {COMPANIES.map((c) => {
+          const active = selectedCompany === c.id;
+          return (
+            <button
+              key={c.id}
+              onClick={() => {
+                setSelectedCompany(c.id);
+                try { localStorage.setItem(LS_COMPANY, c.id); } catch (e) { void e; }
+              }}
+              className={`relative rounded-xl border-2 px-4 py-3 text-left transition-all ${
+                active
+                  ? c.color + ' shadow-lg'
+                  : 'border-slate-700 bg-slate-800/60 text-slate-400 hover:border-slate-500'
+              }`}
+            >
+              {active && (
+                <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-current flex items-center justify-center">
+                  <Icon name="Check" size={10} className="text-slate-900" />
+                </div>
+              )}
+              {c.logo && (
+                <img src={c.logo} alt={c.short} className="h-6 object-contain mb-2 opacity-80" />
+              )}
+              {!c.logo && (
+                <div className="text-[10px] font-black uppercase tracking-wider mb-1 opacity-60">{c.id.toUpperCase()}</div>
+              )}
+              <div className="text-xs font-bold leading-snug">{c.short}</div>
+              <div className={`inline-block mt-1 text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                active ? 'bg-white/20' : 'bg-slate-700'
+              }`}>{c.vat}</div>
+            </button>
+          );
+        })}
+      </div>
+      {/* Реквизиты выбранной компании */}
+      <div className="mt-3 pt-3 border-t border-slate-700/50">
+        <div className="flex items-start gap-3">
+          {company.stamp && (
+            <img src={company.stamp} alt="Печать" className="h-12 w-12 object-contain opacity-70 shrink-0" />
+          )}
+          <div className="text-[10px] text-slate-400 leading-relaxed whitespace-pre-line flex-1">
+            {company.details}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div className="flex gap-6 h-[calc(100vh-280px)] min-h-[500px]">
       {/* Левая панель — чат */}
       <div
         className={`flex flex-col flex-1 bg-slate-900/60 border rounded-2xl overflow-hidden relative transition-colors ${
@@ -712,6 +837,7 @@ export function AIKPGenerator() {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 }

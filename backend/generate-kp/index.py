@@ -1109,6 +1109,12 @@ def handle_deepseek_chat(body: dict, cors_headers: dict) -> dict:
     if not messages:
         return {'statusCode': 400, 'headers': cors_headers, 'body': json.dumps({'error': 'messages обязателен'})}
 
+    company_details = body.get('company_details', '')
+    company_vat = body.get('company_vat', '')
+    company_block = ''
+    if company_details:
+        company_block = f'\n\n═══ ИСПОЛНИТЕЛЬ (РЕКВИЗИТЫ) ═══\n{company_details}\nСтавка НДС: {company_vat}\nВСЕ суммы в КП указывай {("с учётом " + company_vat) if company_vat else "без НДС"}'
+
     # --- Обработка загруженных файлов ---
     # files_text — уже извлечённый текст (парсинг PDF/Word/Excel сделан заранее)
     # files_b64  — изображения, описываем через vision-модель отдельным вызовом
@@ -1167,9 +1173,11 @@ def handle_deepseek_chat(body: dict, cors_headers: dict) -> dict:
         combined = f'{last_user_text}\n\nСОДЕРЖИМОЕ ЗАГРУЖЕННЫХ ФАЙЛОВ:\n{context_block}'.strip()
         chat_messages[-1] = {'role': 'user', 'content': combined}
 
+    system_prompt = DEEPSEEK_SYSTEM_PROMPT + company_block
+
     payload = {
         'model': 'deepseek/deepseek-chat',
-        'messages': [{'role': 'system', 'content': DEEPSEEK_SYSTEM_PROMPT}] + chat_messages,
+        'messages': [{'role': 'system', 'content': system_prompt}] + chat_messages,
         'temperature': 0.7,
         'max_tokens': 4000,
     }
