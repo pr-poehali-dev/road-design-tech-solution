@@ -211,17 +211,9 @@ export function AIKPGenerator() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Максимальный размер файла для отправки на backend (4 MB)
-  const MAX_FILE_BYTES = 4 * 1024 * 1024;
-
-  const readFileChunk = (file: File): Promise<string> =>
-    new Promise((resolve) => {
-      // Берём только первые MAX_FILE_BYTES байт чтобы не превысить лимит запроса
-      const slice = file.size > MAX_FILE_BYTES ? file.slice(0, MAX_FILE_BYTES) : file;
-      const reader = new FileReader();
-      reader.onload = () => resolve((reader.result as string).split(',')[1]);
-      reader.readAsDataURL(slice);
-    });
+  // Лимиты размеров файлов перед отправкой на backend
+  const MAX_FILE_BYTES = 4 * 1024 * 1024;   // 4 MB для документов
+  const MAX_IMG_BYTES  = 2 * 1024 * 1024;   // 2 MB для изображений (OCR)
 
   const processFiles = async (files: File[]) => {
     if (!files.length) return;
@@ -230,15 +222,21 @@ export function AIKPGenerator() {
     const pending: AttachedFile[] = [];
     for (const file of files) {
       const isImage = file.type.startsWith('image/') || /\.(png|jpe?g|webp|gif|bmp|tiff)$/i.test(file.name || '');
-      const truncated = !isImage && file.size > MAX_FILE_BYTES;
-      const b64 = await readFileChunk(file);
+      const limit = isImage ? MAX_IMG_BYTES : MAX_FILE_BYTES;
+      const truncated = file.size > limit;
+      const b64 = await new Promise<string>((resolve) => {
+        const slice = truncated ? file.slice(0, limit) : file;
+        const reader = new FileReader();
+        reader.onload = () => resolve((reader.result as string).split(',')[1]);
+        reader.readAsDataURL(slice);
+      });
       const name = file.name || `скриншот_${Date.now()}.png`;
       pending.push({
-        name: name + (truncated ? ` (первые 4 МБ из ${formatSize(file.size)})` : ''),
+        name: name + (truncated ? ` (сжато до ${formatSize(limit)})` : ''),
         type: file.type || (isImage ? 'image/png' : 'application/octet-stream'),
         size: file.size,
         b64,
-        parsed: false,   // все файлы теперь парсятся — включая изображения (OCR)
+        parsed: false,
         parsing: true,
       });
     }
@@ -256,16 +254,26 @@ export function AIKPGenerator() {
             files_b64: [{ name: f.name, type: f.type, data: f.b64 }],
           }),
         });
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        if (!resp.ok) {
+          const errBody = await resp.text().catch(() => '');
+          throw new Error(`HTTP ${resp.status}: ${errBody.slice(0, 150)}`);
+        }
         const data = await resp.json();
         const parsed = data.files?.[0];
+        const hasText = parsed?.text && !parsed.text.startsWith('[OCR ошибка') && !parsed.text.startsWith('[Ошибка');
         setAttachedFiles(prev => prev.map(af =>
           af.name === f.name && af.parsing
-            ? { ...af, text: parsed?.text || '[Не удалось извлечь текст]', parsed: true, parsing: false, error: parsed?.error }
+            ? {
+                ...af,
+                text: parsed?.text || '[Не удалось извлечь текст]',
+                parsed: true,
+                parsing: false,
+                error: !hasText,
+              }
             : af
         ));
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'ошибка';
+        const msg = err instanceof Error ? err.message : 'неизвестная ошибка';
         setAttachedFiles(prev => prev.map(af =>
           af.name === f.name && af.parsing
             ? { ...af, text: `[Ошибка: ${msg}]`, parsed: true, parsing: false, error: true }
