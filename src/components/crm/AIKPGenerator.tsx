@@ -322,7 +322,15 @@ export function AIKPGenerator() {
   };
 
   const handleKey = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) sendMessage();
+    // Останавливаем всплытие чтобы Tabs не перехватил событие
+    if (e.key === 'Enter' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.stopPropagation();
+    }
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      e.stopPropagation();
+      sendMessage();
+    }
   };
 
   const clearChat = () => {
@@ -344,18 +352,18 @@ export function AIKPGenerator() {
 
   // Drag-and-drop handlers
   const handleDragEnter = (e: React.DragEvent) => {
-    e.preventDefault();
+    e.preventDefault(); e.stopPropagation();
     dragCounterRef.current++;
     if (e.dataTransfer.types.includes('Files')) setIsDragging(true);
   };
   const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
+    e.preventDefault(); e.stopPropagation();
     dragCounterRef.current--;
     if (dragCounterRef.current === 0) setIsDragging(false);
   };
-  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); };
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); };
   const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
+    e.preventDefault(); e.stopPropagation();
     dragCounterRef.current = 0;
     setIsDragging(false);
     const files = Array.from(e.dataTransfer.files);
