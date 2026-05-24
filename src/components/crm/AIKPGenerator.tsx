@@ -373,7 +373,6 @@ function RoadmapPreview({ rm, company, printRef }: { rm: RoadmapData; company: C
             <div className="text-right shrink-0">
               <div className="text-white/50 text-[9px] uppercase tracking-wider mb-0.5">Дата</div>
               <div className="text-white text-xs font-semibold">{today}</div>
-              {company.stamp && <img src={company.stamp} alt="" className="h-16 w-16 object-contain opacity-85 mt-2 ml-auto" />}
             </div>
           </div>
         </div>
