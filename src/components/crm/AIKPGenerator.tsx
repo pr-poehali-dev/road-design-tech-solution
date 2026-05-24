@@ -150,90 +150,121 @@ function KPPreview({ kp, company, printRef }: { kp: KpData; company: Company; pr
   const total = (kp.stages || []).reduce((s, st) => s + st.sum, 0);
   const vatAmount = vatRate > 0 ? Math.round(total * vatRate / (100 + vatRate)) : 0;
   const exVat = total - vatAmount;
-  const p50 = Math.round(total * 0.5);
+  const p30 = Math.round(total * 0.30);
+  const p30b = Math.round(total * 0.30);
+  const p40 = total - p30 - p30b;
+  const today = new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  const directorLine = company.details.split('\n').find(l => l.toLowerCase().includes('директор') || l.toLowerCase().includes('генеральный'));
+  const innLine = company.details.split('\n').find(l => l.includes('ИНН'));
 
   return (
     <div ref={printRef} className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden text-sm font-sans">
-      {/* Шапка */}
-      <div className="px-6 py-4" style={{ background: NAVY }}>
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1">
-            {company.logo && <img src={company.logo} alt={company.short} className="h-7 object-contain mb-2 brightness-0 invert opacity-90" />}
-            <p className="text-white/60 text-[10px] uppercase tracking-widest mb-1">Коммерческое предложение</p>
-            <h2 className="text-white text-base font-bold leading-snug">{kp.project || 'Проект'}</h2>
-            {kp.client && <p className="text-cyan-300 text-xs mt-1">Заказчик: {kp.client}</p>}
+      {/* Шапка с красной полосой */}
+      <div className="flex">
+        <div className="w-1.5 shrink-0" style={{ background: '#c0392b' }} />
+        <div className="flex-1 px-6 py-5" style={{ background: NAVY }}>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              {company.logo
+                ? <img src={company.logo} alt={company.short} className="h-8 object-contain mb-3" style={{ filter: 'brightness(0) invert(1)' }} />
+                : <p className="text-white font-black text-base mb-3">{company.short}</p>
+              }
+              <div className="inline-block text-[9px] font-bold uppercase tracking-[0.15em] text-white/50 border border-white/20 px-2 py-0.5 rounded mb-2">
+                Коммерческое предложение
+              </div>
+              <h2 className="text-white text-lg font-black leading-snug mb-1">{kp.project || 'Проект'}</h2>
+              {kp.client && (
+                <p className="text-cyan-300 text-xs">Заказчик: <span className="font-semibold">{kp.client}</span></p>
+              )}
+            </div>
+            <div className="text-right shrink-0">
+              <div className="text-white/50 text-[9px] uppercase tracking-wider mb-0.5">Дата</div>
+              <div className="text-white text-xs font-semibold">{today}</div>
+              {company.stamp && (
+                <img src={company.stamp} alt="Печать" className="h-16 w-16 object-contain opacity-85 mt-2 ml-auto" />
+              )}
+            </div>
           </div>
-          {company.stamp && <img src={company.stamp} alt="Печать" className="h-14 w-14 object-contain opacity-80 shrink-0" />}
         </div>
       </div>
 
-      <div className="px-6 py-4 space-y-4">
-        {/* Исполнитель */}
-        <div className="rounded-xl p-3 text-xs space-y-0.5" style={{ background: '#f0f4f8' }}>
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Исполнитель</p>
-          <p className="font-bold text-gray-800">{company.full}</p>
-          {company.details.split('\n').slice(1, 4).map((line, i) => (
-            <p key={i} className="text-gray-500">{line}</p>
-          ))}
-          {vatRate === 0 && <p className="text-green-600 font-medium">УСН — без НДС</p>}
-          {vatRate > 0 && <p className="text-blue-600 font-medium">НДС {vatRate}%</p>}
+      <div className="px-6 py-5 space-y-5">
+        {/* Стороны */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-1.5">Исполнитель</p>
+            <p className="font-black text-gray-800 text-xs leading-snug">{company.full}</p>
+            {innLine && <p className="text-[10px] text-gray-500 mt-1">{innLine}</p>}
+            {vatRate === 0 && <p className="text-[10px] text-green-600 font-semibold mt-0.5">УСН — без НДС</p>}
+            {vatRate > 0 && <p className="text-[10px] text-blue-600 font-semibold mt-0.5">НДС {vatRate}%</p>}
+          </div>
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+            <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-1.5">Заказчик</p>
+            <p className="font-black text-gray-800 text-xs">{kp.client || 'Заказчик'}</p>
+            <p className="text-[10px] text-gray-500 mt-1">Основание: Технического задания</p>
+          </div>
         </div>
 
         {/* Состав работ */}
         {(kp.stages || []).length > 0 && (
           <div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Состав работ</p>
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-1 text-gray-400 font-medium w-6">№</th>
-                  <th className="text-left py-1 text-gray-400 font-medium">Наименование</th>
-                  <th className="text-right py-1 text-gray-400 font-medium">Сумма</th>
-                </tr>
-              </thead>
-              <tbody>
-                {kp.stages!.map((st) => (
-                  <tr key={st.n} className="border-b border-gray-100">
-                    <td className="py-1.5 text-gray-400">{st.n}</td>
-                    <td className="py-1.5 text-gray-700">{st.title}</td>
-                    <td className="py-1.5 text-right font-semibold" style={{ color: NAVY }}>{formatMoney(st.sum)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-3 h-0.5 bg-red-500 rounded" />
+              <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em]">Состав работ</p>
+            </div>
+            <div className="rounded-xl overflow-hidden border border-gray-200">
+              <div className="grid text-[9px] font-bold uppercase tracking-wider text-white bg-gray-700 px-3 py-2" style={{ gridTemplateColumns: '32px 1fr 100px' }}>
+                <div>№</div><div>Наименование</div><div className="text-right">Сумма, ₽</div>
+              </div>
+              {kp.stages!.map((st, i) => (
+                <div key={st.n} className={`grid px-3 py-2 border-b border-gray-100 items-start ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}`} style={{ gridTemplateColumns: '32px 1fr 100px' }}>
+                  <span className="text-xs text-gray-400 font-bold">{st.n}</span>
+                  <span className="text-xs text-gray-700 pr-2">{st.title}</span>
+                  <span className="text-xs font-bold text-right tabular-nums" style={{ color: NAVY }}>{formatMoney(st.sum)}</span>
+                </div>
+              ))}
+              <div className="grid px-3 py-2.5 items-center" style={{ gridTemplateColumns: '32px 1fr 100px', background: NAVY }}>
+                <div />
+                <span className="text-xs font-black text-white">ИТОГО{vatRate > 0 ? ` с НДС ${vatRate}%` : ' (без НДС)'}</span>
+                <span className="text-sm font-black text-white text-right tabular-nums">{formatMoney(total)}</span>
+              </div>
+            </div>
+            {vatRate > 0 && (
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 flex justify-between text-xs">
+                  <span className="text-gray-400">Без НДС</span>
+                  <span className="font-semibold text-gray-700 tabular-nums">{formatMoney(exVat)}</span>
+                </div>
+                <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 flex justify-between text-xs">
+                  <span className="text-gray-400">НДС {vatRate}%</span>
+                  <span className="font-semibold text-gray-700 tabular-nums">{formatMoney(vatAmount)}</span>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Итого */}
+        {/* Оплата 30/30/40 */}
         {total > 0 && (
-          <div className="rounded-xl p-3 space-y-1" style={{ background: '#f0f4f8' }}>
-            {vatRate > 0 && <>
-              <div className="flex justify-between text-xs text-gray-500">
-                <span>Без НДС</span><span>{formatMoney(exVat)}</span>
-              </div>
-              <div className="flex justify-between text-xs text-gray-500">
-                <span>НДС {vatRate}%</span><span>{formatMoney(vatAmount)}</span>
-              </div>
-            </>}
-            <div className="flex justify-between font-bold text-sm pt-1 border-t border-gray-300">
-              <span style={{ color: NAVY }}>Итого{vatRate > 0 ? ' с НДС' : ' (без НДС)'}</span>
-              <span style={{ color: NAVY }}>{formatMoney(total)}</span>
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-3 h-0.5 bg-red-500 rounded" />
+              <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em]">Условия оплаты</p>
             </div>
-          </div>
-        )}
-
-        {/* Оплата */}
-        {total > 0 && (
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-xl p-3 text-center" style={{ background: '#f0f4f8' }}>
-              <div className="w-10 h-10 rounded-full mx-auto mb-1.5 flex items-center justify-center text-white text-xs font-bold" style={{ background: NAVY }}>50%</div>
-              <p className="text-xs font-semibold text-gray-700">Предоплата</p>
-              <p className="text-sm font-bold mt-0.5" style={{ color: NAVY }}>{formatMoney(p50)}</p>
-            </div>
-            <div className="rounded-xl p-3 text-center" style={{ background: '#f0f4f8' }}>
-              <div className="w-10 h-10 rounded-full mx-auto mb-1.5 flex items-center justify-center text-white text-xs font-bold" style={{ background: GOLD }}>50%</div>
-              <p className="text-xs font-semibold text-gray-700">По факту</p>
-              <p className="text-sm font-bold mt-0.5" style={{ color: GOLD }}>{formatMoney(total - p50)}</p>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { pct: '30%', label: 'Аванс', sub: 'при подписании договора', amt: p30, color: NAVY },
+                { pct: '30%', label: 'Промежуточный', sub: 'по факту выполнения 1-го этапа', amt: p30b, color: '#7c3aed' },
+                { pct: '40%', label: 'Окончательный', sub: 'после сдачи всех работ', amt: p40, color: '#059669' },
+              ].map(({ pct, label, sub, amt, color }) => (
+                <div key={label} className="rounded-xl border border-gray-200 p-3 text-center">
+                  <div className="w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center text-white text-xs font-black" style={{ background: color }}>{pct}</div>
+                  <p className="text-xs font-bold text-gray-700">{label}</p>
+                  <p className="text-[9px] text-gray-400 mt-0.5 leading-snug">{sub}</p>
+                  <p className="text-sm font-black mt-1.5 tabular-nums" style={{ color }}>{formatMoney(amt)}</p>
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -241,78 +272,133 @@ function KPPreview({ kp, company, printRef }: { kp: KpData; company: Company; pr
         {/* Результаты */}
         {(kp.results || []).length > 0 && (
           <div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Результаты</p>
-            <ul className="space-y-1">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-3 h-0.5 bg-red-500 rounded" />
+              <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em]">Результаты</p>
+            </div>
+            <div className="space-y-1.5">
               {kp.results!.map((r, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs text-gray-700">
-                  <span className="mt-0.5 text-green-500 flex-shrink-0">✓</span>
-                  <span>{r.what} <span className="text-gray-400">{r.fmt}</span> — {r.qty}</span>
-                </li>
+                <div key={i} className="flex items-start gap-2 rounded-lg bg-green-50 border border-green-100 px-3 py-2">
+                  <span className="text-green-500 mt-0.5 text-sm shrink-0">✓</span>
+                  <span className="text-xs text-gray-700">{r.what} <span className="text-gray-400 italic">{r.fmt}</span> — {r.qty}</span>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         )}
 
         {/* Сроки / Примечания */}
-        <div className="grid grid-cols-2 gap-3 text-xs">
-          {kp.timeline && (
-            <div className="rounded-lg p-2.5" style={{ background: '#f0f4f8' }}>
-              <p className="text-gray-400 mb-0.5">Срок</p>
-              <p className="font-semibold text-gray-700">{kp.timeline}</p>
-            </div>
-          )}
-          {kp.notes && (
-            <div className="rounded-lg p-2.5" style={{ background: '#f0f4f8' }}>
-              <p className="text-gray-400 mb-0.5">Примечания</p>
-              <p className="text-gray-600">{kp.notes}</p>
-            </div>
-          )}
-        </div>
-
-        {/* Подпись */}
-        <div className="border-t border-gray-200 pt-3 flex items-end justify-between">
-          <div className="text-xs text-gray-500 space-y-0.5">
-            <p className="font-medium text-gray-700">{company.full}</p>
-            {company.details.split('\n').filter(l => l.includes('ИНН') || l.includes('директор')).map((l, i) => (
-              <p key={i}>{l}</p>
-            ))}
+        {(kp.timeline || kp.notes) && (
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            {kp.timeline && (
+              <div className="rounded-xl border border-blue-100 bg-blue-50 p-3">
+                <p className="text-[9px] text-blue-400 uppercase tracking-wider mb-1">Срок выполнения</p>
+                <p className="font-bold text-gray-700">{kp.timeline}</p>
+              </div>
+            )}
+            {kp.notes && (
+              <div className="rounded-xl border border-amber-100 bg-amber-50 p-3">
+                <p className="text-[9px] text-amber-500 uppercase tracking-wider mb-1">Примечания</p>
+                <p className="text-gray-600 leading-snug">{kp.notes}</p>
+              </div>
+            )}
           </div>
-          {company.stamp && <img src={company.stamp} alt="Печать" className="h-12 w-12 object-contain opacity-70" />}
+        )}
+
+        {/* Подпись и печать — всегда внизу */}
+        <div className="border-t-2 border-gray-700 pt-5 mt-2">
+          <div className="flex items-end justify-between gap-4">
+            <div className="space-y-1">
+              <p className="text-xs text-gray-500">С уважением,</p>
+              <p className="text-xs text-gray-600">{directorLine?.replace(/^(Генеральный\s)?[Дд]иректор[:,]?\s*/i, '') ? 'Генеральный директор' : 'Руководитель'}</p>
+              <p className="text-sm font-black text-gray-900">{company.full}</p>
+              {directorLine && <p className="text-xs text-gray-600">{directorLine}</p>}
+              {innLine && <p className="text-[10px] text-gray-400">{innLine}</p>}
+              <div className="mt-4 flex items-end gap-6">
+                <div>
+                  <div className="border-b border-gray-400 w-36 mb-1" />
+                  <div className="text-[9px] text-gray-400">(подпись)</div>
+                </div>
+                <div>
+                  <div className="border-b border-gray-400 w-28 mb-1" />
+                  <div className="text-[9px] text-gray-400">(дата)</div>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col items-center gap-1 shrink-0">
+              {company.logo && (
+                <img src={company.logo} alt="Логотип" className="h-10 object-contain opacity-70" />
+              )}
+              {company.stamp && (
+                <img src={company.stamp} alt="Печать" className="h-20 w-20 object-contain opacity-85" />
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-const PHASE_COLORS = ['bg-slate-600','bg-blue-600','bg-violet-600','bg-cyan-600','bg-amber-600','bg-red-600','bg-emerald-600','bg-orange-600'];
+const PHASE_BG = ['#1e3a5f','#2563eb','#7c3aed','#0891b2','#d97706','#dc2626','#059669','#ea580c'];
+const PHASE_LIGHT = ['#eff6ff','#eff6ff','#f5f3ff','#ecfeff','#fffbeb','#fff1f2','#f0fdf4','#fff7ed'];
+const PHASE_BORDER = ['#bfdbfe','#bfdbfe','#ddd6fe','#a5f3fc','#fde68a','#fecaca','#bbf7d0','#fed7aa'];
 
 function RoadmapPreview({ rm, company, printRef }: { rm: RoadmapData; company: Company; printRef: React.RefObject<HTMLDivElement> }) {
   const phases = rm.phases || [];
+  const today = new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
+  const directorLine = company.details.split('\n').find(l => l.toLowerCase().includes('директор'));
+  const innLine = company.details.split('\n').find(l => l.includes('ИНН'));
+
+  // Вычисляем суммарную длину для Ганта
+  const parseDays = (s: string) => { const m = s.match(/(\d+)/); return m ? parseInt(m[1]) : 10; };
+  const totalDays = phases.reduce((s, ph) => s + parseDays(ph.duration), 0) || 1;
+  let cumDays = 0;
+
   return (
     <div ref={printRef} className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden text-sm font-sans">
-      <div className="px-6 py-4" style={{ background: NAVY }}>
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            {company.logo && <img src={company.logo} alt={company.short} className="h-7 object-contain mb-2 brightness-0 invert opacity-90" />}
-            <p className="text-white/60 text-[10px] uppercase tracking-widest mb-1">Дорожная карта проекта</p>
-            <h2 className="text-white text-base font-bold leading-snug">{rm.title || 'Дорожная карта'}</h2>
-            {rm.client && <p className="text-cyan-300 text-xs mt-1">Заказчик: {rm.client}</p>}
+      {/* Шапка */}
+      <div className="flex">
+        <div className="w-1.5 shrink-0" style={{ background: '#7c3aed' }} />
+        <div className="flex-1 px-6 py-5" style={{ background: NAVY }}>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              {company.logo
+                ? <img src={company.logo} alt="" className="h-8 object-contain mb-3" style={{ filter: 'brightness(0) invert(1)' }} />
+                : <p className="text-white font-black text-base mb-3">{company.short}</p>
+              }
+              <div className="inline-block text-[9px] font-bold uppercase tracking-[0.15em] text-white/50 border border-white/20 px-2 py-0.5 rounded mb-2">
+                Дорожная карта проекта · ГОСТ 34.601-90
+              </div>
+              <h2 className="text-white text-lg font-black leading-snug mb-1">{rm.title || 'Дорожная карта'}</h2>
+              {rm.client && <p className="text-cyan-300 text-xs">Заказчик: <span className="font-semibold">{rm.client}</span></p>}
+            </div>
+            <div className="text-right shrink-0">
+              <div className="text-white/50 text-[9px] uppercase tracking-wider mb-0.5">Дата</div>
+              <div className="text-white text-xs font-semibold">{today}</div>
+              {company.stamp && <img src={company.stamp} alt="" className="h-16 w-16 object-contain opacity-85 mt-2 ml-auto" />}
+            </div>
           </div>
-          {company.stamp && <img src={company.stamp} alt="Печать" className="h-14 w-14 object-contain opacity-80 shrink-0" />}
         </div>
       </div>
 
-      <div className="px-6 py-4 space-y-4">
-        {/* Вехи */}
+      <div className="px-6 py-5 space-y-5">
+
+        {/* Ключевые вехи */}
         {(rm.milestones || []).length > 0 && (
           <div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Ключевые вехи</p>
-            <div className="space-y-1.5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-3 h-0.5 rounded" style={{ background: '#d97706' }} />
+              <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em]">Ключевые вехи</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
               {rm.milestones!.map((m, i) => (
-                <div key={i} className="flex items-center gap-2 text-xs">
-                  <div className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[9px] font-bold shrink-0">{m.code}</div>
-                  <span className="text-gray-700 flex-1">{m.title}</span>
-                  <span className="text-gray-400 shrink-0">{m.day}</span>
+                <div key={i} className="flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
+                  <div className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px] font-black shrink-0">{m.code}</div>
+                  <div>
+                    <div className="text-xs font-bold text-gray-800 leading-snug">{m.title}</div>
+                    <div className="text-[10px] text-amber-600 font-medium">{m.day}</div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -322,78 +408,144 @@ function RoadmapPreview({ rm, company, printRef }: { rm: RoadmapData; company: C
         {/* Диаграмма Ганта */}
         {phases.length > 0 && (
           <div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Диаграмма Ганта</p>
-            <div className="space-y-1">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-3 h-0.5 rounded bg-blue-500" />
+              <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em]">Диаграмма Ганта</p>
+            </div>
+            <div className="rounded-xl overflow-hidden border border-gray-200">
+              <div className="grid text-[9px] font-bold text-white uppercase tracking-wider px-3 py-2" style={{ gridTemplateColumns: '140px 1fr 80px', background: NAVY }}>
+                <div>Этап</div><div className="text-center">График выполнения</div><div className="text-right">Срок</div>
+              </div>
+              {phases.map((ph, i) => {
+                const days = parseDays(ph.duration);
+                const startPct = (cumDays / totalDays) * 100;
+                const widthPct = (days / totalDays) * 100;
+                cumDays += days;
+                return (
+                  <div key={i} className={`grid items-center px-3 py-2 border-b border-gray-100 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}`} style={{ gridTemplateColumns: '140px 1fr 80px' }}>
+                    <div className="flex items-center gap-1.5 pr-2">
+                      <div className="w-2 h-2 rounded-sm shrink-0" style={{ background: PHASE_BG[i % PHASE_BG.length] }} />
+                      <span className="text-[10px] text-gray-700 font-medium truncate">{ph.code} {ph.title}</span>
+                    </div>
+                    <div className="relative h-5 bg-gray-100 rounded mx-2 overflow-hidden">
+                      <div
+                        className="absolute top-0 h-full rounded flex items-center justify-center"
+                        style={{ left: `${startPct}%`, width: `${Math.max(widthPct, 8)}%`, background: PHASE_BG[i % PHASE_BG.length] }}
+                      >
+                        <span className="text-[8px] text-white font-bold px-1 truncate">{ph.code}</span>
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-gray-500 text-right">{ph.duration}</div>
+                  </div>
+                );
+              })}
+              {/* Временная шкала */}
+              <div className="grid px-3 py-1.5 bg-gray-50 border-t border-gray-200" style={{ gridTemplateColumns: '140px 1fr 80px' }}>
+                <div />
+                <div className="mx-2 flex justify-between text-[8px] text-gray-400">
+                  <span>Начало</span>
+                  <span>{Math.round(totalDays / 4)} д.</span>
+                  <span>{Math.round(totalDays / 2)} д.</span>
+                  <span>{Math.round(totalDays * 3 / 4)} д.</span>
+                  <span>{totalDays} д.</span>
+                </div>
+                <div />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Этапы — детальные карточки */}
+        {phases.length > 0 && (
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-3 h-0.5 rounded" style={{ background: '#7c3aed' }} />
+              <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em]">Детальный план работ</p>
+            </div>
+            <div className="space-y-3">
               {phases.map((ph, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <div className="text-[10px] text-gray-600 w-28 shrink-0 truncate">{ph.code}</div>
-                  <div className="flex-1 bg-gray-100 rounded h-5 overflow-hidden">
-                    <div
-                      className={`h-full ${PHASE_COLORS[i % PHASE_COLORS.length]} flex items-center px-2`}
-                      style={{ width: `${Math.max(15, 100 / phases.length * (i * 0.3 + 1))}%` }}
-                    >
-                      <span className="text-[9px] text-white font-medium truncate">{ph.duration}</span>
+                <div key={i} className="rounded-xl overflow-hidden border" style={{ borderColor: PHASE_BORDER[i % PHASE_BORDER.length] }}>
+                  {/* Заголовок этапа */}
+                  <div className="px-4 py-3 flex items-center justify-between" style={{ background: PHASE_BG[i % PHASE_BG.length] }}>
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-[10px] font-black text-white bg-white/20 px-2 py-0.5 rounded">{ph.code}</span>
+                      <span className="text-sm font-bold text-white">{ph.title}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] text-white/80">{ph.duration}</span>
+                      {ph.responsible && <div className="text-[9px] text-white/60">{ph.responsible}</div>}
                     </div>
                   </div>
+                  {/* Задачи */}
+                  {(ph.tasks || []).length > 0 && (
+                    <div style={{ background: PHASE_LIGHT[i % PHASE_LIGHT.length] }}>
+                      {ph.tasks.map((t, j) => (
+                        <div key={j} className={`px-4 py-2.5 border-b ${t.milestone ? 'bg-amber-50 border-amber-100' : j % 2 === 0 ? 'bg-white border-gray-100' : 'border-gray-50'}`}>
+                          <div className="flex items-start gap-2.5">
+                            {t.milestone
+                              ? <div className="w-5 h-5 rounded-full bg-amber-400 text-white flex items-center justify-center shrink-0 mt-0.5">⚑</div>
+                              : <div className="w-5 h-5 rounded bg-gray-200 text-gray-600 flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5">{j + 1}</div>
+                            }
+                            <div className="flex-1 min-w-0">
+                              <div className={`text-xs leading-snug ${t.milestone ? 'font-bold text-amber-800' : 'text-gray-700'}`}>
+                                {t.title}
+                              </div>
+                              {t.responsible && <div className="text-[9px] text-gray-400 mt-0.5">{t.responsible}</div>}
+                              {(t.items || []).length > 0 && (
+                                <ul className="mt-1.5 space-y-0.5">
+                                  {t.items!.map((item, k) => (
+                                    <li key={k} className="flex items-start gap-1.5">
+                                      <div className="w-1 h-1 rounded-full bg-gray-400 mt-1.5 shrink-0" />
+                                      <span className="text-[10px] text-gray-500 leading-snug">{item}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-gray-400 shrink-0 mt-0.5">{t.duration}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Этапы */}
-        {phases.map((ph, i) => (
-          <div key={i} className="rounded-xl overflow-hidden border border-gray-200">
-            <div className={`px-4 py-2 flex items-center justify-between ${PHASE_COLORS[i % PHASE_COLORS.length]}`}>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black text-white bg-white/20 px-2 py-0.5 rounded">{ph.code}</span>
-                <span className="text-xs font-bold text-white">{ph.title}</span>
-              </div>
-              <span className="text-[10px] text-white/80">{ph.duration}</span>
-            </div>
-            {(ph.tasks || []).length > 0 && (
-              <div className="divide-y divide-gray-100">
-                {ph.tasks.map((t, j) => (
-                  <div key={j} className={`px-4 py-2 ${t.milestone ? 'bg-amber-50' : j % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}`}>
-                    <div className="flex items-start gap-2">
-                      <span className={`text-[10px] font-bold shrink-0 pt-0.5 ${t.milestone ? 'text-amber-600' : 'text-gray-400'}`}>{t.code}</span>
-                      <div className="flex-1">
-                        <span className={`text-xs ${t.milestone ? 'font-bold text-amber-800' : 'text-gray-700'}`}>
-                          {t.milestone && '⚑ '}{t.title}
-                        </span>
-                        {(t.items || []).length > 0 && (
-                          <ul className="mt-1 space-y-0.5">
-                            {t.items!.map((item, k) => (
-                              <li key={k} className="flex items-start gap-1.5">
-                                <span className="text-gray-300 mt-1">•</span>
-                                <span className="text-[10px] text-gray-500">{item}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                      <span className="text-[10px] text-gray-400 shrink-0">{t.duration}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-
         {rm.notes && (
-          <div className="rounded-lg p-3 bg-amber-50 border border-amber-200 text-xs text-amber-800">{rm.notes}</div>
+          <div className="rounded-xl p-3 bg-amber-50 border border-amber-200 flex gap-2">
+            <span className="text-amber-500 text-base shrink-0">⚠</span>
+            <p className="text-xs text-amber-800 leading-relaxed">{rm.notes}</p>
+          </div>
         )}
 
         {/* Подпись */}
-        <div className="border-t border-gray-200 pt-3 flex items-end justify-between">
-          <div className="text-xs text-gray-500 space-y-0.5">
-            <p className="font-medium text-gray-700">{company.full}</p>
-            {company.details.split('\n').filter(l => l.includes('ИНН') || l.includes('директор')).map((l, i2) => (
-              <p key={i2}>{l}</p>
-            ))}
+        <div className="border-t-2 border-gray-700 pt-5 mt-2">
+          <div className="flex items-end justify-between gap-4">
+            <div className="space-y-1">
+              <p className="text-xs text-gray-500">С уважением,</p>
+              <p className="text-xs text-gray-600">Генеральный директор</p>
+              <p className="text-sm font-black text-gray-900">{company.full}</p>
+              {directorLine && <p className="text-xs text-gray-600">{directorLine}</p>}
+              {innLine && <p className="text-[10px] text-gray-400">{innLine}</p>}
+              <div className="mt-4 flex items-end gap-6">
+                <div>
+                  <div className="border-b border-gray-400 w-36 mb-1" />
+                  <div className="text-[9px] text-gray-400">(подпись)</div>
+                </div>
+                <div>
+                  <div className="border-b border-gray-400 w-28 mb-1" />
+                  <div className="text-[9px] text-gray-400">(дата)</div>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col items-center gap-1 shrink-0">
+              {company.logo && <img src={company.logo} alt="" className="h-10 object-contain opacity-70" />}
+              {company.stamp && <img src={company.stamp} alt="Печать" className="h-20 w-20 object-contain opacity-85" />}
+            </div>
           </div>
-          {company.stamp && <img src={company.stamp} alt="Печать" className="h-12 w-12 object-contain opacity-70" />}
         </div>
       </div>
     </div>
@@ -845,7 +997,7 @@ export function AIKPGenerator() {
       </div>
     </div>
 
-    <div className="flex gap-6 h-[calc(100vh-280px)] min-h-[500px]">
+    <div className="flex gap-6" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
       {/* Левая панель — чат */}
       <div
         className={`flex flex-col flex-1 bg-slate-900/60 border rounded-2xl overflow-hidden relative transition-colors ${
@@ -1118,8 +1270,8 @@ export function AIKPGenerator() {
         </div>
       </div>
 
-      {/* Правая панель — превью */}
-      <div className="w-[400px] flex-shrink-0 flex flex-col gap-3 overflow-y-auto">
+      {/* Правая панель — превью (полный скролл без обрезания) */}
+      <div className="w-[420px] flex-shrink-0 flex flex-col gap-3 overflow-y-auto max-h-[calc(100vh-200px)]">
         {/* Шапка правой панели */}
         {(kpData || roadmapData) && (
           <div className="flex items-center justify-between">
