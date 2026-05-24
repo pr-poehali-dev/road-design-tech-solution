@@ -651,7 +651,7 @@ export function AIKPGenerator() {
       const jobId = startData.job_id;
       if (!jobId) throw new Error('Не получен job_id');
 
-      const deadline = Date.now() + 90000;
+      const deadline = Date.now() + (mode === 'roadmap' ? 180000 : 90000);
       while (Date.now() < deadline) {
         await new Promise(r => setTimeout(r, 2000));
         const pollResp = await fetch(API_URL, {
@@ -835,8 +835,8 @@ export function AIKPGenerator() {
       const jobId = startData.job_id;
       if (!jobId) throw new Error('Не получен job_id от сервера');
 
-      // Шаг 2: поллинг каждые 2 сек до готовности (макс 90 сек)
-      const deadline = Date.now() + 90000;
+      // Шаг 2: поллинг каждые 2 сек до готовности (макс 180 сек для дорожной карты)
+      const deadline = Date.now() + (mode === 'roadmap' ? 180000 : 90000);
       while (Date.now() < deadline) {
         await new Promise(r => setTimeout(r, 2000));
 
@@ -1138,11 +1138,20 @@ export function AIKPGenerator() {
                     <div key={i} className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
                   ))}
                 </div>
-                {loadingSeconds > 15 && (
-                  <p className="text-[10px] text-slate-600 mt-1">Анализирую документы, чуть подождите...</p>
+                {mode === 'roadmap' && loadingSeconds > 10 && (
+                  <p className="text-[10px] text-violet-400 mt-1">Формирую детальный план по ГОСТ и СП...</p>
                 )}
-                {loadingSeconds > 30 && (
-                  <p className="text-[10px] text-amber-600 mt-0.5">Запрос сложный, ещё немного...</p>
+                {mode === 'roadmap' && loadingSeconds > 50 && (
+                  <p className="text-[10px] text-violet-300 mt-0.5">Структурирую этапы и риски...</p>
+                )}
+                {mode === 'roadmap' && loadingSeconds > 90 && (
+                  <p className="text-[10px] text-amber-400 mt-0.5">Генерирую JSON дорожной карты...</p>
+                )}
+                {mode !== 'roadmap' && loadingSeconds > 15 && (
+                  <p className="text-[10px] text-slate-600 mt-1">Анализирую данные, чуть подождите...</p>
+                )}
+                {mode !== 'roadmap' && loadingSeconds > 30 && (
+                  <p className="text-[10px] text-amber-600 mt-0.5">Формирую КП...</p>
                 )}
               </div>
             </div>

@@ -1228,13 +1228,16 @@ def _run_deepseek_chat_job(job_id: str, body: dict):
 
         system_prompt = (ROADMAP_CHAT_PROMPT if mode == 'roadmap' else DEEPSEEK_SYSTEM_PROMPT) + company_block
 
-        with _httpx.Client(timeout=55) as client:
+        # Для дорожной карты используем больше токенов и отдельный запрос на JSON
+        max_tokens = 4000 if mode == 'roadmap' else 2000
+
+        with _httpx.Client(timeout=80) as client:
             resp = client.post(
                 'https://openrouter.ai/api/v1/chat/completions',
                 headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json',
                          'HTTP-Referer': 'https://poehali.dev', 'X-Title': 'DEAD SPACE KP Chat'},
                 json={'model': 'deepseek/deepseek-chat', 'messages': [{'role': 'system', 'content': system_prompt}] + chat_messages,
-                      'temperature': 0.5, 'max_tokens': 2000}
+                      'temperature': 0.5, 'max_tokens': max_tokens}
             )
 
         if resp.status_code != 200:
@@ -1242,24 +1245,81 @@ def _run_deepseek_chat_job(job_id: str, body: dict):
 
         assistant_message = resp.json()['choices'][0]['message']['content']
 
-        # Парсим KP_JSON
+        # Парсим KP_JSON и ROADMAP_JSON
         kp_json = None
         roadmap_json = None
         clean_message = assistant_message
 
-        if '<<<KP_JSON>>>' in assistant_message and '<<<END_KP_JSON>>>' in assistant_message:
-            s = assistant_message.index('<<<KP_JSON>>>') + len('<<<KP_JSON>>>')
-            e = assistant_message.index('<<<END_KP_JSON>>>')
-            try: kp_json = json.loads(assistant_message[s:e].strip())
-            except Exception: pass
-            clean_message = assistant_message[:assistant_message.index('<<<KP_JSON>>>')].strip()
+        if '<<<KP_JSON>>>' in assistant_message:
+            start_tag = '<<<KP_JSON>>>'
+            end_tag = '<<<END_KP_JSON>>>'
+            s = assistant_message.index(start_tag) + len(start_tag)
+            e = assistant_message.index(end_tag) if end_tag in assistant_message else len(assistant_message)
+            raw = assistant_message[s:e].strip()
+            # Пытаемся починить обрезанный JSON
+            try:
+                kp_json = json.loads(raw)
+            except Exception:
+                try:
+                    # Добавляем закрывающие скобки если JSON обрезан
+                    fixed = raw
+                    open_b = fixed.count('{') - fixed.count('}')
+                    open_sq = fixed.count('[') - fixed.count(']')
+                    fixed += ']' * max(0, open_sq) + '}' * max(0, open_b)
+                    kp_json = json.loads(fixed)
+                except Exception:
+                    kp_json = None
+            clean_message = assistant_message[:assistant_message.index(start_tag)].strip()
 
-        if '<<<ROADMAP_JSON>>>' in assistant_message and '<<<END_ROADMAP_JSON>>>' in assistant_message:
-            s = assistant_message.index('<<<ROADMAP_JSON>>>') + len('<<<ROADMAP_JSON>>>')
-            e = assistant_message.index('<<<END_ROADMAP_JSON>>>')
-            try: roadmap_json = json.loads(assistant_message[s:e].strip())
-            except Exception: pass
-            clean_message = assistant_message[:assistant_message.index('<<<ROADMAP_JSON>>>')].strip()
+        if '<<<ROADMAP_JSON>>>' in assistant_message:
+            start_tag = '<<<ROADMAP_JSON>>>'
+            end_tag = '<<<END_ROADMAP_JSON>>>'
+            s = assistant_message.index(start_tag) + len(start_tag)
+            e = assistant_message.index(end_tag) if end_tag in assistant_message else len(assistant_message)
+            raw = assistant_message[s:e].strip()
+            try:
+                roadmap_json = json.loads(raw)
+            except Exception:
+                try:
+                    fixed = raw
+                    open_b = fixed.count('{') - fixed.count('}')
+                    open_sq = fixed.count('[') - fixed.count(']')
+                    fixed += ']' * max(0, open_sq) + '}' * max(0, open_b)
+                    roadmap_json = json.loads(fixed)
+                except Exception:
+                    roadmap_json = None
+            clean_message = assistant_message[:assistant_message.index(start_tag)].strip()
+
+        # Если JSON не распарсился — делаем второй запрос только на JSON
+        if mode == 'roadmap' and roadmap_json is None and len(assistant_message) > 200:
+            try:
+                json_only_messages = chat_messages + [
+                    {'role': 'assistant', 'content': assistant_message[:500] + '...[обрезано]'},
+                    {'role': 'user', 'content': 'Выдай ТОЛЬКО JSON дорожной карты в тегах <<<ROADMAP_JSON>>> ... <<<END_ROADMAP_JSON>>> без других слов.'}
+                ]
+                with _httpx.Client(timeout=40) as client2:
+                    resp2 = client2.post(
+                        'https://openrouter.ai/api/v1/chat/completions',
+                        headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+                        json={'model': 'deepseek/deepseek-chat', 'messages': [{'role': 'system', 'content': system_prompt}] + json_only_messages,
+                              'temperature': 0.3, 'max_tokens': 3500}
+                    )
+                if resp2.status_code == 200:
+                    msg2 = resp2.json()['choices'][0]['message']['content']
+                    if '<<<ROADMAP_JSON>>>' in msg2:
+                        s2 = msg2.index('<<<ROADMAP_JSON>>>') + len('<<<ROADMAP_JSON>>>')
+                        e2 = msg2.index('<<<END_ROADMAP_JSON>>>') if '<<<END_ROADMAP_JSON>>>' in msg2 else len(msg2)
+                        raw2 = msg2[s2:e2].strip()
+                        try:
+                            roadmap_json = json.loads(raw2)
+                        except Exception:
+                            open_b = raw2.count('{') - raw2.count('}')
+                            open_sq = raw2.count('[') - raw2.count(']')
+                            raw2 += ']' * max(0, open_sq) + '}' * max(0, open_b)
+                            try: roadmap_json = json.loads(raw2)
+                            except Exception: pass
+            except Exception:
+                pass
 
         result = json.dumps({'message': clean_message, 'kp_json': kp_json, 'roadmap_json': roadmap_json}, ensure_ascii=False)
         conn = get_db()
