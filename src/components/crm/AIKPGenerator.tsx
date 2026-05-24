@@ -605,19 +605,23 @@ export function AIKPGenerator() {
   const printDocument = () => {
     const el = printRef.current;
     if (!el) return;
-    const win = window.open('', '_blank');
+    const win = window.open('', '_blank', 'width=900,height=700');
     if (!win) return;
-    win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>КП</title>
+    // Копируем все inline styles и Tailwind через computed styles
+    const css = Array.from(document.styleSheets)
+      .flatMap(s => { try { return Array.from(s.cssRules).map(r => r.cssText); } catch { return []; } })
+      .join('\n');
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+      <title>${mode === 'kp' ? 'КП' : 'Дорожная карта'}</title>
       <style>
-        body{margin:0;font-family:Arial,sans-serif;background:#fff}
-        @media print{body{margin:0}}
-        img{max-width:100%}
-        table{border-collapse:collapse;width:100%}
-        td,th{padding:4px 6px}
-      </style></head><body>${el.innerHTML}</body></html>`);
+        ${css}
+        @page { size: A4; margin: 10mm 12mm; }
+        body { background: white !important; font-family: Arial, sans-serif; }
+        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      </style></head><body>${el.outerHTML}</body></html>`);
     win.document.close();
     win.focus();
-    setTimeout(() => { win.print(); win.close(); }, 400);
+    setTimeout(() => { win.print(); }, 600);
   };
 
   const regenerateDoc = async () => {
@@ -664,13 +668,8 @@ export function AIKPGenerator() {
         if (poll.status === 'done' && poll.data) {
           const data = poll.data;
           setMessages(prev => [...prev, { role: 'assistant', content: data.message || 'Готово.' }]);
-          if (data.kp_json) {
-            const kp = data.kp_json as KpData;
-            const hasData = (kp.project && kp.project !== '' && kp.project !== 'Проект') ||
-              (kp.stages || []).some((s: KpStage) => s.sum > 0 && s.title !== '');
-            if (hasData) setKpData(kp);
-          }
-          if (data.roadmap_json) setRoadmapData(data.roadmap_json);
+          if (data.kp_json) setKpData(data.kp_json as KpData);
+          if (data.roadmap_json) setRoadmapData(data.roadmap_json as RoadmapData);
           break;
         }
         if (poll.status === 'error') throw new Error(poll.error || 'Ошибка генерации');
@@ -855,21 +854,13 @@ export function AIKPGenerator() {
 
         if (poll.status === 'done' && poll.data) {
           const data = poll.data;
-          const aiText = data.message || 'Готово.';
-          setMessages(prev => [...prev, { role: 'assistant', content: aiText }]);
-          if (data.kp_json) {
-            const kp = data.kp_json as KpData;
-            const hasData = (kp.project && kp.project !== '' && kp.project !== 'Проект') ||
-              (kp.stages || []).some((s: KpStage) => s.sum > 0 && s.title !== '');
-            if (hasData) setKpData(kp);
-          }
-          if (data.roadmap_json) setRoadmapData(data.roadmap_json);
+          setMessages(prev => [...prev, { role: 'assistant', content: data.message || 'Готово.' }]);
+          // Всегда обновляем — пользователь мог запросить изменения
+          if (data.kp_json) setKpData(data.kp_json as KpData);
+          if (data.roadmap_json) setRoadmapData(data.roadmap_json as RoadmapData);
           break;
         }
-        if (poll.status === 'error') {
-          throw new Error(poll.error || 'Ошибка генерации');
-        }
-        // pending — продолжаем поллинг
+        if (poll.status === 'error') throw new Error(poll.error || 'Ошибка генерации');
       }
       if (Date.now() >= deadline) throw new Error('Время ожидания истекло (90 сек). Попробуйте ещё раз.');
 
@@ -997,9 +988,10 @@ export function AIKPGenerator() {
       </div>
     </div>
 
-    <div className="flex gap-6" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
-      {/* Левая панель — чат */}
+    <div className="flex gap-6 items-start" style={{ minHeight: '600px' }}>
+      {/* Левая панель — чат с фиксированной высотой */}
       <div
+        style={{ height: 'calc(100vh - 260px)', minHeight: '550px' }}
         className={`flex flex-col flex-1 bg-slate-900/60 border rounded-2xl overflow-hidden relative transition-colors ${
           isDragging ? 'border-cyan-400 bg-cyan-950/40' : 'border-cyan-500/20'
         }`}
@@ -1270,8 +1262,8 @@ export function AIKPGenerator() {
         </div>
       </div>
 
-      {/* Правая панель — превью (полный скролл без обрезания) */}
-      <div className="w-[420px] flex-shrink-0 flex flex-col gap-3 overflow-y-auto max-h-[calc(100vh-200px)]">
+      {/* Правая панель — полный скролл без обрезания */}
+      <div className="w-[420px] flex-shrink-0 flex flex-col gap-3" style={{ maxHeight: 'calc(100vh - 260px)', overflowY: 'auto' }}>
         {/* Шапка правой панели */}
         {(kpData || roadmapData) && (
           <div className="flex items-center justify-between">
@@ -1318,5 +1310,6 @@ export function AIKPGenerator() {
       </div>
     </div>
     </div>
+
   );
 }

@@ -121,6 +121,18 @@
   [id*="widget"] {
     display: none !important;
   }
+
+  /* Режим печати КП/Дорожной карты — скрываем всё кроме нужного блока */
+  body.aikp-printing > * {
+    display: none !important;
+  }
+  body.aikp-printing #aikp-print-root {
+    display: block !important;
+  }
+  body.aikp-printing #aikp-print-root * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }
 
 @layer base {
