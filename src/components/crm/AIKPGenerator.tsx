@@ -167,7 +167,7 @@ function KPPreview({ kp, company, printRef }: { kp: KpData; company: Company; pr
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               {company.logo
-                ? <img src={company.logo} alt={company.short} className="h-8 object-contain mb-3" style={{ filter: 'brightness(0) invert(1)' }} />
+                ? <img src={company.logo} alt={company.short} className="h-10 object-contain mb-3 rounded" style={{ background: 'white', padding: '4px' }} />
                 : <p className="text-white font-black text-base mb-3">{company.short}</p>
               }
               <div className="inline-block text-[9px] font-bold uppercase tracking-[0.15em] text-white/50 border border-white/20 px-2 py-0.5 rounded mb-2">
@@ -361,7 +361,7 @@ function RoadmapPreview({ rm, company, printRef }: { rm: RoadmapData; company: C
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               {company.logo
-                ? <img src={company.logo} alt="" className="h-8 object-contain mb-3" style={{ filter: 'brightness(0) invert(1)' }} />
+                ? <img src={company.logo} alt="" className="h-10 object-contain mb-3 rounded" style={{ background: 'white', padding: '4px' }} />
                 : <p className="text-white font-black text-base mb-3">{company.short}</p>
               }
               <div className="inline-block text-[9px] font-bold uppercase tracking-[0.15em] text-white/50 border border-white/20 px-2 py-0.5 rounded mb-2">
