@@ -1399,6 +1399,129 @@ def handler(event: dict, context) -> dict:
     if action == 'ping':
         return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'status': 'ok'})}
 
+    # ═══ СЕССИИ ═══
+
+    if action == 'save_session':
+        """Сохранить или обновить сессию чата с КП/ДК."""
+        session_id = body.get('session_id')
+        title = body.get('title', 'Без названия')
+        mode = body.get('mode', 'kp')
+        company_id = body.get('company_id', '')
+        company_name = body.get('company_name', '')
+        messages = body.get('messages', [])
+        kp_json = body.get('kp_json')
+        roadmap_json = body.get('roadmap_json')
+        files_summary = body.get('files_summary', '')
+
+        conn = get_db()
+        cur = conn.cursor()
+        if session_id:
+            cur.execute("""
+                UPDATE ai_sessions SET title=%s, mode=%s, company_id=%s, company_name=%s,
+                messages=%s, kp_json=%s, roadmap_json=%s, files_summary=%s, updated_at=NOW()
+                WHERE id=%s RETURNING id
+            """, (title, mode, company_id, company_name,
+                  json.dumps(messages, ensure_ascii=False),
+                  json.dumps(kp_json, ensure_ascii=False) if kp_json else None,
+                  json.dumps(roadmap_json, ensure_ascii=False) if roadmap_json else None,
+                  files_summary, session_id))
+        else:
+            cur.execute("""
+                INSERT INTO ai_sessions (title, mode, company_id, company_name, messages, kp_json, roadmap_json, files_summary)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id
+            """, (title, mode, company_id, company_name,
+                  json.dumps(messages, ensure_ascii=False),
+                  json.dumps(kp_json, ensure_ascii=False) if kp_json else None,
+                  json.dumps(roadmap_json, ensure_ascii=False) if roadmap_json else None,
+                  files_summary))
+        new_id = str(cur.fetchone()[0])
+
+        # Обновляем общую память: сохраняем ключевые факты из сессии
+        if kp_json and isinstance(kp_json, dict):
+            project = kp_json.get('project', '')
+            if project:
+                cur.execute("""
+                    INSERT INTO ai_memory (category, key, value, source_session_id, weight)
+                    VALUES ('project_names', %s, %s, %s, 1)
+                    ON CONFLICT (category, key) DO UPDATE SET weight = ai_memory.weight + 1, updated_at = NOW()
+                """, (project[:200], project[:500], new_id))
+        conn.commit()
+        conn.close()
+        return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'session_id': new_id})}
+
+    if action == 'list_sessions':
+        """Список всех сохранённых сессий."""
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT id, title, mode, company_name,
+                   kp_json IS NOT NULL as has_kp,
+                   roadmap_json IS NOT NULL as has_roadmap,
+                   created_at, updated_at
+            FROM ai_sessions WHERE is_archived = FALSE
+            ORDER BY updated_at DESC LIMIT 100
+        """)
+        rows = cur.fetchall()
+        conn.close()
+        sessions = [
+            {'id': str(r[0]), 'title': r[1], 'mode': r[2], 'company_name': r[3],
+             'has_kp': r[4], 'has_roadmap': r[5],
+             'created_at': r[6].isoformat(), 'updated_at': r[7].isoformat()}
+            for r in rows
+        ]
+        return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'sessions': sessions}, ensure_ascii=False)}
+
+    if action == 'load_session':
+        """Загрузить полную сессию по ID."""
+        session_id = body.get('session_id')
+        if not session_id:
+            return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'error': 'session_id required'})}
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT id, title, mode, company_id, company_name, messages, kp_json, roadmap_json, files_summary, created_at, updated_at
+            FROM ai_sessions WHERE id = %s
+        """, (session_id,))
+        row = cur.fetchone()
+        conn.close()
+        if not row:
+            return {'statusCode': 404, 'headers': CORS, 'body': json.dumps({'error': 'Session not found'})}
+        session = {
+            'id': str(row[0]), 'title': row[1], 'mode': row[2],
+            'company_id': row[3], 'company_name': row[4],
+            'messages': json.loads(row[5]) if row[5] else [],
+            'kp_json': json.loads(row[6]) if row[6] else None,
+            'roadmap_json': json.loads(row[7]) if row[7] else None,
+            'files_summary': row[8],
+            'created_at': row[9].isoformat(), 'updated_at': row[10].isoformat()
+        }
+        return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(session, ensure_ascii=False)}
+
+    if action == 'archive_session':
+        """Архивировать (скрыть) сессию."""
+        session_id = body.get('session_id')
+        if not session_id:
+            return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'error': 'session_id required'})}
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("UPDATE ai_sessions SET is_archived=TRUE, updated_at=NOW() WHERE id=%s", (session_id,))
+        conn.commit()
+        conn.close()
+        return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'ok': True})}
+
+    if action == 'get_memory':
+        """Получить общую память (топ-факты из всех сессий) для обогащения промпта."""
+        category = body.get('category', '')
+        conn = get_db()
+        cur = conn.cursor()
+        if category:
+            cur.execute("SELECT key, value, weight FROM ai_memory WHERE category=%s ORDER BY weight DESC LIMIT 30", (category,))
+        else:
+            cur.execute("SELECT category, key, value, weight FROM ai_memory ORDER BY weight DESC LIMIT 50")
+        rows = cur.fetchall()
+        conn.close()
+        return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'memory': [dict(zip(['category','key','value','weight'], r if len(r)==4 else [category]+list(r))) for r in rows]}, ensure_ascii=False)}
+
     # Парсинг файлов — извлечение текста + OCR изображений через Gemini Vision
     if action == 'parse_files':
         import httpx as _httpx

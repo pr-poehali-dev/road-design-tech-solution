@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import func2url from '../../../backend/func2url.json';
+import AISessions from './AISessions';
 
 const API_URL = func2url['generate-kp'];
 
@@ -578,6 +579,9 @@ export function AIKPGenerator() {
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const [uploadingFiles, setUploadingFiles] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [activeTab, setActiveTab] = useState<'chat' | 'saved'>('chat');
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const printRef = useRef<HTMLDivElement>(null);
@@ -597,6 +601,54 @@ export function AIKPGenerator() {
   useEffect(() => {
     try { localStorage.setItem(LS_MODE, mode); } catch (e) { void e; }
   }, [mode]);
+
+  // Автосохранение сессии после получения КП или дорожной карты
+  const saveSession = useCallback(async (
+    msgs: Message[], kp: KpData | null, rm: RoadmapData | null, sid: string | null
+  ) => {
+    if (msgs.length === 0) return;
+    setSaving(true);
+    try {
+      const title = kp?.project || rm?.title
+        || msgs.find(m => m.role === 'user')?.content?.slice(0, 60)
+        || 'Новая сессия';
+      const resp = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'save_session',
+          session_id: sid,
+          title: title.replace(/\n.*/s, ''),
+          mode,
+          company_id: selectedCompany,
+          company_name: company.full,
+          messages: msgs,
+          kp_json: kp,
+          roadmap_json: rm,
+        }),
+      });
+      const data = await resp.json();
+      if (data.session_id && !sid) setSessionId(data.session_id);
+    } catch (e) { void e; }
+    setSaving(false);
+  }, [mode, selectedCompany, company.full]);
+
+  // Загрузка сессии из списка сохранённых
+  const handleLoadSession = useCallback((sessionData: {
+    id: string; mode: 'kp' | 'roadmap'; company_id: string;
+    messages: Message[]; kp_json: unknown; roadmap_json: unknown;
+  }) => {
+    setSessionId(sessionData.id);
+    setMode(sessionData.mode);
+    if (sessionData.company_id) {
+      setSelectedCompany(sessionData.company_id);
+      try { localStorage.setItem(LS_COMPANY, sessionData.company_id); } catch (e) { void e; }
+    }
+    setMessages(sessionData.messages || []);
+    setKpData(sessionData.kp_json as KpData || null);
+    setRoadmapData(sessionData.roadmap_json as RoadmapData || null);
+    setActiveTab('chat');
+  }, []);
 
   const printDocument = () => {
     const el = printRef.current;
@@ -663,9 +715,15 @@ export function AIKPGenerator() {
         const poll = await pollResp.json();
         if (poll.status === 'done' && poll.data) {
           const data = poll.data;
+          const updMsgs = [...messages, { role: 'user' as const, content: prompt }, { role: 'assistant' as const, content: data.message || 'Готово.' }];
           setMessages(prev => [...prev, { role: 'assistant', content: data.message || 'Готово.' }]);
-          if (data.kp_json) setKpData(data.kp_json as KpData);
-          if (data.roadmap_json) setRoadmapData(data.roadmap_json as RoadmapData);
+          const newKp = data.kp_json ? data.kp_json as KpData : kpData;
+          const newRm = data.roadmap_json ? data.roadmap_json as RoadmapData : roadmapData;
+          if (data.kp_json) setKpData(newKp);
+          if (data.roadmap_json) setRoadmapData(newRm);
+          if (data.kp_json || data.roadmap_json) {
+            saveSession(updMsgs, newKp, newRm, sessionId);
+          }
           break;
         }
         if (poll.status === 'error') throw new Error(poll.error || 'Ошибка генерации');
@@ -850,10 +908,16 @@ export function AIKPGenerator() {
 
         if (poll.status === 'done' && poll.data) {
           const data = poll.data;
-          setMessages(prev => [...prev, { role: 'assistant', content: data.message || 'Готово.' }]);
-          // Всегда обновляем — пользователь мог запросить изменения
-          if (data.kp_json) setKpData(data.kp_json as KpData);
-          if (data.roadmap_json) setRoadmapData(data.roadmap_json as RoadmapData);
+          const newMsgs = [...newMessages, { role: 'assistant' as const, content: data.message || 'Готово.' }];
+          setMessages(newMsgs);
+          const newKp = data.kp_json ? data.kp_json as KpData : kpData;
+          const newRm = data.roadmap_json ? data.roadmap_json as RoadmapData : roadmapData;
+          if (data.kp_json) setKpData(newKp);
+          if (data.roadmap_json) setRoadmapData(newRm);
+          // Автосохранение после каждого ответа с документом
+          if (data.kp_json || data.roadmap_json) {
+            saveSession(newMsgs, newKp, newRm, sessionId);
+          }
           break;
         }
         if (poll.status === 'error') throw new Error(poll.error || 'Ошибка генерации');
@@ -888,6 +952,7 @@ export function AIKPGenerator() {
     setRoadmapData(null);
     setInput('');
     setAttachedFiles([]);
+    setSessionId(null);
     try {
       localStorage.removeItem(LS_MESSAGES);
       localStorage.removeItem(LS_KPDATA);
@@ -1008,7 +1073,31 @@ export function AIKPGenerator() {
         )}
         {/* Хедер */}
         <div className="flex flex-col border-b border-cyan-500/20 bg-slate-900/80">
-          {/* Строка 1: режим + очистить */}
+          {/* Строка 0: вкладки чат / сохранённые */}
+          <div className="flex items-center gap-0 px-2 pt-2 border-b border-slate-800">
+            <button
+              onClick={() => setActiveTab('chat')}
+              className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold border-b-2 transition-all ${
+                activeTab === 'chat' ? 'border-cyan-500 text-cyan-300' : 'border-transparent text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              <Icon name="MessageSquare" size={12} />
+              Чат
+            </button>
+            <button
+              onClick={() => setActiveTab('saved')}
+              className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold border-b-2 transition-all ${
+                activeTab === 'saved' ? 'border-violet-500 text-violet-300' : 'border-transparent text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              <Icon name="Archive" size={12} />
+              Сохранённые
+              {saving && <Icon name="Loader2" size={10} className="animate-spin text-slate-500" />}
+              {sessionId && !saving && <div className="w-1.5 h-1.5 rounded-full bg-green-500" title="Сохранено" />}
+            </button>
+          </div>
+          {/* Строка 1: режим + очистить (только в чате) */}
+          {activeTab === 'chat' && (
           <div className="flex items-center justify-between px-4 pt-3 pb-2 gap-2">
             {/* Переключатель режима */}
             <div className="flex items-center gap-1 bg-slate-800 rounded-xl p-1">
@@ -1039,7 +1128,9 @@ export function AIKPGenerator() {
               </Button>
             </div>
           </div>
-          {/* Строка 2: кнопка сформировать */}
+          )}
+          {/* Строка 2: кнопка сформировать (только в чате) */}
+          {activeTab === 'chat' && (
           <div className="px-4 pb-2">
             <button
               onClick={regenerateDoc}
@@ -1054,10 +1145,18 @@ export function AIKPGenerator() {
               {mode === 'kp' ? 'Сформировать КП' : 'Сформировать дорожную карту'}
             </button>
           </div>
+          )}
         </div>
 
-        {/* Сообщения */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-4">
+        {/* Вкладка "Сохранённые" */}
+        {activeTab === 'saved' && (
+          <div className="flex-1 overflow-y-auto p-5">
+            <AISessions onLoadSession={handleLoadSession} />
+          </div>
+        )}
+
+        {/* Сообщения (только в режиме чата) */}
+        <div className={`flex-1 overflow-y-auto p-5 space-y-4 ${activeTab === 'saved' ? 'hidden' : ''}`}>
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-center gap-3 text-gray-500">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-purple-600/20 flex items-center justify-center border border-cyan-500/20">
@@ -1196,8 +1295,8 @@ export function AIKPGenerator() {
           </div>
         )}
 
-        {/* Инпут */}
-        <div className="px-4 py-3 border-t border-cyan-500/20 bg-slate-900/80">
+        {/* Инпут (скрыт на вкладке Сохранённые) */}
+        <div className={`px-4 py-3 border-t border-cyan-500/20 bg-slate-900/80 ${activeTab === 'saved' ? 'hidden' : ''}`}>
           <div className="flex gap-2 items-end">
             {/* Кнопка прикрепить файл */}
             <input
