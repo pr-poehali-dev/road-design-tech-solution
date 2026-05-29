@@ -1486,12 +1486,18 @@ def handler(event: dict, context) -> dict:
         conn.close()
         if not row:
             return {'statusCode': 404, 'headers': CORS, 'body': json.dumps({'error': 'Session not found'})}
+        def _parse_jsonb(val):
+            if val is None: return None
+            if isinstance(val, (dict, list)): return val
+            try: return json.loads(val)
+            except Exception: return None
+
         session = {
             'id': str(row[0]), 'title': row[1], 'mode': row[2],
             'company_id': row[3], 'company_name': row[4],
-            'messages': json.loads(row[5]) if row[5] else [],
-            'kp_json': json.loads(row[6]) if row[6] else None,
-            'roadmap_json': json.loads(row[7]) if row[7] else None,
+            'messages': _parse_jsonb(row[5]) or [],
+            'kp_json': _parse_jsonb(row[6]),
+            'roadmap_json': _parse_jsonb(row[7]),
             'files_summary': row[8],
             'created_at': row[9].isoformat(), 'updated_at': row[10].isoformat()
         }

@@ -87,6 +87,12 @@ interface KpResult {
   qty: string;
 }
 
+interface PaymentTerm {
+  pct: number;       // процент: 30, 30, 40
+  label: string;     // 'Аванс', 'Промежуточный', 'Окончательный'
+  sub: string;       // условие
+}
+
 interface KpData {
   client?: string;
   project?: string;
@@ -94,6 +100,7 @@ interface KpData {
   results?: KpResult[];
   timeline?: string;
   notes?: string;
+  payment_terms?: PaymentTerm[];
 }
 
 interface RoadmapTask { code: string; title: string; duration: string; responsible?: string; items?: string[]; milestone?: boolean; }
@@ -146,15 +153,105 @@ function fileColor(type: string) {
   return 'text-gray-400';
 }
 
-function KPPreview({ kp, company, printRef }: { kp: KpData; company: Company; printRef: React.RefObject<HTMLDivElement> }) {
+// Компонент inline-редактирования — двойной клик = редактировать
+function InlineEdit({
+  value, onChange, className = '', multiline = false, placeholder = '—',
+}: {
+  value: string; onChange?: (v: string) => void; className?: string; multiline?: boolean; placeholder?: string;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const ref = useRef<HTMLTextAreaElement & HTMLInputElement>(null);
+
+  useEffect(() => { if (editing) ref.current?.focus(); }, [editing]);
+  useEffect(() => { setDraft(value); }, [value]);
+
+  if (!onChange) return <span className={className}>{value || placeholder}</span>;
+
+  if (editing) {
+    const common = {
+      ref,
+      value: draft,
+      onChange: (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => setDraft(e.target.value),
+      onBlur: () => { onChange(draft); setEditing(false); },
+      onKeyDown: (e: React.KeyboardEvent) => {
+        if (!multiline && e.key === 'Enter') { onChange(draft); setEditing(false); }
+        if (e.key === 'Escape') { setDraft(value); setEditing(false); }
+      },
+      className: `${className} outline outline-2 outline-blue-400 rounded px-1 bg-blue-50 w-full resize-none`,
+    };
+    return multiline
+      ? <textarea {...common} rows={3} style={{ minWidth: 120 }} />
+      : <input {...common} style={{ minWidth: 60 }} />;
+  }
+
+  return (
+    <span
+      className={`${className} cursor-pointer hover:outline hover:outline-1 hover:outline-blue-300 hover:bg-blue-50/40 rounded px-0.5 transition-all group relative`}
+      onDoubleClick={() => setEditing(true)}
+      title="Двойной клик — редактировать"
+    >
+      {value || <span className="text-gray-300 italic text-[10px]">{placeholder}</span>}
+      <span className="absolute -top-3 left-0 text-[8px] text-blue-400 opacity-0 group-hover:opacity-100 whitespace-nowrap no-print">✎ дв.клик</span>
+    </span>
+  );
+}
+
+const DEFAULT_PAYMENT_TERMS: PaymentTerm[] = [
+  { pct: 30, label: 'Аванс', sub: 'при подписании договора' },
+  { pct: 30, label: 'Промежуточный', sub: 'по факту выполнения 1-го этапа' },
+  { pct: 40, label: 'Окончательный', sub: 'после сдачи всех работ' },
+];
+
+const PAYMENT_COLORS = ['#1e3a5f', '#7c3aed', '#059669', '#d97706', '#dc2626'];
+
+function KPPreview({ kp, company, printRef, onKpChange }: {
+  kp: KpData;
+  company: Company;
+  printRef: React.RefObject<HTMLDivElement>;
+  onKpChange?: (updated: KpData) => void;
+}) {
   const vatRate = company.id === 'kapstroy' ? 22 : company.id === 'ctesc' ? 5 : 0;
   const total = (kp.stages || []).reduce((s, st) => s + st.sum, 0);
   const vatAmount = vatRate > 0 ? Math.round(total * vatRate / (100 + vatRate)) : 0;
   const exVat = total - vatAmount;
-  const p30 = Math.round(total * 0.30);
-  const p30b = Math.round(total * 0.30);
-  const p40 = total - p30 - p30b;
   const today = new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  const payTerms = (kp.payment_terms && kp.payment_terms.length > 0) ? kp.payment_terms : DEFAULT_PAYMENT_TERMS;
+
+  // Нормализуем проценты чтобы в сумме = 100
+  const totalPct = payTerms.reduce((s, t) => s + t.pct, 0) || 100;
+  const payAmounts = payTerms.map(t => Math.round(total * t.pct / totalPct));
+  // последний — остаток чтобы не было расхождения из-за округления
+  if (payAmounts.length > 0) payAmounts[payAmounts.length - 1] = total - payAmounts.slice(0, -1).reduce((a, b) => a + b, 0);
+
+  const [editingPayment, setEditingPayment] = useState(false);
+  const [editTerms, setEditTerms] = useState<PaymentTerm[]>(payTerms);
+
+  const savePayment = () => {
+    // Проверяем что сумма = 100
+    const sum = editTerms.reduce((s, t) => s + t.pct, 0);
+    if (sum !== 100) {
+      // Авто-корректируем последний
+      const adjusted = [...editTerms];
+      adjusted[adjusted.length - 1] = { ...adjusted[adjusted.length - 1], pct: 100 - editTerms.slice(0, -1).reduce((s, t) => s + t.pct, 0) };
+      setEditTerms(adjusted);
+      onKpChange?.({ ...kp, payment_terms: adjusted });
+    } else {
+      onKpChange?.({ ...kp, payment_terms: editTerms });
+    }
+    setEditingPayment(false);
+  };
+
+  const addTerm = () => {
+    if (editTerms.length >= 5) return;
+    setEditTerms(prev => [...prev, { pct: 0, label: 'Платёж', sub: 'условие оплаты' }]);
+  };
+
+  const removeTerm = (i: number) => {
+    if (editTerms.length <= 2) return;
+    setEditTerms(prev => prev.filter((_, idx) => idx !== i));
+  };
 
   const directorLine = company.details.split('\n').find(l => l.toLowerCase().includes('директор') || l.toLowerCase().includes('генеральный'));
   const innLine = company.details.split('\n').find(l => l.includes('ИНН'));
@@ -174,10 +271,10 @@ function KPPreview({ kp, company, printRef }: { kp: KpData; company: Company; pr
               <div className="inline-block text-[9px] font-bold uppercase tracking-[0.15em] text-white/50 border border-white/20 px-2 py-0.5 rounded mb-2">
                 Коммерческое предложение
               </div>
-              <h2 className="text-white text-lg font-black leading-snug mb-1">{kp.project || 'Проект'}</h2>
-              {kp.client && (
-                <p className="text-cyan-300 text-xs">Заказчик: <span className="font-semibold">{kp.client}</span></p>
-              )}
+              <h2 className="text-white text-lg font-black leading-snug mb-1">
+                <InlineEdit value={kp.project || ''} placeholder="Название проекта" className="text-white text-lg font-black" onChange={onKpChange ? v => onKpChange({ ...kp, project: v }) : undefined} />
+              </h2>
+              <p className="text-cyan-300 text-xs">Заказчик: <InlineEdit value={kp.client || ''} placeholder="Заказчик" className="text-cyan-300 font-semibold" onChange={onKpChange ? v => onKpChange({ ...kp, client: v }) : undefined} /></p>
             </div>
             <div className="text-right shrink-0">
               <div className="text-white/50 text-[9px] uppercase tracking-wider mb-0.5">Дата</div>
@@ -199,7 +296,9 @@ function KPPreview({ kp, company, printRef }: { kp: KpData; company: Company; pr
           </div>
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
             <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-1.5">Заказчик</p>
-            <p className="font-black text-gray-800 text-xs">{kp.client || 'Заказчик'}</p>
+            <p className="font-black text-gray-800 text-xs">
+              <InlineEdit value={kp.client || ''} placeholder="Заказчик" className="font-black text-gray-800 text-xs" onChange={onKpChange ? v => onKpChange({ ...kp, client: v }) : undefined} />
+            </p>
             <p className="text-[10px] text-gray-500 mt-1">Основание: Технического задания</p>
           </div>
         </div>
@@ -218,8 +317,19 @@ function KPPreview({ kp, company, printRef }: { kp: KpData; company: Company; pr
               {kp.stages!.map((st, i) => (
                 <div key={st.n} className={`grid px-3 py-2 border-b border-gray-100 items-start ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}`} style={{ gridTemplateColumns: '32px 1fr 100px' }}>
                   <span className="text-xs text-gray-400 font-bold">{st.n}</span>
-                  <span className="text-xs text-gray-700 pr-2">{st.title}</span>
-                  <span className="text-xs font-bold text-right tabular-nums" style={{ color: NAVY }}>{formatMoney(st.sum)}</span>
+                  <span className="text-xs text-gray-700 pr-2">
+                    <InlineEdit value={st.title} className="text-xs text-gray-700" onChange={onKpChange ? v => onKpChange({ ...kp, stages: kp.stages!.map((s, j) => j === i ? { ...s, title: v } : s) }) : undefined} />
+                  </span>
+                  <span className="text-xs font-bold text-right tabular-nums" style={{ color: NAVY }}>
+                    <InlineEdit
+                      value={String(st.sum)}
+                      className="text-xs font-bold tabular-nums"
+                      onChange={onKpChange ? v => {
+                        const n = parseInt(v.replace(/\D/g, '')) || 0;
+                        onKpChange({ ...kp, stages: kp.stages!.map((s, j) => j === i ? { ...s, sum: n } : s) });
+                      } : undefined}
+                    />
+                  </span>
                 </div>
               ))}
               <div className="grid px-3 py-2.5 items-center" style={{ gridTemplateColumns: '32px 1fr 100px', background: NAVY }}>
@@ -243,27 +353,81 @@ function KPPreview({ kp, company, printRef }: { kp: KpData; company: Company; pr
           </div>
         )}
 
-        {/* Оплата 30/30/40 */}
+        {/* Условия оплаты — редактируемые */}
         {total > 0 && (
           <div>
             <div className="flex items-center gap-2 mb-2">
               <div className="w-3 h-0.5 bg-red-500 rounded" />
               <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em]">Условия оплаты</p>
+              {onKpChange && !editingPayment && (
+                <button
+                  onClick={() => { setEditTerms(payTerms); setEditingPayment(true); }}
+                  className="ml-auto text-[9px] text-blue-500 hover:text-blue-700 flex items-center gap-0.5 no-print"
+                >
+                  ✎ Изменить
+                </button>
+              )}
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { pct: '30%', label: 'Аванс', sub: 'при подписании договора', amt: p30, color: NAVY },
-                { pct: '30%', label: 'Промежуточный', sub: 'по факту выполнения 1-го этапа', amt: p30b, color: '#7c3aed' },
-                { pct: '40%', label: 'Окончательный', sub: 'после сдачи всех работ', amt: p40, color: '#059669' },
-              ].map(({ pct, label, sub, amt, color }) => (
-                <div key={label} className="rounded-xl border border-gray-200 p-3 text-center">
-                  <div className="w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center text-white text-xs font-black" style={{ background: color }}>{pct}</div>
-                  <p className="text-xs font-bold text-gray-700">{label}</p>
-                  <p className="text-[9px] text-gray-400 mt-0.5 leading-snug">{sub}</p>
-                  <p className="text-sm font-black mt-1.5 tabular-nums" style={{ color }}>{formatMoney(amt)}</p>
+
+            {/* Режим редактирования */}
+            {editingPayment && onKpChange ? (
+              <div className="rounded-xl border-2 border-blue-200 bg-blue-50 p-3 space-y-2 no-print">
+                <p className="text-[10px] text-blue-600 font-semibold mb-2">Сумма процентов должна быть 100%. Последний платёж пересчитывается автоматически.</p>
+                {editTerms.map((t, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1} max={99}
+                      value={t.pct}
+                      onChange={e => setEditTerms(prev => prev.map((x, j) => j === i ? { ...x, pct: parseInt(e.target.value) || 0 } : x))}
+                      className="w-14 border border-gray-300 rounded px-1.5 py-1 text-xs text-center font-bold"
+                      disabled={i === editTerms.length - 1}
+                    />
+                    <span className="text-xs text-gray-400">%</span>
+                    <input
+                      type="text"
+                      value={t.label}
+                      onChange={e => setEditTerms(prev => prev.map((x, j) => j === i ? { ...x, label: e.target.value } : x))}
+                      className="w-28 border border-gray-300 rounded px-1.5 py-1 text-xs"
+                      placeholder="Название"
+                    />
+                    <input
+                      type="text"
+                      value={t.sub}
+                      onChange={e => setEditTerms(prev => prev.map((x, j) => j === i ? { ...x, sub: e.target.value } : x))}
+                      className="flex-1 border border-gray-300 rounded px-1.5 py-1 text-xs"
+                      placeholder="Условие"
+                    />
+                    {editTerms.length > 2 && (
+                      <button onClick={() => removeTerm(i)} className="text-red-400 hover:text-red-600 text-xs px-1">✕</button>
+                    )}
+                  </div>
+                ))}
+                <div className="flex items-center gap-2 pt-1">
+                  {editTerms.length < 5 && (
+                    <button onClick={addTerm} className="text-[10px] text-blue-500 hover:text-blue-700">+ Добавить платёж</button>
+                  )}
+                  <div className="ml-auto flex gap-2">
+                    <button onClick={() => setEditingPayment(false)} className="text-[10px] text-gray-500 hover:text-gray-700 px-2 py-1 border border-gray-300 rounded">Отмена</button>
+                    <button onClick={savePayment} className="text-[10px] text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded font-semibold">Сохранить</button>
+                  </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ) : (
+              <div className={`grid gap-2`} style={{ gridTemplateColumns: `repeat(${Math.min(payTerms.length, 4)}, 1fr)` }}>
+                {payTerms.map((t, i) => {
+                  const color = PAYMENT_COLORS[i % PAYMENT_COLORS.length];
+                  return (
+                    <div key={i} className="rounded-xl border border-gray-200 p-3 text-center">
+                      <div className="w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center text-white text-xs font-black" style={{ background: color }}>{t.pct}%</div>
+                      <p className="text-xs font-bold text-gray-700">{t.label}</p>
+                      <p className="text-[9px] text-gray-400 mt-0.5 leading-snug">{t.sub}</p>
+                      <p className="text-sm font-black mt-1.5 tabular-nums" style={{ color }}>{formatMoney(payAmounts[i] || 0)}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -278,7 +442,14 @@ function KPPreview({ kp, company, printRef }: { kp: KpData; company: Company; pr
               {kp.results!.map((r, i) => (
                 <div key={i} className="flex items-start gap-2 rounded-lg bg-green-50 border border-green-100 px-3 py-2">
                   <span className="text-green-500 mt-0.5 text-sm shrink-0">✓</span>
-                  <span className="text-xs text-gray-700">{r.what} <span className="text-gray-400 italic">{r.fmt}</span> — {r.qty}</span>
+                  <span className="text-xs text-gray-700">
+                    <InlineEdit value={r.what} className="text-xs text-gray-700" onChange={onKpChange ? v => onKpChange({ ...kp, results: kp.results!.map((x, j) => j === i ? { ...x, what: v } : x) }) : undefined} />
+                    {' '}<span className="text-gray-400 italic">
+                      <InlineEdit value={r.fmt} className="text-gray-400 italic text-xs" onChange={onKpChange ? v => onKpChange({ ...kp, results: kp.results!.map((x, j) => j === i ? { ...x, fmt: v } : x) }) : undefined} />
+                    </span>
+                    {' — '}
+                    <InlineEdit value={r.qty} className="text-xs text-gray-700" onChange={onKpChange ? v => onKpChange({ ...kp, results: kp.results!.map((x, j) => j === i ? { ...x, qty: v } : x) }) : undefined} />
+                  </span>
                 </div>
               ))}
             </div>
@@ -286,22 +457,16 @@ function KPPreview({ kp, company, printRef }: { kp: KpData; company: Company; pr
         )}
 
         {/* Сроки / Примечания */}
-        {(kp.timeline || kp.notes) && (
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            {kp.timeline && (
-              <div className="rounded-xl border border-blue-100 bg-blue-50 p-3">
-                <p className="text-[9px] text-blue-400 uppercase tracking-wider mb-1">Срок выполнения</p>
-                <p className="font-bold text-gray-700">{kp.timeline}</p>
-              </div>
-            )}
-            {kp.notes && (
-              <div className="rounded-xl border border-amber-100 bg-amber-50 p-3">
-                <p className="text-[9px] text-amber-500 uppercase tracking-wider mb-1">Примечания</p>
-                <p className="text-gray-600 leading-snug">{kp.notes}</p>
-              </div>
-            )}
+        <div className="grid grid-cols-2 gap-3 text-xs">
+          <div className="rounded-xl border border-blue-100 bg-blue-50 p-3">
+            <p className="text-[9px] text-blue-400 uppercase tracking-wider mb-1">Срок выполнения</p>
+            <InlineEdit value={kp.timeline || ''} placeholder="Укажите срок" className="font-bold text-gray-700 text-xs" onChange={onKpChange ? v => onKpChange({ ...kp, timeline: v }) : undefined} />
           </div>
-        )}
+          <div className="rounded-xl border border-amber-100 bg-amber-50 p-3">
+            <p className="text-[9px] text-amber-500 uppercase tracking-wider mb-1">Примечания</p>
+            <InlineEdit value={kp.notes || ''} placeholder="Добавьте примечания" className="text-gray-600 leading-snug text-xs" multiline onChange={onKpChange ? v => onKpChange({ ...kp, notes: v }) : undefined} />
+          </div>
+        </div>
 
         {/* Подпись и печать — всегда внизу */}
         <div className="border-t-2 border-gray-700 pt-5 mt-2">
@@ -342,7 +507,12 @@ const PHASE_BG = ['#1e3a5f','#2563eb','#7c3aed','#0891b2','#d97706','#dc2626','#
 const PHASE_LIGHT = ['#eff6ff','#eff6ff','#f5f3ff','#ecfeff','#fffbeb','#fff1f2','#f0fdf4','#fff7ed'];
 const PHASE_BORDER = ['#bfdbfe','#bfdbfe','#ddd6fe','#a5f3fc','#fde68a','#fecaca','#bbf7d0','#fed7aa'];
 
-function RoadmapPreview({ rm, company, printRef }: { rm: RoadmapData; company: Company; printRef: React.RefObject<HTMLDivElement> }) {
+function RoadmapPreview({ rm, company, printRef, onRmChange }: {
+  rm: RoadmapData;
+  company: Company;
+  printRef: React.RefObject<HTMLDivElement>;
+  onRmChange?: (updated: RoadmapData) => void;
+}) {
   const phases = rm.phases || [];
   const today = new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
   const directorLine = company.details.split('\n').find(l => l.toLowerCase().includes('директор'));
@@ -368,8 +538,10 @@ function RoadmapPreview({ rm, company, printRef }: { rm: RoadmapData; company: C
               <div className="inline-block text-[9px] font-bold uppercase tracking-[0.15em] text-white/50 border border-white/20 px-2 py-0.5 rounded mb-2">
                 Дорожная карта проекта · ГОСТ 34.601-90
               </div>
-              <h2 className="text-white text-lg font-black leading-snug mb-1">{rm.title || 'Дорожная карта'}</h2>
-              {rm.client && <p className="text-cyan-300 text-xs">Заказчик: <span className="font-semibold">{rm.client}</span></p>}
+              <h2 className="text-white text-lg font-black leading-snug mb-1">
+                <InlineEdit value={rm.title || ''} placeholder="Название проекта" className="text-white text-lg font-black" onChange={onRmChange ? v => onRmChange({ ...rm, title: v }) : undefined} />
+              </h2>
+              <p className="text-cyan-300 text-xs">Заказчик: <InlineEdit value={rm.client || ''} placeholder="Заказчик" className="text-cyan-300 font-semibold" onChange={onRmChange ? v => onRmChange({ ...rm, client: v }) : undefined} /></p>
             </div>
             <div className="text-right shrink-0">
               <div className="text-white/50 text-[9px] uppercase tracking-wider mb-0.5">Дата</div>
@@ -392,9 +564,13 @@ function RoadmapPreview({ rm, company, printRef }: { rm: RoadmapData; company: C
               {rm.milestones!.map((m, i) => (
                 <div key={i} className="flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
                   <div className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px] font-black shrink-0">{m.code}</div>
-                  <div>
-                    <div className="text-xs font-bold text-gray-800 leading-snug">{m.title}</div>
-                    <div className="text-[10px] text-amber-600 font-medium">{m.day}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold text-gray-800 leading-snug">
+                      <InlineEdit value={m.title} className="text-xs font-bold text-gray-800" onChange={onRmChange ? v => onRmChange({ ...rm, milestones: rm.milestones!.map((x, j) => j === i ? { ...x, title: v } : x) }) : undefined} />
+                    </div>
+                    <div className="text-[10px] text-amber-600 font-medium">
+                      <InlineEdit value={m.day} className="text-[10px] text-amber-600 font-medium" onChange={onRmChange ? v => onRmChange({ ...rm, milestones: rm.milestones!.map((x, j) => j === i ? { ...x, day: v } : x) }) : undefined} />
+                    </div>
                   </div>
                 </div>
               ))}
@@ -422,7 +598,9 @@ function RoadmapPreview({ rm, company, printRef }: { rm: RoadmapData; company: C
                   <div key={i} className={`grid items-center px-3 py-2 border-b border-gray-100 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}`} style={{ gridTemplateColumns: '140px 1fr 80px' }}>
                     <div className="flex items-center gap-1.5 pr-2">
                       <div className="w-2 h-2 rounded-sm shrink-0" style={{ background: PHASE_BG[i % PHASE_BG.length] }} />
-                      <span className="text-[10px] text-gray-700 font-medium truncate">{ph.code} {ph.title}</span>
+                      <span className="text-[10px] text-gray-700 font-medium">
+                        <InlineEdit value={ph.title} className="text-[10px] text-gray-700 font-medium" onChange={onRmChange ? v => onRmChange({ ...rm, phases: rm.phases!.map((p, j) => j === i ? { ...p, title: v } : p) }) : undefined} />
+                      </span>
                     </div>
                     <div className="relative h-5 bg-gray-100 rounded mx-2 overflow-hidden">
                       <div
@@ -432,7 +610,9 @@ function RoadmapPreview({ rm, company, printRef }: { rm: RoadmapData; company: C
                         <span className="text-[8px] text-white font-bold px-1 truncate">{ph.code}</span>
                       </div>
                     </div>
-                    <div className="text-[10px] text-gray-500 text-right">{ph.duration}</div>
+                    <div className="text-[10px] text-gray-500 text-right">
+                      <InlineEdit value={ph.duration} className="text-[10px] text-gray-500" onChange={onRmChange ? v => onRmChange({ ...rm, phases: rm.phases!.map((p, j) => j === i ? { ...p, duration: v } : p) }) : undefined} />
+                    </div>
                   </div>
                 );
               })}
@@ -635,18 +815,35 @@ export function AIKPGenerator() {
 
   // Загрузка сессии из списка сохранённых
   const handleLoadSession = useCallback((sessionData: {
-    id: string; mode: 'kp' | 'roadmap'; company_id: string;
+    id: string; mode: 'kp' | 'roadmap'; company_id?: string | null;
     messages: Message[]; kp_json: unknown; roadmap_json: unknown;
   }) => {
+    const newMode = (sessionData.mode === 'roadmap' ? 'roadmap' : 'kp') as 'kp' | 'roadmap';
+    const newMsgs = Array.isArray(sessionData.messages) ? sessionData.messages : [];
+    const newKp = sessionData.kp_json && typeof sessionData.kp_json === 'object' ? sessionData.kp_json as KpData : null;
+    const newRm = sessionData.roadmap_json && typeof sessionData.roadmap_json === 'object' ? sessionData.roadmap_json as RoadmapData : null;
+
     setSessionId(sessionData.id);
-    setMode(sessionData.mode);
-    if (sessionData.company_id) {
+    setMode(newMode);
+    setMessages(newMsgs);
+    setKpData(newKp);
+    setRoadmapData(newRm);
+    setAttachedFiles([]);
+    setInput('');
+
+    if (sessionData.company_id && COMPANIES.find(c => c.id === sessionData.company_id)) {
       setSelectedCompany(sessionData.company_id);
       try { localStorage.setItem(LS_COMPANY, sessionData.company_id); } catch (e) { void e; }
     }
-    setMessages(sessionData.messages || []);
-    setKpData(sessionData.kp_json as KpData || null);
-    setRoadmapData(sessionData.roadmap_json as RoadmapData || null);
+
+    // Синхронизируем localStorage сразу
+    try {
+      localStorage.setItem(LS_MESSAGES, JSON.stringify(newMsgs));
+      localStorage.setItem(LS_KPDATA, JSON.stringify(newKp));
+      localStorage.setItem(LS_RMDATA, JSON.stringify(newRm));
+      localStorage.setItem(LS_MODE, newMode);
+    } catch (e) { void e; }
+
     setActiveTab('chat');
   }, []);
 
@@ -1370,28 +1567,34 @@ export function AIKPGenerator() {
       <div className="w-[420px] flex-shrink-0 flex flex-col gap-3" style={{ maxHeight: 'calc(100vh - 260px)', overflowY: 'auto' }}>
         {/* Шапка правой панели */}
         {(kpData || roadmapData) && (
-          <div className="flex items-center justify-between">
-            <Badge className={`text-xs ${mode === 'roadmap' ? 'bg-violet-500/20 text-violet-400 border-violet-500/30' : 'bg-green-500/20 text-green-400 border-green-500/30'}`}>
-              <Icon name="CheckCircle" size={12} className="mr-1" />
-              {mode === 'roadmap' ? 'Дорожная карта готова' : 'КП сформировано'}
-            </Badge>
-            <Button
-              size="sm"
-              onClick={printDocument}
-              className="bg-slate-700 hover:bg-slate-600 text-white gap-1.5 text-xs h-7"
-            >
-              <Icon name="Printer" size={12} />
-              Скачать PDF
-            </Button>
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between">
+              <Badge className={`text-xs ${mode === 'roadmap' ? 'bg-violet-500/20 text-violet-400 border-violet-500/30' : 'bg-green-500/20 text-green-400 border-green-500/30'}`}>
+                <Icon name="CheckCircle" size={12} className="mr-1" />
+                {mode === 'roadmap' ? 'Дорожная карта готова' : 'КП сформировано'}
+              </Badge>
+              <Button
+                size="sm"
+                onClick={printDocument}
+                className="bg-slate-700 hover:bg-slate-600 text-white gap-1.5 text-xs h-7"
+              >
+                <Icon name="Printer" size={12} />
+                Скачать PDF
+              </Button>
+            </div>
+            <p className="text-[10px] text-slate-600 flex items-center gap-1">
+              <Icon name="MousePointerClick" size={10} className="text-slate-500" />
+              Двойной клик на любом тексте — редактировать прямо в документе
+            </p>
           </div>
         )}
 
         {/* Содержимое */}
         {mode === 'kp' && kpData && (
-          <KPPreview kp={kpData} company={company} printRef={printRef} />
+          <KPPreview kp={kpData} company={company} printRef={printRef} onKpChange={updated => { setKpData(updated); if (sessionId) saveSession(messages, updated, roadmapData, sessionId); }} />
         )}
         {mode === 'roadmap' && roadmapData && (
-          <RoadmapPreview rm={roadmapData} company={company} printRef={printRef} />
+          <RoadmapPreview rm={roadmapData} company={company} printRef={printRef} onRmChange={updated => { setRoadmapData(updated); if (sessionId) saveSession(messages, kpData, updated, sessionId); }} />
         )}
         {mode === 'kp' && !kpData && (
           <div className="flex-1 flex flex-col items-center justify-center text-center gap-3 bg-slate-900/40 rounded-2xl border border-dashed border-slate-700 p-8 min-h-[300px]">
