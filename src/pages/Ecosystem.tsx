@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import { Link } from 'react-router-dom';
 
-const API_URL = 'https://functions.poehali.dev/dfa8f17b-5894-48e3-b263-bb3c5de0282e';
+const API_URL = 'https://functions.poehali.dev/fd1c95d9-d394-4d33-af98-1d5a05163881';
 
 /* ------------------------------------------------------------------ types */
 

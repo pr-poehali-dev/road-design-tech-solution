@@ -1,4 +1,4 @@
-const CHAT_API_URL = 'https://functions.poehali.dev/1b13a1d7-858c-4996-9fd5-18a6cd587522';
+const CHAT_API_URL = 'https://functions.poehali.dev/a9705a51-be73-4ccc-aab9-2be92c076eae';
 
 interface RegisterUserResponse {
   user: {

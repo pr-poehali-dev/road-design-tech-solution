@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 
-const KP_STORAGE_URL = 'https://functions.poehali.dev/0af926d6-1696-45cc-acd3-a20ae910f578';
+const KP_STORAGE_URL = 'https://functions.poehali.dev/98b50081-0e70-4947-abb9-b1669df368df';
 
 const formatMoney = (n: number) =>
   new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(n);

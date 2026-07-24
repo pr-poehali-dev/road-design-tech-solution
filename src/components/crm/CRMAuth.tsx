@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 
-const API_URL = 'https://functions.poehali.dev/dfa8f17b-5894-48e3-b263-bb3c5de0282e';
+const API_URL = 'https://functions.poehali.dev/fd1c95d9-d394-4d33-af98-1d5a05163881';
 
 interface CRMAuthProps {
   onLoginSuccess: (user: any) => void;

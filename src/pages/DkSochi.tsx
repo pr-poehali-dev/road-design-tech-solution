@@ -9,7 +9,7 @@ const LOGO_URL =
 const STAMP_URL =
   "https://cdn.poehali.dev/projects/5adabe83-9a88-49bb-ba7c-144288d55800/bucket/28ef465a-8d37-462f-9a36-4d59c5b0a662.png";
 
-const API_URL = "https://functions.poehali.dev/48de52d9-7a27-4110-b87b-d00e64ff6c66";
+const API_URL = "https://functions.poehali.dev/d3c696a1-199c-4933-a3d9-61c703ef3ef8";
 
 async function imgToBase64(url: string): Promise<string> {
   const res = await fetch(`${API_URL}?action=image-proxy&url=${encodeURIComponent(url)}`);

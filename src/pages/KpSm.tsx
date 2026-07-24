@@ -83,7 +83,7 @@ const NEEDED = [
   "При необходимости — фото текущего состояния ввода/щитов",
 ];
 
-const API_URL = "https://functions.poehali.dev/48de52d9-7a27-4110-b87b-d00e64ff6c66";
+const API_URL = "https://functions.poehali.dev/d3c696a1-199c-4933-a3d9-61c703ef3ef8";
 
 async function imgToBase64(url: string): Promise<string> {
   const res = await fetch(`${API_URL}?action=image-proxy&url=${encodeURIComponent(url)}`);

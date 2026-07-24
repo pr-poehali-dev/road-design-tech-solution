@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 
-const GENERATE_KP_URL = 'https://functions.poehali.dev/f595b8a7-903c-4870-b1f7-d0aac554463f';
+const GENERATE_KP_URL = 'https://functions.poehali.dev/5d119cfc-254b-41fd-8e6b-cf759a030469';
 
 // ─── Типы ───────────────────────────────────────────────────────────────────
 
