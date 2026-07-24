@@ -68,6 +68,7 @@ const Abipkyzbas = lazyWithRetry(() => import("./pages/Abipkyzbas"));
 const CSTKkyz = lazyWithRetry(() => import("./pages/CSTKkyz"));
 const Centodinkp = lazyWithRetry(() => import("./pages/Centodinkp"));
 const DTCodin = lazyWithRetry(() => import("./pages/DTCodin"));
+const Evden2 = lazyWithRetry(() => import("./pages/Evden2"));
 
 const queryClient = new QueryClient();
 
@@ -322,6 +323,11 @@ const App = () => (
             </Suspense>
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/evden2" element={
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
+              <Evden2 />
+            </Suspense>
+          } />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

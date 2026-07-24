@@ -95,6 +95,14 @@ export const CRMHeader = ({
                 <Icon name="Rocket" size={14} className="mr-1" />
                 DEAD SPACE
               </Button>
+              <Button
+                onClick={() => window.location.href = '/evden2'}
+                size="sm"
+                className="h-8 bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-400 hover:from-orange-600 hover:via-amber-600 hover:to-yellow-500 text-slate-900 font-bold shadow-[0_0_20px_rgba(251,191,36,0.6)] hover:shadow-[0_0_30px_rgba(251,191,36,0.8)] transition-all border-0"
+              >
+                <Icon name="Sparkles" size={14} className="mr-1" />
+                EVDEN 2.0
+              </Button>
               <Button variant="ghost" size="sm" onClick={goHome} className="h-8 w-8 p-0 touch-manipulation text-cyan-400 hover:bg-cyan-500/10">
                 <Icon name="Home" size={16} />
               </Button>
