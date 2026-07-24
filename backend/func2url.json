@@ -1,9 +1,11 @@
 {
-  "kp-storage": "https://functions.poehali.dev/0af926d6-1696-45cc-acd3-a20ae910f578",
-  "kp-worker": "https://functions.poehali.dev/5a6c2f56-6efc-41cc-9519-afc58fd49a75",
-  "generate-kp": "https://functions.poehali.dev/f595b8a7-903c-4870-b1f7-d0aac554463f",
-  "crm": "https://functions.poehali.dev/dfa8f17b-5894-48e3-b263-bb3c5de0282e",
-  "admin": "https://functions.poehali.dev/0d7b5196-aacb-49a5-9e26-b2e61bceaa5f",
-  "api": "https://functions.poehali.dev/48de52d9-7a27-4110-b87b-d00e64ff6c66",
-  "chat": "https://functions.poehali.dev/1b13a1d7-858c-4996-9fd5-18a6cd587522"
+  "crm": "https://functions.poehali.dev/fd1c95d9-d394-4d33-af98-1d5a05163881",
+  "kp-storage": "https://functions.poehali.dev/98b50081-0e70-4947-abb9-b1669df368df",
+  "leads": "https://functions.poehali.dev/f5d359a1-33b0-414e-96fe-1961884b4ad9",
+  "kp-worker": "https://functions.poehali.dev/30468bd4-edee-4f61-87ba-eb21e1b42b7d",
+  "api": "https://functions.poehali.dev/d3c696a1-199c-4933-a3d9-61c703ef3ef8",
+  "chat": "https://functions.poehali.dev/a9705a51-be73-4ccc-aab9-2be92c076eae",
+  "generate-kp": "https://functions.poehali.dev/5d119cfc-254b-41fd-8e6b-cf759a030469",
+  "import-price-list": "https://functions.poehali.dev/0688ffd7-7b4f-4dee-bd11-ed89ba3ab165",
+  "admin": "https://functions.poehali.dev/e56f94df-d49b-4dfd-a4d7-5d7a5335eb24"
 }
