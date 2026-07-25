@@ -1,12 +1,15 @@
-"""Модуль «Экипаж»: регистрация/вход, профили сотрудников, ранги по баллам, приглашения, начисление очков"""
+"""Модуль «Экипаж»: регистрация/вход, профили, ранги, приглашения, начисление очков, оргструктура, загрузка фото"""
 import json
 import os
 import hashlib
 import secrets
+import base64
+import uuid
 from datetime import datetime, timedelta
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
+import boto3
 
 ROLES = {
     'engineer': 'Инженер',
@@ -70,6 +73,8 @@ def member_public(m, include_email=False):
         'avatar_url': m.get('avatar_url'),
         'motto': m.get('motto'),
         'suit_status': m.get('suit_status'),
+        'position_title': m.get('position_title'),
+        'parent_id': m.get('parent_id'),
         'is_admin': m['is_admin'],
         'is_online': m.get('is_online', False),
         'created_at': m.get('created_at'),
@@ -121,6 +126,11 @@ def handler(event, context):
         if not me:
             return err('Требуется авторизация', 401)
 
+        # обновляем присутствие
+        with conn.cursor() as cur:
+            cur.execute("UPDATE crew_members SET is_online = TRUE, last_seen = NOW() WHERE id = %s", (me['id'],))
+            conn.commit()
+
         if action == 'me':
             return ok({'member': member_public(me, include_email=True)})
         if action == 'list':
@@ -139,6 +149,16 @@ def handler(event, context):
             return do_list_invites(conn, me)
         if action == 'set_role':
             return do_set_role(conn, me, body)
+        if action == 'org_tree':
+            return do_org_tree(conn)
+        if action == 'set_parent':
+            return do_set_parent(conn, body)
+        if action == 'set_position':
+            return do_set_position(conn, body)
+        if action == 'upload_avatar':
+            return do_upload_avatar(conn, me, body)
+        if action == 'logout':
+            return do_logout(conn, token)
 
         return err('Неизвестное действие', 400)
     except Exception as exc:
@@ -285,8 +305,6 @@ def do_points_history(conn, member_id):
 
 
 def do_add_points(conn, me, body):
-    if not me['is_admin']:
-        return err('Только для администратора', 403)
     member_id = body.get('member_id')
     delta = body.get('delta')
     reason = (body.get('reason') or '').strip()
@@ -306,8 +324,6 @@ def do_add_points(conn, me, body):
 
 
 def do_create_invite(conn, me, body):
-    if not me['is_admin']:
-        return err('Только для администратора', 403)
     role = body.get('role') or 'universal'
     department = body.get('department')
     max_uses = int(body.get('max_uses') or 1)
@@ -327,8 +343,6 @@ def do_create_invite(conn, me, body):
 
 
 def do_list_invites(conn, me):
-    if not me['is_admin']:
-        return err('Только для администратора', 403)
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute("SELECT * FROM crew_invitations ORDER BY id DESC LIMIT 50")
         invites = cur.fetchall()
@@ -336,8 +350,6 @@ def do_list_invites(conn, me):
 
 
 def do_set_role(conn, me, body):
-    if not me['is_admin']:
-        return err('Только для администратора', 403)
     member_id = body.get('member_id')
     role = body.get('role')
     if not member_id or role not in ROLES:
@@ -349,3 +361,89 @@ def do_set_role(conn, me, body):
             return err('Сотрудник не найден', 404)
         conn.commit()
     return ok({'member': member_public(member)})
+
+
+def do_org_tree(conn):
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("SELECT * FROM crew_members ORDER BY points DESC, callsign ASC")
+        members = cur.fetchall()
+    return ok({'members': [member_public(m) for m in members]})
+
+
+def do_set_parent(conn, body):
+    member_id = body.get('member_id')
+    parent_id = body.get('parent_id')  # может быть None (снять руководителя)
+    if not member_id:
+        return err('Не указан member_id', 400)
+    if parent_id and int(parent_id) == int(member_id):
+        return err('Сотрудник не может подчиняться сам себе', 400)
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("UPDATE crew_members SET parent_id = %s WHERE id = %s RETURNING *", (parent_id, member_id))
+        member = cur.fetchone()
+        if not member:
+            return err('Сотрудник не найден', 404)
+        conn.commit()
+    return ok({'member': member_public(member)})
+
+
+def do_set_position(conn, body):
+    member_id = body.get('member_id')
+    position = (body.get('position_title') or '').strip() or None
+    department = body.get('department')
+    if not member_id:
+        return err('Не указан member_id', 400)
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        if department is not None:
+            cur.execute("UPDATE crew_members SET position_title = %s, department = %s WHERE id = %s RETURNING *",
+                        (position, department, member_id))
+        else:
+            cur.execute("UPDATE crew_members SET position_title = %s WHERE id = %s RETURNING *",
+                        (position, member_id))
+        member = cur.fetchone()
+        if not member:
+            return err('Сотрудник не найден', 404)
+        conn.commit()
+    return ok({'member': member_public(member)})
+
+
+def do_upload_avatar(conn, me, body):
+    data_url = body.get('image') or ''
+    target_id = body.get('member_id') or me['id']
+    if not data_url:
+        return err('Нет изображения', 400)
+    if ',' in data_url:
+        header, b64 = data_url.split(',', 1)
+    else:
+        header, b64 = 'image/png', data_url
+    content_type = 'image/png'
+    if 'image/jpeg' in header or 'image/jpg' in header:
+        content_type = 'image/jpeg'
+    elif 'image/webp' in header:
+        content_type = 'image/webp'
+    ext = {'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp'}[content_type]
+    raw = base64.b64decode(b64)
+    if len(raw) > 6 * 1024 * 1024:
+        return err('Файл слишком большой (макс 6 МБ)', 400)
+
+    key = f"crew/avatars/{uuid.uuid4().hex}.{ext}"
+    s3 = boto3.client(
+        's3',
+        endpoint_url='https://bucket.poehali.dev',
+        aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+        aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
+    )
+    s3.put_object(Bucket='files', Key=key, Body=raw, ContentType=content_type)
+    url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{key}"
+
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("UPDATE crew_members SET avatar_url = %s WHERE id = %s RETURNING *", (url, target_id))
+        member = cur.fetchone()
+        conn.commit()
+    return ok({'member': member_public(member), 'url': url})
+
+
+def do_logout(conn, token):
+    with conn.cursor() as cur:
+        cur.execute("UPDATE crew_members SET is_online = FALSE WHERE id = (SELECT member_id FROM crew_sessions WHERE token = %s)", (token,))
+        conn.commit()
+    return ok({'ok': True})

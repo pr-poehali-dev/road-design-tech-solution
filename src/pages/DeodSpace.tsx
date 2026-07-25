@@ -11,25 +11,20 @@ import CrewSupportWidget from '@/components/deod/CrewSupportWidget';
 import StarComWidget from '@/components/deod/StarComWidget';
 import StarComLauncher from '@/components/deod/StarComLauncher';
 import CrewPanel from '@/components/deod/CrewPanel';
-import CrewAuthModal from '@/components/deod/CrewAuthModal';
+import DeodAuthGate from '@/components/deod/DeodAuthGate';
 import { CrewAuthProvider, useCrewAuth } from '@/components/deod/CrewAuthContext';
 import { sections } from '@/components/deod/sectionsData';
 
 const DeodSpaceInner = () => {
-  const { me } = useCrewAuth();
+  const { me, loading } = useCrewAuth();
   const [chatOpen, setChatOpen] = useState(false);
+  const [chatRecipient, setChatRecipient] = useState<number | null>(null);
   const [crewOpen, setCrewOpen] = useState(false);
-  const [authOpen, setAuthOpen] = useState(false);
   const [unread, setUnread] = useState(0);
   const [flashing, setFlashing] = useState(false);
   const prevUnread = useRef(0);
 
-  // invite from URL → prefill register
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('invite') && !me) {
-      setAuthOpen(true);
-    }
     if (window.location.hash === '#chat') setChatOpen(true);
     if (window.location.hash === '#crew') setCrewOpen(true);
   }, [me]);
@@ -44,14 +39,28 @@ const DeodSpaceInner = () => {
     prevUnread.current = unread;
   }, [unread, chatOpen]);
 
-  const openChat = () => setChatOpen(true);
+  const openChat = (recipientId?: number) => {
+    setChatRecipient(recipientId ?? null);
+    setChatOpen(true);
+  };
   const openCrew = () => setCrewOpen(true);
-  const requireAuth = () => setAuthOpen(true);
 
   const handleSpecial = (kind: 'crew' | 'chat') => {
     if (kind === 'crew') openCrew();
     else openChat();
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0B0C10] flex items-center justify-center">
+        <Icon name="Loader2" size={32} className="animate-spin text-[#66FCF1]" />
+      </div>
+    );
+  }
+
+  if (!me) {
+    return <DeodAuthGate />;
+  }
 
   return (
     <div className="min-h-screen bg-[#0B0C10] text-white relative overflow-hidden font-sans">
@@ -83,7 +92,7 @@ const DeodSpaceInner = () => {
       </div>
 
       <div className="relative z-10">
-        <MissionHeader onOpenCrew={openCrew} onOpenAuth={requireAuth} />
+        <MissionHeader onOpenCrew={openCrew} />
         <OrbitTicker />
         <QuickNav onOpenChat={openChat} onOpenCrew={openCrew} />
 
@@ -122,12 +131,16 @@ const DeodSpaceInner = () => {
       <CrewSupportWidget />
 
       {!chatOpen && (
-        <StarComLauncher unread={unread} flashing={flashing} onClick={openChat} />
+        <StarComLauncher unread={unread} flashing={flashing} onClick={() => openChat()} />
       )}
-      <StarComWidget open={chatOpen} onClose={() => setChatOpen(false)} onRequireAuth={requireAuth} onUnreadChange={setUnread} />
+      <StarComWidget
+        open={chatOpen}
+        recipientId={chatRecipient}
+        onClose={() => setChatOpen(false)}
+        onUnreadChange={setUnread}
+      />
 
-      <CrewPanel open={crewOpen} onClose={() => setCrewOpen(false)} onRequireAuth={requireAuth} onOpenChat={openChat} />
-      <CrewAuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
+      <CrewPanel open={crewOpen} onClose={() => setCrewOpen(false)} onOpenChat={openChat} />
     </div>
   );
 };

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import Icon from '@/components/ui/icon';
 import { useCrewAuth } from './CrewAuthContext';
 
-const MissionHeader = ({ onOpenCrew, onOpenAuth }: { onOpenCrew: () => void; onOpenAuth: () => void }) => {
+const MissionHeader = ({ onOpenCrew }: { onOpenCrew: () => void }) => {
   const { me } = useCrewAuth();
   const [now, setNow] = useState(new Date());
 
@@ -44,7 +44,7 @@ const MissionHeader = ({ onOpenCrew, onOpenAuth }: { onOpenCrew: () => void; onO
             <span className="font-mono text-[#66FCF1] text-sm sm:text-lg font-bold tabular-nums leading-none">{timeStr}</span>
             <span className="text-[10px] text-[#6B7684] mt-1 capitalize">{dateStr}</span>
           </div>
-          {me ? (
+          {me && (
             <button onClick={onOpenCrew} className="flex items-center gap-2 pl-3 sm:pl-5 border-l border-[#45A29E]/20 group">
               <div className="hidden sm:block text-right">
                 <div className="text-xs text-white font-semibold leading-none group-hover:text-[#66FCF1] transition-colors">{me.callsign}</div>
@@ -59,16 +59,6 @@ const MissionHeader = ({ onOpenCrew, onOpenAuth }: { onOpenCrew: () => void; onO
                   <Icon name="UserRound" size={20} className="text-[#66FCF1]" />
                 )}
               </div>
-            </button>
-          ) : (
-            <button
-              onClick={onOpenAuth}
-              className="flex items-center gap-2 pl-3 sm:pl-5 border-l border-[#45A29E]/20 text-[#66FCF1] hover:text-white transition-colors"
-            >
-              <div className="w-10 h-10 rounded-full bg-[#1F2833] border border-[#66FCF1]/40 flex items-center justify-center">
-                <Icon name="LogIn" size={19} />
-              </div>
-              <span className="hidden sm:inline text-sm font-semibold">Войти</span>
             </button>
           )}
         </div>

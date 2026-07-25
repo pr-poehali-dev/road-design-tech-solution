@@ -22,10 +22,21 @@ export interface CrewMember {
   avatar_url: string | null;
   motto: string | null;
   suit_status: string | null;
+  position_title: string | null;
+  parent_id: number | null;
   is_admin: boolean;
   is_online: boolean;
   email?: string;
   created_at?: string;
+}
+
+export interface Recipient {
+  id: number;
+  callsign: string;
+  avatar_url: string | null;
+  role: string;
+  is_online: boolean;
+  unread: number;
 }
 
 export interface ChatMessage {
@@ -98,7 +109,21 @@ export const crewApi = {
 
   listInvites: () => call(`${CREW_URL}?action=list_invites`),
 
-  // chat
+  // org structure
+  orgTree: () => call(`${CREW_URL}?action=org_tree`),
+
+  setParent: (member_id: number, parent_id: number | null) =>
+    call(CREW_URL, { method: 'POST', body: JSON.stringify({ action: 'set_parent', member_id, parent_id }) }),
+
+  setPosition: (member_id: number, position_title: string, department?: string) =>
+    call(CREW_URL, { method: 'POST', body: JSON.stringify({ action: 'set_position', member_id, position_title, department }) }),
+
+  uploadAvatar: (image: string, member_id?: number) =>
+    call(CREW_URL, { method: 'POST', body: JSON.stringify({ action: 'upload_avatar', image, member_id }) }),
+
+  logout: () => call(CREW_URL, { method: 'POST', body: JSON.stringify({ action: 'logout' }) }).catch(() => {}),
+
+  // chat channels
   getChannels: () => call(`${CHAT_URL}?action=channels`),
 
   getMessages: (channel: string, after = 0) =>
@@ -106,4 +131,13 @@ export const crewApi = {
 
   sendMessage: (channel: string, text: string) =>
     call(CHAT_URL, { method: 'POST', body: JSON.stringify({ channel, text }) }),
+
+  // direct messages
+  getRecipients: () => call(`${CHAT_URL}?action=recipients`),
+
+  getDM: (withId: number, after = 0) =>
+    call(`${CHAT_URL}?action=dm&with=${withId}&after=${after}`),
+
+  sendDM: (recipient_id: number, text: string) =>
+    call(CHAT_URL, { method: 'POST', body: JSON.stringify({ recipient_id, text }) }),
 };

@@ -3,27 +3,31 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Icon from '@/components/ui/icon';
 import { useNotificationSound } from './useNotificationSound';
 import { useCrewAuth } from './CrewAuthContext';
-import { crewApi, ChatMessage, ChatChannel } from '@/lib/crewApi';
+import { crewApi, ChatMessage, ChatChannel, Recipient } from '@/lib/crewApi';
 
 interface Props {
   open: boolean;
+  recipientId: number | null;
   onClose: () => void;
-  onRequireAuth: () => void;
   onUnreadChange?: (count: number) => void;
 }
 
-const StarComWidget = ({ open, onClose, onRequireAuth, onUnreadChange }: Props) => {
+type Target = { kind: 'channel'; slug: string; name: string; icon: string } | { kind: 'dm'; id: number; name: string; avatar: string | null };
+
+const StarComWidget = ({ open, recipientId, onClose, onUnreadChange }: Props) => {
   const { me } = useCrewAuth();
   const [fullscreen, setFullscreen] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [channels, setChannels] = useState<ChatChannel[]>([]);
-  const [activeChannel, setActiveChannel] = useState('general');
+  const [recipients, setRecipients] = useState<Recipient[]>([]);
+  const [target, setTarget] = useState<Target>({ kind: 'channel', slug: 'general', name: 'Общий канал', icon: 'Hash' });
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [flash, setFlash] = useState(false);
   const [unread, setUnread] = useState(0);
   const [online, setOnline] = useState(0);
   const [sending, setSending] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastIdRef = useRef(0);
@@ -35,34 +39,48 @@ const StarComWidget = ({ open, onClose, onRequireAuth, onUnreadChange }: Props) 
     });
   }, []);
 
-  useEffect(() => {
-    onUnreadChange?.(unread);
-  }, [unread, onUnreadChange]);
+  useEffect(() => { onUnreadChange?.(unread); }, [unread, onUnreadChange]);
 
-  useEffect(() => {
+  // load channels + recipients
+  const loadDirectory = useCallback(() => {
     if (!me) return;
-    crewApi.getChannels().then((r) => {
-      setChannels(r.channels);
-      setOnline(r.online);
-    }).catch(() => {});
+    crewApi.getChannels().then((r) => { setChannels(r.channels); setOnline(r.online); }).catch(() => {});
+    crewApi.getRecipients().then((r) => setRecipients(r.recipients)).catch(() => {});
   }, [me]);
 
+  useEffect(() => { loadDirectory(); }, [loadDirectory]);
+
+  // switch to DM when recipientId provided
   useEffect(() => {
-    if (!me) return;
+    if (recipientId && open) {
+      const person = recipients.find((r) => r.id === recipientId);
+      setTarget({ kind: 'dm', id: recipientId, name: person?.callsign || 'Сотрудник', avatar: person?.avatar_url || null });
+    }
+  }, [recipientId, open, recipients]);
+
+  const fetchMessages = useCallback((after: number) => {
+    if (target.kind === 'channel') return crewApi.getMessages(target.slug, after);
+    return crewApi.getDM(target.id, after);
+  }, [target]);
+
+  // load history on target change
+  useEffect(() => {
+    if (!me || !open) return;
     lastIdRef.current = 0;
     setMessages([]);
-    crewApi.getMessages(activeChannel, 0).then((r) => {
+    fetchMessages(0).then((r) => {
       setMessages(r.messages);
       if (r.messages.length) lastIdRef.current = r.messages[r.messages.length - 1].id;
       scrollBottom();
     }).catch(() => {});
-  }, [activeChannel, me, scrollBottom]);
+  }, [target, me, open, fetchMessages, scrollBottom]);
 
+  // polling
   useEffect(() => {
     if (!me) return;
     const poll = async () => {
       try {
-        const r = await crewApi.getMessages(activeChannel, lastIdRef.current);
+        const r = await fetchMessages(lastIdRef.current);
         if (r.messages.length) {
           const fresh: ChatMessage[] = r.messages;
           lastIdRef.current = fresh[fresh.length - 1].id;
@@ -76,25 +94,34 @@ const StarComWidget = ({ open, onClose, onRequireAuth, onUnreadChange }: Props) 
           }
           if (open && !minimized) scrollBottom();
         }
+        // refresh unread badges on DM list periodically
       } catch { /* ignore */ }
     };
     const timer = setInterval(poll, 3000);
     return () => clearInterval(timer);
-  }, [activeChannel, me, open, minimized, playSound, scrollBottom]);
+  }, [fetchMessages, me, open, minimized, playSound, scrollBottom]);
+
+  // refresh recipients unread every 8s
+  useEffect(() => {
+    if (!me || !open) return;
+    const t = setInterval(() => {
+      crewApi.getRecipients().then((r) => setRecipients(r.recipients)).catch(() => {});
+    }, 8000);
+    return () => clearInterval(t);
+  }, [me, open]);
 
   useEffect(() => {
-    if (open && !minimized) {
-      setUnread(0);
-      scrollBottom();
-    }
-  }, [open, minimized, activeChannel, scrollBottom]);
+    if (open && !minimized) { setUnread(0); scrollBottom(); }
+  }, [open, minimized, target, scrollBottom]);
 
   const send = async () => {
     const text = input.trim();
     if (!text || sending) return;
     setSending(true);
     try {
-      const r = await crewApi.sendMessage(activeChannel, text);
+      const r = target.kind === 'channel'
+        ? await crewApi.sendMessage(target.slug, text)
+        : await crewApi.sendDM(target.id, text);
       setMessages((prev) => [...prev, r.message]);
       lastIdRef.current = Math.max(lastIdRef.current, r.message.id);
       setInput('');
@@ -104,38 +131,61 @@ const StarComWidget = ({ open, onClose, onRequireAuth, onUnreadChange }: Props) 
     }
   };
 
-  if (!open) return null;
+  const pickChannel = (c: ChatChannel) => {
+    setTarget({ kind: 'channel', slug: c.slug, name: c.name, icon: c.icon });
+    setShowSidebar(false);
+  };
+  const pickPerson = (p: Recipient) => {
+    setTarget({ kind: 'dm', id: p.id, name: p.callsign, avatar: p.avatar_url });
+    setShowSidebar(false);
+  };
 
-  if (!me) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        style={{ left: 16, top: 96 }}
-        className="fixed z-[60] w-[340px] max-w-[calc(100vw-1.5rem)] rounded-2xl border border-[#45A29E]/40 bg-[#0B0C10]/95 backdrop-blur-xl p-6 text-center shadow-[0_0_40px_rgba(0,0,0,0.6)]"
-      >
-        <button onClick={onClose} className="absolute top-3 right-3 text-[#6B7684] hover:text-white"><Icon name="X" size={18} /></button>
-        <Icon name="Lock" size={30} className="text-[#66FCF1] mx-auto mb-3" />
-        <h3 className="font-heading font-bold text-white mb-1">Межзвездная связь</h3>
-        <p className="text-sm text-[#8B98A5] mb-4">Войдите в экипаж, чтобы общаться с коллегами</p>
-        <button onClick={onRequireAuth} className="w-full py-2 rounded-lg bg-[#45A29E] text-[#0B0C10] font-bold hover:opacity-90">
-          Пристыковаться
-        </button>
-      </motion.div>
-    );
-  }
+  if (!open) return null;
 
   const containerClass = fullscreen
     ? 'fixed inset-0 z-[60] w-screen h-screen rounded-none'
-    : 'fixed z-[60] w-[380px] max-w-[calc(100vw-1.5rem)] h-[520px] max-h-[calc(100vh-6rem)] rounded-2xl';
+    : 'fixed z-[60] w-[400px] max-w-[calc(100vw-1.5rem)] h-[540px] max-h-[calc(100vh-6rem)] rounded-2xl';
 
-  const activeCh = channels.find((c) => c.slug === activeChannel);
   const dragConstraints = {
-    left: 0,
-    right: typeof window !== 'undefined' ? window.innerWidth - 400 : 800,
+    left: -(typeof window !== 'undefined' ? window.innerWidth - 440 : 800),
+    right: 0,
     top: -20,
     bottom: typeof window !== 'undefined' ? window.innerHeight - 200 : 400,
   };
+
+  const Sidebar = (
+    <div className={`${fullscreen ? 'w-64 flex' : (showSidebar ? 'absolute inset-0 z-30 flex bg-[#0B0C10]/98' : 'hidden')} flex-col border-r border-[#45A29E]/20 bg-[#0B0C10]/80 shrink-0`}>
+      {!fullscreen && (
+        <div className="flex items-center justify-between px-3 py-2 border-b border-[#45A29E]/15">
+          <span className="text-[10px] font-mono uppercase tracking-widest text-[#6B7684]">Куда писать</span>
+          <button onClick={() => setShowSidebar(false)} className="text-[#6B7684] hover:text-white"><Icon name="X" size={15} /></button>
+        </div>
+      )}
+      <div className="overflow-y-auto flex-1">
+        <div className="px-3 py-2 text-[10px] font-mono uppercase tracking-widest text-[#6B7684]">Каналы</div>
+        {channels.map((c) => (
+          <button key={c.slug} onClick={() => pickChannel(c)}
+            className={`w-full flex items-center gap-2 px-3 py-2 text-left transition-colors ${target.kind === 'channel' && target.slug === c.slug ? 'bg-[#45A29E]/15 border-l-2 border-[#66FCF1]' : 'hover:bg-[#1F2833]/60 border-l-2 border-transparent'}`}>
+            <Icon name={c.icon as any} size={15} className="text-[#45A29E] shrink-0" />
+            <span className="text-sm text-[#C5C6C7] flex-1 truncate">{c.name}</span>
+          </button>
+        ))}
+        <div className="px-3 py-2 mt-1 text-[10px] font-mono uppercase tracking-widest text-[#6B7684]">Личные сообщения</div>
+        {recipients.length === 0 && <div className="px-3 py-2 text-[11px] text-[#6B7684]">Нет других сотрудников</div>}
+        {recipients.map((p) => (
+          <button key={p.id} onClick={() => pickPerson(p)}
+            className={`w-full flex items-center gap-2 px-3 py-2 text-left transition-colors ${target.kind === 'dm' && target.id === p.id ? 'bg-[#45A29E]/15 border-l-2 border-[#66FCF1]' : 'hover:bg-[#1F2833]/60 border-l-2 border-transparent'}`}>
+            <div className="relative w-7 h-7 rounded-full overflow-hidden bg-[#1F2833] border border-[#45A29E]/30 flex items-center justify-center shrink-0">
+              {p.avatar_url ? <img src={p.avatar_url} alt={p.callsign} className="w-full h-full object-cover" /> : <Icon name="UserRound" size={14} className="text-[#45A29E]" />}
+              {p.is_online && <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#45A29E] border border-[#0B0C10]" />}
+            </div>
+            <span className="text-sm text-[#C5C6C7] flex-1 truncate">{p.callsign}</span>
+            {p.unread > 0 && <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-[#FF4D4D] text-white text-[10px] font-bold flex items-center justify-center">{p.unread}</span>}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <motion.div
@@ -145,18 +195,13 @@ const StarComWidget = ({ open, onClose, onRequireAuth, onUnreadChange }: Props) 
       dragConstraints={dragConstraints}
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      style={fullscreen ? {} : { left: 16, top: 96 }}
+      style={fullscreen ? {} : { right: 16, top: 96 }}
       className={`${containerClass} border ${flash ? 'border-[#FF6600] shadow-[0_0_40px_rgba(255,102,0,0.5)]' : 'border-[#45A29E]/40 shadow-[0_0_40px_rgba(0,0,0,0.6)]'} bg-[#0B0C10]/95 backdrop-blur-xl overflow-hidden flex flex-col transition-colors`}
     >
       <AnimatePresence>
         {flash && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 0.25, 0, 0.25, 0] }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.4 }}
-            className="pointer-events-none absolute inset-0 bg-[#FF6600] z-20"
-          />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: [0, 0.25, 0, 0.25, 0] }} exit={{ opacity: 0 }} transition={{ duration: 1.4 }}
+            className="pointer-events-none absolute inset-0 bg-[#FF6600] z-20" />
         )}
       </AnimatePresence>
 
@@ -182,47 +227,30 @@ const StarComWidget = ({ open, onClose, onRequireAuth, onUnreadChange }: Props) 
       </div>
 
       {!minimized && (
-        <div className="flex flex-1 min-h-0">
-          <div className={`${fullscreen ? 'w-56 flex' : 'hidden'} flex-col border-r border-[#45A29E]/20 bg-[#0B0C10]/60 shrink-0`}>
-            <div className="px-3 py-2 text-[10px] font-mono uppercase tracking-widest text-[#6B7684]">Каналы</div>
-            {channels.map((c) => (
-              <button
-                key={c.slug}
-                onClick={() => setActiveChannel(c.slug)}
-                className={`flex items-center gap-2 px-3 py-2.5 text-left transition-colors ${
-                  activeChannel === c.slug ? 'bg-[#45A29E]/15 border-l-2 border-[#66FCF1]' : 'hover:bg-[#1F2833]/60 border-l-2 border-transparent'
-                }`}
-              >
-                <Icon name={c.icon as any} size={15} className="text-[#45A29E] shrink-0" />
-                <span className="text-sm text-[#C5C6C7] flex-1 truncate">{c.name}</span>
-              </button>
-            ))}
-          </div>
+        <div className="flex flex-1 min-h-0 relative">
+          {Sidebar}
 
           <div className="flex flex-col flex-1 min-w-0">
-            {!fullscreen && (
-              <div className="flex gap-1 px-2 py-1.5 border-b border-[#45A29E]/15 overflow-x-auto scrollbar-hide shrink-0">
-                {channels.map((c) => (
-                  <button
-                    key={c.slug}
-                    onClick={() => setActiveChannel(c.slug)}
-                    className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] whitespace-nowrap transition-colors ${
-                      activeChannel === c.slug ? 'bg-[#45A29E]/20 text-[#66FCF1]' : 'text-[#8B98A5] hover:text-white'
-                    }`}
-                  >
-                    <Icon name={c.icon as any} size={12} />
-                    {c.name}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {fullscreen && activeCh && (
-              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-[#45A29E]/15 shrink-0">
-                <Icon name={activeCh.icon as any} size={16} className="text-[#66FCF1]" />
-                <span className="font-heading font-semibold text-white">{activeCh.name}</span>
-              </div>
-            )}
+            {/* target bar */}
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-[#45A29E]/15 shrink-0">
+              {!fullscreen && (
+                <button onClick={() => setShowSidebar(true)} title="Выбрать получателя"
+                  className="w-7 h-7 rounded-lg border border-[#45A29E]/30 text-[#66FCF1] hover:bg-[#45A29E]/10 flex items-center justify-center shrink-0">
+                  <Icon name="Users" size={15} />
+                </button>
+              )}
+              {target.kind === 'channel' ? (
+                <><Icon name={target.icon as any} size={16} className="text-[#66FCF1]" /><span className="font-heading font-semibold text-white text-sm truncate">{target.name}</span></>
+              ) : (
+                <>
+                  <div className="w-6 h-6 rounded-full overflow-hidden bg-[#1F2833] border border-[#45A29E]/30 flex items-center justify-center shrink-0">
+                    {target.avatar ? <img src={target.avatar} alt="" className="w-full h-full object-cover" /> : <Icon name="UserRound" size={12} className="text-[#45A29E]" />}
+                  </div>
+                  <span className="font-heading font-semibold text-white text-sm truncate">{target.name}</span>
+                  <span className="text-[10px] text-[#6B7684]">· личное</span>
+                </>
+              )}
+            </div>
 
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-2.5 min-h-0">
               {messages.length === 0 && (
@@ -248,7 +276,7 @@ const StarComWidget = ({ open, onClose, onRequireAuth, onUnreadChange }: Props) 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && send()}
-                placeholder={`Сообщение в «${activeCh?.name || 'канал'}»...`}
+                placeholder={target.kind === 'dm' ? `Написать ${target.name}...` : `Сообщение в «${target.name}»...`}
                 className="flex-1 bg-[#1F2833]/70 border border-[#45A29E]/30 rounded-lg px-3 py-2 text-sm text-white placeholder:text-[#6B7684] focus:outline-none focus:border-[#66FCF1]/60"
               />
               <button onClick={send} disabled={sending} className="w-9 h-9 rounded-lg bg-[#45A29E] hover:bg-[#3d8f8b] flex items-center justify-center shrink-0 transition-colors disabled:opacity-50">

@@ -56,6 +56,7 @@ export const CrewAuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
+    crewApi.logout();
     clearToken();
     setMe(null);
   };
