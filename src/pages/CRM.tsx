@@ -3,6 +3,7 @@ import { CRMAuth } from '@/components/crm/CRMAuth';
 import { CRMHeader } from '@/components/crm/CRMHeader';
 import { CRMKanban, Lead } from '@/components/crm/CRMKanban';
 import { CRMLeadModal, Task, Activity } from '@/components/crm/CRMLeadModal';
+import StarfieldBackground from '@/components/deod/StarfieldBackground';
 
 const API_URL = 'https://functions.poehali.dev/fd1c95d9-d394-4d33-af98-1d5a05163881';
 
@@ -29,13 +30,13 @@ const CRM = () => {
   });
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [customColors, setCustomColors] = useState<{[key: string]: {color: string, textColor: string}}>({
-    'new': { color: '#1e3a8a', textColor: '#60a5fa' },
-    'first-contact': { color: '#0f766e', textColor: '#5eead4' },
-    'evaluation': { color: '#7c2d12', textColor: '#fdba74' },
-    'proposal': { color: '#7e22ce', textColor: '#d8b4fe' },
-    'negotiation': { color: '#be123c', textColor: '#fda4af' },
-    'closed-won': { color: '#065f46', textColor: '#6ee7b7' },
-    'closed-lost': { color: '#1f2937', textColor: '#9ca3af' }
+    'new': { color: '#12232b', textColor: '#66FCF1' },
+    'first-contact': { color: '#1F2833', textColor: '#45A29E' },
+    'evaluation': { color: '#2b1f33', textColor: '#C89BFF' },
+    'proposal': { color: '#3a2412', textColor: '#FF9B4D' },
+    'negotiation': { color: '#3a1414', textColor: '#FF8080' },
+    'closed-won': { color: '#0f2b26', textColor: '#5eead4' },
+    'closed-lost': { color: '#1F2833', textColor: '#6B7684' }
   });
 
   const statusStages = [
@@ -473,7 +474,24 @@ const CRM = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+    <div className="min-h-screen bg-[#0B0C10] relative overflow-hidden">
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0B0C10] via-[#12132a] to-[#0B0C10]" />
+        <div className="absolute top-[-15%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-[#45A29E]/8 blur-[120px]" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-[#663399]/12 blur-[120px]" />
+        <div className="absolute top-1/3 right-1/4 w-[30vw] h-[30vw] rounded-full bg-[#FF6600]/5 blur-[100px]" />
+      </div>
+      <StarfieldBackground />
+      <div
+        className="fixed inset-0 pointer-events-none opacity-[0.07]"
+        style={{
+          backgroundImage:
+            'linear-gradient(#66FCF1 1px, transparent 1px), linear-gradient(90deg, #66FCF1 1px, transparent 1px)',
+          backgroundSize: '48px 48px',
+        }}
+      />
+
+      <div className="relative z-10">
       <CRMHeader
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -524,6 +542,7 @@ const CRM = () => {
         setNewLead={setNewLead}
         onCreateLead={createLead}
       />
+      </div>
     </div>
   );
 };

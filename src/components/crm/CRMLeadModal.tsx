@@ -65,8 +65,8 @@ const formatCurrency = (value: number | undefined | null): string => {
   return num.toLocaleString('ru-RU');
 };
 
-const inputCls = 'h-9 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500/20';
-const labelCls = 'text-xs font-medium text-cyan-400';
+const inputCls = 'h-9 bg-[#1F2833]/70 border-[#45A29E]/30 text-white placeholder:text-[#6B7684] focus:border-[#66FCF1]/60 focus:ring-[#66FCF1]/20';
+const labelCls = 'text-xs font-medium text-[#66FCF1]';
 
 interface EditFormState {
   name: string;
@@ -184,14 +184,14 @@ export const CRMLeadModal = ({
       {/* -------- CREATE LEAD MODAL -------- */}
       {showCreateLead && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
-          <Card className="w-full max-w-2xl bg-slate-800/95 border-cyan-500/30 shadow-[0_0_30px_rgba(6,182,212,0.3)]">
-            <CardHeader className="border-b border-cyan-500/30">
+          <Card className="w-full max-w-2xl bg-[#1F2833]/95 border-[#45A29E]/30 shadow-[0_0_30px_rgba(6,182,212,0.3)]">
+            <CardHeader className="border-b border-[#45A29E]/30">
               <div className="flex justify-between items-center">
                 <div>
                   <CardTitle className="text-lg text-white">Новая сделка</CardTitle>
-                  <CardDescription className="text-cyan-400">Заполните данные о клиенте</CardDescription>
+                  <CardDescription className="text-[#66FCF1]">Заполните данные о клиенте</CardDescription>
                 </div>
-                <Button variant="ghost" size="sm" onClick={onCloseCreateLead} className="touch-manipulation w-8 h-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700/50">
+                <Button variant="ghost" size="sm" onClick={onCloseCreateLead} className="touch-manipulation w-8 h-8 p-0 text-[#8B98A5] hover:text-white hover:bg-[#1F2833]/70">
                   <Icon name="X" size={16} />
                 </Button>
               </div>
@@ -244,14 +244,14 @@ export const CRMLeadModal = ({
                   value={newLead.message}
                   onChange={(e) => setNewLead({ ...newLead, message: e.target.value })}
                   rows={2}
-                  className="text-sm bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                  className="text-sm bg-[#1F2833]/70 border-[#45A29E]/30 text-white placeholder:text-[#6B7684]"
                 />
               </div>
               <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                <Button onClick={onCreateLead} className="flex-1 h-9 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-[0_0_20px_rgba(6,182,212,0.3)] touch-manipulation">
+                <Button onClick={onCreateLead} className="flex-1 h-9 bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold touch-manipulation">
                   Создать
                 </Button>
-                <Button variant="outline" onClick={onCloseCreateLead} className="h-9 sm:w-auto touch-manipulation border-slate-600 text-slate-300 hover:bg-slate-700/50">
+                <Button variant="outline" onClick={onCloseCreateLead} className="h-9 sm:w-auto touch-manipulation border-[#45A29E]/30 text-[#C5C6C7] hover:bg-[#1F2833]/70">
                   Отмена
                 </Button>
               </div>
@@ -263,16 +263,16 @@ export const CRMLeadModal = ({
       {/* -------- VIEW / EDIT LEAD MODAL -------- */}
       {showLeadCard && selectedLead && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-2 sm:p-4 overflow-y-auto">
-          <Card className="w-full max-w-4xl max-h-[95vh] overflow-y-auto my-2 sm:my-8 bg-slate-800/95 border-cyan-500/30 shadow-[0_0_30px_rgba(6,182,212,0.3)]">
+          <Card className="w-full max-w-4xl max-h-[95vh] overflow-y-auto my-2 sm:my-8 bg-[#1F2833]/95 border-[#45A29E]/30 shadow-[0_0_30px_rgba(6,182,212,0.3)]">
 
             {/* ---------- HEADER ---------- */}
-            <CardHeader className="border-b border-cyan-500/30 sticky top-0 bg-slate-800/95 backdrop-blur-lg z-10">
+            <CardHeader className="border-b border-[#45A29E]/30 sticky top-0 bg-[#1F2833]/95 backdrop-blur-lg z-10">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <CardTitle className="text-xl text-white">
                     {isEditing ? 'Редактирование сделки' : selectedLead.name}
                   </CardTitle>
-                  <CardDescription className="mt-1 flex items-center gap-2 text-cyan-400">
+                  <CardDescription className="mt-1 flex items-center gap-2 text-[#66FCF1]">
                     {!isEditing && selectedLead.company && <span>{selectedLead.company}</span>}
                     {isEditing && <span>Измените поля и нажмите Сохранить</span>}
                   </CardDescription>
@@ -283,16 +283,16 @@ export const CRMLeadModal = ({
                       variant="ghost"
                       size="sm"
                       onClick={startEditing}
-                      className="text-cyan-400 hover:bg-cyan-500/20 touch-manipulation w-8 h-8 p-0"
+                      className="text-[#66FCF1] hover:bg-[#45A29E]/15 touch-manipulation w-8 h-8 p-0"
                       title="Редактировать"
                     >
                       <Icon name="Pencil" size={16} />
                     </Button>
                   )}
-                  <Button variant="ghost" size="sm" onClick={() => onDeleteLead(selectedLead.id)} className="text-red-400 hover:bg-red-500/20 touch-manipulation w-8 h-8 p-0">
+                  <Button variant="ghost" size="sm" onClick={() => onDeleteLead(selectedLead.id)} className="text-[#FF4D4D] hover:bg-[#FF4D4D]/15 touch-manipulation w-8 h-8 p-0">
                     <Icon name="Trash2" size={16} />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={onCloseLeadCard} className="touch-manipulation w-8 h-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700/50">
+                  <Button variant="ghost" size="sm" onClick={onCloseLeadCard} className="touch-manipulation w-8 h-8 p-0 text-[#8B98A5] hover:text-white hover:bg-[#1F2833]/70">
                     <Icon name="X" size={16} />
                   </Button>
                 </div>
@@ -304,8 +304,8 @@ export const CRMLeadModal = ({
               {isEditing ? (
                 <div className="space-y-4">
                   {/* Contact fields */}
-                  <div className="bg-slate-700/50 rounded-lg p-3 space-y-3 border border-cyan-500/20">
-                    <div className="text-xs font-medium text-cyan-400 flex items-center gap-1.5">
+                  <div className="bg-[#1F2833]/70 rounded-lg p-3 space-y-3 border border-[#45A29E]/20">
+                    <div className="text-xs font-medium text-[#66FCF1] flex items-center gap-1.5">
                       <Icon name="User" size={14} />
                       Контактные данные
                     </div>
@@ -330,18 +330,18 @@ export const CRMLeadModal = ({
                   </div>
 
                   {/* Stage */}
-                  <div className="bg-slate-700/50 rounded-lg p-3 space-y-2 border border-cyan-500/20">
-                    <div className="text-xs font-medium text-cyan-400 flex items-center gap-1.5">
+                  <div className="bg-[#1F2833]/70 rounded-lg p-3 space-y-2 border border-[#45A29E]/20">
+                    <div className="text-xs font-medium text-[#66FCF1] flex items-center gap-1.5">
                       <Icon name="GitBranch" size={14} />
                       Этап сделки
                     </div>
                     <Select value={editForm.stage} onValueChange={(v) => updateField('stage', v)}>
-                      <SelectTrigger className="h-9 bg-slate-700/50 border-slate-600 text-white">
+                      <SelectTrigger className="h-9 bg-[#1F2833]/70 border-[#45A29E]/30 text-white">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-600">
+                      <SelectContent className="bg-[#1F2833] border-[#45A29E]/30">
                         {statusStages.map(stage => (
-                          <SelectItem key={stage.id} value={stage.id} className="text-white hover:bg-slate-700">
+                          <SelectItem key={stage.id} value={stage.id} className="text-white hover:bg-[#1F2833]">
                             {stage.label}
                           </SelectItem>
                         ))}
@@ -350,8 +350,8 @@ export const CRMLeadModal = ({
                   </div>
 
                   {/* Financial fields */}
-                  <div className="bg-slate-700/50 rounded-lg p-3 space-y-3 border border-emerald-500/20">
-                    <div className="text-xs font-medium text-emerald-400 flex items-center gap-1.5">
+                  <div className="bg-[#1F2833]/70 rounded-lg p-3 space-y-3 border border-[#66FCF1]/20">
+                    <div className="text-xs font-medium text-[#66FCF1] flex items-center gap-1.5">
                       <Icon name="Banknote" size={14} />
                       Финансовые данные
                     </div>
@@ -361,27 +361,27 @@ export const CRMLeadModal = ({
                         <Input type="number" value={editForm.deal_amount} onChange={(e) => updateField('deal_amount', e.target.value)} className={inputCls} placeholder="0" />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-medium text-emerald-400">Оборот (revenue)</label>
+                        <label className="text-xs font-medium text-[#66FCF1]">Оборот (revenue)</label>
                         <Input type="number" value={editForm.revenue} onChange={(e) => updateField('revenue', e.target.value)} className={inputCls} placeholder="0" />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-medium text-amber-400">Плановый оборот</label>
+                        <label className="text-xs font-medium text-[#FF9B4D]">Плановый оборот</label>
                         <Input type="number" value={editForm.planned_revenue} onChange={(e) => updateField('planned_revenue', e.target.value)} className={inputCls} placeholder="0" />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-medium text-violet-400">Сумма контракта</label>
+                        <label className="text-xs font-medium text-[#C89BFF]">Сумма контракта</label>
                         <Input type="number" value={editForm.contract_amount} onChange={(e) => updateField('contract_amount', e.target.value)} className={inputCls} placeholder="0" />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-medium text-sky-400">Поступления</label>
+                        <label className="text-xs font-medium text-[#66FCF1]">Поступления</label>
                         <Input type="number" value={editForm.received_amount} onChange={(e) => updateField('received_amount', e.target.value)} className={inputCls} placeholder="0" />
                       </div>
                     </div>
                   </div>
 
                   {/* Notes & description */}
-                  <div className="bg-slate-700/50 rounded-lg p-3 space-y-3 border border-cyan-500/20">
-                    <div className="text-xs font-medium text-cyan-400 flex items-center gap-1.5">
+                  <div className="bg-[#1F2833]/70 rounded-lg p-3 space-y-3 border border-[#45A29E]/20">
+                    <div className="text-xs font-medium text-[#66FCF1] flex items-center gap-1.5">
                       <Icon name="FileText" size={14} />
                       Описание и примечания
                     </div>
@@ -391,7 +391,7 @@ export const CRMLeadModal = ({
                         value={editForm.description}
                         onChange={(e) => updateField('description', e.target.value)}
                         rows={3}
-                        className="text-sm bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                        className="text-sm bg-[#1F2833]/70 border-[#45A29E]/30 text-white placeholder:text-[#6B7684]"
                         placeholder="Подробное описание сделки..."
                       />
                     </div>
@@ -401,7 +401,7 @@ export const CRMLeadModal = ({
                         value={editForm.message}
                         onChange={(e) => updateField('message', e.target.value)}
                         rows={2}
-                        className="text-sm bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                        className="text-sm bg-[#1F2833]/70 border-[#45A29E]/30 text-white placeholder:text-[#6B7684]"
                         placeholder="Заметки..."
                       />
                     </div>
@@ -411,7 +411,7 @@ export const CRMLeadModal = ({
                   <div className="flex gap-2 pt-1">
                     <Button
                       onClick={saveEdits}
-                      className="flex-1 h-9 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-[0_0_20px_rgba(16,185,129,0.3)] touch-manipulation"
+                      className="flex-1 h-9 bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold touch-manipulation"
                     >
                       <Icon name="Check" size={16} className="mr-1.5" />
                       Сохранить
@@ -419,7 +419,7 @@ export const CRMLeadModal = ({
                     <Button
                       variant="outline"
                       onClick={cancelEditing}
-                      className="h-9 touch-manipulation border-slate-600 text-slate-300 hover:bg-slate-700/50"
+                      className="h-9 touch-manipulation border-[#45A29E]/30 text-[#C5C6C7] hover:bg-[#1F2833]/70"
                     >
                       <Icon name="X" size={16} className="mr-1.5" />
                       Отмена
@@ -431,21 +431,21 @@ export const CRMLeadModal = ({
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                   <div className="lg:col-span-2 space-y-4">
                     {/* Contacts */}
-                    <div className="bg-slate-700/50 rounded-lg p-3 space-y-2 border border-cyan-500/20">
-                      <div className="text-xs font-medium text-cyan-400">Контакты</div>
+                    <div className="bg-[#1F2833]/70 rounded-lg p-3 space-y-2 border border-[#45A29E]/20">
+                      <div className="text-xs font-medium text-[#66FCF1]">Контакты</div>
                       <div className="space-y-1">
                         <div className="text-sm flex items-center gap-2 text-white">
-                          <Icon name="Mail" size={14} className="text-cyan-400" />
+                          <Icon name="Mail" size={14} className="text-[#66FCF1]" />
                           {selectedLead.email}
                         </div>
                         {selectedLead.phone && (
                           <div className="text-sm flex items-center gap-2 text-white">
-                            <Icon name="Phone" size={14} className="text-cyan-400" />
+                            <Icon name="Phone" size={14} className="text-[#66FCF1]" />
                             {selectedLead.phone}
                             <Button
                               size="sm"
                               onClick={() => onMakeCall(selectedLead.phone)}
-                              className="ml-auto h-6 text-xs bg-emerald-600 hover:bg-emerald-700 shadow-[0_0_15px_rgba(16,185,129,0.3)] touch-manipulation"
+                              className="ml-auto h-6 text-xs bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold touch-manipulation"
                             >
                               Позвонить
                             </Button>
@@ -455,18 +455,18 @@ export const CRMLeadModal = ({
                     </div>
 
                     {/* Stage */}
-                    <div className="bg-slate-700/50 rounded-lg p-3 space-y-2 border border-cyan-500/20">
-                      <div className="text-xs font-medium text-cyan-400">Этап сделки</div>
+                    <div className="bg-[#1F2833]/70 rounded-lg p-3 space-y-2 border border-[#45A29E]/20">
+                      <div className="text-xs font-medium text-[#66FCF1]">Этап сделки</div>
                       <Select
                         value={selectedLead.status}
                         onValueChange={(value) => onUpdateLeadStatus(selectedLead.id, value as Lead['status'])}
                       >
-                        <SelectTrigger className="h-9 bg-slate-700/50 border-slate-600 text-white">
+                        <SelectTrigger className="h-9 bg-[#1F2833]/70 border-[#45A29E]/30 text-white">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-slate-600">
+                        <SelectContent className="bg-[#1F2833] border-[#45A29E]/30">
                           {statusStages.map(stage => (
-                            <SelectItem key={stage.id} value={stage.id} className="text-white hover:bg-slate-700">
+                            <SelectItem key={stage.id} value={stage.id} className="text-white hover:bg-[#1F2833]">
                               {stage.label}
                             </SelectItem>
                           ))}
@@ -475,64 +475,64 @@ export const CRMLeadModal = ({
                     </div>
 
                     {/* Revenue cards */}
-                    <div className="bg-slate-700/50 rounded-lg p-3 space-y-2 border border-emerald-500/20">
-                      <div className="text-xs font-medium text-emerald-400 flex items-center gap-1.5">
+                    <div className="bg-[#1F2833]/70 rounded-lg p-3 space-y-2 border border-[#66FCF1]/20">
+                      <div className="text-xs font-medium text-[#66FCF1] flex items-center gap-1.5">
                         <Icon name="Banknote" size={14} />
                         Финансы
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {selectedLead.deal_amount != null && (
-                          <div className="bg-slate-800/60 rounded-md p-2 border border-slate-600/50">
-                            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Сумма сделки</div>
+                          <div className="bg-[#0B0C10]/60 rounded-md p-2 border border-[#45A29E]/20">
+                            <div className="text-[10px] text-[#8B98A5] uppercase tracking-wider">Сумма сделки</div>
                             <div className="text-sm font-semibold text-white">{formatCurrency(selectedLead.deal_amount)} &#8381;</div>
                           </div>
                         )}
-                        <div className="bg-slate-800/60 rounded-md p-2 border border-emerald-500/30">
-                          <div className="text-[10px] text-emerald-400 uppercase tracking-wider">Оборот</div>
-                          <div className="text-sm font-semibold text-emerald-400">{formatCurrency(selectedLead.revenue)} &#8381;</div>
+                        <div className="bg-[#0B0C10]/60 rounded-md p-2 border border-[#66FCF1]/30">
+                          <div className="text-[10px] text-[#66FCF1] uppercase tracking-wider">Оборот</div>
+                          <div className="text-sm font-semibold text-[#66FCF1]">{formatCurrency(selectedLead.revenue)} &#8381;</div>
                         </div>
-                        <div className="bg-slate-800/60 rounded-md p-2 border border-amber-500/30">
-                          <div className="text-[10px] text-amber-400 uppercase tracking-wider">Плановый</div>
-                          <div className="text-sm font-semibold text-amber-400">{formatCurrency(selectedLead.planned_revenue)} &#8381;</div>
+                        <div className="bg-[#0B0C10]/60 rounded-md p-2 border border-[#FF6600]/30">
+                          <div className="text-[10px] text-[#FF9B4D] uppercase tracking-wider">Плановый</div>
+                          <div className="text-sm font-semibold text-[#FF9B4D]">{formatCurrency(selectedLead.planned_revenue)} &#8381;</div>
                         </div>
-                        <div className="bg-slate-800/60 rounded-md p-2 border border-violet-500/30">
-                          <div className="text-[10px] text-violet-400 uppercase tracking-wider">Контракт</div>
-                          <div className="text-sm font-semibold text-violet-400">{formatCurrency(selectedLead.contract_amount)} &#8381;</div>
+                        <div className="bg-[#0B0C10]/60 rounded-md p-2 border border-[#663399]/40">
+                          <div className="text-[10px] text-[#C89BFF] uppercase tracking-wider">Контракт</div>
+                          <div className="text-sm font-semibold text-[#C89BFF]">{formatCurrency(selectedLead.contract_amount)} &#8381;</div>
                         </div>
-                        <div className="bg-slate-800/60 rounded-md p-2 border border-sky-500/30">
-                          <div className="text-[10px] text-sky-400 uppercase tracking-wider">Поступления</div>
-                          <div className="text-sm font-semibold text-sky-400">{formatCurrency(selectedLead.received_amount)} &#8381;</div>
+                        <div className="bg-[#0B0C10]/60 rounded-md p-2 border border-[#45A29E]/30">
+                          <div className="text-[10px] text-[#66FCF1] uppercase tracking-wider">Поступления</div>
+                          <div className="text-sm font-semibold text-[#66FCF1]">{formatCurrency(selectedLead.received_amount)} &#8381;</div>
                         </div>
                       </div>
                     </div>
 
                     {/* Description */}
                     {selectedLead.description && (
-                      <div className="bg-slate-700/50 rounded-lg p-3 space-y-2 border border-cyan-500/20">
-                        <div className="text-xs font-medium text-cyan-400">Описание</div>
+                      <div className="bg-[#1F2833]/70 rounded-lg p-3 space-y-2 border border-[#45A29E]/20">
+                        <div className="text-xs font-medium text-[#66FCF1]">Описание</div>
                         <div className="text-sm text-white whitespace-pre-wrap">{selectedLead.description}</div>
                       </div>
                     )}
 
                     {/* Notes */}
                     {selectedLead.message && (
-                      <div className="bg-slate-700/50 rounded-lg p-3 space-y-2 border border-cyan-500/20">
-                        <div className="text-xs font-medium text-cyan-400">Примечание</div>
+                      <div className="bg-[#1F2833]/70 rounded-lg p-3 space-y-2 border border-[#45A29E]/20">
+                        <div className="text-xs font-medium text-[#66FCF1]">Примечание</div>
                         <div className="text-sm text-white">{selectedLead.message}</div>
                       </div>
                     )}
 
                     {/* Add note */}
                     <div className="space-y-2">
-                      <div className="text-xs font-medium text-cyan-400">Добавить примечание</div>
+                      <div className="text-xs font-medium text-[#66FCF1]">Добавить примечание</div>
                       <Textarea
                         placeholder="Новая заметка..."
                         value={newNote}
                         onChange={(e) => setNewNote(e.target.value)}
                         rows={2}
-                        className="text-sm bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                        className="text-sm bg-[#1F2833]/70 border-[#45A29E]/30 text-white placeholder:text-[#6B7684]"
                       />
-                      <Button onClick={onAddNote} size="sm" className="h-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-[0_0_15px_rgba(6,182,212,0.3)] touch-manipulation">
+                      <Button onClick={onAddNote} size="sm" className="h-8 bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold touch-manipulation">
                         Добавить
                       </Button>
                     </div>
@@ -541,8 +541,8 @@ export const CRMLeadModal = ({
                   {/* ---- RIGHT SIDEBAR ---- */}
                   <div className="space-y-4">
                     {/* Tasks */}
-                    <div className="bg-slate-700/50 rounded-lg p-3 border border-cyan-500/20">
-                      <div className="text-xs font-medium text-cyan-400 mb-2">Задачи</div>
+                    <div className="bg-[#1F2833]/70 rounded-lg p-3 border border-[#45A29E]/20">
+                      <div className="text-xs font-medium text-[#66FCF1] mb-2">Задачи</div>
                       <div className="space-y-2 mb-3">
                         {tasks.filter(t => t.leadId === selectedLead.id && !t.completed).map(task => (
                           <div key={task.id} className="flex items-start gap-2 text-sm">
@@ -552,40 +552,40 @@ export const CRMLeadModal = ({
                               className="h-4 w-4 p-0 touch-manipulation"
                               onClick={() => onToggleTaskComplete(task.id)}
                             >
-                              <Icon name="Circle" size={14} className="text-cyan-400" />
+                              <Icon name="Circle" size={14} className="text-[#66FCF1]" />
                             </Button>
                             <div className="flex-1">
                               <div className="text-xs text-white">{task.title}</div>
-                              <div className="text-xs text-slate-400">
+                              <div className="text-xs text-[#8B98A5]">
                                 {new Date(task.dueDate).toLocaleDateString('ru-RU')}
                               </div>
                             </div>
                           </div>
                         ))}
                         {tasks.filter(t => t.leadId === selectedLead.id && !t.completed).length === 0 && (
-                          <div className="text-xs text-slate-500">Нет задач</div>
+                          <div className="text-xs text-[#6B7684]">Нет задач</div>
                         )}
                       </div>
                       <Input
                         placeholder="Новая задача..."
                         value={newTask.title}
                         onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                        className="h-8 text-xs mb-2 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                        className="h-8 text-xs mb-2 bg-[#1F2833]/70 border-[#45A29E]/30 text-white placeholder:text-[#6B7684]"
                       />
                       <Input
                         type="date"
                         value={newTask.dueDate}
                         onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
-                        className="h-8 text-xs mb-2 bg-slate-700/50 border-slate-600 text-white"
+                        className="h-8 text-xs mb-2 bg-[#1F2833]/70 border-[#45A29E]/30 text-white"
                       />
-                      <Button onClick={onAddTask} size="sm" className="w-full h-7 text-xs bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-[0_0_15px_rgba(6,182,212,0.3)] touch-manipulation">
+                      <Button onClick={onAddTask} size="sm" className="w-full h-7 text-xs bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold touch-manipulation">
                         Добавить задачу
                       </Button>
                     </div>
 
                     {/* Activities */}
-                    <div className="bg-slate-700/50 rounded-lg p-3 border border-cyan-500/20">
-                      <div className="text-xs font-medium text-cyan-400 mb-2">История</div>
+                    <div className="bg-[#1F2833]/70 rounded-lg p-3 border border-[#45A29E]/20">
+                      <div className="text-xs font-medium text-[#66FCF1] mb-2">История</div>
                       <div className="space-y-2 max-h-64 overflow-y-auto">
                         {activities
                           .filter(a => a.leadId === selectedLead.id)
@@ -593,7 +593,7 @@ export const CRMLeadModal = ({
                           .map(activity => (
                             <div key={activity.id} className="text-xs">
                               <div className="text-white">{activity.description}</div>
-                              <div className="text-slate-400 text-xs">
+                              <div className="text-[#8B98A5] text-xs">
                                 {new Date(activity.createdAt).toLocaleString('ru-RU')}
                               </div>
                             </div>

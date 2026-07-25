@@ -60,7 +60,7 @@ export const CRMKanban = ({
           return (
             <div key={stage.id} className="w-72 flex-shrink-0">
               <div 
-                className="rounded-t-lg p-3 flex justify-between items-center shadow-[0_0_15px_rgba(6,182,212,0.2)]" 
+                className="rounded-t-lg p-3 flex justify-between items-center shadow-[0_0_15px_rgba(102,252,241,0.15)]" 
                 style={{ backgroundColor: stageColors.color }}
               >
                 <div className="flex items-center gap-2">
@@ -105,16 +105,16 @@ export const CRMKanban = ({
                 </div>
               </div>
               
-              <div className="bg-slate-800/30 rounded-b-lg p-2 min-h-[calc(100vh-300px)] space-y-2 border border-t-0 border-cyan-500/20">
+              <div className="bg-[#1F2833]/30 rounded-b-lg p-2 min-h-[calc(100vh-300px)] space-y-2 border border-t-0 border-[#45A29E]/20">
                 {stageLeads.length === 0 ? (
-                  <div className="text-center py-8 text-slate-500 text-sm">
+                  <div className="text-center py-8 text-[#6B7684] text-sm">
                     Нет сделок
                   </div>
                 ) : (
                   stageLeads.map((lead) => (
                     <Card
                       key={lead.id}
-                      className="cursor-pointer hover:shadow-lg transition-all duration-200 bg-slate-800/80 border-cyan-500/20 hover:border-cyan-500/40 shadow-[0_0_10px_rgba(6,182,212,0.1)] hover:shadow-[0_0_20px_rgba(6,182,212,0.2)] touch-manipulation"
+                      className="cursor-pointer hover:shadow-lg transition-all duration-200 bg-[#1F2833]/60 border-[#45A29E]/20 hover:border-[#66FCF1]/50 shadow-[0_0_10px_rgba(102,252,241,0.08)] hover:shadow-[0_0_20px_rgba(102,252,241,0.15)] touch-manipulation"
                       onClick={() => onLeadClick(lead)}
                     >
                       <CardHeader className="p-3 pb-2">
@@ -125,28 +125,28 @@ export const CRMKanban = ({
                       <CardContent className="p-3 pt-0">
                         <div className="space-y-1.5 text-xs">
                           {lead.company && (
-                            <div className="flex items-center gap-1.5 text-cyan-400">
+                            <div className="flex items-center gap-1.5 text-[#66FCF1]">
                               <Icon name="Building" size={12} />
                               <span className="truncate">{lead.company}</span>
                             </div>
                           )}
-                          <div className="flex items-center gap-1.5 text-slate-400">
+                          <div className="flex items-center gap-1.5 text-[#8B98A5]">
                             <Icon name="Mail" size={12} />
                             <span className="truncate">{lead.email}</span>
                           </div>
                           {lead.phone && (
-                            <div className="flex items-center gap-1.5 text-slate-400">
+                            <div className="flex items-center gap-1.5 text-[#8B98A5]">
                               <Icon name="Phone" size={12} />
                               <span className="truncate">{lead.phone}</span>
                             </div>
                           )}
                           {lead.budget && (
-                            <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
+                            <div className="flex items-center gap-1.5 text-[#66FCF1] font-medium">
                               <Icon name="DollarSign" size={12} />
                               <span>{parseInt(lead.budget).toLocaleString()} ₽</span>
                             </div>
                           )}
-                          <div className="text-slate-500 text-[10px] mt-2">
+                          <div className="text-[#6B7684] text-[10px] mt-2">
                             {new Date(lead.createdAt).toLocaleDateString('ru-RU')}
                           </div>
                         </div>

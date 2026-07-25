@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
+import StarfieldBackground from '@/components/deod/StarfieldBackground';
 
 const API_URL = 'https://functions.poehali.dev/fd1c95d9-d394-4d33-af98-1d5a05163881';
 
@@ -71,19 +72,27 @@ export const CRMAuth = ({ onLoginSuccess }: CRMAuthProps) => {
     }
   };
 
-  const inputCls = 'h-10 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500/20';
+  const inputCls = 'h-10 bg-[#1F2833]/70 border-[#45A29E]/30 text-white placeholder:text-[#6B7684] focus:border-[#66FCF1]/60 focus:ring-[#66FCF1]/20';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4">
-      <Card className="max-w-md w-full shadow-2xl border-cyan-500/30 bg-slate-800/80 backdrop-blur-lg">
+    <div className="min-h-screen bg-[#0B0C10] relative overflow-hidden flex items-center justify-center p-4">
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0B0C10] via-[#12132a] to-[#0B0C10]" />
+        <div className="absolute top-[-15%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-[#45A29E]/8 blur-[120px]" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-[#663399]/12 blur-[120px]" />
+        <div className="absolute top-1/3 right-1/4 w-[30vw] h-[30vw] rounded-full bg-[#FF6600]/5 blur-[100px]" />
+      </div>
+      <StarfieldBackground />
+
+      <Card className="relative z-10 max-w-md w-full shadow-2xl border-[#45A29E]/30 bg-[#1F2833]/60 backdrop-blur-lg">
         <CardHeader className="text-center space-y-2">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(6,182,212,0.5)]">
-            <Icon name={mode === 'login' ? 'Lock' : 'UserPlus'} size={32} className="text-white" />
+          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-[#45A29E] to-[#0B0C10] border border-[#66FCF1]/40 rounded-lg flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(102,252,241,0.4)]">
+            <Icon name={mode === 'login' ? 'Lock' : 'UserPlus'} size={32} className="text-[#66FCF1]" />
           </div>
-          <CardTitle className="text-2xl font-semibold bg-gradient-to-r from-cyan-400 via-purple-400 to-violet-400 bg-clip-text text-transparent">
+          <CardTitle className="font-heading text-2xl font-bold text-white tracking-wide">
             DEAD SPACE
           </CardTitle>
-          <CardDescription className="text-slate-300">
+          <CardDescription className="text-[#C5C6C7]">
             {mode === 'login' ? 'Войдите в систему' : 'Создайте аккаунт партнёра'}
           </CardDescription>
         </CardHeader>
@@ -137,7 +146,7 @@ export const CRMAuth = ({ onLoginSuccess }: CRMAuthProps) => {
 
             {mode === 'register' && (
               <div className="relative">
-                <Icon name="Gift" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-400/60" />
+                <Icon name="Gift" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#66FCF1]/60" />
                 <Input
                   type="text"
                   placeholder="Код приглашения (необязательно)"
@@ -149,7 +158,7 @@ export const CRMAuth = ({ onLoginSuccess }: CRMAuthProps) => {
             )}
 
             {error && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-md px-3 py-2 text-sm text-red-400 flex items-center gap-2">
+              <div className="bg-[#FF4D4D]/10 border border-[#FF4D4D]/30 rounded-md px-3 py-2 text-sm text-[#FF4D4D] flex items-center gap-2">
                 <Icon name="AlertCircle" size={14} />
                 {error}
               </div>
@@ -158,7 +167,7 @@ export const CRMAuth = ({ onLoginSuccess }: CRMAuthProps) => {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-10 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] transition-all disabled:opacity-50"
+              className="w-full h-10 bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold shadow-[0_0_20px_rgba(102,252,241,0.25)] hover:shadow-[0_0_30px_rgba(102,252,241,0.4)] transition-all disabled:opacity-50"
             >
               {loading ? (
                 <Icon name="Loader2" size={16} className="animate-spin mr-2" />
@@ -176,7 +185,7 @@ export const CRMAuth = ({ onLoginSuccess }: CRMAuthProps) => {
                 setMode(mode === 'login' ? 'register' : 'login');
                 setError('');
               }}
-              className="text-sm text-cyan-400/70 hover:text-cyan-400 transition-colors underline underline-offset-4 decoration-cyan-500/30 hover:decoration-cyan-500/60"
+              className="text-sm text-[#66FCF1]/70 hover:text-[#66FCF1] transition-colors underline underline-offset-4 decoration-[#45A29E]/30 hover:decoration-[#66FCF1]/60"
             >
               {mode === 'login' ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти'}
             </button>
