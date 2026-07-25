@@ -1,0 +1,1 @@
+UPDATE crew_members SET password_hash = 'de77e85863dbf305b7de922a4cc7948cfb10a85a5a398c28308ec2d4e7cbae45' WHERE email = 'ipzlenko@gmail.com';
