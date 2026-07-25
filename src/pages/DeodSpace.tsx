@@ -12,6 +12,7 @@ import StarComWidget from '@/components/deod/StarComWidget';
 import StarComLauncher from '@/components/deod/StarComLauncher';
 import CrewPanel from '@/components/deod/CrewPanel';
 import DepositoryPanel from '@/components/deod/DepositoryPanel';
+import RecentFilesWidget from '@/components/deod/RecentFilesWidget';
 import DeodAuthGate from '@/components/deod/DeodAuthGate';
 import { CrewAuthProvider, useCrewAuth } from '@/components/deod/CrewAuthContext';
 import { sections } from '@/components/deod/sectionsData';
@@ -112,6 +113,10 @@ const DeodSpaceInner = () => {
 
           <div className="mb-8">
             <CosmicAnalytics />
+          </div>
+
+          <div className="mb-8">
+            <RecentFilesWidget onOpenDepo={openDepo} />
           </div>
 
           <div className="flex items-center gap-2 mb-4">

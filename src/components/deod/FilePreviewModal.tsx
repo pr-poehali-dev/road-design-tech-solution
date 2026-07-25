@@ -54,7 +54,19 @@ const FilePreviewModal = ({ file, onClose }: Props) => {
                   <audio src={file.url} controls className="mx-auto" />
                 </div>
               ) : isPdf(file.name, file.mime) ? (
-                <iframe src={file.url} title={file.name} className="w-full h-[75vh]" />
+                <div className="w-full h-[75vh] flex flex-col">
+                  <iframe
+                    src={`https://docs.google.com/viewer?embedded=true&url=${encodeURIComponent(file.url)}`}
+                    title={file.name}
+                    className="w-full flex-1 bg-white"
+                  />
+                  <div className="flex items-center justify-center gap-2 py-2 bg-[#0B0C10] border-t border-[#45A29E]/20 text-[11px] text-[#6B7684]">
+                    <span>Не отображается?</span>
+                    <a href={file.url} target="_blank" rel="noopener noreferrer" className="text-[#66FCF1] hover:text-white inline-flex items-center gap-1">
+                      <Icon name="ExternalLink" size={12} /> Открыть в новой вкладке
+                    </a>
+                  </div>
+                </div>
               ) : (
                 <div className="p-12 text-center">
                   <Icon name={fileIcon(file.name, file.mime) as any} size={56} className="text-[#45A29E] mx-auto mb-4" />
