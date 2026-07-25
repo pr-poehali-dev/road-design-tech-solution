@@ -18,7 +18,7 @@ import { CrewAuthProvider, useCrewAuth } from '@/components/deod/CrewAuthContext
 import { sections } from '@/components/deod/sectionsData';
 
 const DeodSpaceInner = () => {
-  const { me, loading } = useCrewAuth();
+  const { me, loading, connectionError, refresh } = useCrewAuth();
   const [chatOpen, setChatOpen] = useState(false);
   const [chatRecipient, setChatRecipient] = useState<number | null>(null);
   const [crewOpen, setCrewOpen] = useState(false);
@@ -60,6 +60,26 @@ const DeodSpaceInner = () => {
     return (
       <div className="min-h-screen bg-[#0B0C10] flex items-center justify-center">
         <Icon name="Loader2" size={32} className="animate-spin text-[#66FCF1]" />
+      </div>
+    );
+  }
+
+  if (!me && connectionError) {
+    return (
+      <div className="min-h-screen bg-[#0B0C10] flex items-center justify-center p-4">
+        <div className="text-center max-w-sm">
+          <Icon name="WifiOff" size={40} className="text-[#FF6600] mx-auto mb-4" />
+          <h2 className="font-heading font-bold text-white text-lg mb-2">Нет связи со станцией</h2>
+          <p className="text-[#8B98A5] text-sm mb-5">
+            Не удалось проверить сессию. Ваш вход сохранён — проверьте соединение и повторите попытку.
+          </p>
+          <button
+            onClick={() => refresh()}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#45A29E] text-[#0B0C10] font-bold hover:opacity-90"
+          >
+            <Icon name="RefreshCw" size={16} /> Повторить попытку
+          </button>
+        </div>
       </div>
     );
   }

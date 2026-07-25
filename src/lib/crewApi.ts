@@ -105,6 +105,14 @@ export const getToken = () => localStorage.getItem(TOKEN_KEY) || '';
 export const setToken = (t: string) => localStorage.setItem(TOKEN_KEY, t);
 export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
 
+export class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+
 async function call(url: string, options: RequestInit = {}, auth = true): Promise<any> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json', ...(options.headers as any) };
   if (auth) {
@@ -112,8 +120,15 @@ async function call(url: string, options: RequestInit = {}, auth = true): Promis
     if (t) headers['X-Auth-Token'] = t;
   }
   const res = await fetch(url, { ...options, headers });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || `Ошибка ${res.status}`);
+  let data: any = {};
+  try {
+    data = await res.json();
+  } catch {
+    // невалидный/пустой JSON — не считаем это ошибкой авторизации
+    if (!res.ok) throw new ApiError(`Ошибка ${res.status}`, res.status);
+    return data;
+  }
+  if (!res.ok) throw new ApiError(data.error || `Ошибка ${res.status}`, res.status);
   return data;
 }
 
