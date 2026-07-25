@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import Icon from '@/components/ui/icon';
 import { sections } from './sectionsData';
 
-const QuickNav = ({ onOpenChat }: { onOpenChat: () => void }) => {
+const QuickNav = ({ onOpenChat, onOpenCrew }: { onOpenChat: () => void; onOpenCrew: () => void }) => {
   const go = (route: string) => {
     window.location.href = route;
   };
@@ -17,11 +17,15 @@ const QuickNav = ({ onOpenChat }: { onOpenChat: () => void }) => {
           </span>
           {sections.map((s) => {
             const isOrange = s.accent === 'orange';
-            const isComms = s.id === 'comms';
+            const handle = () => {
+              if (s.special === 'chat') onOpenChat();
+              else if (s.special === 'crew') onOpenCrew();
+              else go(s.route);
+            };
             return (
               <motion.button
                 key={s.id}
-                onClick={() => (isComms ? onOpenChat() : go(s.route))}
+                onClick={handle}
                 whileHover={{ y: -2 }}
                 title={s.title}
                 className={`group flex items-center gap-1.5 shrink-0 rounded-lg border px-2.5 py-1.5 transition-colors ${

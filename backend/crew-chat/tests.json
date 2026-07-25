@@ -1,0 +1,16 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Auth required",
+      "method": "GET",
+      "path": "/?action=messages&channel=general",
+      "expectedStatus": 401
+    }
+  ]
+}

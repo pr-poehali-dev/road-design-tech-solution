@@ -2,10 +2,14 @@ import { motion } from 'framer-motion';
 import Icon from '@/components/ui/icon';
 import { DeodSection } from './sectionsData';
 
-const SectionCard = ({ section, index }: { section: DeodSection; index: number }) => {
+const SectionCard = ({ section, index, onSpecial }: { section: DeodSection; index: number; onSpecial?: (kind: 'crew' | 'chat') => void }) => {
   const isOrange = section.accent === 'orange';
 
   const go = () => {
+    if (section.special && onSpecial) {
+      onSpecial(section.special);
+      return;
+    }
     window.location.href = section.route;
   };
 

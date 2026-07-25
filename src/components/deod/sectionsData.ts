@@ -12,6 +12,7 @@ export interface DeodSection {
   metrics: SectionMetric[];
   accent: 'teal' | 'orange';
   featured?: boolean;
+  special?: 'crew' | 'chat';
 }
 
 export const sections: DeodSection[] = [
@@ -99,12 +100,13 @@ export const sections: DeodSection[] = [
     title: 'Межзвездная связь',
     subtitle: 'Чаты с экипажем',
     icon: 'Radio',
-    route: '/chat',
+    route: '#chat',
     accent: 'teal',
+    special: 'chat',
     metrics: [
-      { label: 'Непрочитанных', value: '7' },
-      { label: 'Активных каналов', value: '14' },
-      { label: 'Онлайн', value: '9' },
+      { label: 'Каналов', value: '4' },
+      { label: 'Онлайн', value: '—' },
+      { label: 'Реальный чат', value: 'БД' },
     ],
   },
   {
@@ -144,6 +146,20 @@ export const sections: DeodSection[] = [
       { label: 'Документов', value: '3 402' },
       { label: 'Загружено/нед', value: '124' },
       { label: 'Хранилище', value: '68%' },
+    ],
+  },
+  {
+    id: 'crew',
+    title: 'Экипаж',
+    subtitle: 'Реестр персонала и ранги',
+    icon: 'Users',
+    route: '#crew',
+    accent: 'teal',
+    special: 'crew',
+    metrics: [
+      { label: 'Профили', value: 'да' },
+      { label: 'Ранги', value: '6' },
+      { label: 'Регистрация', value: 'вкл' },
     ],
   },
 ];

@@ -10,13 +10,29 @@ import SectionCard from '@/components/deod/SectionCard';
 import CrewSupportWidget from '@/components/deod/CrewSupportWidget';
 import StarComWidget from '@/components/deod/StarComWidget';
 import StarComLauncher from '@/components/deod/StarComLauncher';
+import CrewPanel from '@/components/deod/CrewPanel';
+import CrewAuthModal from '@/components/deod/CrewAuthModal';
+import { CrewAuthProvider, useCrewAuth } from '@/components/deod/CrewAuthContext';
 import { sections } from '@/components/deod/sectionsData';
 
-const DeodSpace = () => {
-  const [chatOpen, setChatOpen] = useState(typeof window !== 'undefined' && window.location.hash === '#chat');
+const DeodSpaceInner = () => {
+  const { me } = useCrewAuth();
+  const [chatOpen, setChatOpen] = useState(false);
+  const [crewOpen, setCrewOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
   const [unread, setUnread] = useState(0);
   const [flashing, setFlashing] = useState(false);
   const prevUnread = useRef(0);
+
+  // invite from URL → prefill register
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('invite') && !me) {
+      setAuthOpen(true);
+    }
+    if (window.location.hash === '#chat') setChatOpen(true);
+    if (window.location.hash === '#crew') setCrewOpen(true);
+  }, [me]);
 
   useEffect(() => {
     if (unread > prevUnread.current && !chatOpen) {
@@ -27,6 +43,15 @@ const DeodSpace = () => {
     }
     prevUnread.current = unread;
   }, [unread, chatOpen]);
+
+  const openChat = () => setChatOpen(true);
+  const openCrew = () => setCrewOpen(true);
+  const requireAuth = () => setAuthOpen(true);
+
+  const handleSpecial = (kind: 'crew' | 'chat') => {
+    if (kind === 'crew') openCrew();
+    else openChat();
+  };
 
   return (
     <div className="min-h-screen bg-[#0B0C10] text-white relative overflow-hidden font-sans">
@@ -39,7 +64,6 @@ const DeodSpace = () => {
       </div>
       <StarfieldBackground />
 
-      {/* neon grid overlay */}
       <div
         className="fixed inset-0 pointer-events-none opacity-[0.07]"
         style={{
@@ -49,7 +73,6 @@ const DeodSpace = () => {
         }}
       />
 
-      {/* big flying rocket in background */}
       <div className="fixed top-24 right-8 pointer-events-none hidden lg:block opacity-40">
         <div className="animate-rocket-fly">
           <div className="relative">
@@ -59,19 +82,13 @@ const DeodSpace = () => {
         </div>
       </div>
 
-      {/* content */}
       <div className="relative z-10">
-        <MissionHeader />
+        <MissionHeader onOpenCrew={openCrew} onOpenAuth={requireAuth} />
         <OrbitTicker />
-        <QuickNav onOpenChat={() => setChatOpen(true)} />
+        <QuickNav onOpenChat={openChat} onOpenCrew={openCrew} />
 
         <main className="max-w-[1600px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
-          {/* intro line */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex items-center gap-2 mb-6"
-          >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 mb-6">
             <span className="h-px flex-1 bg-gradient-to-r from-transparent to-[#45A29E]/40" />
             <span className="font-mono text-[11px] text-[#45A29E] uppercase tracking-[0.3em]">
               Все системы онлайн · выберите модуль станции
@@ -79,23 +96,20 @@ const DeodSpace = () => {
             <span className="h-px flex-1 bg-gradient-to-l from-transparent to-[#45A29E]/40" />
           </motion.div>
 
-          {/* cosmic analytics */}
           <div className="mb-8">
             <CosmicAnalytics />
           </div>
 
-          {/* section grid */}
           <div className="flex items-center gap-2 mb-4">
             <Icon name="LayoutGrid" size={18} className="text-[#66FCF1]" />
             <h2 className="font-heading font-bold text-lg text-white tracking-wide">Модули станции</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {sections.map((section, i) => (
-              <SectionCard key={section.id} section={section} index={i} />
+              <SectionCard key={section.id} section={section} index={i} onSpecial={handleSpecial} />
             ))}
           </div>
 
-          {/* footer status */}
           <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[10px] font-mono text-[#45A29E]/70 uppercase tracking-widest">
             <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-[#45A29E] animate-pulse" /> Реактор: стабилен</span>
             <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-[#66FCF1] animate-pulse" /> Связь: 100%</span>
@@ -108,11 +122,20 @@ const DeodSpace = () => {
       <CrewSupportWidget />
 
       {!chatOpen && (
-        <StarComLauncher unread={unread} flashing={flashing} onClick={() => setChatOpen(true)} />
+        <StarComLauncher unread={unread} flashing={flashing} onClick={openChat} />
       )}
-      <StarComWidget open={chatOpen} onClose={() => setChatOpen(false)} onUnreadChange={setUnread} />
+      <StarComWidget open={chatOpen} onClose={() => setChatOpen(false)} onRequireAuth={requireAuth} onUnreadChange={setUnread} />
+
+      <CrewPanel open={crewOpen} onClose={() => setCrewOpen(false)} onRequireAuth={requireAuth} onOpenChat={openChat} />
+      <CrewAuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </div>
   );
 };
+
+const DeodSpace = () => (
+  <CrewAuthProvider>
+    <DeodSpaceInner />
+  </CrewAuthProvider>
+);
 
 export default DeodSpace;
