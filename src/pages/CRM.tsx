@@ -4,11 +4,14 @@ import { CRMHeader } from '@/components/crm/CRMHeader';
 import { CRMKanban, Lead } from '@/components/crm/CRMKanban';
 import { CRMLeadModal, Task, Activity } from '@/components/crm/CRMLeadModal';
 import StarfieldBackground from '@/components/deod/StarfieldBackground';
+import { getToken as getCrewToken } from '@/lib/crewApi';
+import Icon from '@/components/ui/icon';
 
 const API_URL = 'https://functions.poehali.dev/fd1c95d9-d394-4d33-af98-1d5a05163881';
 
 const CRM = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [checkingCrewAuth, setCheckingCrewAuth] = useState(true);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [revenueStats, setRevenueStats] = useState({ totalRevenue: 0, totalPlanned: 0, totalContracts: 0, totalReceived: 0 });
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -50,18 +53,46 @@ const CRM = () => {
   ];
 
   useEffect(() => {
-    const userProfile = localStorage.getItem('userProfile');
-    if (userProfile) {
-      try {
-        const profile = JSON.parse(userProfile);
-        if (profile && profile.id) {
-          setIsAuthenticated(true);
-          loadData();
+    const init = async () => {
+      const userProfile = localStorage.getItem('userProfile');
+      if (userProfile) {
+        try {
+          const profile = JSON.parse(userProfile);
+          if (profile && profile.id) {
+            setIsAuthenticated(true);
+            loadData();
+            setCheckingCrewAuth(false);
+            return;
+          }
+        } catch {
+          // invalid profile, try crew auth below
         }
-      } catch {
-        // invalid profile, stay on auth screen
       }
-    }
+
+      // Нет сессии CRM — пробуем автовход по сессии станции DEOD (без пароля)
+      const crewToken = getCrewToken();
+      if (crewToken) {
+        try {
+          const res = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Auth-Token': crewToken },
+            body: JSON.stringify({ resource: 'crew_login' }),
+          });
+          const data = await res.json();
+          if (res.ok && data.user) {
+            localStorage.setItem('userProfile', JSON.stringify(data.user));
+            setIsAuthenticated(true);
+            loadData();
+          }
+        } catch {
+          // сеть недоступна — остаёмся на обычном экране входа
+        }
+      }
+      setCheckingCrewAuth(false);
+    };
+
+    init();
+
     const savedColors = localStorage.getItem('crm_colors');
     if (savedColors) {
       setCustomColors(JSON.parse(savedColors));
@@ -464,6 +495,14 @@ const CRM = () => {
       return sum + budget;
     }, 0);
   };
+
+  if (checkingCrewAuth) {
+    return (
+      <div className="min-h-screen bg-[#0B0C10] flex items-center justify-center">
+        <Icon name="Loader2" size={32} className="text-[#66FCF1] animate-spin" />
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (

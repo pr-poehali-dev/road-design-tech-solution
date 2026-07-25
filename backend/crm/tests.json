@@ -42,6 +42,16 @@
       },
       "expectedStatus": 400,
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Crew login without token",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "resource": "crew_login"
+      },
+      "expectedStatus": 401,
+      "bodyMatcher": "partial"
     }
   ]
 }

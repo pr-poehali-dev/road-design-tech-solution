@@ -100,6 +100,10 @@ def handle_post(event, conn):
         return register_partner(conn, body)
     if resource == 'login':
         return login_partner(conn, body)
+    if resource == 'crew_login':
+        headers = event.get('headers') or {}
+        token = headers.get('X-Auth-Token') or headers.get('x-auth-token')
+        return crew_login(conn, token)
     if resource == 'profile':
         partner_id = _parse_partner_id(body.get('partner_id'))
         if isinstance(partner_id, dict):
@@ -246,6 +250,74 @@ def login_partner(conn, body):
         user = cur.fetchone()
         if not user:
             return error_response('Invalid phone or password', 401)
+
+        cur.execute(
+            "UPDATE users SET is_online = true, last_seen = NOW() WHERE id = %s",
+            (user['id'],)
+        )
+        conn.commit()
+
+        return ok_response({'success': True, 'user': user})
+
+
+def crew_login(conn, token):
+    """Автоматический вход в CRM для сотрудников станции DEOD (без пароля).
+
+    Принимает crew-токен (сессия /deod.space), проверяет его в crew_sessions,
+    находит существующего CRM-партнёра по email сотрудника или создаёт нового
+    (доступ считается служебным — is_admin=true, пароль не используется).
+    """
+    if not token:
+        return error_response('Missing crew token', 401)
+
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("""
+            SELECT m.id, m.email, m.callsign, m.is_admin
+            FROM crew_members m
+            JOIN crew_sessions s ON s.member_id = m.id
+            WHERE s.token = %s AND s.expires_at > NOW()
+        """, (token,))
+        member = cur.fetchone()
+
+        if not member:
+            return error_response('Invalid or expired crew session', 401)
+
+        email = (member.get('email') or '').strip()
+
+        user = None
+        if email:
+            cur.execute("""
+                SELECT id, name, phone, email, company, invite_code, parent_id,
+                       grade, is_admin, created_at, asset, expected_income
+                FROM users
+                WHERE email = %s
+            """, (email,))
+            user = cur.fetchone()
+
+        if not user:
+            new_invite_code = generate_invite_code()
+            while True:
+                cur.execute("SELECT id FROM users WHERE invite_code = %s", (new_invite_code,))
+                if not cur.fetchone():
+                    break
+                new_invite_code = generate_invite_code()
+
+            placeholder_phone = f"crew-{member['id']}"
+
+            cur.execute("""
+                INSERT INTO users (
+                    name, phone, email, company, invite_code,
+                    grade, is_admin, created_at
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
+                ON CONFLICT (phone) DO NOTHING
+                RETURNING id, name, phone, email, company, invite_code,
+                          parent_id, grade, is_admin, created_at, asset, expected_income
+            """, (
+                member['callsign'], placeholder_phone, email or None, 'DEOD',
+                new_invite_code, 'Сотрудник УК', bool(member.get('is_admin'))
+            ))
+            user = cur.fetchone()
+            conn.commit()
 
         cur.execute(
             "UPDATE users SET is_online = true, last_seen = NOW() WHERE id = %s",
@@ -812,7 +884,7 @@ def cors_headers():
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, X-User-Id',
+        'Access-Control-Allow-Headers': 'Content-Type, X-User-Id, X-Auth-Token',
     }
 
 
