@@ -48,6 +48,48 @@ export interface ChatMessage {
   avatar_url: string | null;
   role: string;
   mine: boolean;
+  file_url?: string | null;
+  file_name?: string | null;
+  file_mime?: string | null;
+  file_size?: number | null;
+  depo_path?: string | null;
+}
+
+export interface ChatFilePayload {
+  file_data?: string;
+  file_url?: string;
+  file_name?: string;
+  file_mime?: string;
+  file_size?: number;
+  depo_path?: string;
+}
+
+export interface DepoFolder {
+  id: number;
+  name: string;
+  parent_id: number | null;
+  kind: string;
+  is_public: boolean;
+  file_count?: number;
+  sub_count?: number;
+}
+
+export interface DepoFile {
+  id: number;
+  folder_id: number | null;
+  name: string;
+  url: string;
+  mime: string | null;
+  size_bytes: number;
+  description: string | null;
+  tags: string[];
+  ai_summary: string | null;
+  owner_id: number | null;
+  owner_name?: string | null;
+  is_public: boolean;
+  path?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ChatChannel {
@@ -129,8 +171,8 @@ export const crewApi = {
   getMessages: (channel: string, after = 0) =>
     call(`${CHAT_URL}?action=messages&channel=${channel}&after=${after}`),
 
-  sendMessage: (channel: string, text: string) =>
-    call(CHAT_URL, { method: 'POST', body: JSON.stringify({ channel, text }) }),
+  sendMessage: (channel: string, text: string, file?: ChatFilePayload) =>
+    call(CHAT_URL, { method: 'POST', body: JSON.stringify({ channel, text, ...(file || {}) }) }),
 
   // direct messages
   getRecipients: () => call(`${CHAT_URL}?action=recipients`),
@@ -138,6 +180,41 @@ export const crewApi = {
   getDM: (withId: number, after = 0) =>
     call(`${CHAT_URL}?action=dm&with=${withId}&after=${after}`),
 
-  sendDM: (recipient_id: number, text: string) =>
-    call(CHAT_URL, { method: 'POST', body: JSON.stringify({ recipient_id, text }) }),
+  sendDM: (recipient_id: number, text: string, file?: ChatFilePayload) =>
+    call(CHAT_URL, { method: 'POST', body: JSON.stringify({ recipient_id, text, ...(file || {}) }) }),
+};
+
+const DEPO_URL = 'https://functions.poehali.dev/0e05d2cd-6312-4f14-bf4f-28492bc6e2bf';
+
+export const depoApi = {
+  folders: (parentId?: number | null) =>
+    call(`${DEPO_URL}?action=folders${parentId ? `&parent_id=${parentId}` : ''}`),
+
+  files: (folderId?: number | null) =>
+    call(`${DEPO_URL}?action=files${folderId ? `&folder_id=${folderId}` : ''}`),
+
+  file: (id: number) => call(`${DEPO_URL}?action=file&id=${id}`),
+
+  createFolder: (name: string, parent_id: number | null, kind = 'folder') =>
+    call(DEPO_URL, { method: 'POST', body: JSON.stringify({ action: 'create_folder', name, parent_id, kind }) }),
+
+  upload: (payload: { name: string; folder_id: number | null; data: string; mime: string; description?: string; tags?: string[] }) =>
+    call(DEPO_URL, { method: 'POST', body: JSON.stringify({ action: 'upload', ...payload }) }),
+
+  updateFile: (id: number, fields: Partial<DepoFile>) =>
+    call(DEPO_URL, { method: 'POST', body: JSON.stringify({ action: 'update_file', id, ...fields }) }),
+
+  trashFile: (id: number) =>
+    call(DEPO_URL, { method: 'POST', body: JSON.stringify({ action: 'trash_file', id }) }),
+
+  search: (q: string) => call(`${DEPO_URL}?action=search&q=${encodeURIComponent(q)}`),
+
+  aiSearch: (q: string) => call(`${DEPO_URL}?action=ai_search&q=${encodeURIComponent(q)}`),
+
+  recent: (limit = 8) => call(`${DEPO_URL}?action=recent&limit=${limit}`),
+
+  saveFromChat: (payload: { name: string; url: string; mime: string; size: number; folder_id: number | null; tags?: string[] }) =>
+    call(DEPO_URL, { method: 'POST', body: JSON.stringify({ action: 'save_from_chat', ...payload }) }),
+
+  activity: (fileId: number) => call(`${DEPO_URL}?action=activity&file_id=${fileId}`),
 };

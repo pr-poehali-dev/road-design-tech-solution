@@ -25,10 +25,37 @@ const CrewInviteModal = ({ open, onClose }: { open: boolean; onClose: () => void
 
   const linkFor = (code: string) => `${window.location.origin}/deod.space?invite=${code}`;
 
-  const copy = (code: string) => {
-    navigator.clipboard.writeText(linkFor(code));
-    setCopied(code);
-    setTimeout(() => setCopied(null), 1500);
+  const copyToClipboard = async (text: string): Promise<boolean> => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch { /* fallback below */ }
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      ta.setAttribute('readonly', '');
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    } catch {
+      return false;
+    }
+  };
+
+  const copy = async (code: string) => {
+    const ok = await copyToClipboard(linkFor(code));
+    if (ok) {
+      setCopied(code);
+      setTimeout(() => setCopied(null), 1500);
+    } else {
+      window.prompt('Скопируйте ссылку вручную:', linkFor(code));
+    }
   };
 
   return (

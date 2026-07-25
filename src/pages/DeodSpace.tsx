@@ -11,6 +11,7 @@ import CrewSupportWidget from '@/components/deod/CrewSupportWidget';
 import StarComWidget from '@/components/deod/StarComWidget';
 import StarComLauncher from '@/components/deod/StarComLauncher';
 import CrewPanel from '@/components/deod/CrewPanel';
+import DepositoryPanel from '@/components/deod/DepositoryPanel';
 import DeodAuthGate from '@/components/deod/DeodAuthGate';
 import { CrewAuthProvider, useCrewAuth } from '@/components/deod/CrewAuthContext';
 import { sections } from '@/components/deod/sectionsData';
@@ -20,6 +21,7 @@ const DeodSpaceInner = () => {
   const [chatOpen, setChatOpen] = useState(false);
   const [chatRecipient, setChatRecipient] = useState<number | null>(null);
   const [crewOpen, setCrewOpen] = useState(false);
+  const [depoOpen, setDepoOpen] = useState(false);
   const [unread, setUnread] = useState(0);
   const [flashing, setFlashing] = useState(false);
   const prevUnread = useRef(0);
@@ -27,6 +29,7 @@ const DeodSpaceInner = () => {
   useEffect(() => {
     if (window.location.hash === '#chat') setChatOpen(true);
     if (window.location.hash === '#crew') setCrewOpen(true);
+    if (window.location.hash === '#depository') setDepoOpen(true);
   }, [me]);
 
   useEffect(() => {
@@ -44,9 +47,11 @@ const DeodSpaceInner = () => {
     setChatOpen(true);
   };
   const openCrew = () => setCrewOpen(true);
+  const openDepo = () => setDepoOpen(true);
 
-  const handleSpecial = (kind: 'crew' | 'chat') => {
+  const handleSpecial = (kind: 'crew' | 'chat' | 'depository') => {
     if (kind === 'crew') openCrew();
+    else if (kind === 'depository') openDepo();
     else openChat();
   };
 
@@ -94,7 +99,7 @@ const DeodSpaceInner = () => {
       <div className="relative z-10">
         <MissionHeader onOpenCrew={openCrew} />
         <OrbitTicker />
-        <QuickNav onOpenChat={openChat} onOpenCrew={openCrew} />
+        <QuickNav onOpenChat={openChat} onOpenCrew={openCrew} onOpenDepo={openDepo} />
 
         <main className="max-w-[1600px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 mb-6">
@@ -141,6 +146,7 @@ const DeodSpaceInner = () => {
       />
 
       <CrewPanel open={crewOpen} onClose={() => setCrewOpen(false)} onOpenChat={openChat} />
+      <DepositoryPanel open={depoOpen} onClose={() => setDepoOpen(false)} />
     </div>
   );
 };

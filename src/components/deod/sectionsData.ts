@@ -12,7 +12,7 @@ export interface DeodSection {
   metrics: SectionMetric[];
   accent: 'teal' | 'orange';
   featured?: boolean;
-  special?: 'crew' | 'chat';
+  special?: 'crew' | 'chat' | 'depository';
 }
 
 export const sections: DeodSection[] = [
@@ -140,12 +140,13 @@ export const sections: DeodSection[] = [
     title: 'Голографический депозитарий',
     subtitle: 'Хранилище всех документов',
     icon: 'FolderLock',
-    route: '/crm',
+    route: '#depository',
     accent: 'teal',
+    special: 'depository',
     metrics: [
-      { label: 'Документов', value: '3 402' },
-      { label: 'Загружено/нед', value: '124' },
-      { label: 'Хранилище', value: '68%' },
+      { label: 'Отделов', value: '8' },
+      { label: 'ИИ-поиск', value: 'да' },
+      { label: 'Теги', value: 'авто' },
     ],
   },
   {

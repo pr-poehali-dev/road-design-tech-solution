@@ -5,7 +5,11 @@ import { useNotificationSound } from './useNotificationSound';
 import { useCrewAuth } from './CrewAuthContext';
 import { crewApi, ChatMessage, ChatChannel, Recipient } from '@/lib/crewApi';
 import { generateRoom, roomToUrl, detectMeetingLink } from '@/lib/videoCall';
+import { fileToDataUrl } from '@/lib/fileUtils';
 import VideoCallModal from './VideoCallModal';
+import ChatFileCard from './ChatFileCard';
+import FilePreviewModal, { PreviewFile } from './FilePreviewModal';
+import SaveToDepoModal from './SaveToDepoModal';
 
 interface Props {
   open: boolean;
@@ -33,8 +37,12 @@ const StarComWidget = ({ open, recipientId, onClose, onUnreadChange }: Props) =>
   const [callRoom, setCallRoom] = useState<string | null>(null);
   const [linkOpen, setLinkOpen] = useState(false);
   const [externalLink, setExternalLink] = useState('');
+  const [previewFile, setPreviewFile] = useState<PreviewFile | null>(null);
+  const [saveMsg, setSaveMsg] = useState<ChatMessage | null>(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const lastIdRef = useRef(0);
   const playSound = useNotificationSound();
 
@@ -139,6 +147,39 @@ const StarComWidget = ({ open, recipientId, onClose, onUnreadChange }: Props) =>
     } catch { /* ignore */ } finally {
       setSending(false);
     }
+  };
+
+  const uploadFile = async (file: File) => {
+    if (uploadingFile) return;
+    if (file.size > 30 * 1024 * 1024) {
+      alert('Файл превышает 30 МБ');
+      return;
+    }
+    setUploadingFile(true);
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      const payload = {
+        file_data: dataUrl,
+        file_name: file.name,
+        file_mime: file.type || 'application/octet-stream',
+      };
+      const r = target.kind === 'channel'
+        ? await crewApi.sendMessage(target.slug, input.trim(), payload)
+        : await crewApi.sendDM(target.id, input.trim(), payload);
+      setMessages((prev) => [...prev, r.message]);
+      lastIdRef.current = Math.max(lastIdRef.current, r.message.id);
+      setInput('');
+      scrollBottom();
+    } catch (e: any) {
+      alert(e.message || 'Не удалось загрузить файл');
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  const openPreview = (m: ChatMessage) => {
+    if (!m.file_url) return;
+    setPreviewFile({ url: m.file_url, name: m.file_name || 'Файл', mime: m.file_mime, size: m.file_size, path: m.depo_path });
   };
 
   const startVideoCall = async () => {
@@ -326,27 +367,35 @@ const StarComWidget = ({ open, recipientId, onClose, onUnreadChange }: Props) =>
                 <div className="text-center text-xs text-[#6B7684] py-8">Сообщений пока нет. Начните разговор!</div>
               )}
               {messages.map((m) => {
-                const meeting = detectMeetingLink(m.text);
+                const meeting = m.text ? detectMeetingLink(m.text) : null;
+                const hasFile = !!m.file_url;
                 return (
                   <div key={m.id} className={`flex ${m.mine ? 'justify-end' : 'justify-start'}`}>
                     <div className={`${fullscreen ? 'max-w-[60%]' : 'max-w-[85%]'}`}>
                       {!m.mine && <div className="text-[10px] text-[#45A29E] mb-0.5 ml-1">{m.callsign}</div>}
-                      <div className={`rounded-xl px-3 py-2 text-sm ${m.mine ? 'bg-[#45A29E]/25 text-white rounded-br-none' : 'bg-[#1F2833] text-[#C5C6C7] rounded-bl-none'}`}>
-                        {meeting ? (
-                          <div>
-                            <div className="flex items-center gap-1.5 font-semibold text-white mb-1">
-                              <Icon name="Video" size={15} className="text-[#66FCF1]" /> Видеовстреча
+                      {hasFile && (
+                        <div className="mb-1">
+                          <ChatFileCard msg={m} mine={m.mine} onPreview={openPreview} onSaveToDepo={setSaveMsg} />
+                        </div>
+                      )}
+                      {(m.text || (!hasFile && !meeting)) && (
+                        <div className={`rounded-xl px-3 py-2 text-sm ${m.mine ? 'bg-[#45A29E]/25 text-white rounded-br-none' : 'bg-[#1F2833] text-[#C5C6C7] rounded-bl-none'}`}>
+                          {meeting ? (
+                            <div>
+                              <div className="flex items-center gap-1.5 font-semibold text-white mb-1">
+                                <Icon name="Video" size={15} className="text-[#66FCF1]" /> Видеовстреча
+                              </div>
+                              <div className="text-[11px] text-[#8B98A5] mb-2 break-all">{meeting.label}</div>
+                              <button onClick={() => joinMeeting(meeting)}
+                                className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-[#66FCF1] text-[#0B0C10] font-bold text-sm hover:opacity-90">
+                                <Icon name="PhoneCall" size={15} /> Присоединиться
+                              </button>
                             </div>
-                            <div className="text-[11px] text-[#8B98A5] mb-2 break-all">{meeting.label}</div>
-                            <button onClick={() => joinMeeting(meeting)}
-                              className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-[#66FCF1] text-[#0B0C10] font-bold text-sm hover:opacity-90">
-                              <Icon name="PhoneCall" size={15} /> Присоединиться
-                            </button>
-                          </div>
-                        ) : (
-                          m.text
-                        )}
-                      </div>
+                          ) : (
+                            m.text
+                          )}
+                        </div>
+                      )}
                       <div className={`text-[9px] text-[#6B7684] mt-0.5 ${m.mine ? 'text-right mr-1' : 'ml-1'}`}>
                         {new Date(m.created_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
                       </div>
@@ -356,7 +405,13 @@ const StarComWidget = ({ open, recipientId, onClose, onUnreadChange }: Props) =>
               })}
             </div>
 
-            <div className="p-2.5 border-t border-[#45A29E]/20 flex gap-2 shrink-0">
+            <div className="p-2.5 border-t border-[#45A29E]/20 flex gap-2 shrink-0 items-center">
+              <input ref={fileInputRef} type="file" className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f); e.target.value = ''; }} />
+              <button onClick={() => fileInputRef.current?.click()} disabled={uploadingFile} title="Прикрепить файл"
+                className="w-9 h-9 rounded-lg border border-[#45A29E]/30 text-[#66FCF1] hover:bg-[#45A29E]/10 flex items-center justify-center shrink-0 disabled:opacity-50">
+                <Icon name={uploadingFile ? 'Loader2' : 'Paperclip'} size={16} className={uploadingFile ? 'animate-spin' : ''} />
+              </button>
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -378,6 +433,11 @@ const StarComWidget = ({ open, recipientId, onClose, onUnreadChange }: Props) =>
       displayName={me?.callsign || 'Экипаж DEOD'}
       onClose={() => setCallRoom(null)}
     />
+    <FilePreviewModal file={previewFile} onClose={() => setPreviewFile(null)} />
+    <SaveToDepoModal msg={saveMsg} onClose={() => setSaveMsg(null)} onSaved={(path) => {
+      setMessages((prev) => prev.map((mm) => mm.id === saveMsg?.id ? { ...mm, depo_path: path } : mm));
+      setSaveMsg(null);
+    }} />
     </>
   );
 };
