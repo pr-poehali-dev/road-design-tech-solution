@@ -69,6 +69,7 @@ const CSTKkyz = lazyWithRetry(() => import("./pages/CSTKkyz"));
 const Centodinkp = lazyWithRetry(() => import("./pages/Centodinkp"));
 const DTCodin = lazyWithRetry(() => import("./pages/DTCodin"));
 const Evden2 = lazyWithRetry(() => import("./pages/Evden2"));
+const DeodSpace = lazyWithRetry(() => import("./pages/DeodSpace"));
 
 const queryClient = new QueryClient();
 
@@ -326,6 +327,11 @@ const App = () => (
           <Route path="/evden2" element={
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
               <Evden2 />
+            </Suspense>
+          } />
+          <Route path="/deod.space" element={
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
+              <DeodSpace />
             </Suspense>
           } />
           <Route path="*" element={<NotFound />} />
