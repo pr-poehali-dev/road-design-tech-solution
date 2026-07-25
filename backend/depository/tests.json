@@ -1,0 +1,16 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Auth required for folders",
+      "method": "GET",
+      "path": "/?action=folders",
+      "expectedStatus": 401
+    }
+  ]
+}
