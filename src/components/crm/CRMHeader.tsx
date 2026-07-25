@@ -90,7 +90,7 @@ export const CRMHeader = ({
               <Button
                 onClick={() => window.location.href = '/admin'}
                 size="sm"
-                className="h-8 bg-[#FF6600]/15 border border-[#FF6600]/50 hover:bg-[#FF6600]/25 text-[#FF6600] font-bold transition-all"
+                className="h-8 bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 hover:from-purple-700 hover:via-pink-700 hover:to-cyan-600 text-white font-bold shadow-[0_0_20px_rgba(168,85,247,0.6)] hover:shadow-[0_0_30px_rgba(168,85,247,0.8)] transition-all animate-pulse border-0"
               >
                 <Icon name="Rocket" size={14} className="mr-1" />
                 DEAD SPACE
