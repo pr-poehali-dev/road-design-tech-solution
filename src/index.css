@@ -163,6 +163,14 @@
 }
 
 @layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   .text-gradient {
     @apply bg-gradient-to-r from-primary via-blue-400 to-blue-500 bg-clip-text text-transparent;
   }

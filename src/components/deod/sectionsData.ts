@@ -133,4 +133,17 @@ export const sections: DeodSection[] = [
       { label: 'Дедлайн сегодня', value: '2' },
     ],
   },
+  {
+    id: 'depository',
+    title: 'Голографический депозитарий',
+    subtitle: 'Хранилище всех документов',
+    icon: 'FolderLock',
+    route: '/crm',
+    accent: 'teal',
+    metrics: [
+      { label: 'Документов', value: '3 402' },
+      { label: 'Загружено/нед', value: '124' },
+      { label: 'Хранилище', value: '68%' },
+    ],
+  },
 ];

@@ -1,14 +1,33 @@
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import Icon from '@/components/ui/icon';
 import StarfieldBackground from '@/components/deod/StarfieldBackground';
 import OrbitTicker from '@/components/deod/OrbitTicker';
 import MissionHeader from '@/components/deod/MissionHeader';
+import QuickNav from '@/components/deod/QuickNav';
 import CosmicAnalytics from '@/components/deod/CosmicAnalytics';
 import SectionCard from '@/components/deod/SectionCard';
 import CrewSupportWidget from '@/components/deod/CrewSupportWidget';
+import StarComWidget from '@/components/deod/StarComWidget';
+import StarComLauncher from '@/components/deod/StarComLauncher';
 import { sections } from '@/components/deod/sectionsData';
 
 const DeodSpace = () => {
+  const [chatOpen, setChatOpen] = useState(typeof window !== 'undefined' && window.location.hash === '#chat');
+  const [unread, setUnread] = useState(0);
+  const [flashing, setFlashing] = useState(false);
+  const prevUnread = useRef(0);
+
+  useEffect(() => {
+    if (unread > prevUnread.current && !chatOpen) {
+      setFlashing(true);
+      const t = setTimeout(() => setFlashing(false), 4000);
+      prevUnread.current = unread;
+      return () => clearTimeout(t);
+    }
+    prevUnread.current = unread;
+  }, [unread, chatOpen]);
+
   return (
     <div className="min-h-screen bg-[#0B0C10] text-white relative overflow-hidden font-sans">
       {/* deep space gradients */}
@@ -44,6 +63,7 @@ const DeodSpace = () => {
       <div className="relative z-10">
         <MissionHeader />
         <OrbitTicker />
+        <QuickNav onOpenChat={() => setChatOpen(true)} />
 
         <main className="max-w-[1600px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
           {/* intro line */}
@@ -86,6 +106,11 @@ const DeodSpace = () => {
       </div>
 
       <CrewSupportWidget />
+
+      {!chatOpen && (
+        <StarComLauncher unread={unread} flashing={flashing} onClick={() => setChatOpen(true)} />
+      )}
+      <StarComWidget open={chatOpen} onClose={() => setChatOpen(false)} onUnreadChange={setUnread} />
     </div>
   );
 };
