@@ -43,7 +43,8 @@ const CrewProfileModal = ({ memberId, onClose, onChanged, onWrite }: Props) => {
   const [reason, setReason] = useState('');
 
   const isSelf = me && member && me.id === member.id;
-  const canEdit = true; // общий доступ — правит любой авторизованный
+  const isAdmin = !!me?.is_admin;
+  const canEdit = isSelf || isAdmin; // свой профиль правит любой, чужой — только админ
 
   const load = async () => {
     if (!memberId) return;
@@ -151,7 +152,7 @@ const CrewProfileModal = ({ memberId, onClose, onChanged, onWrite }: Props) => {
                 <div className="relative p-5 border-b border-[#45A29E]/20 bg-gradient-to-br from-[#45A29E]/10 to-transparent">
                   <button onClick={onClose} className="absolute top-4 right-4 text-[#6B7684] hover:text-white"><Icon name="X" size={20} /></button>
                   <div className="flex items-center gap-4">
-                    <label className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 shrink-0 cursor-pointer group" style={{ borderColor: rankColor }}>
+                    <label className={`relative w-20 h-20 rounded-2xl overflow-hidden border-2 shrink-0 group ${canEdit ? 'cursor-pointer' : 'cursor-default'}`} style={{ borderColor: rankColor }}>
                       {member.avatar_url ? (
                         <img src={member.avatar_url} alt={member.callsign} className="w-full h-full object-cover" />
                       ) : (
@@ -159,11 +160,15 @@ const CrewProfileModal = ({ memberId, onClose, onChanged, onWrite }: Props) => {
                           <Icon name="UserRound" size={32} className="text-[#45A29E]" />
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        {uploading ? <Icon name="Loader2" size={20} className="text-white animate-spin" /> : <Icon name="Camera" size={20} className="text-white" />}
-                      </div>
-                      <input type="file" accept="image/*" className="hidden"
-                        onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f); }} />
+                      {canEdit && (
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          {uploading ? <Icon name="Loader2" size={20} className="text-white animate-spin" /> : <Icon name="Camera" size={20} className="text-white" />}
+                        </div>
+                      )}
+                      {canEdit && (
+                        <input type="file" accept="image/*" className="hidden"
+                          onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f); }} />
+                      )}
                     </label>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -226,7 +231,7 @@ const CrewProfileModal = ({ memberId, onClose, onChanged, onWrite }: Props) => {
                         <InfoCard icon="Radio" label="Статус скафандра" value={member.suit_status || '—'} />
                       </div>
 
-                      {(
+                      {isAdmin && (
                         <div className="rounded-xl border border-[#FF6600]/25 bg-[#FF6600]/5 p-3 space-y-3">
                           <div className="text-[11px] uppercase tracking-widest text-[#FF6600] font-bold flex items-center gap-1.5">
                             <Icon name="Award" size={13} /> Начисление баллов и роль

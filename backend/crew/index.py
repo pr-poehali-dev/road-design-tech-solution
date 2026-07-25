@@ -84,6 +84,13 @@ def member_public(m, include_email=False):
     return data
 
 
+def require_admin(me):
+    """Возвращает error-response если сотрудник не является супер-админом станции, иначе None."""
+    if not me or not me.get('is_admin'):
+        return err('Доступно только администратору станции', 403)
+    return None
+
+
 def get_member_by_token(conn, token):
     if not token:
         return None
@@ -152,9 +159,9 @@ def handler(event, context):
         if action == 'org_tree':
             return do_org_tree(conn)
         if action == 'set_parent':
-            return do_set_parent(conn, body)
+            return do_set_parent(conn, me, body)
         if action == 'set_position':
-            return do_set_position(conn, body)
+            return do_set_position(conn, me, body)
         if action == 'upload_avatar':
             return do_upload_avatar(conn, me, body)
         if action == 'logout':
@@ -305,6 +312,8 @@ def do_points_history(conn, member_id):
 
 
 def do_add_points(conn, me, body):
+    if err_resp := require_admin(me):
+        return err_resp
     member_id = body.get('member_id')
     delta = body.get('delta')
     reason = (body.get('reason') or '').strip()
@@ -324,6 +333,8 @@ def do_add_points(conn, me, body):
 
 
 def do_create_invite(conn, me, body):
+    if err_resp := require_admin(me):
+        return err_resp
     role = body.get('role') or 'universal'
     department = body.get('department')
     max_uses = int(body.get('max_uses') or 1)
@@ -350,6 +361,8 @@ def do_list_invites(conn, me):
 
 
 def do_set_role(conn, me, body):
+    if err_resp := require_admin(me):
+        return err_resp
     member_id = body.get('member_id')
     role = body.get('role')
     if not member_id or role not in ROLES:
@@ -370,7 +383,9 @@ def do_org_tree(conn):
     return ok({'members': [member_public(m) for m in members]})
 
 
-def do_set_parent(conn, body):
+def do_set_parent(conn, me, body):
+    if err_resp := require_admin(me):
+        return err_resp
     member_id = body.get('member_id')
     parent_id = body.get('parent_id')  # может быть None (снять руководителя)
     if not member_id:
@@ -386,8 +401,11 @@ def do_set_parent(conn, body):
     return ok({'member': member_public(member)})
 
 
-def do_set_position(conn, body):
+def do_set_position(conn, me, body):
     member_id = body.get('member_id')
+    if member_id and int(member_id) != int(me['id']):
+        if err_resp := require_admin(me):
+            return err_resp
     position = (body.get('position_title') or '').strip() or None
     department = body.get('department')
     if not member_id:
@@ -409,6 +427,9 @@ def do_set_position(conn, body):
 def do_upload_avatar(conn, me, body):
     data_url = body.get('image') or ''
     target_id = body.get('member_id') or me['id']
+    if int(target_id) != int(me['id']):
+        if err_resp := require_admin(me):
+            return err_resp
     if not data_url:
         return err('Нет изображения', 400)
     if ',' in data_url:
