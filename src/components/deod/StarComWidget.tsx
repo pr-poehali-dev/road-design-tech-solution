@@ -4,6 +4,8 @@ import Icon from '@/components/ui/icon';
 import { useNotificationSound } from './useNotificationSound';
 import { useCrewAuth } from './CrewAuthContext';
 import { crewApi, ChatMessage, ChatChannel, Recipient } from '@/lib/crewApi';
+import { generateRoom, roomToUrl, detectMeetingLink } from '@/lib/videoCall';
+import VideoCallModal from './VideoCallModal';
 
 interface Props {
   open: boolean;
@@ -28,6 +30,9 @@ const StarComWidget = ({ open, recipientId, onClose, onUnreadChange }: Props) =>
   const [online, setOnline] = useState(0);
   const [sending, setSending] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [callRoom, setCallRoom] = useState<string | null>(null);
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [externalLink, setExternalLink] = useState('');
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastIdRef = useRef(0);
@@ -114,21 +119,58 @@ const StarComWidget = ({ open, recipientId, onClose, onUnreadChange }: Props) =>
     if (open && !minimized) { setUnread(0); scrollBottom(); }
   }, [open, minimized, target, scrollBottom]);
 
+  const sendText = async (text: string) => {
+    const body = text.trim();
+    if (!body) return;
+    const r = target.kind === 'channel'
+      ? await crewApi.sendMessage(target.slug, body)
+      : await crewApi.sendDM(target.id, body);
+    setMessages((prev) => [...prev, r.message]);
+    lastIdRef.current = Math.max(lastIdRef.current, r.message.id);
+    scrollBottom();
+  };
+
   const send = async () => {
-    const text = input.trim();
-    if (!text || sending) return;
+    if (!input.trim() || sending) return;
     setSending(true);
     try {
-      const r = target.kind === 'channel'
-        ? await crewApi.sendMessage(target.slug, text)
-        : await crewApi.sendDM(target.id, text);
-      setMessages((prev) => [...prev, r.message]);
-      lastIdRef.current = Math.max(lastIdRef.current, r.message.id);
+      await sendText(input);
       setInput('');
-      scrollBottom();
     } catch { /* ignore */ } finally {
       setSending(false);
     }
+  };
+
+  const startVideoCall = async () => {
+    if (sending) return;
+    setSending(true);
+    try {
+      const room = generateRoom();
+      const url = roomToUrl(room);
+      await sendText(`📹 Приглашение на видеовстречу DEOD: ${url}`);
+      setCallRoom(room);
+    } catch { /* ignore */ } finally {
+      setSending(false);
+    }
+  };
+
+  const sendExternalLink = async () => {
+    const link = externalLink.trim();
+    if (!link) return;
+    const normalized = /^https?:\/\//i.test(link) ? link : `https://${link}`;
+    setSending(true);
+    try {
+      await sendText(`📹 Ссылка на видеовстречу: ${normalized}`);
+      setExternalLink('');
+      setLinkOpen(false);
+    } catch { /* ignore */ } finally {
+      setSending(false);
+    }
+  };
+
+  const joinMeeting = (link: { url: string; room: string | null }) => {
+    if (link.room) setCallRoom(link.room);
+    else window.open(link.url, '_blank', 'noopener');
   };
 
   const pickChannel = (c: ChatChannel) => {
@@ -188,6 +230,7 @@ const StarComWidget = ({ open, recipientId, onClose, onUnreadChange }: Props) =>
   );
 
   return (
+    <>
     <motion.div
       drag={!fullscreen}
       dragMomentum={false}
@@ -250,25 +293,67 @@ const StarComWidget = ({ open, recipientId, onClose, onUnreadChange }: Props) =>
                   <span className="text-[10px] text-[#6B7684]">· личное</span>
                 </>
               )}
+              <div className="flex-1" />
+              <button onClick={startVideoCall} disabled={sending} title="Начать видеозвонок"
+                className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-[#45A29E] text-[#0B0C10] font-bold text-[11px] hover:opacity-90 disabled:opacity-50 shrink-0">
+                <Icon name="Video" size={14} /> <span className="hidden sm:inline">Звонок</span>
+              </button>
+              <button onClick={() => setLinkOpen((v) => !v)} title="Отправить ссылку на встречу"
+                className="w-7 h-7 rounded-lg border border-[#45A29E]/30 text-[#66FCF1] hover:bg-[#45A29E]/10 flex items-center justify-center shrink-0">
+                <Icon name="Link" size={14} />
+              </button>
             </div>
+
+            {linkOpen && (
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-[#45A29E]/15 bg-[#1F2833]/40 shrink-0">
+                <Icon name="Link" size={15} className="text-[#45A29E] shrink-0" />
+                <input
+                  value={externalLink}
+                  onChange={(e) => setExternalLink(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && sendExternalLink()}
+                  placeholder="Вставьте ссылку Zoom / Google Meet / Яндекс..."
+                  className="flex-1 bg-[#0B0C10]/60 border border-[#45A29E]/30 rounded-lg px-2 py-1.5 text-sm text-white placeholder:text-[#6B7684] focus:outline-none focus:border-[#66FCF1]/60"
+                />
+                <button onClick={sendExternalLink} disabled={sending || !externalLink.trim()}
+                  className="px-3 py-1.5 rounded-lg bg-[#45A29E] text-[#0B0C10] font-bold text-sm hover:opacity-90 disabled:opacity-50 shrink-0">
+                  Отправить
+                </button>
+              </div>
+            )}
 
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-2.5 min-h-0">
               {messages.length === 0 && (
                 <div className="text-center text-xs text-[#6B7684] py-8">Сообщений пока нет. Начните разговор!</div>
               )}
-              {messages.map((m) => (
-                <div key={m.id} className={`flex ${m.mine ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`${fullscreen ? 'max-w-[60%]' : 'max-w-[85%]'}`}>
-                    {!m.mine && <div className="text-[10px] text-[#45A29E] mb-0.5 ml-1">{m.callsign}</div>}
-                    <div className={`rounded-xl px-3 py-2 text-sm ${m.mine ? 'bg-[#45A29E]/25 text-white rounded-br-none' : 'bg-[#1F2833] text-[#C5C6C7] rounded-bl-none'}`}>
-                      {m.text}
-                    </div>
-                    <div className={`text-[9px] text-[#6B7684] mt-0.5 ${m.mine ? 'text-right mr-1' : 'ml-1'}`}>
-                      {new Date(m.created_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+              {messages.map((m) => {
+                const meeting = detectMeetingLink(m.text);
+                return (
+                  <div key={m.id} className={`flex ${m.mine ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`${fullscreen ? 'max-w-[60%]' : 'max-w-[85%]'}`}>
+                      {!m.mine && <div className="text-[10px] text-[#45A29E] mb-0.5 ml-1">{m.callsign}</div>}
+                      <div className={`rounded-xl px-3 py-2 text-sm ${m.mine ? 'bg-[#45A29E]/25 text-white rounded-br-none' : 'bg-[#1F2833] text-[#C5C6C7] rounded-bl-none'}`}>
+                        {meeting ? (
+                          <div>
+                            <div className="flex items-center gap-1.5 font-semibold text-white mb-1">
+                              <Icon name="Video" size={15} className="text-[#66FCF1]" /> Видеовстреча
+                            </div>
+                            <div className="text-[11px] text-[#8B98A5] mb-2 break-all">{meeting.label}</div>
+                            <button onClick={() => joinMeeting(meeting)}
+                              className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-[#66FCF1] text-[#0B0C10] font-bold text-sm hover:opacity-90">
+                              <Icon name="PhoneCall" size={15} /> Присоединиться
+                            </button>
+                          </div>
+                        ) : (
+                          m.text
+                        )}
+                      </div>
+                      <div className={`text-[9px] text-[#6B7684] mt-0.5 ${m.mine ? 'text-right mr-1' : 'ml-1'}`}>
+                        {new Date(m.created_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="p-2.5 border-t border-[#45A29E]/20 flex gap-2 shrink-0">
@@ -287,6 +372,13 @@ const StarComWidget = ({ open, recipientId, onClose, onUnreadChange }: Props) =>
         </div>
       )}
     </motion.div>
+
+    <VideoCallModal
+      room={callRoom}
+      displayName={me?.callsign || 'Экипаж DEOD'}
+      onClose={() => setCallRoom(null)}
+    />
+    </>
   );
 };
 
