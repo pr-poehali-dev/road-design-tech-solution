@@ -1,4 +1,7 @@
 {
+  "evden2-bidzaar": "https://functions.poehali.dev/596db4ae-bbb0-48a2-afb3-f14643a1ff50",
+  "evden2-telegram": "https://functions.poehali.dev/6c6e200a-5525-49b2-95be-4b170a916141",
+  "evden2": "https://functions.poehali.dev/bc2ee383-b7b8-4960-abef-37242287aa89",
   "crm": "https://functions.poehali.dev/fd1c95d9-d394-4d33-af98-1d5a05163881",
   "kp-storage": "https://functions.poehali.dev/98b50081-0e70-4947-abb9-b1669df368df",
   "leads": "https://functions.poehali.dev/f5d359a1-33b0-414e-96fe-1961884b4ad9",

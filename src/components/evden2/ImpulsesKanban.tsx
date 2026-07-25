@@ -1,16 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
+import { useToast } from '@/hooks/use-toast';
+import { evdenApi, Impulse } from '@/lib/evden2Api';
 
-interface Impulse {
-  id: string;
-  title: string;
-  deal: string;
-  priority: 'critical' | 'high' | 'medium' | 'low';
-  assignee: string;
-  status: 'open' | 'progress' | 'review' | 'done';
-}
+type ImpulseWithDeal = Impulse & { deal_name: string };
 
 const priorityMeta: Record<string, { label: string; color: string }> = {
   critical: { label: 'Критично', color: 'bg-red-500/15 text-red-300 border-red-500/30' },
@@ -19,15 +14,6 @@ const priorityMeta: Record<string, { label: string; color: string }> = {
   low: { label: 'Низкий', color: 'bg-slate-500/15 text-slate-300 border-slate-500/30' },
 };
 
-const initialImpulses: Impulse[] = [
-  { id: '1', title: 'Расчёт фундамента ТЦ «Меридиан»', deal: 'ТЦ Меридиан', priority: 'critical', assignee: 'Иванов И.', status: 'open' },
-  { id: '2', title: 'Подготовить геологию до пятницы', deal: 'Складской комплекс', priority: 'high', assignee: 'Петров С.', status: 'open' },
-  { id: '3', title: 'Изучить ТЗ и задать уточняющие вопросы', deal: 'Жилой квартал', priority: 'medium', assignee: 'Сидорова А.', status: 'progress' },
-  { id: '4', title: 'Смета по экологическим изысканиям', deal: 'Логистический парк', priority: 'high', assignee: 'Иванов И.', status: 'progress' },
-  { id: '5', title: 'Протокол разногласий', deal: 'ТЦ Меридиан', priority: 'medium', assignee: 'Петрова А.', status: 'review' },
-  { id: '6', title: 'Договор по тендеру №4521', deal: 'Мост через реку', priority: 'critical', assignee: 'Сидорова А.', status: 'done' },
-];
-
 const columns: { key: Impulse['status']; title: string; color: string }[] = [
   { key: 'open', title: 'Открыт', color: 'border-sky-500/30' },
   { key: 'progress', title: 'В работе', color: 'border-amber-500/30' },
@@ -35,13 +21,46 @@ const columns: { key: Impulse['status']; title: string; color: string }[] = [
   { key: 'done', title: 'Закрыт', color: 'border-emerald-500/30' },
 ];
 
-export const ImpulsesKanban = () => {
-  const [impulses, setImpulses] = useState(initialImpulses);
-  const [dragId, setDragId] = useState<string | null>(null);
+export const ImpulsesKanban = ({ refreshKey }: { refreshKey?: number }) => {
+  const { toast } = useToast();
+  const [impulses, setImpulses] = useState<ImpulseWithDeal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dragId, setDragId] = useState<number | null>(null);
 
-  const moveTo = (id: string, status: Impulse['status']) => {
-    setImpulses((prev) => prev.map((imp) => (imp.id === id ? { ...imp, status } : imp)));
+  const load = useCallback(async () => {
+    try {
+      const res = await evdenApi.getAllImpulses();
+      setImpulses(res.impulses);
+    } catch (e: any) {
+      toast({ title: 'Не удалось загрузить импульсы', description: e.message, variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    load();
+  }, [load, refreshKey]);
+
+  const moveTo = async (id: number, status: Impulse['status']) => {
+    const prev = impulses;
+    setImpulses((cur) => cur.map((imp) => (imp.id === id ? { ...imp, status } : imp)));
+    try {
+      await evdenApi.updateImpulse(id, { status });
+    } catch (e: any) {
+      setImpulses(prev);
+      toast({ title: 'Не удалось переместить импульс', description: e.message, variant: 'destructive' });
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="rounded-2xl border border-slate-700/50 bg-slate-900/50 p-10 text-center text-slate-400">
+        <Icon name="Loader2" size={28} className="animate-spin mx-auto mb-2 text-amber-400" />
+        Загрузка импульсов...
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -74,8 +93,8 @@ export const ImpulsesKanban = () => {
                     <p className="text-xs font-medium text-slate-100 leading-snug">{imp.title}</p>
                   </div>
                   <div className="flex items-center justify-between">
-                    <Badge className={`text-[10px] px-1.5 py-0 border ${priorityMeta[imp.priority].color}`}>
-                      {priorityMeta[imp.priority].label}
+                    <Badge className={`text-[10px] px-1.5 py-0 border ${priorityMeta[imp.priority]?.color || priorityMeta.medium.color}`}>
+                      {priorityMeta[imp.priority]?.label || imp.priority}
                     </Badge>
                     <div className="flex items-center gap-1 text-[10px] text-slate-400">
                       <Icon name="User" size={11} />
@@ -84,8 +103,14 @@ export const ImpulsesKanban = () => {
                   </div>
                   <div className="mt-1.5 flex items-center gap-1 text-[10px] text-slate-500">
                     <Icon name="Briefcase" size={10} />
-                    {imp.deal}
+                    {imp.deal_name}
                   </div>
+                  {imp.source !== 'manual' && (
+                    <div className="mt-1 flex items-center gap-1 text-[10px] text-amber-400/70">
+                      <Icon name="Sparkles" size={10} />
+                      {imp.source === 'ai_comment' ? 'создано ИИ из комментария' : imp.source === 'voice' ? 'создано голосом' : imp.source === 'bidzaar' ? 'из BIDZAAR' : imp.source}
+                    </div>
+                  )}
                 </motion.div>
               ))}
               {items.length === 0 && (

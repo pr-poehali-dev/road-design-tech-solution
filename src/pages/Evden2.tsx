@@ -1,58 +1,78 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
+import { useToast } from '@/hooks/use-toast';
 import NeuralBackground from '@/components/evden2/NeuralBackground';
 import ModeToggle from '@/components/evden2/ModeToggle';
 import PhaseFunnel from '@/components/evden2/PhaseFunnel';
-import DealCardDemo from '@/components/evden2/DealCardDemo';
+import DealsPanel from '@/components/evden2/DealsPanel';
 import ImpulsesKanban from '@/components/evden2/ImpulsesKanban';
 import AiAgentsGrid from '@/components/evden2/AiAgentsGrid';
 import IntegrationsRow from '@/components/evden2/IntegrationsRow';
 import LiveAnalytics from '@/components/evden2/LiveAnalytics';
-
-const voiceCommands = [
-  'Неврон, покажи все сделки на этапе «Стыковка» с риском по срокам',
-  'Неврон, создай импульс для Иванова — подготовить геологию до пятницы',
-  'Неврон, ответь клиенту в Telegram, что мы выслали КП',
-  'Неврон, покажи отчёт по комментариям за месяц',
-];
-
-const heroStats = [
-  { label: 'Сделок в работе', value: '128', icon: 'Briefcase', color: 'from-cyan-500 to-blue-500' },
-  { label: 'Конверсия', value: '34%', icon: 'TrendingUp', color: 'from-emerald-500 to-teal-500' },
-  { label: 'Оборот за месяц', value: '12.4M ₽', icon: 'Wallet', color: 'from-amber-500 to-orange-500' },
-  { label: 'Импульсов закрыто', value: '312', icon: 'Zap', color: 'from-violet-500 to-purple-500' },
-];
+import { useVoiceControl } from '@/hooks/useVoiceControl';
+import { evdenApi, Deal, Stats } from '@/lib/evden2Api';
 
 const whyPoints = [
-  { icon: 'Rocket', title: 'Скорость', desc: 'Сделки закрываются в 2 раза быстрее за счёт мгновенных реакций ИИ' },
+  { icon: 'Rocket', title: 'Скорость', desc: 'Сделки закрываются быстрее за счёт мгновенных реакций ИИ' },
   { icon: 'Infinity', title: 'Полная автоматизация', desc: 'Менеджер занимается переговорами — остальное делает ИИ' },
-  { icon: 'LayoutTemplate', title: 'Единая экосистема', desc: 'Не нужно переключаться между десятком сервисов' },
-  { icon: 'Mic2', title: 'Голосовое управление', desc: 'Освобождает руки и глаза в любой ситуации' },
-  { icon: 'Eye', title: 'Аналитика-интуиция', desc: 'ИИ видит скрытые риски и настроения раньше вас' },
-  { icon: 'Gavel', title: 'Охота за тендерами', desc: 'BIDZAAR превращает ожидание в активный поиск' },
+  { icon: 'LayoutTemplate', title: 'Единая экосистема', desc: 'Сделки, задачи и переписка в одном месте' },
+  { icon: 'Mic2', title: 'Голосовое управление', desc: 'Реальное распознавание речи создаёт задачи и двигает сделки' },
+  { icon: 'Eye', title: 'ИИ-аналитика', desc: 'Настоящий анализ тональности комментариев через YandexGPT' },
+  { icon: 'Gavel', title: 'Охота за тендерами', desc: 'BIDZAAR API подключён и готов к работе' },
 ];
 
 const Evden2 = () => {
+  const { toast } = useToast();
   const [mode, setMode] = useState<'voice' | 'manual'>('voice');
-  const [listening, setListening] = useState(false);
-  const [cmdIndex, setCmdIndex] = useState(0);
   const [activePhase, setActivePhase] = useState('docking');
+  const [deals, setDeals] = useState<Deal[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  const loadData = useCallback(async () => {
+    try {
+      const [dealsRes, statsRes] = await Promise.all([evdenApi.getDeals(), evdenApi.getStats()]);
+      setDeals(dealsRes.deals);
+      setStats(statsRes);
+    } catch (e: any) {
+      toast({ title: 'Ошибка загрузки данных EVDEN 2.0', description: e.message, variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
 
   useEffect(() => {
-    if (!listening) return;
-    const interval = setInterval(() => {
-      setCmdIndex((i) => (i + 1) % voiceCommands.length);
-    }, 3200);
-    return () => clearInterval(interval);
-  }, [listening]);
+    loadData();
+  }, [loadData]);
+
+  const handleChanged = () => {
+    loadData();
+    setRefreshTick((t) => t + 1);
+  };
+
+  const voice = useVoiceControl({ onExecuted: handleChanged });
 
   const goBack = () => {
     window.location.href = '/crm';
   };
+
+  const totalBudget = stats?.total_budget || 0;
+  const totalDeals = stats?.total_deals ?? deals.length;
+  const avgConversion = deals.length
+    ? Math.round((deals.filter((d) => d.phase === 'foundation').length / deals.length) * 100)
+    : 0;
+
+  const heroStats = [
+    { label: 'Сделок в работе', value: String(totalDeals), icon: 'Briefcase', color: 'from-cyan-500 to-blue-500' },
+    { label: 'В производстве', value: `${avgConversion}%`, icon: 'TrendingUp', color: 'from-emerald-500 to-teal-500' },
+    { label: 'Общий бюджет', value: `${(totalBudget / 1_000_000).toFixed(1)}M ₽`, icon: 'Wallet', color: 'from-amber-500 to-orange-500' },
+    { label: 'Импульсов закрыто', value: String(stats?.closed_impulses ?? 0), icon: 'Zap', color: 'from-violet-500 to-purple-500' },
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-orange-950/10 to-slate-950 text-white relative">
@@ -70,7 +90,7 @@ const Evden2 = () => {
               EVDEN 2.0
             </h1>
             <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 hidden sm:inline-flex">
-              Демо · Инженерные изыскания и проектирование
+              Инженерные изыскания и проектирование
             </Badge>
           </div>
           <Button
@@ -92,7 +112,7 @@ const Evden2 = () => {
         <div className="relative px-4 py-12 sm:py-20 text-center max-w-3xl mx-auto">
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
             <Badge className="mb-4 bg-amber-500/10 text-amber-300 border-amber-500/30">
-              Новый способ работать
+              Работающая система, не витрина
             </Badge>
           </motion.div>
           <motion.h2
@@ -109,17 +129,20 @@ const Evden2 = () => {
             transition={{ delay: 0.2 }}
             className="text-slate-400 text-sm sm:text-base max-w-xl mx-auto mb-8"
           >
-            Голос и руки, ИИ-агенты, единый инбокс, тендеры BIDZAAR и модуль «Импульсы» —
-            операционная система для инженерных изысканий и проектирования.
+            Реальная база сделок, живой ИИ-анализ комментариев, голосовое управление и
+            Telegram — всё работает по-настоящему, а не для вида.
           </motion.p>
 
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
             <ModeToggle
               mode={mode}
               setMode={setMode}
-              listening={listening}
-              setListening={setListening}
-              transcript={voiceCommands[cmdIndex]}
+              listening={voice.listening}
+              onToggleListen={voice.listening ? voice.stop : voice.start}
+              transcript={voice.transcript}
+              processing={voice.processing}
+              lastReply={voice.lastReply}
+              supported={voice.supported}
             />
           </motion.div>
         </div>
@@ -139,7 +162,7 @@ const Evden2 = () => {
               <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${s.color} flex items-center justify-center mb-2`}>
                 <Icon name={s.icon as any} size={18} className="text-white" />
               </div>
-              <div className="text-xl sm:text-2xl font-bold text-white">{s.value}</div>
+              <div className="text-xl sm:text-2xl font-bold text-white">{loading ? '—' : s.value}</div>
               <div className="text-xs text-slate-400">{s.label}</div>
             </motion.div>
           ))}
@@ -151,7 +174,7 @@ const Evden2 = () => {
           <Icon name="Waypoints" size={18} className="text-amber-400" />
           <h3 className="text-lg font-semibold text-white">Воронка продаж: 4 фазы</h3>
         </div>
-        <PhaseFunnel active={activePhase} onSelect={setActivePhase} />
+        <PhaseFunnel deals={deals} active={activePhase} onSelect={setActivePhase} />
       </section>
 
       <section className="px-4 py-8 max-w-6xl mx-auto">
@@ -159,7 +182,7 @@ const Evden2 = () => {
           <TabsList className="bg-slate-900/60 border border-slate-700/50 mb-5 flex-wrap h-auto gap-1 p-1">
             <TabsTrigger value="deal" className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-300 text-xs sm:text-sm">
               <Icon name="FileText" size={14} className="mr-1.5" />
-              Карточка сделки
+              Сделки
             </TabsTrigger>
             <TabsTrigger value="impulses" className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-300 text-xs sm:text-sm">
               <Icon name="Zap" size={14} className="mr-1.5" />
@@ -180,19 +203,26 @@ const Evden2 = () => {
           </TabsList>
 
           <TabsContent value="deal">
-            <DealCardDemo />
+            {loading ? (
+              <div className="rounded-2xl border border-slate-700/50 bg-slate-900/50 p-10 text-center text-slate-400">
+                <Icon name="Loader2" size={28} className="animate-spin mx-auto mb-2 text-amber-400" />
+                Загрузка сделок...
+              </div>
+            ) : (
+              <DealsPanel deals={deals} onChanged={handleChanged} />
+            )}
           </TabsContent>
           <TabsContent value="impulses">
-            <ImpulsesKanban />
+            <ImpulsesKanban refreshKey={refreshTick} />
           </TabsContent>
           <TabsContent value="agents">
             <AiAgentsGrid />
           </TabsContent>
           <TabsContent value="integrations">
-            <IntegrationsRow />
+            <IntegrationsRow onDealCreated={handleChanged} />
           </TabsContent>
           <TabsContent value="analytics">
-            <LiveAnalytics />
+            <LiveAnalytics deals={deals} stats={stats} />
           </TabsContent>
         </Tabs>
       </section>
@@ -200,7 +230,7 @@ const Evden2 = () => {
       <section className="px-4 py-10 max-w-6xl mx-auto">
         <div className="flex items-center gap-2 mb-5">
           <Icon name="Flame" size={18} className="text-amber-400" />
-          <h3 className="text-lg font-semibold text-white">Почему это взрывает рынок</h3>
+          <h3 className="text-lg font-semibold text-white">Почему это по-настоящему работает</h3>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {whyPoints.map((f, i) => (
@@ -224,7 +254,7 @@ const Evden2 = () => {
 
       <section className="px-4 py-12 text-center relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-amber-500/5 to-transparent pointer-events-none" />
-        <p className="text-slate-500 text-xs mb-3 relative">Это демо-заглушка новой системы — реальный функционал в разработке</p>
+        <p className="text-slate-500 text-xs mb-3 relative">Данные сохраняются в реальной базе — можно создавать сделки, задачи и переписываться в Telegram</p>
         <Button
           onClick={goBack}
           className="relative bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-400 hover:from-orange-600 hover:via-amber-600 hover:to-yellow-500 text-slate-900 font-bold shadow-[0_0_25px_rgba(251,191,36,0.35)]"
