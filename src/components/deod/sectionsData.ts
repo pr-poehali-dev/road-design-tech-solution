@@ -34,7 +34,7 @@ export const sections: DeodSection[] = [
     title: 'DEAD SPACE',
     subtitle: 'Генерация проектов, КП и дорожных карт',
     icon: 'Rocket',
-    route: '/kp',
+    route: '/admin',
     accent: 'orange',
     featured: true,
     metrics: [
@@ -48,7 +48,7 @@ export const sections: DeodSection[] = [
     title: 'Альянс',
     subtitle: 'Партнёрская экосистема',
     icon: 'Handshake',
-    route: '/partner',
+    route: '/ecosystem',
     accent: 'teal',
     metrics: [
       { label: 'Партнёров', value: '86' },
