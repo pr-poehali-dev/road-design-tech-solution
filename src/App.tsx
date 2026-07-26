@@ -329,7 +329,7 @@ const App = () => (
               <Evden2 />
             </Suspense>
           } />
-          <Route path="/deod.space" element={
+          <Route path="/deod-space" element={
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Загрузка...</div>}>
               <DeodSpace />
             </Suspense>

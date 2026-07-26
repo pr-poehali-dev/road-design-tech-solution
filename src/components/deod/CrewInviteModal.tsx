@@ -23,7 +23,7 @@ const CrewInviteModal = ({ open, onClose }: { open: boolean; onClose: () => void
     } finally { setCreating(false); }
   };
 
-  const linkFor = (code: string) => `${window.location.origin}/deod.space?invite=${code}`;
+  const linkFor = (code: string) => `${window.location.origin}/deod-space?invite=${code}`;
 
   const copyToClipboard = async (text: string): Promise<boolean> => {
     try {
