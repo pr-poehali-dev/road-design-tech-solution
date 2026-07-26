@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import Icon from '@/components/ui/icon';
 import { sections } from './sectionsData';
 
-const QuickNav = ({ onOpenChat, onOpenCrew, onOpenDepo }: { onOpenChat: () => void; onOpenCrew: () => void; onOpenDepo: () => void }) => {
+const QuickNav = ({ onOpenChat, onOpenCrew, onOpenDepo, onOpenTasks }: { onOpenChat: () => void; onOpenCrew: () => void; onOpenDepo: () => void; onOpenTasks: () => void }) => {
   const go = (route: string) => {
     window.location.href = route;
   };
@@ -21,6 +21,7 @@ const QuickNav = ({ onOpenChat, onOpenCrew, onOpenDepo }: { onOpenChat: () => vo
               if (s.special === 'chat') onOpenChat();
               else if (s.special === 'crew') onOpenCrew();
               else if (s.special === 'depository') onOpenDepo();
+              else if (s.special === 'tasks') onOpenTasks();
               else go(s.route);
             };
             return (

@@ -12,6 +12,7 @@ import StarComWidget from '@/components/deod/StarComWidget';
 import StarComLauncher from '@/components/deod/StarComLauncher';
 import CrewPanel from '@/components/deod/CrewPanel';
 import DepositoryPanel from '@/components/deod/DepositoryPanel';
+import TacticalLog from '@/components/deod/TacticalLog';
 import RecentFilesWidget from '@/components/deod/RecentFilesWidget';
 import DeodAuthGate from '@/components/deod/DeodAuthGate';
 import { CrewAuthProvider, useCrewAuth } from '@/components/deod/CrewAuthContext';
@@ -23,6 +24,7 @@ const DeodSpaceInner = () => {
   const [chatRecipient, setChatRecipient] = useState<number | null>(null);
   const [crewOpen, setCrewOpen] = useState(false);
   const [depoOpen, setDepoOpen] = useState(false);
+  const [tasksOpen, setTasksOpen] = useState(false);
   const [unread, setUnread] = useState(0);
   const [flashing, setFlashing] = useState(false);
   const prevUnread = useRef(0);
@@ -31,6 +33,7 @@ const DeodSpaceInner = () => {
     if (window.location.hash === '#chat') setChatOpen(true);
     if (window.location.hash === '#crew') setCrewOpen(true);
     if (window.location.hash === '#depository') setDepoOpen(true);
+    if (window.location.hash === '#tasks') setTasksOpen(true);
   }, [me]);
 
   useEffect(() => {
@@ -49,10 +52,12 @@ const DeodSpaceInner = () => {
   };
   const openCrew = () => setCrewOpen(true);
   const openDepo = () => setDepoOpen(true);
+  const openTasks = () => setTasksOpen(true);
 
-  const handleSpecial = (kind: 'crew' | 'chat' | 'depository') => {
+  const handleSpecial = (kind: 'crew' | 'chat' | 'depository' | 'tasks') => {
     if (kind === 'crew') openCrew();
     else if (kind === 'depository') openDepo();
+    else if (kind === 'tasks') openTasks();
     else openChat();
   };
 
@@ -120,7 +125,7 @@ const DeodSpaceInner = () => {
       <div className="relative z-10">
         <MissionHeader onOpenCrew={openCrew} />
         <OrbitTicker />
-        <QuickNav onOpenChat={openChat} onOpenCrew={openCrew} onOpenDepo={openDepo} />
+        <QuickNav onOpenChat={openChat} onOpenCrew={openCrew} onOpenDepo={openDepo} onOpenTasks={openTasks} />
 
         <main className="max-w-[1600px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 mb-6">
@@ -172,6 +177,7 @@ const DeodSpaceInner = () => {
 
       <CrewPanel open={crewOpen} onClose={() => setCrewOpen(false)} onOpenChat={openChat} />
       <DepositoryPanel open={depoOpen} onClose={() => setDepoOpen(false)} />
+      <TacticalLog open={tasksOpen} onClose={() => setTasksOpen(false)} />
     </div>
   );
 };

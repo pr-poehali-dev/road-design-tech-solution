@@ -12,7 +12,7 @@ export interface DeodSection {
   metrics: SectionMetric[];
   accent: 'teal' | 'orange';
   featured?: boolean;
-  special?: 'crew' | 'chat' | 'depository';
+  special?: 'crew' | 'chat' | 'depository' | 'tasks';
 }
 
 export const sections: DeodSection[] = [
@@ -125,14 +125,15 @@ export const sections: DeodSection[] = [
   {
     id: 'tasks',
     title: 'Бортовой журнал',
-    subtitle: 'Личный задачник',
+    subtitle: 'Тактическая карта манёвров',
     icon: 'ClipboardList',
-    route: '/crm',
+    route: '#tasks',
     accent: 'teal',
+    special: 'tasks',
     metrics: [
-      { label: 'Личных задач', value: '18' },
-      { label: 'Приоритетных', value: '4' },
-      { label: 'Дедлайн сегодня', value: '2' },
+      { label: 'Манёвров', value: 'live' },
+      { label: 'ИИ-советник', value: 'да' },
+      { label: 'Канбан', value: 'вкл' },
     ],
   },
   {

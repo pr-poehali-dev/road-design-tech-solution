@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import Icon from '@/components/ui/icon';
 import { DeodSection } from './sectionsData';
 
-const SectionCard = ({ section, index, onSpecial }: { section: DeodSection; index: number; onSpecial?: (kind: 'crew' | 'chat' | 'depository') => void }) => {
+const SectionCard = ({ section, index, onSpecial }: { section: DeodSection; index: number; onSpecial?: (kind: 'crew' | 'chat' | 'depository' | 'tasks') => void }) => {
   const isOrange = section.accent === 'orange';
 
   const go = () => {

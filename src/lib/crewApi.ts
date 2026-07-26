@@ -1,5 +1,41 @@
 const CREW_URL = 'https://functions.poehali.dev/f9e0edfc-d11f-4fd0-9b7d-6560ff825ba6';
 const CHAT_URL = 'https://functions.poehali.dev/cf9d0069-c5f0-404a-ae54-f4f9da017900';
+const TASKS_URL = 'https://functions.poehali.dev/e759fe81-2fc9-4a30-8840-e13b63f75d0c';
+
+export const PRIORITY_LABELS: Record<string, string> = {
+  critical: 'Критическая угроза',
+  high: 'Высокая угроза',
+  medium: 'Средняя угроза',
+  low: 'Низкая угроза',
+};
+
+export const STATUS_LABELS: Record<string, string> = {
+  planned: 'На старте',
+  in_progress: 'В зоне поражения',
+  review: 'На подтверждении',
+  done: 'Миссия выполнена',
+  failed: 'Провалено',
+};
+
+export interface CrewTask {
+  id: number;
+  title: string;
+  comment: string | null;
+  deadline: string | null;
+  priority: string;
+  priority_label: string;
+  status: string;
+  status_label: string;
+  assignee_id: number | null;
+  assignee_callsign: string | null;
+  assignee_avatar: string | null;
+  created_by: number | null;
+  creator_callsign: string | null;
+  reminder_at: string | null;
+  ai_analysis: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 export const ROLE_LABELS: Record<string, string> = {
   engineer: 'Инженер',
@@ -178,6 +214,9 @@ export const crewApi = {
   uploadAvatar: (image: string, member_id?: number) =>
     call(CREW_URL, { method: 'POST', body: JSON.stringify({ action: 'upload_avatar', image, member_id }) }),
 
+  fire: (member_id: number, reason?: string) =>
+    call(CREW_URL, { method: 'POST', body: JSON.stringify({ action: 'fire', member_id, reason }) }),
+
   logout: () => call(CREW_URL, { method: 'POST', body: JSON.stringify({ action: 'logout' }) }).catch(() => {}),
 
   // chat channels
@@ -232,4 +271,25 @@ export const depoApi = {
     call(DEPO_URL, { method: 'POST', body: JSON.stringify({ action: 'save_from_chat', ...payload }) }),
 
   activity: (fileId: number) => call(`${DEPO_URL}?action=activity&file_id=${fileId}`),
+};
+
+export const taskApi = {
+  list: (assignee_id?: number, status?: string) => {
+    const p = new URLSearchParams({ action: 'list' });
+    if (assignee_id) p.set('assignee_id', String(assignee_id));
+    if (status) p.set('status', status);
+    return call(`${TASKS_URL}?${p.toString()}`);
+  },
+
+  create: (payload: { title: string; comment?: string; deadline?: string | null; priority?: string; assignee_id?: number | null; reminder_at?: string | null }) =>
+    call(TASKS_URL, { method: 'POST', body: JSON.stringify({ action: 'create', ...payload }) }),
+
+  update: (id: number, fields: Partial<CrewTask>) =>
+    call(TASKS_URL, { method: 'POST', body: JSON.stringify({ action: 'update', id, ...fields }) }),
+
+  remove: (id: number) =>
+    call(TASKS_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', id }) }),
+
+  aiAnalyze: (id: number) =>
+    call(TASKS_URL, { method: 'POST', body: JSON.stringify({ action: 'ai_analyze', id }) }),
 };

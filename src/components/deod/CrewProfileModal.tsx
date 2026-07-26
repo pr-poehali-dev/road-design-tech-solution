@@ -42,6 +42,11 @@ const CrewProfileModal = ({ memberId, onClose, onChanged, onWrite }: Props) => {
   const [delta, setDelta] = useState('');
   const [reason, setReason] = useState('');
 
+  // увольнение
+  const [confirmFire, setConfirmFire] = useState(false);
+  const [fireReason, setFireReason] = useState('');
+  const [firing, setFiring] = useState(false);
+
   const isSelf = me && member && me.id === member.id;
   const isAdmin = !!me?.is_admin;
   const canEdit = isSelf || isAdmin; // свой профиль правит любой, чужой — только админ
@@ -125,6 +130,19 @@ const CrewProfileModal = ({ memberId, onClose, onChanged, onWrite }: Props) => {
     await crewApi.setRole(member.id, role);
     await load();
     onChanged();
+  };
+
+  const fireMember = async () => {
+    if (!member) return;
+    setFiring(true);
+    try {
+      await crewApi.fire(member.id, fireReason.trim() || undefined);
+      setConfirmFire(false);
+      onChanged();
+      onClose();
+    } finally {
+      setFiring(false);
+    }
   };
 
   const rankColor = member ? (RANK_COLORS[member.rank] || '#66FCF1') : '#66FCF1';
@@ -258,6 +276,21 @@ const CrewProfileModal = ({ memberId, onClose, onChanged, onWrite }: Props) => {
                           </div>
                         </div>
                       )}
+
+                      {isAdmin && !isSelf && (
+                        <div className="rounded-xl border border-[#FF4D4D]/30 bg-[#FF4D4D]/5 p-3 space-y-2">
+                          <div className="text-[11px] uppercase tracking-widest text-[#FF4D4D] font-bold flex items-center gap-1.5">
+                            <Icon name="DoorOpen" size={13} /> Опасная зона
+                          </div>
+                          <p className="text-[10px] text-[#8B98A5] leading-snug">
+                            Увольнение немедленно закрывает доступ сотрудника ко всей станции. Отменить нельзя.
+                          </p>
+                          <button onClick={() => setConfirmFire(true)}
+                            className="w-full py-2 rounded-lg border border-[#FF4D4D]/40 text-[#FF9B9B] font-bold text-sm hover:bg-[#FF4D4D]/10 flex items-center justify-center gap-2">
+                            <Icon name="DoorOpen" size={15} /> Открыть люк
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -315,6 +348,47 @@ const CrewProfileModal = ({ memberId, onClose, onChanged, onWrite }: Props) => {
                 </div>
               </>
             )}
+          </motion.div>
+        </motion.div>
+      )}
+
+      {confirmFire && member && (
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          onClick={() => !firing && setConfirmFire(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-2xl border border-[#FF4D4D]/40 bg-[#0B0C10]/95 backdrop-blur-xl p-5 shadow-[0_0_50px_rgba(255,77,77,0.25)]"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-[#FF4D4D]/15 border border-[#FF4D4D]/40 flex items-center justify-center shrink-0">
+                <Icon name="DoorOpen" size={20} className="text-[#FF4D4D]" />
+              </div>
+              <h2 className="font-heading font-bold text-lg text-white">Открыть люк?</h2>
+            </div>
+            <p className="text-sm text-[#C5C6C7] mb-3">
+              <b className="text-white">{member.callsign}</b> будет немедленно уволен со станции и потеряет доступ ко всей системе. Это действие нельзя отменить.
+            </p>
+            <input
+              value={fireReason}
+              onChange={(e) => setFireReason(e.target.value)}
+              placeholder="Причина увольнения (необязательно)"
+              className="w-full bg-[#1F2833]/70 border border-[#45A29E]/30 rounded-lg px-3 py-2 text-sm text-white placeholder:text-[#6B7684] focus:outline-none focus:border-[#FF4D4D]/60 mb-4"
+            />
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmFire(false)} disabled={firing}
+                className="flex-1 py-2.5 rounded-lg border border-[#45A29E]/30 text-[#8B98A5] font-bold text-sm hover:text-white hover:bg-[#45A29E]/10 disabled:opacity-50">
+                Отмена
+              </button>
+              <button onClick={fireMember} disabled={firing}
+                className="flex-1 py-2.5 rounded-lg bg-[#FF4D4D] text-white font-bold text-sm hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2">
+                {firing ? <Icon name="Loader2" size={16} className="animate-spin" /> : <Icon name="DoorOpen" size={16} />}
+                Открыть люк
+              </button>
+            </div>
           </motion.div>
         </motion.div>
       )}
