@@ -1,0 +1,23 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Auth required for list",
+      "method": "GET",
+      "path": "/?action=list",
+      "expectedStatus": 401
+    },
+    {
+      "name": "Auth required for create",
+      "method": "POST",
+      "path": "/",
+      "body": { "action": "create", "title": "Тест" },
+      "expectedStatus": 401
+    }
+  ]
+}

@@ -1,13 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { CRMAuth } from '@/components/crm/CRMAuth';
 import { CRMHeader } from '@/components/crm/CRMHeader';
-import { CRMKanban, Lead } from '@/components/crm/CRMKanban';
+import { CRMKanban, Lead, StageDef } from '@/components/crm/CRMKanban';
 import { CRMLeadModal, Task, Activity } from '@/components/crm/CRMLeadModal';
+import { CRMListView } from '@/components/crm/CRMListView';
+import { CRMAnalytics } from '@/components/crm/CRMAnalytics';
 import StarfieldBackground from '@/components/deod/StarfieldBackground';
 import { getToken as getCrewToken } from '@/lib/crewApi';
+import { crmApi } from '@/lib/crmApi';
+import { exportLeadsToExcel, importLeadsFromExcel } from '@/lib/crmExcel';
 import Icon from '@/components/ui/icon';
 
 const API_URL = 'https://functions.poehali.dev/fd1c95d9-d394-4d33-af98-1d5a05163881';
+
+const DEFAULT_COLORS: Record<string, { color: string; textColor: string }> = {
+  'new': { color: '#12232b', textColor: '#66FCF1' },
+  'first-contact': { color: '#1F2833', textColor: '#45A29E' },
+  'evaluation': { color: '#2b1f33', textColor: '#C89BFF' },
+  'proposal': { color: '#3a2412', textColor: '#FF9B4D' },
+  'negotiation': { color: '#3a1414', textColor: '#FF8080' },
+  'closed-won': { color: '#0f2b26', textColor: '#5eead4' },
+  'closed-lost': { color: '#1F2833', textColor: '#6B7684' },
+};
 
 const CRM = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -29,28 +43,25 @@ const CRM = () => {
     company: '',
     message: '',
     type: 'Ручной ввод',
-    status: 'new' as Lead['status']
+    status: 'new'
   });
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const [customColors, setCustomColors] = useState<{[key: string]: {color: string, textColor: string}}>({
-    'new': { color: '#12232b', textColor: '#66FCF1' },
-    'first-contact': { color: '#1F2833', textColor: '#45A29E' },
-    'evaluation': { color: '#2b1f33', textColor: '#C89BFF' },
-    'proposal': { color: '#3a2412', textColor: '#FF9B4D' },
-    'negotiation': { color: '#3a1414', textColor: '#FF8080' },
-    'closed-won': { color: '#0f2b26', textColor: '#5eead4' },
-    'closed-lost': { color: '#1F2833', textColor: '#6B7684' }
-  });
+  const [customColors, setCustomColors] = useState<{ [key: string]: { color: string; textColor: string } }>(DEFAULT_COLORS);
+  const [statusStages, setStatusStages] = useState<StageDef[]>([]);
+  const [view, setView] = useState<'kanban' | 'list' | 'analytics'>('kanban');
 
-  const statusStages = [
-    { id: 'new', label: 'Новый лид' },
-    { id: 'first-contact', label: 'Первый контакт' },
-    { id: 'evaluation', label: 'Квалификация' },
-    { id: 'proposal', label: 'Коммерческое предложение' },
-    { id: 'negotiation', label: 'Переговоры' },
-    { id: 'closed-won', label: 'Успешно реализовано' },
-    { id: 'closed-lost', label: 'Закрыто и не реализовано' }
-  ];
+  const loadStages = useCallback(async () => {
+    try {
+      const res = await crmApi.getStages();
+      const stages: StageDef[] = res.stages.map((s) => ({ id: s.stage_key, label: s.label, dbId: s.id }));
+      setStatusStages(stages);
+      const colors: Record<string, { color: string; textColor: string }> = {};
+      res.stages.forEach((s) => { colors[s.stage_key] = { color: s.color, textColor: s.text_color }; });
+      setCustomColors(colors);
+    } catch {
+      setStatusStages(Object.keys(DEFAULT_COLORS).map((id) => ({ id, label: id })));
+    }
+  }, []);
 
   useEffect(() => {
     const init = async () => {
@@ -61,6 +72,7 @@ const CRM = () => {
           if (profile && profile.id) {
             setIsAuthenticated(true);
             loadData();
+            loadStages();
             setCheckingCrewAuth(false);
             return;
           }
@@ -69,7 +81,6 @@ const CRM = () => {
         }
       }
 
-      // Нет сессии CRM — пробуем автовход по сессии станции DEOD (без пароля)
       const crewToken = getCrewToken();
       if (crewToken) {
         try {
@@ -83,6 +94,7 @@ const CRM = () => {
             localStorage.setItem('userProfile', JSON.stringify(data.user));
             setIsAuthenticated(true);
             loadData();
+            loadStages();
           }
         } catch {
           // сеть недоступна — остаёмся на обычном экране входа
@@ -92,31 +104,24 @@ const CRM = () => {
     };
 
     init();
-
-    const savedColors = localStorage.getItem('crm_colors');
-    if (savedColors) {
-      setCustomColors(JSON.parse(savedColors));
-    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {
     try {
       const userProfile = localStorage.getItem('userProfile');
       if (!userProfile) return;
-      
+
       const profile = JSON.parse(userProfile);
       const partnerId = profile.id;
-      
+
       if (!partnerId) {
         console.error('Partner ID not found in user profile');
         return;
       }
-      
-      // Загружаем клиентов партнера из backend/crm
-      const clientsResponse = await fetch(
-        `${API_URL}?resource=clients&partner_id=${partnerId}`
-      );
-      
+
+      const clientsResponse = await fetch(`${API_URL}?resource=clients&partner_id=${partnerId}`);
+
       if (clientsResponse.ok) {
         const clientsData = await clientsResponse.json();
         if (clientsData.clients) {
@@ -126,6 +131,7 @@ const CRM = () => {
             email: client.email || '',
             phone: client.phone || '',
             company: client.company_name || '',
+            legal_name: client.legal_name || '',
             message: client.notes || '',
             description: client.description || '',
             type: 'CRM',
@@ -137,40 +143,49 @@ const CRM = () => {
             planned_revenue: Number(client.planned_revenue) || 0,
             contract_amount: Number(client.contract_amount) || 0,
             received_amount: Number(client.received_amount) || 0,
+            decision_maker_name: client.decision_maker_name || '',
+            decision_maker_phone: client.decision_maker_phone || '',
+            open_task_title: client.open_task_title || '',
+            open_task_due_date: client.open_task_due_date || '',
+            open_task_status: client.open_task_status || '',
+            next_action_at: client.next_action_at || '',
+            last_action_at: client.last_action_at || '',
           }));
           setLeads(mappedLeads);
         }
       }
-      
-      // Загружаем задачи партнера
-      const tasksResponse = await fetch(
-        `${API_URL}?resource=tasks&partner_id=${partnerId}`
-      );
-      
+
+      const tasksResponse = await fetch(`${API_URL}?resource=tasks&partner_id=${partnerId}`);
       if (tasksResponse.ok) {
         const tasksData = await tasksResponse.json();
         if (tasksData.tasks) {
-          setTasks(tasksData.tasks);
+          setTasks(tasksData.tasks.map((t: Record<string, unknown>) => ({
+            id: String(t.id),
+            leadId: String(t.client_id),
+            title: t.title,
+            type: 'call',
+            dueDate: t.due_date || '',
+            completed: t.status === 'completed',
+            createdAt: t.created_at,
+          })));
         }
       }
-      
-      // Загружаем активности партнера
-      const activitiesResponse = await fetch(
-        `${API_URL}?resource=activities&partner_id=${partnerId}`
-      );
-      
+
+      const activitiesResponse = await fetch(`${API_URL}?resource=activities&partner_id=${partnerId}`);
       if (activitiesResponse.ok) {
         const activitiesData = await activitiesResponse.json();
         if (activitiesData.activities) {
-          setActivities(activitiesData.activities);
+          setActivities(activitiesData.activities.map((a: Record<string, unknown>) => ({
+            id: String(a.id),
+            leadId: String(a.client_id),
+            type: a.type,
+            description: a.description,
+            createdAt: a.created_at,
+          })));
         }
       }
 
-      // Загружаем статистику с revenue-данными
-      const statsResponse = await fetch(
-        `${API_URL}?resource=stats&partner_id=${partnerId}`
-      );
-
+      const statsResponse = await fetch(`${API_URL}?resource=stats&partner_id=${partnerId}`);
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
         if (statsData.stats) {
@@ -187,15 +202,10 @@ const CRM = () => {
     }
   };
 
-  const saveData = (newLeads: Lead[], newTasks?: Task[], newActivities?: Activity[]) => {
-    localStorage.setItem('crm_leads', JSON.stringify(newLeads));
-    if (newTasks) localStorage.setItem('crm_tasks', JSON.stringify(newTasks));
-    if (newActivities) localStorage.setItem('crm_activities', JSON.stringify(newActivities));
-  };
-
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
     loadData();
+    loadStages();
   };
 
   const handleLogout = () => {
@@ -204,9 +214,34 @@ const CRM = () => {
     setIsAuthenticated(false);
   };
 
-  const openCreateLeadModal = (status?: Lead['status']) => {
+  const openCreateLeadModal = (status?: string) => {
     setNewLead({ ...newLead, status: status || 'new' });
     setShowCreateLead(true);
+  };
+
+  const quickCreateLead = async () => {
+    const name = prompt('Название сделки (компания или ФИО клиента):');
+    if (!name || !name.trim()) return;
+    const userProfile = localStorage.getItem('userProfile');
+    if (!userProfile) return;
+    const profile = JSON.parse(userProfile);
+    try {
+      await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resource: 'client',
+          partner_id: profile.id,
+          contact_name: name.trim(),
+          company_name: name.trim(),
+          stage: statusStages[0]?.id || 'new',
+          source: 'Быстрое создание',
+        }),
+      });
+      await loadData();
+    } catch (error) {
+      console.error('Error quick-creating lead:', error);
+    }
   };
 
   const createLead = async () => {
@@ -221,16 +256,15 @@ const CRM = () => {
         alert('Профиль пользователя не найден');
         return;
       }
-      
+
       const profile = JSON.parse(userProfile);
       const partnerId = profile.id;
-      
+
       if (!partnerId) {
         alert('ID партнера не найден в профиле');
         return;
       }
 
-      // Создаем клиента в backend
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -248,18 +282,8 @@ const CRM = () => {
       });
 
       if (response.ok) {
-        // Перезагружаем данные после создания
         await loadData();
-        
-        setNewLead({
-          name: '',
-          email: '',
-          phone: '',
-          company: '',
-          message: '',
-          type: 'Ручной ввод',
-          status: 'new'
-        });
+        setNewLead({ name: '', email: '', phone: '', company: '', message: '', type: 'Ручной ввод', status: 'new' });
         setShowCreateLead(false);
       } else {
         alert('Ошибка создания клиента');
@@ -270,25 +294,14 @@ const CRM = () => {
     }
   };
 
-  const updateLeadStatus = async (id: string, newStatus: Lead['status']) => {
-    const updatedLeads = leads.map(lead => 
-      lead.id === id ? { ...lead, status: newStatus } : lead
-    );
+  const updateLeadStatus = async (id: string, newStatus: string) => {
+    const updatedLeads = leads.map(lead => (lead.id === id ? { ...lead, status: newStatus } : lead));
     setLeads(updatedLeads);
-    
-    const newActivity: Activity = {
-      id: Date.now().toString(),
-      leadId: id,
-      type: 'status_change',
-      description: `Статус изменен на "${statusStages.find(s => s.id === newStatus)?.label}"`,
-      createdAt: new Date().toISOString()
-    };
-    const updatedActivities = [...activities, newActivity];
-    setActivities(updatedActivities);
-    
-    saveData(updatedLeads, tasks, updatedActivities);
-    
-    // Синхронизируем с backend
+
+    if (selectedLead?.id === id) {
+      setSelectedLead({ ...selectedLead, status: newStatus });
+    }
+
     try {
       const userProfile = localStorage.getItem('userProfile');
       const profile = userProfile ? JSON.parse(userProfile) : null;
@@ -303,41 +316,29 @@ const CRM = () => {
             updates: { stage: newStatus }
           })
         });
+        await loadData();
       }
     } catch (error) {
       console.error('Failed to update lead status:', error);
-    }
-    
-    if (selectedLead?.id === id) {
-      setSelectedLead({ ...selectedLead, status: newStatus });
     }
   };
 
   const deleteLead = async (id: string) => {
     if (!confirm('Удалить этот лид?')) return;
-    
+
     const updatedLeads = leads.filter(lead => lead.id !== id);
-    const updatedTasks = tasks.filter(task => task.leadId !== id);
-    const updatedActivities = activities.filter(activity => activity.leadId !== id);
-    
     setLeads(updatedLeads);
-    setTasks(updatedTasks);
-    setActivities(updatedActivities);
-    saveData(updatedLeads, updatedTasks, updatedActivities);
-    
-    // Удаляем из backend
+
     try {
       const userProfile = localStorage.getItem('userProfile');
       const profile = userProfile ? JSON.parse(userProfile) : null;
       if (profile?.id) {
-        await fetch(`${API_URL}?resource=client&partner_id=${profile.id}&id=${id}`, {
-          method: 'DELETE'
-        });
+        await fetch(`${API_URL}?resource=client&partner_id=${profile.id}&id=${id}`, { method: 'DELETE' });
       }
     } catch (error) {
       console.error('Failed to delete lead:', error);
     }
-    
+
     if (selectedLead?.id === id) {
       setShowLeadCard(false);
       setSelectedLead(null);
@@ -349,76 +350,55 @@ const CRM = () => {
     setShowLeadCard(true);
   };
 
-  const addTask = () => {
+  const addTask = async () => {
     if (!selectedLead || !newTask.title) return;
-    
-    const task: Task = {
-      id: Date.now().toString(),
-      leadId: selectedLead.id,
-      title: newTask.title,
-      type: newTask.type as Task['type'],
-      dueDate: newTask.dueDate,
-      completed: false,
-      createdAt: new Date().toISOString()
-    };
-    
-    const updatedTasks = [...tasks, task];
-    setTasks(updatedTasks);
-    
-    const activity: Activity = {
-      id: (Date.now() + 1).toString(),
-      leadId: selectedLead.id,
-      type: 'task_created',
-      description: `Создана задача: ${newTask.title}`,
-      createdAt: new Date().toISOString()
-    };
-    const updatedActivities = [...activities, activity];
-    setActivities(updatedActivities);
-    
-    saveData(leads, updatedTasks, updatedActivities);
-    setNewTask({ title: '', type: 'call', dueDate: '' });
+    try {
+      await crmApi.createQuickTask({ client_id: Number(selectedLead.id), title: newTask.title, due_date: newTask.dueDate || undefined });
+      setNewTask({ title: '', type: 'call', dueDate: '' });
+      await loadData();
+    } catch (error) {
+      console.error('Error adding task:', error);
+    }
   };
 
-  const addNote = () => {
+  const addNote = async () => {
     if (!selectedLead || !newNote) return;
-    
-    const activity: Activity = {
-      id: Date.now().toString(),
-      leadId: selectedLead.id,
-      type: 'note',
-      description: newNote,
-      createdAt: new Date().toISOString()
-    };
-    
-    const updatedActivities = [...activities, activity];
-    setActivities(updatedActivities);
-    saveData(leads, tasks, updatedActivities);
-    setNewNote('');
+    try {
+      const userProfile = localStorage.getItem('userProfile');
+      const profile = userProfile ? JSON.parse(userProfile) : null;
+      if (!profile?.id) return;
+      await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resource: 'activity', partner_id: profile.id, client_id: Number(selectedLead.id), type: 'note', description: newNote }),
+      });
+      setNewNote('');
+      await loadData();
+    } catch (error) {
+      console.error('Error adding note:', error);
+    }
   };
 
-  const toggleTaskComplete = (taskId: string) => {
-    const updatedTasks = tasks.map(task =>
-      task.id === taskId ? { ...task, completed: !task.completed } : task
-    );
-    setTasks(updatedTasks);
-    saveData(leads, updatedTasks, activities);
+  const toggleTaskComplete = async (taskId: string) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+    const userProfile = localStorage.getItem('userProfile');
+    const profile = userProfile ? JSON.parse(userProfile) : null;
+    if (!profile?.id) return;
+    try {
+      await fetch(API_URL, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resource: 'task', partner_id: profile.id, id: Number(taskId), updates: { status: task.completed ? 'pending' : 'completed' } }),
+      });
+      await loadData();
+    } catch (error) {
+      console.error('Error toggling task:', error);
+    }
   };
 
   const makeCall = (phone?: string) => {
-    if (!phone || !selectedLead) return;
-    
-    const activity: Activity = {
-      id: Date.now().toString(),
-      leadId: selectedLead.id,
-      type: 'call',
-      description: `Звонок на номер ${phone}`,
-      createdAt: new Date().toISOString()
-    };
-    
-    const updatedActivities = [...activities, activity];
-    setActivities(updatedActivities);
-    saveData(leads, tasks, updatedActivities);
-    
+    if (!phone) return;
     window.open(`tel:${phone}`);
   };
 
@@ -433,33 +413,11 @@ const CRM = () => {
       const response = await fetch(API_URL, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          resource: 'client',
-          partner_id: partnerId,
-          id: Number(id),
-          updates
-        })
+        body: JSON.stringify({ resource: 'client', partner_id: partnerId, id: Number(id), updates }),
       });
 
       if (response.ok) {
-        // Immediately update selectedLead with mapped field names
-        if (selectedLead && String(selectedLead.id) === String(id)) {
-          const mapped: Partial<Lead> = {};
-          if (updates.contact_name !== undefined) mapped.name = String(updates.contact_name);
-          if (updates.email !== undefined) mapped.email = String(updates.email);
-          if (updates.phone !== undefined) mapped.phone = String(updates.phone);
-          if (updates.company_name !== undefined) mapped.company = String(updates.company_name);
-          if (updates.notes !== undefined) mapped.message = String(updates.notes);
-          if (updates.description !== undefined) mapped.description = String(updates.description);
-          if (updates.stage !== undefined) mapped.status = String(updates.stage) as Lead['status'];
-          if (updates.deal_amount !== undefined) mapped.deal_amount = Number(updates.deal_amount);
-          if (updates.revenue !== undefined) mapped.revenue = Number(updates.revenue);
-          if (updates.planned_revenue !== undefined) mapped.planned_revenue = Number(updates.planned_revenue);
-          if (updates.contract_amount !== undefined) mapped.contract_amount = Number(updates.contract_amount);
-          if (updates.received_amount !== undefined) mapped.received_amount = Number(updates.received_amount);
-          setSelectedLead({ ...selectedLead, ...mapped });
-        }
-        // Reload all data from backend (updates leads list + stats)
+        setShowLeadCard(false);
         await loadData();
       } else {
         alert('Ошибка обновления сделки');
@@ -470,31 +428,106 @@ const CRM = () => {
     }
   };
 
-  const updateStageColor = (stageId: string, color: string, textColor: string) => {
+  const updateStageColor = async (stageId: string, color: string, textColor: string) => {
     const newColors = { ...customColors, [stageId]: { color, textColor } };
     setCustomColors(newColors);
-    localStorage.setItem('crm_colors', JSON.stringify(newColors));
+    const stage = statusStages.find((s) => s.id === stageId);
+    if (stage?.dbId) {
+      try { await crmApi.updateStage(stage.dbId, { color, text_color: textColor }); } catch { /* noop */ }
+    }
+  };
+
+  const moveLead = (leadId: string, newStatus: string) => updateLeadStatus(leadId, newStatus);
+
+  const reorderStages = async (newOrder: StageDef[]) => {
+    setStatusStages(newOrder);
+    const ids = newOrder.map((s) => s.dbId).filter((v): v is number => !!v);
+    if (ids.length === newOrder.length) {
+      try { await crmApi.reorderStages(ids); } catch { /* noop */ }
+    }
+  };
+
+  const renameStage = async (stageId: string, newLabel: string) => {
+    setStatusStages((prev) => prev.map((s) => (s.id === stageId ? { ...s, label: newLabel } : s)));
+    const stage = statusStages.find((s) => s.id === stageId);
+    if (stage?.dbId) {
+      try { await crmApi.updateStage(stage.dbId, { label: newLabel }); } catch { /* noop */ }
+    }
+  };
+
+  const addStage = async () => {
+    const label = prompt('Название нового этапа:');
+    if (!label || !label.trim()) return;
+    try {
+      const res = await crmApi.createStage(label.trim());
+      setStatusStages((prev) => [...prev, { id: res.stage.stage_key, label: res.stage.label, dbId: res.stage.id }]);
+      setCustomColors((prev) => ({ ...prev, [res.stage.stage_key]: { color: res.stage.color, textColor: res.stage.text_color } }));
+    } catch (error) {
+      console.error('Error adding stage:', error);
+    }
+  };
+
+  const deleteStageHandler = async (stageId: string) => {
+    if (!confirm('Удалить этап? Сделки на этом этапе не будут удалены, но потеряют привязку к этапу.')) return;
+    const stage = statusStages.find((s) => s.id === stageId);
+    setStatusStages((prev) => prev.filter((s) => s.id !== stageId));
+    if (stage?.dbId) {
+      try { await crmApi.deleteStage(stage.dbId); } catch { /* noop */ }
+    }
+  };
+
+  const handleExport = () => {
+    const labels: Record<string, string> = {};
+    statusStages.forEach((s) => { labels[s.id] = s.label; });
+    exportLeadsToExcel(leads, labels);
+  };
+
+  const handleImportFile = async (file: File) => {
+    try {
+      const rows = await importLeadsFromExcel(file);
+      if (rows.length === 0) {
+        alert('Не удалось найти данные для импорта. Проверьте заголовки колонок.');
+        return;
+      }
+      await crmApi.bulkImport(rows as Record<string, unknown>[]);
+      await loadData();
+      alert(`Импортировано сделок: ${rows.length}`);
+    } catch (error) {
+      console.error('Import error:', error);
+      alert('Ошибка импорта файла');
+    }
+  };
+
+  const triggerImport = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xlsx,.xls';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (file) handleImportFile(file);
+    };
+    input.click();
   };
 
   const getConversionRate = (): string => {
     const total = leads.length;
     if (total === 0) return '0';
-    const won = leads.filter(l => l.status === 'closed-won').length;
+    const won = leads.filter(l => l.status === 'closed-won' || l.status === 'closed_won').length;
     return ((won / total) * 100).toFixed(0);
   };
 
-  const filteredLeads = leads.filter(lead => 
+  const filteredLeads = leads.filter(lead =>
     lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     lead.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
     lead.company?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const getTotalBudget = () => {
-    return leads.reduce((sum, lead) => {
-      const budget = parseInt(lead.budget || '0');
-      return sum + budget;
-    }, 0);
+    return leads.reduce((sum, lead) => sum + (lead.deal_amount || 0), 0);
   };
+
+  const stageLabels: Record<string, string> = {};
+  statusStages.forEach((s) => { stageLabels[s.id] = s.label; });
 
   if (checkingCrewAuth) {
     return (
@@ -505,11 +538,7 @@ const CRM = () => {
   }
 
   if (!isAuthenticated) {
-    return (
-      <CRMAuth 
-        onLoginSuccess={handleLoginSuccess} 
-      />
-    );
+    return <CRMAuth onLoginSuccess={handleLoginSuccess} />;
   }
 
   return (
@@ -524,63 +553,80 @@ const CRM = () => {
       <div
         className="fixed inset-0 pointer-events-none opacity-[0.07]"
         style={{
-          backgroundImage:
-            'linear-gradient(#66FCF1 1px, transparent 1px), linear-gradient(90deg, #66FCF1 1px, transparent 1px)',
+          backgroundImage: 'linear-gradient(#66FCF1 1px, transparent 1px), linear-gradient(90deg, #66FCF1 1px, transparent 1px)',
           backgroundSize: '48px 48px',
         }}
       />
 
       <div className="relative z-10">
-      <CRMHeader
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        onCreateLead={() => openCreateLeadModal()}
-        onToggleColorPicker={() => setShowColorPicker(!showColorPicker)}
-        onLogout={handleLogout}
-        totalLeads={leads.length}
-        activeLeads={leads.filter(l => !['closed-won', 'closed-lost'].includes(l.status)).length}
-        conversionRate={getConversionRate()}
-        totalBudget={getTotalBudget()}
-        totalRevenue={revenueStats.totalRevenue}
-        totalPlanned={revenueStats.totalPlanned}
-        totalContracts={revenueStats.totalContracts}
-        totalReceived={revenueStats.totalReceived}
-      />
+        <CRMHeader
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          onCreateLead={() => openCreateLeadModal()}
+          onQuickCreateLead={quickCreateLead}
+          onToggleColorPicker={() => setShowColorPicker(!showColorPicker)}
+          onLogout={handleLogout}
+          totalLeads={leads.length}
+          activeLeads={leads.filter(l => !['closed-won', 'closed-lost', 'closed_won', 'closed_lost'].includes(l.status)).length}
+          conversionRate={getConversionRate()}
+          totalBudget={getTotalBudget()}
+          totalRevenue={revenueStats.totalRevenue}
+          totalPlanned={revenueStats.totalPlanned}
+          totalContracts={revenueStats.totalContracts}
+          totalReceived={revenueStats.totalReceived}
+          view={view}
+          onChangeView={setView}
+          onExport={handleExport}
+          onImportClick={triggerImport}
+        />
 
-      <CRMKanban
-        leads={filteredLeads}
-        statusStages={statusStages}
-        customColors={customColors}
-        showColorPicker={showColorPicker}
-        onLeadClick={openLeadCard}
-        onCreateLeadInStage={openCreateLeadModal}
-        onUpdateStageColor={updateStageColor}
-      />
+        {view === 'kanban' && statusStages.length > 0 && (
+          <CRMKanban
+            leads={filteredLeads}
+            statusStages={statusStages}
+            customColors={customColors}
+            showColorPicker={showColorPicker}
+            onLeadClick={openLeadCard}
+            onCreateLeadInStage={openCreateLeadModal}
+            onUpdateStageColor={updateStageColor}
+            onMoveLead={moveLead}
+            onReorderStages={reorderStages}
+            onRenameStage={renameStage}
+            onAddStage={addStage}
+            onDeleteStage={deleteStageHandler}
+          />
+        )}
 
-      <CRMLeadModal
-        showLeadCard={showLeadCard}
-        showCreateLead={showCreateLead}
-        selectedLead={selectedLead}
-        newLead={newLead}
-        tasks={tasks}
-        activities={activities}
-        newTask={newTask}
-        newNote={newNote}
-        statusStages={statusStages}
-        onCloseLeadCard={() => setShowLeadCard(false)}
-        onCloseCreateLead={() => setShowCreateLead(false)}
-        onDeleteLead={deleteLead}
-        onUpdateLeadStatus={updateLeadStatus}
-        onUpdateLead={updateLead}
-        onAddNote={addNote}
-        onAddTask={addTask}
-        onToggleTaskComplete={toggleTaskComplete}
-        onMakeCall={makeCall}
-        setNewNote={setNewNote}
-        setNewTask={setNewTask}
-        setNewLead={setNewLead}
-        onCreateLead={createLead}
-      />
+        {view === 'list' && (
+          <CRMListView leads={filteredLeads} stageLabels={stageLabels} onLeadClick={openLeadCard} />
+        )}
+
+        {view === 'analytics' && <CRMAnalytics />}
+
+        <CRMLeadModal
+          showLeadCard={showLeadCard}
+          showCreateLead={showCreateLead}
+          selectedLead={selectedLead}
+          newLead={newLead}
+          tasks={tasks}
+          activities={activities}
+          newTask={newTask}
+          newNote={newNote}
+          statusStages={statusStages}
+          onCloseLeadCard={() => setShowLeadCard(false)}
+          onCloseCreateLead={() => setShowCreateLead(false)}
+          onDeleteLead={deleteLead}
+          onUpdateLeadStatus={updateLeadStatus}
+          onUpdateLead={updateLead}
+          onAddNote={addNote}
+          onAddTask={addTask}
+          onToggleTaskComplete={toggleTaskComplete}
+          onMakeCall={makeCall}
+          setNewNote={setNewNote}
+          setNewTask={setNewTask}
+          setNewLead={(lead) => setNewLead(lead as typeof newLead)}
+          onCreateLead={createLead}
+        />
       </div>
     </div>
   );

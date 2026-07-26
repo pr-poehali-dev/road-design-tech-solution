@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import Icon from '@/components/ui/icon';
-import { Lead } from './CRMKanban';
+import { Lead, StageDef } from './CRMKanban';
+import { crmApi, Contact, CrmDocument, CustomFieldValue } from '@/lib/crmApi';
 
 export interface Task {
   id: string;
@@ -36,17 +38,17 @@ interface CRMLeadModalProps {
     company: string;
     message: string;
     type: string;
-    status: Lead['status'];
+    status: string;
   };
   tasks: Task[];
   activities: Activity[];
   newTask: { title: string; type: string; dueDate: string };
   newNote: string;
-  statusStages: Array<{ id: string; label: string }>;
+  statusStages: StageDef[];
   onCloseLeadCard: () => void;
   onCloseCreateLead: () => void;
   onDeleteLead: (id: string) => void;
-  onUpdateLeadStatus: (id: string, status: Lead['status']) => void;
+  onUpdateLeadStatus: (id: string, status: string) => void;
   onUpdateLead: (id: string, updates: Record<string, unknown>) => void;
   onAddNote: () => void;
   onAddTask: () => void;
@@ -73,6 +75,7 @@ interface EditFormState {
   email: string;
   phone: string;
   company: string;
+  legal_name: string;
   message: string;
   description: string;
   stage: string;
@@ -108,20 +111,50 @@ export const CRMLeadModal = ({
   onCreateLead
 }: CRMLeadModalProps) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [tab, setTab] = useState<'main' | 'contacts' | 'documents' | 'custom'>('main');
+  const [createFolder, setCreateFolder] = useState(false);
   const [editForm, setEditForm] = useState<EditFormState>({
-    name: '',
-    email: '',
-    phone: '',
-    company: '',
-    message: '',
-    description: '',
-    stage: 'new',
-    deal_amount: '0',
-    revenue: '0',
-    planned_revenue: '0',
-    contract_amount: '0',
-    received_amount: '0',
+    name: '', email: '', phone: '', company: '', legal_name: '', message: '', description: '',
+    stage: 'new', deal_amount: '0', revenue: '0', planned_revenue: '0', contract_amount: '0', received_amount: '0',
   });
+
+  // contacts
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [newContact, setNewContact] = useState({ full_name: '', position_title: '', phone: '', email: '', is_decision_maker: false });
+
+  // documents
+  const [documents, setDocuments] = useState<CrmDocument[]>([]);
+  const [uploading, setUploading] = useState(false);
+
+  // custom fields
+  const [customFields, setCustomFields] = useState<CustomFieldValue[]>([]);
+  const [newFieldLabel, setNewFieldLabel] = useState('');
+
+  // quick task inline (on card view)
+  const [quickTaskOpen, setQuickTaskOpen] = useState(false);
+  const [quickTaskTitle, setQuickTaskTitle] = useState('');
+  const [quickTaskDate, setQuickTaskDate] = useState('');
+
+  const loadRelated = useCallback(async (clientId: number) => {
+    try {
+      const [c, d, f] = await Promise.all([
+        crmApi.getContacts(clientId),
+        crmApi.getDocuments(clientId),
+        crmApi.getCustomFields(),
+      ]);
+      setContacts(c.contacts);
+      setDocuments(d.documents);
+      setCustomFields(f.custom_fields.map((field) => ({ ...field, field_id: field.id, value: null })));
+    } catch {
+      // best-effort — не блокируем карточку
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedLead && showLeadCard) {
+      loadRelated(Number(selectedLead.id));
+    }
+  }, [selectedLead, showLeadCard, loadRelated]);
 
   useEffect(() => {
     if (selectedLead && isEditing) {
@@ -130,6 +163,7 @@ export const CRMLeadModal = ({
         email: selectedLead.email || '',
         phone: selectedLead.phone || '',
         company: selectedLead.company || '',
+        legal_name: selectedLead.legal_name || '',
         message: selectedLead.message || '',
         description: selectedLead.description || '',
         stage: selectedLead.status || 'new',
@@ -145,16 +179,13 @@ export const CRMLeadModal = ({
   useEffect(() => {
     if (!showLeadCard) {
       setIsEditing(false);
+      setTab('main');
+      setQuickTaskOpen(false);
     }
   }, [showLeadCard]);
 
-  const startEditing = () => {
-    setIsEditing(true);
-  };
-
-  const cancelEditing = () => {
-    setIsEditing(false);
-  };
+  const startEditing = () => setIsEditing(true);
+  const cancelEditing = () => setIsEditing(false);
 
   const saveEdits = () => {
     if (!selectedLead) return;
@@ -163,6 +194,7 @@ export const CRMLeadModal = ({
       email: editForm.email,
       phone: editForm.phone,
       company_name: editForm.company,
+      legal_name: editForm.legal_name,
       notes: editForm.message,
       description: editForm.description,
       stage: editForm.stage,
@@ -177,6 +209,63 @@ export const CRMLeadModal = ({
 
   const updateField = (field: keyof EditFormState, value: string) => {
     setEditForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const addContact = async () => {
+    if (!selectedLead || !newContact.full_name.trim()) return;
+    const res = await crmApi.createContact({ client_id: Number(selectedLead.id), ...newContact });
+    setContacts((prev) => [...prev.filter((c) => !newContact.is_decision_maker || !c.is_decision_maker), res.contact]);
+    setNewContact({ full_name: '', position_title: '', phone: '', email: '', is_decision_maker: false });
+  };
+
+  const removeContact = async (id: number) => {
+    await crmApi.deleteContact(id);
+    setContacts((prev) => prev.filter((c) => c.id !== id));
+  };
+
+  const handleFileUpload = async (file: File) => {
+    if (!selectedLead) return;
+    setUploading(true);
+    try {
+      const dataUrl: string = await new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(fr.result as string);
+        fr.onerror = reject;
+        fr.readAsDataURL(file);
+      });
+      const res = await crmApi.uploadDocument({ client_id: Number(selectedLead.id), name: file.name, data: dataUrl, mime: file.type });
+      setDocuments((prev) => [res.document, ...prev]);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeDocument = async (id: number) => {
+    await crmApi.deleteDocument(id);
+    setDocuments((prev) => prev.filter((d) => d.id !== id));
+  };
+
+  const addCustomField = async () => {
+    if (!selectedLead || !newFieldLabel.trim()) return;
+    await crmApi.createCustomField({ label: newFieldLabel.trim() });
+    const res = await crmApi.getCustomFields();
+    setCustomFields(res.custom_fields.map((f) => ({ ...f, field_id: f.id, value: null })));
+    setNewFieldLabel('');
+  };
+
+  const setCustomFieldValue = async (fieldId: number, value: string) => {
+    if (!selectedLead) return;
+    setCustomFields((prev) => prev.map((f) => (f.field_id === fieldId ? { ...f, value } : f)));
+    await crmApi.setCustomFieldValue(Number(selectedLead.id), fieldId, value);
+  };
+
+  const submitQuickTask = async () => {
+    if (!selectedLead || !quickTaskTitle.trim()) return;
+    await crmApi.createQuickTask({ client_id: Number(selectedLead.id), title: quickTaskTitle.trim(), due_date: quickTaskDate || undefined });
+    setQuickTaskTitle('');
+    setQuickTaskDate('');
+    setQuickTaskOpen(false);
+    onUpdateLeadStatus(selectedLead.id, selectedLead.status); // триггерит перезагрузку списка через родителя
   };
 
   return (
@@ -243,7 +332,6 @@ export const CRMLeadModal = ({
                   placeholder="Дополнительная информация..."
                   value={newLead.message}
                   onChange={(e) => setNewLead({ ...newLead, message: e.target.value })}
-                  rows={2}
                   className="text-sm bg-[#1F2833]/70 border-[#45A29E]/30 text-white placeholder:text-[#6B7684]"
                 />
               </div>
@@ -279,13 +367,7 @@ export const CRMLeadModal = ({
                 </div>
                 <div className="flex gap-2">
                   {!isEditing && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={startEditing}
-                      className="text-[#66FCF1] hover:bg-[#45A29E]/15 touch-manipulation w-8 h-8 p-0"
-                      title="Редактировать"
-                    >
+                    <Button variant="ghost" size="sm" onClick={startEditing} className="text-[#66FCF1] hover:bg-[#45A29E]/15 touch-manipulation w-8 h-8 p-0" title="Редактировать">
                       <Icon name="Pencil" size={16} />
                     </Button>
                   )}
@@ -297,13 +379,29 @@ export const CRMLeadModal = ({
                   </Button>
                 </div>
               </div>
+
+              {!isEditing && (
+                <div className="flex gap-1 mt-3">
+                  {(['main', 'contacts', 'documents', 'custom'] as const).map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => setTab(t)}
+                      className={`text-xs px-3 py-1.5 rounded-md transition-colors ${tab === t ? 'bg-[#45A29E] text-[#0B0C10] font-bold' : 'text-[#8B98A5] hover:text-white'}`}
+                    >
+                      {t === 'main' && 'Основное'}
+                      {t === 'contacts' && `Контакты (${contacts.length})`}
+                      {t === 'documents' && `Документы (${documents.length})`}
+                      {t === 'custom' && 'Доп. поля'}
+                    </button>
+                  ))}
+                </div>
+              )}
             </CardHeader>
 
             <CardContent className="p-3 sm:p-4">
               {/* ========== EDIT MODE ========== */}
               {isEditing ? (
                 <div className="space-y-4">
-                  {/* Contact fields */}
                   <div className="bg-[#1F2833]/70 rounded-lg p-3 space-y-3 border border-[#45A29E]/20">
                     <div className="text-xs font-medium text-[#66FCF1] flex items-center gap-1.5">
                       <Icon name="User" size={14} />
@@ -326,10 +424,13 @@ export const CRMLeadModal = ({
                         <label className={labelCls}>Компания</label>
                         <Input value={editForm.company} onChange={(e) => updateField('company', e.target.value)} className={inputCls} />
                       </div>
+                      <div className="space-y-1 sm:col-span-2">
+                        <label className={labelCls}>Юридическое название клиента</label>
+                        <Input value={editForm.legal_name} onChange={(e) => updateField('legal_name', e.target.value)} className={inputCls} placeholder='ООО "Ромашка"' />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Stage */}
                   <div className="bg-[#1F2833]/70 rounded-lg p-3 space-y-2 border border-[#45A29E]/20">
                     <div className="text-xs font-medium text-[#66FCF1] flex items-center gap-1.5">
                       <Icon name="GitBranch" size={14} />
@@ -349,7 +450,6 @@ export const CRMLeadModal = ({
                     </Select>
                   </div>
 
-                  {/* Financial fields */}
                   <div className="bg-[#1F2833]/70 rounded-lg p-3 space-y-3 border border-[#66FCF1]/20">
                     <div className="text-xs font-medium text-[#66FCF1] flex items-center gap-1.5">
                       <Icon name="Banknote" size={14} />
@@ -379,7 +479,6 @@ export const CRMLeadModal = ({
                     </div>
                   </div>
 
-                  {/* Notes & description */}
                   <div className="bg-[#1F2833]/70 rounded-lg p-3 space-y-3 border border-[#45A29E]/20">
                     <div className="text-xs font-medium text-[#66FCF1] flex items-center gap-1.5">
                       <Icon name="FileText" size={14} />
@@ -392,7 +491,6 @@ export const CRMLeadModal = ({
                         onChange={(e) => updateField('description', e.target.value)}
                         rows={3}
                         className="text-sm bg-[#1F2833]/70 border-[#45A29E]/30 text-white placeholder:text-[#6B7684]"
-                        placeholder="Подробное описание сделки..."
                       />
                     </div>
                     <div className="space-y-1">
@@ -407,30 +505,118 @@ export const CRMLeadModal = ({
                     </div>
                   </div>
 
-                  {/* Action buttons */}
                   <div className="flex gap-2 pt-1">
-                    <Button
-                      onClick={saveEdits}
-                      className="flex-1 h-9 bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold touch-manipulation"
-                    >
+                    <Button onClick={saveEdits} className="flex-1 h-9 bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold touch-manipulation">
                       <Icon name="Check" size={16} className="mr-1.5" />
                       Сохранить
                     </Button>
-                    <Button
-                      variant="outline"
-                      onClick={cancelEditing}
-                      className="h-9 touch-manipulation border-[#45A29E]/30 text-[#C5C6C7] hover:bg-[#1F2833]/70"
-                    >
+                    <Button variant="outline" onClick={cancelEditing} className="h-9 touch-manipulation border-[#45A29E]/30 text-[#C5C6C7] hover:bg-[#1F2833]/70">
                       <Icon name="X" size={16} className="mr-1.5" />
                       Отмена
                     </Button>
                   </div>
                 </div>
+              ) : tab === 'contacts' ? (
+                /* ========== CONTACTS TAB ========== */
+                <div className="space-y-3">
+                  <div className="bg-[#1F2833]/70 rounded-lg p-3 space-y-2 border border-[#45A29E]/20">
+                    <div className="text-xs font-medium text-[#66FCF1]">Добавить контактное лицо</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <Input placeholder="ФИО" value={newContact.full_name} onChange={(e) => setNewContact({ ...newContact, full_name: e.target.value })} className={inputCls} />
+                      <Input placeholder="Должность" value={newContact.position_title} onChange={(e) => setNewContact({ ...newContact, position_title: e.target.value })} className={inputCls} />
+                      <Input placeholder="Телефон" value={newContact.phone} onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })} className={inputCls} />
+                      <Input placeholder="Email" value={newContact.email} onChange={(e) => setNewContact({ ...newContact, email: e.target.value })} className={inputCls} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox id="dm" checked={newContact.is_decision_maker} onCheckedChange={(v) => setNewContact({ ...newContact, is_decision_maker: !!v })} />
+                      <label htmlFor="dm" className="text-xs text-[#C5C6C7]">Лицо, принимающее решение (ЛПР)</label>
+                    </div>
+                    <Button onClick={addContact} size="sm" className="h-8 bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold">
+                      <Icon name="Plus" size={14} className="mr-1" /> Добавить
+                    </Button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {contacts.length === 0 && <div className="text-center text-sm text-[#6B7684] py-6">Контактов пока нет</div>}
+                    {contacts.map((c) => (
+                      <div key={c.id} className="flex items-center gap-3 bg-[#1F2833]/50 rounded-lg p-3 border border-[#45A29E]/15">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-white font-medium text-sm">{c.full_name}</span>
+                            {c.is_decision_maker && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#FF6600]/20 text-[#FF6600] font-bold">ЛПР</span>}
+                          </div>
+                          <div className="text-xs text-[#8B98A5]">
+                            {c.position_title && <span>{c.position_title} · </span>}
+                            {c.phone && <span>{c.phone} · </span>}
+                            {c.email}
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={() => removeContact(c.id)} className="h-7 w-7 p-0 text-[#FF4D4D] hover:bg-[#FF4D4D]/15">
+                          <Icon name="Trash2" size={14} />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : tab === 'documents' ? (
+                /* ========== DOCUMENTS TAB ========== */
+                <div className="space-y-3">
+                  <div className="bg-[#1F2833]/70 rounded-lg p-3 border border-[#45A29E]/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Checkbox id="createFolder" checked={createFolder} onCheckedChange={(v) => setCreateFolder(!!v)} />
+                      <label htmlFor="createFolder" className="text-xs text-[#C5C6C7]">
+                        Создать папку в Голографическом депозитарии (Галактический реестр)
+                      </label>
+                    </div>
+                    <label className="flex items-center justify-center gap-2 h-20 rounded-lg border-2 border-dashed border-[#45A29E]/30 text-[#66FCF1] hover:border-[#66FCF1]/60 cursor-pointer transition-colors text-sm">
+                      {uploading ? <Icon name="Loader2" size={18} className="animate-spin" /> : <Icon name="Upload" size={18} />}
+                      {uploading ? 'Загрузка...' : 'Прикрепить файл'}
+                      <input type="file" className="hidden" disabled={uploading} onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])} />
+                    </label>
+                  </div>
+
+                  <div className="space-y-2">
+                    {documents.length === 0 && <div className="text-center text-sm text-[#6B7684] py-6">Документов пока нет</div>}
+                    {documents.map((d) => (
+                      <div key={d.id} className="flex items-center gap-3 bg-[#1F2833]/50 rounded-lg p-3 border border-[#45A29E]/15">
+                        <Icon name="FileText" size={18} className="text-[#66FCF1] shrink-0" />
+                        <a href={d.url} target="_blank" rel="noreferrer" className="flex-1 min-w-0 text-sm text-white hover:text-[#66FCF1] truncate">
+                          {d.name}
+                        </a>
+                        <Button variant="ghost" size="sm" onClick={() => removeDocument(d.id)} className="h-7 w-7 p-0 text-[#FF4D4D] hover:bg-[#FF4D4D]/15">
+                          <Icon name="Trash2" size={14} />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : tab === 'custom' ? (
+                /* ========== CUSTOM FIELDS TAB ========== */
+                <div className="space-y-3">
+                  <div className="bg-[#1F2833]/70 rounded-lg p-3 flex gap-2 border border-[#45A29E]/20">
+                    <Input placeholder="Название нового поля" value={newFieldLabel} onChange={(e) => setNewFieldLabel(e.target.value)} className={inputCls} />
+                    <Button onClick={addCustomField} size="sm" className="h-9 bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold shrink-0">
+                      <Icon name="Plus" size={14} />
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {customFields.length === 0 && <div className="text-center text-sm text-[#6B7684] py-6">Дополнительных полей пока нет</div>}
+                    {customFields.map((f) => (
+                      <div key={f.field_id} className="space-y-1">
+                        <label className={labelCls}>{f.label}</label>
+                        <Input
+                          value={f.value || ''}
+                          onChange={(e) => setCustomFieldValue(f.field_id, e.target.value)}
+                          className={inputCls}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
               ) : (
-                /* ========== VIEW MODE ========== */
+                /* ========== VIEW MODE (main) ========== */
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                   <div className="lg:col-span-2 space-y-4">
-                    {/* Contacts */}
                     <div className="bg-[#1F2833]/70 rounded-lg p-3 space-y-2 border border-[#45A29E]/20">
                       <div className="text-xs font-medium text-[#66FCF1]">Контакты</div>
                       <div className="space-y-1">
@@ -442,25 +628,23 @@ export const CRMLeadModal = ({
                           <div className="text-sm flex items-center gap-2 text-white">
                             <Icon name="Phone" size={14} className="text-[#66FCF1]" />
                             {selectedLead.phone}
-                            <Button
-                              size="sm"
-                              onClick={() => onMakeCall(selectedLead.phone)}
-                              className="ml-auto h-6 text-xs bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold touch-manipulation"
-                            >
+                            <Button size="sm" onClick={() => onMakeCall(selectedLead.phone)} className="ml-auto h-6 text-xs bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold touch-manipulation">
                               Позвонить
                             </Button>
+                          </div>
+                        )}
+                        {selectedLead.legal_name && (
+                          <div className="text-sm flex items-center gap-2 text-white">
+                            <Icon name="Landmark" size={14} className="text-[#66FCF1]" />
+                            {selectedLead.legal_name}
                           </div>
                         )}
                       </div>
                     </div>
 
-                    {/* Stage */}
                     <div className="bg-[#1F2833]/70 rounded-lg p-3 space-y-2 border border-[#45A29E]/20">
                       <div className="text-xs font-medium text-[#66FCF1]">Этап сделки</div>
-                      <Select
-                        value={selectedLead.status}
-                        onValueChange={(value) => onUpdateLeadStatus(selectedLead.id, value as Lead['status'])}
-                      >
+                      <Select value={selectedLead.status} onValueChange={(value) => onUpdateLeadStatus(selectedLead.id, value)}>
                         <SelectTrigger className="h-9 bg-[#1F2833]/70 border-[#45A29E]/30 text-white">
                           <SelectValue />
                         </SelectTrigger>
@@ -474,7 +658,6 @@ export const CRMLeadModal = ({
                       </Select>
                     </div>
 
-                    {/* Revenue cards */}
                     <div className="bg-[#1F2833]/70 rounded-lg p-3 space-y-2 border border-[#66FCF1]/20">
                       <div className="text-xs font-medium text-[#66FCF1] flex items-center gap-1.5">
                         <Icon name="Banknote" size={14} />
@@ -506,7 +689,6 @@ export const CRMLeadModal = ({
                       </div>
                     </div>
 
-                    {/* Description */}
                     {selectedLead.description && (
                       <div className="bg-[#1F2833]/70 rounded-lg p-3 space-y-2 border border-[#45A29E]/20">
                         <div className="text-xs font-medium text-[#66FCF1]">Описание</div>
@@ -514,7 +696,6 @@ export const CRMLeadModal = ({
                       </div>
                     )}
 
-                    {/* Notes */}
                     {selectedLead.message && (
                       <div className="bg-[#1F2833]/70 rounded-lg p-3 space-y-2 border border-[#45A29E]/20">
                         <div className="text-xs font-medium text-[#66FCF1]">Примечание</div>
@@ -522,7 +703,6 @@ export const CRMLeadModal = ({
                       </div>
                     )}
 
-                    {/* Add note */}
                     <div className="space-y-2">
                       <div className="text-xs font-medium text-[#66FCF1]">Добавить примечание</div>
                       <Textarea
@@ -540,64 +720,61 @@ export const CRMLeadModal = ({
 
                   {/* ---- RIGHT SIDEBAR ---- */}
                   <div className="space-y-4">
-                    {/* Tasks */}
                     <div className="bg-[#1F2833]/70 rounded-lg p-3 border border-[#45A29E]/20">
-                      <div className="text-xs font-medium text-[#66FCF1] mb-2">Задачи</div>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-xs font-medium text-[#66FCF1]">Задачи</div>
+                        <Button variant="ghost" size="sm" onClick={() => setQuickTaskOpen(!quickTaskOpen)} className="h-6 w-6 p-0 text-[#66FCF1]">
+                          <Icon name="Plus" size={14} />
+                        </Button>
+                      </div>
+                      {quickTaskOpen && (
+                        <div className="space-y-1.5 mb-3 bg-[#0B0C10]/40 rounded-md p-2">
+                          <Input placeholder="Быстрая задача..." value={quickTaskTitle} onChange={(e) => setQuickTaskTitle(e.target.value)} className={`${inputCls} h-8 text-xs`} />
+                          <Input type="datetime-local" value={quickTaskDate} onChange={(e) => setQuickTaskDate(e.target.value)} className={`${inputCls} h-8 text-xs`} />
+                          <Button onClick={submitQuickTask} size="sm" className="h-7 w-full bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold text-xs">
+                            Создать
+                          </Button>
+                        </div>
+                      )}
                       <div className="space-y-2 mb-3">
                         {tasks.filter(t => t.leadId === selectedLead.id && !t.completed).map(task => (
                           <div key={task.id} className="flex items-start gap-2 text-sm">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-4 w-4 p-0 touch-manipulation"
-                              onClick={() => onToggleTaskComplete(task.id)}
-                            >
-                              <Icon name="Circle" size={14} className="text-[#66FCF1]" />
+                            <Button variant="ghost" size="sm" className="h-4 w-4 p-0 touch-manipulation" onClick={() => onToggleTaskComplete(task.id)}>
+                              <Icon name="Circle" size={14} className="text-[#45A29E]" />
                             </Button>
-                            <div className="flex-1">
-                              <div className="text-xs text-white">{task.title}</div>
-                              <div className="text-xs text-[#8B98A5]">
-                                {new Date(task.dueDate).toLocaleDateString('ru-RU')}
-                              </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-white text-xs">{task.title}</div>
+                              {task.dueDate && <div className="text-[10px] text-[#8B98A5]">{new Date(task.dueDate).toLocaleDateString('ru-RU')}</div>}
                             </div>
                           </div>
                         ))}
-                        {tasks.filter(t => t.leadId === selectedLead.id && !t.completed).length === 0 && (
-                          <div className="text-xs text-[#6B7684]">Нет задач</div>
+                        {tasks.filter(t => t.leadId === selectedLead.id && !t.completed).length === 0 && !quickTaskOpen && (
+                          <div className="text-xs text-[#6B7684]">Нет открытых задач</div>
                         )}
                       </div>
-                      <Input
-                        placeholder="Новая задача..."
-                        value={newTask.title}
-                        onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                        className="h-8 text-xs mb-2 bg-[#1F2833]/70 border-[#45A29E]/30 text-white placeholder:text-[#6B7684]"
-                      />
-                      <Input
-                        type="date"
-                        value={newTask.dueDate}
-                        onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
-                        className="h-8 text-xs mb-2 bg-[#1F2833]/70 border-[#45A29E]/30 text-white"
-                      />
-                      <Button onClick={onAddTask} size="sm" className="w-full h-7 text-xs bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold touch-manipulation">
-                        Добавить задачу
-                      </Button>
+                      <div className="flex gap-1.5 mb-2">
+                        <Input placeholder="Заголовок задачи" value={newTask.title} onChange={(e) => setNewTask({ ...newTask, title: e.target.value })} className={`${inputCls} h-8 text-xs`} />
+                      </div>
+                      <div className="flex gap-1.5">
+                        <Input type="date" value={newTask.dueDate} onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })} className={`${inputCls} h-8 text-xs flex-1`} />
+                        <Button onClick={onAddTask} size="sm" className="h-8 bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold text-xs shrink-0">
+                          <Icon name="Plus" size={12} />
+                        </Button>
+                      </div>
                     </div>
 
-                    {/* Activities */}
                     <div className="bg-[#1F2833]/70 rounded-lg p-3 border border-[#45A29E]/20">
-                      <div className="text-xs font-medium text-[#66FCF1] mb-2">История</div>
+                      <div className="text-xs font-medium text-[#66FCF1] mb-2">Активности</div>
                       <div className="space-y-2 max-h-64 overflow-y-auto">
-                        {activities
-                          .filter(a => a.leadId === selectedLead.id)
-                          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                          .map(activity => (
-                            <div key={activity.id} className="text-xs">
-                              <div className="text-white">{activity.description}</div>
-                              <div className="text-[#8B98A5] text-xs">
-                                {new Date(activity.createdAt).toLocaleString('ru-RU')}
-                              </div>
-                            </div>
-                          ))}
+                        {activities.filter(a => a.leadId === selectedLead.id).slice().reverse().map(a => (
+                          <div key={a.id} className="text-xs text-[#8B98A5] border-l-2 border-[#45A29E]/30 pl-2">
+                            <div className="text-white">{a.description}</div>
+                            <div className="text-[10px]">{new Date(a.createdAt).toLocaleString('ru-RU')}</div>
+                          </div>
+                        ))}
+                        {activities.filter(a => a.leadId === selectedLead.id).length === 0 && (
+                          <div className="text-xs text-[#6B7684]">Пока нет активностей</div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -610,5 +787,3 @@ export const CRMLeadModal = ({
     </>
   );
 };
-
-export default CRMLeadModal;

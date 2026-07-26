@@ -6,6 +6,7 @@ interface CRMHeaderProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   onCreateLead: () => void;
+  onQuickCreateLead: () => void;
   onToggleColorPicker: () => void;
   onLogout: () => void;
   totalLeads: number;
@@ -16,6 +17,10 @@ interface CRMHeaderProps {
   totalPlanned: number;
   totalContracts: number;
   totalReceived: number;
+  view: 'kanban' | 'list' | 'analytics';
+  onChangeView: (v: 'kanban' | 'list' | 'analytics') => void;
+  onExport: () => void;
+  onImportClick: () => void;
 }
 
 const formatMillions = (value: number) => `${(value / 1_000_000).toFixed(1)}M`;
@@ -24,6 +29,7 @@ export const CRMHeader = ({
   searchQuery,
   setSearchQuery,
   onCreateLead,
+  onQuickCreateLead,
   onToggleColorPicker,
   onLogout,
   totalLeads,
@@ -34,6 +40,10 @@ export const CRMHeader = ({
   totalPlanned,
   totalContracts,
   totalReceived,
+  view,
+  onChangeView,
+  onExport,
+  onImportClick,
 }: CRMHeaderProps) => {
   const goHome = () => {
     window.location.href = '/ecosystem';
@@ -48,12 +58,21 @@ export const CRMHeader = ({
       <header className="border-b border-[#45A29E]/30 bg-[#0B0C10]/80 backdrop-blur-lg sticky top-0 z-40">
         <div className="px-4 py-3">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
+            <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto flex-wrap">
               <h1 className="font-heading font-bold text-lg sm:text-xl text-white tracking-wide">DEOD CRM</h1>
+              <Button
+                onClick={onQuickCreateLead}
+                size="sm"
+                className="bg-[#FF6600] hover:bg-[#e65c00] text-[#0B0C10] font-bold h-8 text-xs ml-auto sm:ml-0 touch-manipulation shadow-[0_0_15px_rgba(255,102,0,0.25)]"
+                title="Быстро создать сделку по одному названию"
+              >
+                <Icon name="Zap" size={14} className="mr-1" />
+                <span className="hidden sm:inline">Быстро</span>
+              </Button>
               <Button
                 onClick={onCreateLead}
                 size="sm"
-                className="bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold h-8 text-xs ml-auto sm:ml-0 touch-manipulation shadow-[0_0_15px_rgba(102,252,241,0.25)]"
+                className="bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold h-8 text-xs touch-manipulation shadow-[0_0_15px_rgba(102,252,241,0.25)]"
               >
                 <Icon name="Plus" size={14} className="mr-1" />
                 <span className="hidden sm:inline">Новая сделка</span>
@@ -67,6 +86,26 @@ export const CRMHeader = ({
               >
                 <Icon name="Palette" size={14} />
               </Button>
+              <div className="flex gap-1 p-1 rounded-lg bg-[#1F2833]/60 border border-[#45A29E]/20">
+                <button
+                  onClick={() => onChangeView('kanban')}
+                  className={`h-6 px-2 rounded text-xs flex items-center gap-1 ${view === 'kanban' ? 'bg-[#45A29E] text-[#0B0C10] font-bold' : 'text-[#8B98A5]'}`}
+                >
+                  <Icon name="Columns3" size={12} /> Воронка
+                </button>
+                <button
+                  onClick={() => onChangeView('list')}
+                  className={`h-6 px-2 rounded text-xs flex items-center gap-1 ${view === 'list' ? 'bg-[#45A29E] text-[#0B0C10] font-bold' : 'text-[#8B98A5]'}`}
+                >
+                  <Icon name="List" size={12} /> Список
+                </button>
+                <button
+                  onClick={() => onChangeView('analytics')}
+                  className={`h-6 px-2 rounded text-xs flex items-center gap-1 ${view === 'analytics' ? 'bg-[#45A29E] text-[#0B0C10] font-bold' : 'text-[#8B98A5]'}`}
+                >
+                  <Icon name="BarChart3" size={12} /> Аналитика
+                </button>
+              </div>
             </div>
             <div className="flex gap-2 items-center w-full sm:w-auto">
               <div className="relative flex-1 sm:flex-initial">
@@ -78,6 +117,12 @@ export const CRMHeader = ({
                   className="pl-8 w-full sm:w-48 h-8 text-sm bg-[#1F2833]/70 border-[#45A29E]/30 text-white placeholder:text-[#6B7684]"
                 />
               </div>
+              <Button onClick={onImportClick} size="sm" variant="outline" className="h-8 border-[#45A29E]/30 text-[#66FCF1] hover:bg-[#45A29E]/10 touch-manipulation" title="Импорт из Excel">
+                <Icon name="Upload" size={14} />
+              </Button>
+              <Button onClick={onExport} size="sm" variant="outline" className="h-8 border-[#45A29E]/30 text-[#66FCF1] hover:bg-[#45A29E]/10 touch-manipulation" title="Экспорт в Excel">
+                <Icon name="Download" size={14} />
+              </Button>
               <Button
                 onClick={goToEcosystem}
                 size="sm"
