@@ -13,6 +13,8 @@ const isOverdue = (dueDate?: string, status?: string) => {
 };
 
 const fmtDate = (d?: string) => (d ? new Date(d).toLocaleDateString('ru-RU') : '—');
+const fmtDateTime = (d?: string) =>
+  d ? new Date(d).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
 
 export const CRMListView = ({ leads, stageLabels, onLeadClick }: CRMListViewProps) => {
   return (
@@ -53,10 +55,10 @@ export const CRMListView = ({ leads, stageLabels, onLeadClick }: CRMListViewProp
                 <td className="py-2.5 px-3">
                   {overdue ? (
                     <span className="flex items-center gap-1 text-xs text-[#FF9B9B] font-bold">
-                      <Icon name="AlertTriangle" size={12} /> {fmtDate(lead.open_task_due_date)}
+                      <Icon name="AlertTriangle" size={12} /> {fmtDateTime(lead.open_task_due_date)}
                     </span>
                   ) : (
-                    <span className="text-xs text-[#8B98A5]">{fmtDate(lead.open_task_due_date || lead.next_action_at)}</span>
+                    <span className="text-xs text-[#8B98A5]">{fmtDateTime(lead.open_task_due_date || lead.next_action_at)}</span>
                   )}
                 </td>
                 <td className="py-2.5 px-3 text-right font-mono text-[#66FCF1]">

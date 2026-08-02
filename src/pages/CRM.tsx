@@ -33,7 +33,6 @@ const CRM = () => {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showLeadCard, setShowLeadCard] = useState(false);
   const [showCreateLead, setShowCreateLead] = useState(false);
-  const [newTask, setNewTask] = useState({ title: '', type: 'call', dueDate: '' });
   const [newNote, setNewNote] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [newLead, setNewLead] = useState({
@@ -215,7 +214,7 @@ const CRM = () => {
   };
 
   const openCreateLeadModal = (status?: string) => {
-    setNewLead({ ...newLead, status: status || 'new' });
+    setNewLead({ ...newLead, status: status || statusStages[0]?.id || 'new' });
     setShowCreateLead(true);
   };
 
@@ -348,17 +347,6 @@ const CRM = () => {
   const openLeadCard = (lead: Lead) => {
     setSelectedLead(lead);
     setShowLeadCard(true);
-  };
-
-  const addTask = async () => {
-    if (!selectedLead || !newTask.title) return;
-    try {
-      await crmApi.createQuickTask({ client_id: Number(selectedLead.id), title: newTask.title, due_date: newTask.dueDate || undefined });
-      setNewTask({ title: '', type: 'call', dueDate: '' });
-      await loadData();
-    } catch (error) {
-      console.error('Error adding task:', error);
-    }
   };
 
   const addNote = async () => {
@@ -610,7 +598,6 @@ const CRM = () => {
           newLead={newLead}
           tasks={tasks}
           activities={activities}
-          newTask={newTask}
           newNote={newNote}
           statusStages={statusStages}
           onCloseLeadCard={() => setShowLeadCard(false)}
@@ -619,11 +606,9 @@ const CRM = () => {
           onUpdateLeadStatus={updateLeadStatus}
           onUpdateLead={updateLead}
           onAddNote={addNote}
-          onAddTask={addTask}
           onToggleTaskComplete={toggleTaskComplete}
           onMakeCall={makeCall}
           setNewNote={setNewNote}
-          setNewTask={setNewTask}
           setNewLead={(lead) => setNewLead(lead as typeof newLead)}
           onCreateLead={createLead}
         />

@@ -517,7 +517,7 @@ def create_client(conn, partner_id, body):
             d.get('legal_name') or '',
             d.get('email', ''),
             d.get('phone', ''),
-            d.get('stage', 'lead'),
+            d.get('stage') or 'new',
             d.get('deal_amount', 0),
             d.get('notes', ''),
             d.get('description', ''),

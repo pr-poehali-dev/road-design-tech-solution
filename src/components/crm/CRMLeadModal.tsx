@@ -42,7 +42,6 @@ interface CRMLeadModalProps {
   };
   tasks: Task[];
   activities: Activity[];
-  newTask: { title: string; type: string; dueDate: string };
   newNote: string;
   statusStages: StageDef[];
   onCloseLeadCard: () => void;
@@ -51,11 +50,9 @@ interface CRMLeadModalProps {
   onUpdateLeadStatus: (id: string, status: string) => void;
   onUpdateLead: (id: string, updates: Record<string, unknown>) => void;
   onAddNote: () => void;
-  onAddTask: () => void;
   onToggleTaskComplete: (taskId: string) => void;
   onMakeCall: (phone?: string) => void;
   setNewNote: (note: string) => void;
-  setNewTask: (task: { title: string; type: string; dueDate: string }) => void;
   setNewLead: (lead: Record<string, unknown>) => void;
   onCreateLead: () => void;
 }
@@ -65,6 +62,11 @@ const formatCurrency = (value: number | undefined | null): string => {
   if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(2)}M`;
   if (num >= 1_000) return `${(num / 1_000).toFixed(1)}K`;
   return num.toLocaleString('ru-RU');
+};
+
+const isTaskOverdue = (dueDate?: string): boolean => {
+  if (!dueDate) return false;
+  return new Date(dueDate).getTime() < Date.now();
 };
 
 const inputCls = 'h-9 bg-[#1F2833]/70 border-[#45A29E]/30 text-white placeholder:text-[#6B7684] focus:border-[#66FCF1]/60 focus:ring-[#66FCF1]/20';
@@ -93,7 +95,6 @@ export const CRMLeadModal = ({
   newLead,
   tasks,
   activities,
-  newTask,
   newNote,
   statusStages,
   onCloseLeadCard,
@@ -102,11 +103,9 @@ export const CRMLeadModal = ({
   onUpdateLeadStatus,
   onUpdateLead,
   onAddNote,
-  onAddTask,
   onToggleTaskComplete,
   onMakeCall,
   setNewNote,
-  setNewTask,
   setNewLead,
   onCreateLead
 }: CRMLeadModalProps) => {
@@ -129,8 +128,7 @@ export const CRMLeadModal = ({
   const [customFields, setCustomFields] = useState<CustomFieldValue[]>([]);
   const [newFieldLabel, setNewFieldLabel] = useState('');
 
-  // quick task inline (on card view)
-  const [quickTaskOpen, setQuickTaskOpen] = useState(false);
+  // быстрое создание манёвра (задачи)
   const [quickTaskTitle, setQuickTaskTitle] = useState('');
   const [quickTaskDate, setQuickTaskDate] = useState('');
 
@@ -179,7 +177,6 @@ export const CRMLeadModal = ({
     if (!showLeadCard) {
       setIsEditing(false);
       setTab('main');
-      setQuickTaskOpen(false);
     }
   }, [showLeadCard]);
 
@@ -259,11 +256,10 @@ export const CRMLeadModal = ({
   };
 
   const submitQuickTask = async () => {
-    if (!selectedLead || !quickTaskTitle.trim()) return;
-    await crmApi.createQuickTask({ client_id: Number(selectedLead.id), title: quickTaskTitle.trim(), due_date: quickTaskDate || undefined });
+    if (!selectedLead || !quickTaskTitle.trim() || !quickTaskDate) return;
+    await crmApi.createQuickTask({ client_id: Number(selectedLead.id), title: quickTaskTitle.trim(), due_date: quickTaskDate });
     setQuickTaskTitle('');
     setQuickTaskDate('');
-    setQuickTaskOpen(false);
     onUpdateLeadStatus(selectedLead.id, selectedLead.status); // триггерит перезагрузку списка через родителя
   };
 
@@ -719,56 +715,69 @@ export const CRMLeadModal = ({
                   <div className="space-y-4">
                     <div className="bg-[#1F2833]/70 rounded-lg p-3 border border-[#45A29E]/20">
                       <div className="flex items-center justify-between mb-2">
-                        <div className="text-xs font-medium text-[#66FCF1]">Задачи</div>
-                        <Button variant="ghost" size="sm" onClick={() => setQuickTaskOpen(!quickTaskOpen)} className="h-6 w-6 p-0 text-[#66FCF1]">
-                          <Icon name="Plus" size={14} />
+                        <div className="text-xs font-medium text-[#66FCF1] flex items-center gap-1.5">
+                          <Icon name="Rocket" size={13} />
+                          Манёвры
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5 mb-3 bg-[#0B0C10]/40 rounded-md p-2">
+                        <Input placeholder="Название манёвра..." value={quickTaskTitle} onChange={(e) => setQuickTaskTitle(e.target.value)} className={`${inputCls} h-8 text-xs`} />
+                        <Input
+                          type="datetime-local"
+                          value={quickTaskDate}
+                          onChange={(e) => setQuickTaskDate(e.target.value)}
+                          className={`${inputCls} h-8 text-xs`}
+                          placeholder="Срок выполнения"
+                        />
+                        <Button
+                          onClick={submitQuickTask}
+                          size="sm"
+                          disabled={!quickTaskTitle.trim() || !quickTaskDate}
+                          className="h-7 w-full bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold text-xs disabled:opacity-40"
+                        >
+                          <Icon name="Plus" size={12} className="mr-1" />
+                          Поставить манёвр
                         </Button>
                       </div>
-                      {quickTaskOpen && (
-                        <div className="space-y-1.5 mb-3 bg-[#0B0C10]/40 rounded-md p-2">
-                          <Input placeholder="Быстрая задача..." value={quickTaskTitle} onChange={(e) => setQuickTaskTitle(e.target.value)} className={`${inputCls} h-8 text-xs`} />
-                          <Input type="datetime-local" value={quickTaskDate} onChange={(e) => setQuickTaskDate(e.target.value)} className={`${inputCls} h-8 text-xs`} />
-                          <Button onClick={submitQuickTask} size="sm" className="h-7 w-full bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold text-xs">
-                            Создать
-                          </Button>
-                        </div>
-                      )}
-                      <div className="space-y-2 mb-3">
+
+                      <div className="space-y-2 mb-1">
                         {tasks.filter(t => t.leadId === selectedLead.id && !t.completed).map(task => (
                           <div key={task.id} className="flex items-start gap-2 text-sm">
-                            <Button variant="ghost" size="sm" className="h-4 w-4 p-0 touch-manipulation" onClick={() => onToggleTaskComplete(task.id)}>
+                            <Button variant="ghost" size="sm" className="h-4 w-4 p-0 touch-manipulation mt-0.5" onClick={() => onToggleTaskComplete(task.id)}>
                               <Icon name="Circle" size={14} className="text-[#45A29E]" />
                             </Button>
                             <div className="flex-1 min-w-0">
                               <div className="text-white text-xs">{task.title}</div>
-                              {task.dueDate && <div className="text-[10px] text-[#8B98A5]">{new Date(task.dueDate).toLocaleDateString('ru-RU')}</div>}
+                              {task.dueDate && (
+                                <div className={`text-[10px] flex items-center gap-1 ${isTaskOverdue(task.dueDate) ? 'text-[#FF9B9B] font-semibold' : 'text-[#8B98A5]'}`}>
+                                  <Icon name="Clock" size={10} />
+                                  до {new Date(task.dueDate).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                              )}
                             </div>
                           </div>
                         ))}
-                        {tasks.filter(t => t.leadId === selectedLead.id && !t.completed).length === 0 && !quickTaskOpen && (
-                          <div className="text-xs text-[#6B7684]">Нет открытых задач</div>
+                        {tasks.filter(t => t.leadId === selectedLead.id && !t.completed).length === 0 && (
+                          <div className="text-xs text-[#6B7684]">Нет активных манёвров</div>
                         )}
-                      </div>
-                      <div className="flex gap-1.5 mb-2">
-                        <Input placeholder="Заголовок задачи" value={newTask.title} onChange={(e) => setNewTask({ ...newTask, title: e.target.value })} className={`${inputCls} h-8 text-xs`} />
-                      </div>
-                      <div className="flex gap-1.5">
-                        <Input type="date" value={newTask.dueDate} onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })} className={`${inputCls} h-8 text-xs flex-1`} />
-                        <Button onClick={onAddTask} size="sm" className="h-8 bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold text-xs shrink-0">
-                          <Icon name="Plus" size={12} />
-                        </Button>
                       </div>
 
                       {tasks.filter(t => t.leadId === selectedLead.id && t.completed).length > 0 && (
                         <div className="mt-3 pt-3 border-t border-[#45A29E]/15">
-                          <div className="text-[10px] font-medium text-[#6B7684] uppercase tracking-wider mb-1.5">История задач</div>
+                          <div className="text-[10px] font-medium text-[#6B7684] uppercase tracking-wider mb-1.5">История манёвров</div>
                           <div className="space-y-1.5 max-h-40 overflow-y-auto">
                             {tasks.filter(t => t.leadId === selectedLead.id && t.completed).map(task => (
                               <div key={task.id} className="flex items-start gap-2 text-xs">
                                 <Icon name="CheckCircle2" size={13} className="text-[#5eead4] mt-0.5 shrink-0" />
                                 <div className="flex-1 min-w-0">
                                   <div className="text-[#8B98A5] line-through">{task.title}</div>
-                                  {task.dueDate && <div className="text-[10px] text-[#6B7684]">{new Date(task.dueDate).toLocaleDateString('ru-RU')}</div>}
+                                  {task.dueDate && (
+                                    <div className="text-[10px] text-[#6B7684] flex items-center gap-1">
+                                      <Icon name="Clock" size={10} />
+                                      до {new Date(task.dueDate).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             ))}

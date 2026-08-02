@@ -107,9 +107,17 @@ const DealCard = ({ lead, onLeadClick }: { lead: Lead; onLeadClick: (lead: Lead)
           </div>
         )}
         {lead.open_task_title && (
-          <div className={`flex items-center gap-1.5 mt-1.5 rounded-md px-1.5 py-1 ${overdue ? 'bg-[#FF4D4D]/15 text-[#FF9B9B]' : 'bg-[#45A29E]/10 text-[#66FCF1]'}`}>
-            <Icon name={overdue ? 'AlertTriangle' : 'ListTodo'} size={12} className="shrink-0" />
-            <span className="truncate text-[10px]">{lead.open_task_title}</span>
+          <div className={`flex flex-col gap-0.5 mt-1.5 rounded-md px-1.5 py-1 ${overdue ? 'bg-[#FF4D4D]/15 text-[#FF9B9B]' : 'bg-[#45A29E]/10 text-[#66FCF1]'}`}>
+            <div className="flex items-center gap-1.5">
+              <Icon name={overdue ? 'AlertTriangle' : 'Rocket'} size={12} className="shrink-0" />
+              <span className="truncate text-[10px] font-medium">{lead.open_task_title}</span>
+            </div>
+            {lead.open_task_due_date && (
+              <div className="flex items-center gap-1 text-[9px] pl-[18px] opacity-90">
+                <Icon name="Clock" size={9} />
+                до {new Date(lead.open_task_due_date).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+              </div>
+            )}
           </div>
         )}
         <div className="text-[#6B7684] text-[10px] mt-1.5">
