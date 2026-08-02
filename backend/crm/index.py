@@ -530,17 +530,8 @@ def create_client(conn, partner_id, body):
 
         result = cur.fetchone()
 
-        if d.get('create_folder') and (d.get('legal_name') or d.get('company_name')):
-            folder_name = d.get('legal_name') or d.get('company_name')
-            cur.execute("SELECT id FROM depo_folders WHERE name = 'Галактический реестр' AND parent_id IS NULL LIMIT 1")
-            root = cur.fetchone()
-            root_id = root['id'] if root else None
-            cur.execute(
-                "INSERT INTO depo_folders (name, parent_id, kind) VALUES (%s, %s, 'folder') RETURNING id",
-                (folder_name, root_id),
-            )
-            folder = cur.fetchone()
-            cur.execute("UPDATE crm_clients SET depo_folder_id = %s WHERE id = %s", (folder['id'], result['id']))
+        # Папка в депозитарии создаётся автоматически для каждой сделки сразу при создании
+        _ensure_client_folder(cur, result['id'], partner_id)
 
         conn.commit()
 
@@ -594,8 +585,34 @@ def bulk_import_clients(conn, partner_id, body):
     return ok_response({'success': True, 'imported': inserted})
 
 
+def _ensure_client_folder(cur, client_id, partner_id):
+    """Создаёт папку в 'Галактический реестр' для сделки, если её ещё нет. Возвращает folder_id."""
+    cur.execute(
+        "SELECT legal_name, company_name, depo_folder_id FROM crm_clients WHERE id = %s AND partner_id = %s",
+        (client_id, partner_id),
+    )
+    client = cur.fetchone()
+    if not client:
+        return None
+    if client['depo_folder_id']:
+        return client['depo_folder_id']
+
+    folder_name = client['legal_name'] or client['company_name'] or f'Сделка #{client_id}'
+    cur.execute("SELECT id FROM depo_folders WHERE name = 'Галактический реестр' AND parent_id IS NULL LIMIT 1")
+    root = cur.fetchone()
+    root_id = root['id'] if root else None
+    cur.execute(
+        "INSERT INTO depo_folders (name, parent_id, kind) VALUES (%s, %s, 'folder') RETURNING id",
+        (folder_name, root_id),
+    )
+    folder_id = cur.fetchone()['id']
+    cur.execute("UPDATE crm_clients SET depo_folder_id = %s WHERE id = %s", (folder_id, client_id))
+    return folder_id
+
+
 def update_client(conn, partner_id, body):
-    """Обновить клиента — все поля включая revenue-поля"""
+    """Обновить клиента — все поля включая revenue-поля.
+    При смене этапа (stage) автоматически создаётся папка сделки в депозитарии, если её ещё нет."""
     client_id = body.get('id')
     updates = body.get('updates', {})
 
@@ -626,11 +643,13 @@ def update_client(conn, partner_id, body):
     set_clause = ', '.join(f"{key} = %s" for key in filtered)
     values = list(filtered.values()) + [client_id, partner_id]
 
-    with conn.cursor() as cur:
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute(
             f"UPDATE crm_clients SET {set_clause} WHERE id = %s AND partner_id = %s",
             values,
         )
+        if 'stage' in filtered:
+            _ensure_client_folder(cur, client_id, partner_id)
         conn.commit()
 
     return ok_response({'success': True})
@@ -1226,26 +1245,9 @@ def create_document(conn, partner_id, body):
         return error_response('client_id, name and url are required', 400)
 
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
-        cur.execute(
-            "SELECT legal_name, company_name, depo_folder_id FROM crm_clients WHERE id = %s AND partner_id = %s",
-            (client_id, partner_id),
-        )
-        client = cur.fetchone()
-        if not client:
+        folder_id = _ensure_client_folder(cur, client_id, partner_id)
+        if folder_id is None:
             return error_response('Client not found', 404)
-
-        folder_id = client['depo_folder_id']
-        if not folder_id:
-            folder_name = client['legal_name'] or client['company_name'] or f'Сделка #{client_id}'
-            cur.execute("SELECT id FROM depo_folders WHERE name = 'Галактический реестр' AND parent_id IS NULL LIMIT 1")
-            root = cur.fetchone()
-            root_id = root['id'] if root else None
-            cur.execute(
-                "INSERT INTO depo_folders (name, parent_id, kind) VALUES (%s, %s, 'folder') RETURNING id",
-                (folder_name, root_id),
-            )
-            folder_id = cur.fetchone()['id']
-            cur.execute("UPDATE crm_clients SET depo_folder_id = %s WHERE id = %s", (folder_id, client_id))
 
         cur.execute("""
             INSERT INTO crm_documents (client_id, partner_id, depo_file_id, name, url, mime, size_bytes, uploaded_by)
@@ -1290,26 +1292,9 @@ def upload_document(conn, partner_id, body):
         return error_response('Файл превышает 30 МБ', 400)
 
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
-        cur.execute(
-            "SELECT legal_name, company_name, depo_folder_id FROM crm_clients WHERE id = %s AND partner_id = %s",
-            (client_id, partner_id),
-        )
-        client = cur.fetchone()
-        if not client:
+        folder_id = _ensure_client_folder(cur, client_id, partner_id)
+        if folder_id is None:
             return error_response('Client not found', 404)
-
-        folder_id = client['depo_folder_id']
-        if not folder_id:
-            folder_name = client['legal_name'] or client['company_name'] or f'Сделка #{client_id}'
-            cur.execute("SELECT id FROM depo_folders WHERE name = 'Галактический реестр' AND parent_id IS NULL LIMIT 1")
-            root = cur.fetchone()
-            root_id = root['id'] if root else None
-            cur.execute(
-                "INSERT INTO depo_folders (name, parent_id, kind) VALUES (%s, %s, 'folder') RETURNING id",
-                (folder_name, root_id),
-            )
-            folder_id = cur.fetchone()['id']
-            cur.execute("UPDATE crm_clients SET depo_folder_id = %s WHERE id = %s", (folder_id, client_id))
 
         ext = name.rsplit('.', 1)[-1].lower()[:8] if '.' in name else ''
         key = f"depository/{uuid.uuid4().hex}{('.' + ext) if ext else ''}"

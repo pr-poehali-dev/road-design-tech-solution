@@ -126,7 +126,7 @@ const CRM = () => {
         const clientsData = await clientsResponse.json();
         if (clientsData.clients) {
           const mappedLeads = clientsData.clients.map((client: Record<string, unknown>) => ({
-            id: client.id,
+            id: String(client.id),
             name: client.contact_name || '',
             email: client.email || '',
             phone: client.phone || '',

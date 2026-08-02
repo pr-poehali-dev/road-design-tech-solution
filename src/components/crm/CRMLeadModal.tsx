@@ -112,7 +112,6 @@ export const CRMLeadModal = ({
 }: CRMLeadModalProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [tab, setTab] = useState<'main' | 'contacts' | 'documents' | 'custom'>('main');
-  const [createFolder, setCreateFolder] = useState(false);
   const [editForm, setEditForm] = useState<EditFormState>({
     name: '', email: '', phone: '', company: '', legal_name: '', message: '', description: '',
     stage: 'new', deal_amount: '0', revenue: '0', planned_revenue: '0', contract_amount: '0', received_amount: '0',
@@ -562,11 +561,9 @@ export const CRMLeadModal = ({
                 /* ========== DOCUMENTS TAB ========== */
                 <div className="space-y-3">
                   <div className="bg-[#1F2833]/70 rounded-lg p-3 border border-[#45A29E]/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Checkbox id="createFolder" checked={createFolder} onCheckedChange={(v) => setCreateFolder(!!v)} />
-                      <label htmlFor="createFolder" className="text-xs text-[#C5C6C7]">
-                        Создать папку в Голографическом депозитарии (Галактический реестр)
-                      </label>
+                    <div className="flex items-center gap-1.5 mb-2 text-[10px] text-[#6B7684]">
+                      <Icon name="FolderLock" size={12} className="text-[#66FCF1]" />
+                      Документы автоматически сохраняются в папке сделки в «Галактическом реестре» (Голографический депозитарий)
                     </div>
                     <label className="flex items-center justify-center gap-2 h-20 rounded-lg border-2 border-dashed border-[#45A29E]/30 text-[#66FCF1] hover:border-[#66FCF1]/60 cursor-pointer transition-colors text-sm">
                       {uploading ? <Icon name="Loader2" size={18} className="animate-spin" /> : <Icon name="Upload" size={18} />}
@@ -761,10 +758,27 @@ export const CRMLeadModal = ({
                           <Icon name="Plus" size={12} />
                         </Button>
                       </div>
+
+                      {tasks.filter(t => t.leadId === selectedLead.id && t.completed).length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-[#45A29E]/15">
+                          <div className="text-[10px] font-medium text-[#6B7684] uppercase tracking-wider mb-1.5">История задач</div>
+                          <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                            {tasks.filter(t => t.leadId === selectedLead.id && t.completed).map(task => (
+                              <div key={task.id} className="flex items-start gap-2 text-xs">
+                                <Icon name="CheckCircle2" size={13} className="text-[#5eead4] mt-0.5 shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-[#8B98A5] line-through">{task.title}</div>
+                                  {task.dueDate && <div className="text-[10px] text-[#6B7684]">{new Date(task.dueDate).toLocaleDateString('ru-RU')}</div>}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="bg-[#1F2833]/70 rounded-lg p-3 border border-[#45A29E]/20">
-                      <div className="text-xs font-medium text-[#66FCF1] mb-2">Активности</div>
+                      <div className="text-xs font-medium text-[#66FCF1] mb-2">История примечаний и активностей</div>
                       <div className="space-y-2 max-h-64 overflow-y-auto">
                         {activities.filter(a => a.leadId === selectedLead.id).slice().reverse().map(a => (
                           <div key={a.id} className="text-xs text-[#8B98A5] border-l-2 border-[#45A29E]/30 pl-2">
