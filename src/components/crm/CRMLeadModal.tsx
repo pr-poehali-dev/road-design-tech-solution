@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import Icon from '@/components/ui/icon';
 import { Lead, StageDef } from './CRMKanban';
 import { crmApi, Contact, CrmDocument, CustomFieldValue } from '@/lib/crmApi';
+import { CRMLeadBridgeTab } from './CRMLeadBridgeTab';
 
 export interface Task {
   id: string;
@@ -78,6 +79,7 @@ interface EditFormState {
   phone: string;
   company: string;
   legal_name: string;
+  telegram_username: string;
   message: string;
   description: string;
   stage: string;
@@ -110,9 +112,9 @@ export const CRMLeadModal = ({
   onCreateLead
 }: CRMLeadModalProps) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [tab, setTab] = useState<'main' | 'contacts' | 'documents' | 'custom'>('main');
+  const [tab, setTab] = useState<'main' | 'contacts' | 'documents' | 'custom' | 'bridge'>('main');
   const [editForm, setEditForm] = useState<EditFormState>({
-    name: '', email: '', phone: '', company: '', legal_name: '', message: '', description: '',
+    name: '', email: '', phone: '', company: '', legal_name: '', telegram_username: '', message: '', description: '',
     stage: 'new', deal_amount: '0', revenue: '0', planned_revenue: '0', contract_amount: '0', received_amount: '0',
   });
 
@@ -161,6 +163,7 @@ export const CRMLeadModal = ({
         phone: selectedLead.phone || '',
         company: selectedLead.company || '',
         legal_name: selectedLead.legal_name || '',
+        telegram_username: selectedLead.telegram_username || '',
         message: selectedLead.message || '',
         description: selectedLead.description || '',
         stage: selectedLead.status || 'new',
@@ -191,6 +194,7 @@ export const CRMLeadModal = ({
       phone: editForm.phone,
       company_name: editForm.company,
       legal_name: editForm.legal_name,
+      telegram_username: editForm.telegram_username,
       notes: editForm.message,
       description: editForm.description,
       stage: editForm.stage,
@@ -377,16 +381,22 @@ export const CRMLeadModal = ({
 
               {!isEditing && (
                 <div className="flex gap-1 mt-3">
-                  {(['main', 'contacts', 'documents', 'custom'] as const).map((t) => (
+                  {(['main', 'contacts', 'documents', 'custom', 'bridge'] as const).map((t) => (
                     <button
                       key={t}
                       onClick={() => setTab(t)}
-                      className={`text-xs px-3 py-1.5 rounded-md transition-colors ${tab === t ? 'bg-[#45A29E] text-[#0B0C10] font-bold' : 'text-[#8B98A5] hover:text-white'}`}
+                      className={`text-xs px-3 py-1.5 rounded-md transition-colors flex items-center gap-1 ${tab === t ? 'bg-[#45A29E] text-[#0B0C10] font-bold' : 'text-[#8B98A5] hover:text-white'}`}
                     >
                       {t === 'main' && 'Основное'}
                       {t === 'contacts' && `Контакты (${contacts.length})`}
                       {t === 'documents' && `Документы (${documents.length})`}
                       {t === 'custom' && 'Доп. поля'}
+                      {t === 'bridge' && (
+                        <>
+                          <Icon name="MessagesSquare" size={12} />
+                          Переписка
+                        </>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -422,6 +432,10 @@ export const CRMLeadModal = ({
                       <div className="space-y-1 sm:col-span-2">
                         <label className={labelCls}>Юридическое название клиента</label>
                         <Input value={editForm.legal_name} onChange={(e) => updateField('legal_name', e.target.value)} className={inputCls} placeholder='ООО "Ромашка"' />
+                      </div>
+                      <div className="space-y-1 sm:col-span-2">
+                        <label className={labelCls}>Telegram (username клиента, для переписки в Радужном мосту)</label>
+                        <Input value={editForm.telegram_username} onChange={(e) => updateField('telegram_username', e.target.value.replace('@', ''))} className={inputCls} placeholder="username без @" />
                       </div>
                     </div>
                   </div>
@@ -606,6 +620,9 @@ export const CRMLeadModal = ({
                     ))}
                   </div>
                 </div>
+              ) : tab === 'bridge' ? (
+                /* ========== BRIDGE (correspondence) TAB ========== */
+                <CRMLeadBridgeTab clientId={Number(selectedLead.id)} clientEmail={selectedLead.email} />
               ) : (
                 /* ========== VIEW MODE (main) ========== */
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

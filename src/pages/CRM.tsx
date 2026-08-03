@@ -5,6 +5,7 @@ import { CRMKanban, Lead, StageDef } from '@/components/crm/CRMKanban';
 import { CRMLeadModal, Task, Activity } from '@/components/crm/CRMLeadModal';
 import { CRMListView } from '@/components/crm/CRMListView';
 import { CRMAnalytics } from '@/components/crm/CRMAnalytics';
+import { CRMBridge } from '@/components/crm/CRMBridge';
 import StarfieldBackground from '@/components/deod/StarfieldBackground';
 import { getToken as getCrewToken } from '@/lib/crewApi';
 import { crmApi } from '@/lib/crmApi';
@@ -47,7 +48,7 @@ const CRM = () => {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [customColors, setCustomColors] = useState<{ [key: string]: { color: string; textColor: string } }>(DEFAULT_COLORS);
   const [statusStages, setStatusStages] = useState<StageDef[]>([]);
-  const [view, setView] = useState<'kanban' | 'list' | 'analytics'>('kanban');
+  const [view, setView] = useState<'kanban' | 'list' | 'analytics' | 'bridge'>('kanban');
 
   const loadStages = useCallback(async () => {
     try {
@@ -149,6 +150,8 @@ const CRM = () => {
             open_task_status: client.open_task_status || '',
             next_action_at: client.next_action_at || '',
             last_action_at: client.last_action_at || '',
+            unread_messages_count: Number(client.unread_messages_count) || 0,
+            telegram_username: client.telegram_username || '',
           }));
           setLeads(mappedLeads);
         }
@@ -590,6 +593,8 @@ const CRM = () => {
         )}
 
         {view === 'analytics' && <CRMAnalytics />}
+
+        {view === 'bridge' && <CRMBridge />}
 
         <CRMLeadModal
           showLeadCard={showLeadCard}

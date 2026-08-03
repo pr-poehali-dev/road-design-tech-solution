@@ -17,8 +17,8 @@ interface CRMHeaderProps {
   totalPlanned: number;
   totalContracts: number;
   totalReceived: number;
-  view: 'kanban' | 'list' | 'analytics';
-  onChangeView: (v: 'kanban' | 'list' | 'analytics') => void;
+  view: 'kanban' | 'list' | 'analytics' | 'bridge';
+  onChangeView: (v: 'kanban' | 'list' | 'analytics' | 'bridge') => void;
   onExport: () => void;
   onImportClick: () => void;
 }
@@ -104,6 +104,12 @@ export const CRMHeader = ({
                   className={`h-6 px-2 rounded text-xs flex items-center gap-1 ${view === 'analytics' ? 'bg-[#45A29E] text-[#0B0C10] font-bold' : 'text-[#8B98A5]'}`}
                 >
                   <Icon name="BarChart3" size={12} /> Аналитика
+                </button>
+                <button
+                  onClick={() => onChangeView('bridge')}
+                  className={`h-6 px-2 rounded text-xs flex items-center gap-1 ${view === 'bridge' ? 'bg-[#45A29E] text-[#0B0C10] font-bold' : 'text-[#8B98A5]'}`}
+                >
+                  <Icon name="MessagesSquare" size={12} /> Радужный мост
                 </button>
               </div>
             </div>

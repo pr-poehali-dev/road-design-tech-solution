@@ -624,6 +624,7 @@ def update_client(conn, partner_id, body):
         'deal_amount', 'notes', 'description', 'status', 'source',
         'revenue', 'planned_revenue', 'contract_amount', 'received_amount',
         'next_action_at', 'last_action_at', 'depo_folder_id',
+        'telegram_username', 'telegram_chat_id', 'max_chat_id',
     }
 
     filtered = {}

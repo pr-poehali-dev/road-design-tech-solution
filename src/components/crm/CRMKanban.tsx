@@ -38,6 +38,8 @@ export interface Lead {
   open_task_status?: string;
   next_action_at?: string;
   last_action_at?: string;
+  unread_messages_count?: number;
+  telegram_username?: string;
 }
 
 export interface StageDef {
@@ -82,7 +84,15 @@ const DealCard = ({ lead, onLeadClick }: { lead: Lead; onLeadClick: (lead: Lead)
         overdue ? 'border-[#FF4D4D] animate-pulse-red' : 'border-[#45A29E]/20'
       }`}
     >
-      <div className="text-sm font-medium text-white leading-tight mb-1.5">{lead.name || lead.company || '—'}</div>
+      <div className="flex items-center justify-between gap-1.5 mb-1.5">
+        <div className="text-sm font-medium text-white leading-tight truncate">{lead.name || lead.company || '—'}</div>
+        {(lead.unread_messages_count ?? 0) > 0 && (
+          <span className="shrink-0 flex items-center gap-0.5 text-[9px] font-bold bg-[#FF6600] text-[#0B0C10] rounded-full px-1.5 py-0.5">
+            <Icon name="MessagesSquare" size={9} />
+            {lead.unread_messages_count}
+          </span>
+        )}
+      </div>
       <div className="space-y-1.5 text-xs">
         {lead.company && (
           <div className="flex items-center gap-1.5 text-[#66FCF1]">

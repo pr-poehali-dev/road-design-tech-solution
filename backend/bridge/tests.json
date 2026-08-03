@@ -1,0 +1,29 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Missing partner_id on conversations",
+      "method": "GET",
+      "path": "/?resource=conversations",
+      "expectedStatus": 400
+    },
+    {
+      "name": "Missing client_id on messages",
+      "method": "GET",
+      "path": "/?resource=messages",
+      "expectedStatus": 400
+    },
+    {
+      "name": "Unknown resource POST",
+      "method": "POST",
+      "path": "/",
+      "body": { "resource": "unknown_thing" },
+      "expectedStatus": 400
+    }
+  ]
+}
