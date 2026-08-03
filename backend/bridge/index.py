@@ -1,8 +1,12 @@
-"""Радужный мост: единая переписка с клиентами через Email (IMAP/SMTP), Telegram и MAX."""
+"""Радужный мост: единая переписка с клиентами через Email (IMAP/SMTP, несколько ящиков),
+Telegram и MAX. Поддерживает вложения, автосоздание лида по неизвестному отправителю,
+разделение на входящие/отправленные и фильтр по почтовому ящику."""
 import json
 import os
 import re
 import ssl
+import uuid
+import base64
 import smtplib
 import imaplib
 import email as email_lib
@@ -10,8 +14,11 @@ import urllib.request
 import urllib.parse
 from email.header import decode_header
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
 from email.utils import parseaddr
 
+import boto3
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
@@ -20,11 +27,13 @@ IMAP_HOST = 'imap.beget.com'
 IMAP_PORT = 993
 SMTP_HOST = 'smtp.beget.com'
 SMTP_PORT = 465
+MAX_ATTACH_SIZE = 25 * 1024 * 1024  # 25 МБ на файл
+DEFAULT_MAILBOX_ADDRESS = 'info@sppi.ooo'
 
 
 def handler(event, context):
     """Обрабатывает запросы модуля 'Радужный мост': список диалогов, сообщения, отправка писем/Telegram,
-    синхронизация входящей почты по IMAP, приём Telegram webhook."""
+    синхронизация входящей почты по нескольким IMAP-ящикам, приём Telegram webhook, вложения."""
     method = event.get('httpMethod', 'GET')
     if method == 'OPTIONS':
         return {'statusCode': 200, 'headers': cors(), 'body': '', 'isBase64Encoded': False}
@@ -49,6 +58,10 @@ def handler(event, context):
                 return get_conversations(conn, params)
             if resource == 'messages':
                 return get_messages(conn, params)
+            if resource == 'email_list':
+                return get_email_list(conn, params)
+            if resource == 'mailboxes':
+                return get_mailboxes()
             return error_response('Unknown resource', 400)
 
         if method == 'POST':
@@ -62,6 +75,8 @@ def handler(event, context):
                 return mark_read(conn, body)
             if resource == 'register_telegram_webhook':
                 return register_telegram_webhook(body)
+            if resource == 'import_range':
+                return import_range(conn, body)
             return error_response('Unknown resource', 400)
 
         return error_response('Method not allowed', 405)
@@ -79,6 +94,7 @@ def get_conversations(conn, params):
     if partner_id is None:
         return error_response('Missing partner_id', 400)
     channel = params.get('channel')  # опциональный фильтр по каналу
+    mailbox = params.get('mailbox')  # опциональный фильтр по почтовому ящику
 
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         query = """
@@ -92,9 +108,11 @@ def get_conversations(conn, params):
                 c.telegram_username,
                 c.unread_messages_count,
                 c.last_message_at,
+                c.auto_created,
                 m.channel AS last_channel,
                 m.body AS last_message,
                 m.direction AS last_direction,
+                m.mailbox AS last_mailbox,
                 m.created_at AS last_message_created_at
             FROM crm_clients c
             JOIN bridge_messages m ON m.client_id = c.id
@@ -104,6 +122,9 @@ def get_conversations(conn, params):
         if channel:
             query += " AND m.channel = %s"
             args.append(channel)
+        if mailbox:
+            query += " AND m.mailbox = %s"
+            args.append(mailbox)
         query += " ORDER BY c.id, m.created_at DESC"
 
         cur.execute(query, args)
@@ -114,7 +135,7 @@ def get_conversations(conn, params):
 
 
 def get_messages(conn, params):
-    """История сообщений по клиенту (все каналы) или по конкретному каналу"""
+    """История сообщений по клиенту (все каналы) или по конкретному каналу, вместе с вложениями"""
     client_id = _parse_int(params.get('client_id'))
     if client_id is None:
         return error_response('Missing client_id', 400)
@@ -130,7 +151,48 @@ def get_messages(conn, params):
         cur.execute(query, args)
         messages = cur.fetchall()
 
+        _attach_attachments(cur, messages)
+
     return ok_response({'messages': messages})
+
+
+def get_email_list(conn, params):
+    """Раздельный список писем: 'Входящие' (direction=in) или 'Отправленные' (direction=out),
+    с фильтром по почтовому ящику."""
+    partner_id = _parse_int(params.get('partner_id'))
+    if partner_id is None:
+        return error_response('Missing partner_id', 400)
+    direction = params.get('direction', 'in')
+    if direction not in ('in', 'out'):
+        return error_response("direction must be 'in' or 'out'", 400)
+    mailbox = params.get('mailbox')
+    limit = _parse_int(params.get('limit')) or 100
+
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        query = """
+            SELECT m.*, c.company_name, c.contact_person
+            FROM bridge_messages m
+            LEFT JOIN crm_clients c ON c.id = m.client_id
+            WHERE m.partner_id = %s AND m.channel = 'email' AND m.direction = %s
+        """
+        args = [partner_id, direction]
+        if mailbox:
+            query += " AND m.mailbox = %s"
+            args.append(mailbox)
+        query += " ORDER BY m.created_at DESC LIMIT %s"
+        args.append(limit)
+
+        cur.execute(query, args)
+        messages = cur.fetchall()
+        _attach_attachments(cur, messages)
+
+    return ok_response({'messages': messages})
+
+
+def get_mailboxes():
+    """Список настроенных почтовых ящиков, доступных для отправки/фильтрации"""
+    boxes = [{'address': b['address']} for b in _get_mailboxes()]
+    return ok_response({'mailboxes': boxes})
 
 
 def mark_read(conn, body):
@@ -145,7 +207,35 @@ def mark_read(conn, body):
     return ok_response({'success': True})
 
 
+def _attach_attachments(cur, messages):
+    """Добавляет к каждому сообщению список вложений (attachments: [...])"""
+    if not messages:
+        return
+    ids = [m['id'] for m in messages]
+    cur.execute("SELECT * FROM bridge_attachments WHERE message_id = ANY(%s) ORDER BY id ASC", (ids,))
+    atts_by_message = {}
+    for a in cur.fetchall():
+        atts_by_message.setdefault(a['message_id'], []).append(a)
+    for m in messages:
+        m['attachments'] = atts_by_message.get(m['id'], [])
+
+
 # ------------------------------------------------------------------- email --
+
+def _get_mailboxes():
+    """Настроенные почтовые ящики (адрес + пароль), для которых заведены секреты"""
+    boxes = []
+    addr1 = os.environ.get('EMAIL_ADDRESS')
+    pass1 = os.environ.get('EMAIL_PASSWORD')
+    if addr1 and pass1:
+        boxes.append({'address': addr1, 'password': pass1})
+
+    pass2 = os.environ.get('INFO_EMAIL_PASSWORD')
+    if pass2:
+        boxes.append({'address': DEFAULT_MAILBOX_ADDRESS, 'password': pass2})
+
+    return boxes
+
 
 def _decode_mime_words(s):
     if not s:
@@ -195,19 +285,86 @@ def _get_email_body(msg):
             return ''
 
 
+def _extract_email_attachments(msg):
+    """Достаёт вложения письма: [(filename, mime, raw_bytes), ...]"""
+    atts = []
+    if not msg.is_multipart():
+        return atts
+    for part in msg.walk():
+        disp = str(part.get('Content-Disposition') or '')
+        filename = part.get_filename()
+        if not filename:
+            continue
+        if 'attachment' not in disp and 'inline' not in disp:
+            continue
+        filename = _decode_mime_words(filename)
+        try:
+            payload = part.get_payload(decode=True)
+        except Exception:
+            continue
+        if not payload:
+            continue
+        atts.append((filename, part.get_content_type(), payload))
+    return atts
+
+
+def _upload_bytes(raw, filename, mime, prefix='bridge'):
+    ext = filename.rsplit('.', 1)[-1].lower()[:8] if '.' in filename else ''
+    key = f"{prefix}/{uuid.uuid4().hex}{('.' + ext) if ext else ''}"
+    s3 = boto3.client(
+        's3',
+        endpoint_url='https://bucket.poehali.dev',
+        aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+        aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
+    )
+    s3.put_object(Bucket='files', Key=key, Body=raw, ContentType=mime or 'application/octet-stream')
+    return f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{key}"
+
+
+def _save_attachment(cur, message_id, filename, mime, raw):
+    if len(raw) > MAX_ATTACH_SIZE:
+        return
+    url = _upload_bytes(raw, filename, mime)
+    cur.execute("""
+        INSERT INTO bridge_attachments (message_id, file_name, mime, size_bytes, url)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (message_id, filename, mime, len(raw), url))
+
+
+def _find_client_or_create(cur, partner_id, clients_by_email, counterpart_addr, counterpart_name, own_addresses):
+    """Находит клиента по email; если не найден и адрес не наш собственный — создаёт новый лид."""
+    if not counterpart_addr:
+        return None
+    client_id = clients_by_email.get(counterpart_addr)
+    if client_id:
+        return client_id
+    if counterpart_addr in own_addresses:
+        return None
+
+    company_name = counterpart_name or counterpart_addr
+    cur.execute("""
+        INSERT INTO crm_clients (partner_id, company_name, contact_person, email, stage, auto_created)
+        VALUES (%s, %s, %s, %s, 'new', TRUE)
+        RETURNING id
+    """, (partner_id, company_name, counterpart_name or '', counterpart_addr))
+    new_id = cur.fetchone()['id']
+    clients_by_email[counterpart_addr] = new_id
+    return new_id
+
+
 def sync_email(conn, body):
-    """Синхронизирует входящую почту по IMAP: скачивает новые письма, привязывает к клиенту по email,
-    сохраняет как непривязанные если отправитель неизвестен."""
+    """Синхронизирует входящую почту по всем настроенным IMAP-ящикам: скачивает новые письма,
+    привязывает к клиенту по email, создаёт нового лида если отправитель неизвестен."""
     partner_id = body.get('partner_id')
     if not partner_id:
         return error_response('Missing partner_id', 400)
 
-    address = os.environ.get('EMAIL_ADDRESS')
-    password = os.environ.get('EMAIL_PASSWORD')
-    if not address or not password:
-        return error_response('EMAIL_ADDRESS / EMAIL_PASSWORD не настроены', 500)
+    boxes = _get_mailboxes()
+    if not boxes:
+        return error_response('Не настроен ни один почтовый ящик', 500)
 
-    imported = 0
+    own_addresses = {b['address'].lower() for b in boxes}
+
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute("SELECT email_message_id FROM bridge_messages WHERE channel = 'email' AND email_message_id IS NOT NULL")
         known_ids = {r['email_message_id'] for r in cur.fetchall()}
@@ -215,24 +372,48 @@ def sync_email(conn, body):
         cur.execute("SELECT id, email FROM crm_clients WHERE partner_id = %s AND email IS NOT NULL AND email != ''", (partner_id,))
         clients_by_email = {r['email'].lower(): r['id'] for r in cur.fetchall() if r['email']}
 
+    total_imported = 0
+    total_created = 0
+    errors = []
+
+    for box in boxes:
+        try:
+            imported, created = _sync_mailbox(conn, partner_id, box['address'], box['password'], known_ids, clients_by_email, own_addresses)
+            total_imported += imported
+            total_created += created
+        except Exception as exc:
+            errors.append(f"{box['address']}: {exc}")
+
+    linked = _backfill_unlinked_emails(conn, partner_id)
+
+    result = {'success': True, 'imported': total_imported, 'linked': linked, 'created_leads': total_created}
+    if errors:
+        result['errors'] = errors
+    return ok_response(result)
+
+
+def _sync_mailbox(conn, partner_id, address, password, known_ids, clients_by_email, own_addresses):
+    """Синхронизирует последние 30 писем одного почтового ящика"""
+    imported = 0
+    created_leads = 0
+
     imap = imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT, timeout=15)
     try:
         imap.login(address, password)
         imap.select('INBOX')
         status, data = imap.search(None, 'ALL')
         if status != 'OK':
-            return error_response('Не удалось получить список писем', 502)
+            raise RuntimeError('Не удалось получить список писем')
 
         ids = data[0].split()
         recent_ids = ids[-30:]  # последние 30 писем за проход, чтобы уложиться в таймаут функции
         if not recent_ids:
-            return ok_response({'success': True, 'imported': 0})
+            return 0, 0
 
-        # Один batch-запрос вместо N отдельных fetch — резко сокращает число round-trip'ов к серверу
         id_set = b','.join(recent_ids)
         status, msg_data = imap.fetch(id_set, '(RFC822)')
         if status != 'OK' or not msg_data:
-            return error_response('Не удалось получить письма', 502)
+            raise RuntimeError('Не удалось получить письма')
 
         raw_messages = [part[1] for part in msg_data if isinstance(part, tuple)]
 
@@ -251,17 +432,24 @@ def sync_email(conn, body):
                 body_text = _get_email_body(msg)[:20000]
                 to_addr = parseaddr(msg.get('To', ''))[1]
 
-                client_id = clients_by_email.get(from_addr)
+                client_id = _find_client_or_create(cur, partner_id, clients_by_email, from_addr, from_name, own_addresses)
+                if client_id and from_addr not in clients_by_email:
+                    created_leads += 1
 
                 cur.execute("""
                     INSERT INTO bridge_messages (
                         partner_id, client_id, channel, direction, sender_name,
-                        subject, body, email_message_id, email_from, email_to
-                    ) VALUES (%s, %s, 'email', 'in', %s, %s, %s, %s, %s, %s)
+                        subject, body, email_message_id, email_from, email_to, mailbox
+                    ) VALUES (%s, %s, 'email', 'in', %s, %s, %s, %s, %s, %s, %s)
+                    RETURNING id
                 """, (
                     partner_id, client_id, from_name or from_addr,
-                    subject, body_text, message_id or None, from_addr, to_addr,
+                    subject, body_text, message_id or None, from_addr, to_addr, address,
                 ))
+                msg_id = cur.fetchone()['id']
+
+                for filename, mime, raw_bytes in _extract_email_attachments(msg):
+                    _save_attachment(cur, msg_id, filename, mime, raw_bytes)
 
                 if client_id:
                     cur.execute("""
@@ -271,7 +459,6 @@ def sync_email(conn, body):
                     """, (client_id,))
 
                 known_ids.add(message_id)
-
                 imported += 1
 
             conn.commit()
@@ -282,9 +469,7 @@ def sync_email(conn, body):
             pass
         imap.logout()
 
-    linked = _backfill_unlinked_emails(conn, partner_id)
-
-    return ok_response({'success': True, 'imported': imported, 'linked': linked})
+    return imported, created_leads
 
 
 def _backfill_unlinked_emails(conn, partner_id):
@@ -329,20 +514,25 @@ def _backfill_unlinked_emails(conn, partner_id):
 
 
 def send_email(conn, body):
-    """Отправляет письмо клиенту через SMTP и сохраняет в истории переписки"""
+    """Отправляет письмо клиенту через SMTP (с выбором ящика-отправителя и вложениями)
+    и сохраняет в истории переписки"""
     client_id = body.get('client_id')
     partner_id = body.get('partner_id')
     subject = (body.get('subject') or '').strip()
     text = (body.get('body') or '').strip()
     to_override = (body.get('to') or '').strip()
+    mailbox_address = (body.get('mailbox') or '').strip()
+    attachments_in = body.get('attachments') or []
 
     if not partner_id or not text:
         return error_response('partner_id and body are required', 400)
 
-    address = os.environ.get('EMAIL_ADDRESS')
-    password = os.environ.get('EMAIL_PASSWORD')
-    if not address or not password:
-        return error_response('EMAIL_ADDRESS / EMAIL_PASSWORD не настроены', 500)
+    boxes = _get_mailboxes()
+    if not boxes:
+        return error_response('Не настроен ни один почтовый ящик', 500)
+
+    box = next((b for b in boxes if b['address'] == mailbox_address), None) or boxes[0]
+    address, password = box['address'], box['password']
 
     to_addr = to_override
     if not to_addr and client_id:
@@ -354,10 +544,31 @@ def send_email(conn, body):
     if not to_addr:
         return error_response('Не указан email получателя (у клиента нет email)', 400)
 
-    msg = MIMEText(text, 'plain', 'utf-8')
+    if attachments_in:
+        msg = MIMEMultipart()
+        msg.attach(MIMEText(text, 'plain', 'utf-8'))
+    else:
+        msg = MIMEText(text, 'plain', 'utf-8')
     msg['Subject'] = subject or '(без темы)'
     msg['From'] = address
     msg['To'] = to_addr
+
+    decoded_attachments = []
+    for att in attachments_in:
+        name = att.get('name') or 'file'
+        data_url = att.get('data') or ''
+        mime = att.get('mime') or 'application/octet-stream'
+        raw_b64 = data_url.split(',', 1)[1] if ',' in data_url else data_url
+        try:
+            raw = base64.b64decode(raw_b64)
+        except Exception:
+            continue
+        if len(raw) > MAX_ATTACH_SIZE:
+            return error_response(f'Файл "{name}" превышает 25 МБ', 400)
+        part = MIMEApplication(raw, Name=name)
+        part['Content-Disposition'] = f'attachment; filename="{name}"'
+        msg.attach(part)
+        decoded_attachments.append((name, mime, raw))
 
     context = ssl.create_default_context()
     with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=context) as server:
@@ -368,16 +579,191 @@ def send_email(conn, body):
         cur.execute("""
             INSERT INTO bridge_messages (
                 partner_id, client_id, channel, direction, sender_name,
-                subject, body, email_from, email_to
-            ) VALUES (%s, %s, 'email', 'out', 'Менеджер', %s, %s, %s, %s)
+                subject, body, email_from, email_to, mailbox
+            ) VALUES (%s, %s, 'email', 'out', 'Менеджер', %s, %s, %s, %s, %s)
             RETURNING *
-        """, (partner_id, client_id, subject, text, address, to_addr))
+        """, (partner_id, client_id, subject, text, address, to_addr, address))
         message = cur.fetchone()
+
+        for name, mime, raw in decoded_attachments:
+            _save_attachment(cur, message['id'], name, mime, raw)
+
         if client_id:
             cur.execute("UPDATE crm_clients SET last_message_at = NOW() WHERE id = %s", (client_id,))
         conn.commit()
 
+        cur.execute("SELECT * FROM bridge_attachments WHERE message_id = %s", (message['id'],))
+        message['attachments'] = cur.fetchall()
+
     return ok_response({'success': True, 'message': message})
+
+
+# ------------------------------------------------------------- import_range --
+
+def _imap_date(date_str):
+    """'YYYY-MM-DD' -> '01-Jul-2026' (формат для IMAP SEARCH)"""
+    from datetime import datetime
+    d = datetime.strptime(date_str, '%Y-%m-%d')
+    return d.strftime('%d-%b-%Y')
+
+
+def _imap_date_plus_one(date_str):
+    from datetime import datetime, timedelta
+    d = datetime.strptime(date_str, '%Y-%m-%d') + timedelta(days=1)
+    return d.strftime('%d-%b-%Y')
+
+
+def _find_folder(imap, keywords):
+    """Ищет имя папки на IMAP-сервере, содержащее одно из ключевых слов (например 'sent')"""
+    typ, data = imap.list()
+    if typ != 'OK':
+        return None
+    for line in data:
+        if not line:
+            continue
+        text = line.decode(errors='ignore') if isinstance(line, bytes) else str(line)
+        m = re.search(r'"([^"]+)"\s*$', text)
+        name = m.group(1) if m else text.split()[-1].strip('"')
+        low = name.lower()
+        for kw in keywords:
+            if kw in low:
+                return name
+    return None
+
+
+def import_range(conn, body):
+    """Служебный метод: загружает исторические письма (входящие или отправленные) за указанный
+    период из конкретного почтового ящика — постранично (offset/limit), чтобы не упереться
+    в таймаут функции. Вызывается несколько раз подряд, пока has_more == True."""
+    partner_id = body.get('partner_id')
+    mailbox_address = (body.get('mailbox') or '').strip()
+    date_from = body.get('date_from')  # 'YYYY-MM-DD'
+    date_to = body.get('date_to')      # 'YYYY-MM-DD' включительно
+    folder = body.get('folder', 'INBOX')  # 'INBOX' | 'SENT' (логическое имя, реальное определяется автоматически)
+    offset = int(body.get('offset', 0))
+    limit = min(int(body.get('limit', 10)), 20)
+
+    if not partner_id or not mailbox_address or not date_from or not date_to:
+        return error_response('partner_id, mailbox, date_from, date_to are required', 400)
+    if folder not in ('INBOX', 'SENT'):
+        return error_response("folder must be 'INBOX' or 'SENT'", 400)
+
+    boxes = _get_mailboxes()
+    box = next((b for b in boxes if b['address'] == mailbox_address), None)
+    if not box:
+        return error_response('Указанный почтовый ящик не настроен', 400)
+    own_addresses = {b['address'].lower() for b in boxes}
+
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("SELECT email_message_id FROM bridge_messages WHERE channel = 'email' AND email_message_id IS NOT NULL")
+        known_ids = {r['email_message_id'] for r in cur.fetchall()}
+        cur.execute("SELECT id, email FROM crm_clients WHERE partner_id = %s AND email IS NOT NULL AND email != ''", (partner_id,))
+        clients_by_email = {r['email'].lower(): r['id'] for r in cur.fetchall() if r['email']}
+
+    imap = imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT, timeout=20)
+    try:
+        imap.login(box['address'], box['password'])
+
+        real_folder = 'INBOX' if folder == 'INBOX' else (_find_folder(imap, ['sent', 'отправ']) or 'Sent')
+        status, _ = imap.select(f'"{real_folder}"', readonly=True)
+        if status != 'OK':
+            return error_response(f'Папка "{real_folder}" недоступна', 502)
+
+        since = _imap_date(date_from)
+        before = _imap_date_plus_one(date_to)
+        status, data = imap.search(None, f'(SINCE "{since}" BEFORE "{before}")')
+        if status != 'OK':
+            return error_response('Ошибка поиска писем', 502)
+
+        ids = data[0].split()
+        total = len(ids)
+        page_ids = ids[offset:offset + limit]
+
+        imported = 0
+        if page_ids:
+            id_set = b','.join(page_ids)
+            status, msg_data = imap.fetch(id_set, '(RFC822)')
+            if status == 'OK' and msg_data:
+                raw_messages = [part[1] for part in msg_data if isinstance(part, tuple)]
+                direction = 'in' if folder == 'INBOX' else 'out'
+
+                with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                    for raw in raw_messages:
+                        msg = email_lib.message_from_bytes(raw)
+                        message_id = (msg.get('Message-ID') or '').strip()
+                        if message_id and message_id in known_ids:
+                            continue
+
+                        subject = _decode_mime_words(msg.get('Subject', ''))
+                        body_text = _get_email_body(msg)[:20000]
+
+                        if direction == 'in':
+                            from_name, from_addr = parseaddr(msg.get('From', ''))
+                            from_name = _decode_mime_words(from_name) or from_addr
+                            from_addr = (from_addr or '').lower()
+                            to_addr = parseaddr(msg.get('To', ''))[1]
+                            counterpart_addr, counterpart_name = from_addr, from_name
+                            sender_name = from_name or from_addr
+                        else:
+                            _, to_addr_raw = parseaddr(msg.get('To', ''))
+                            to_addr = (to_addr_raw or '').lower()
+                            from_addr = mailbox_address
+                            counterpart_addr, counterpart_name = to_addr, None
+                            sender_name = 'Менеджер'
+
+                        client_id = _find_client_or_create(cur, partner_id, clients_by_email, counterpart_addr, counterpart_name, own_addresses)
+
+                        cur.execute("""
+                            INSERT INTO bridge_messages (
+                                partner_id, client_id, channel, direction, sender_name,
+                                subject, body, email_message_id, email_from, email_to, mailbox
+                            ) VALUES (%s, %s, 'email', %s, %s, %s, %s, %s, %s, %s, %s)
+                            RETURNING id
+                        """, (
+                            partner_id, client_id, direction, sender_name,
+                            subject, body_text, message_id or None, from_addr, to_addr, mailbox_address,
+                        ))
+                        msg_id = cur.fetchone()['id']
+
+                        for filename, mime, raw_bytes in _extract_email_attachments(msg):
+                            _save_attachment(cur, msg_id, filename, mime, raw_bytes)
+
+                        if client_id and direction == 'in':
+                            cur.execute("""
+                                UPDATE crm_clients
+                                SET last_message_at = NOW(), unread_messages_count = unread_messages_count + 1
+                                WHERE id = %s
+                            """, (client_id,))
+                        elif client_id:
+                            cur.execute("UPDATE crm_clients SET last_message_at = NOW() WHERE id = %s", (client_id,))
+
+                        if message_id:
+                            known_ids.add(message_id)
+                        imported += 1
+
+                    conn.commit()
+    finally:
+        try:
+            imap.logout()
+        except Exception:
+            pass
+
+    next_offset = offset + limit
+    has_more = next_offset < total
+
+    result = {
+        'success': True,
+        'folder': folder,
+        'imported': imported,
+        'total': total,
+        'offset': offset,
+        'next_offset': next_offset,
+        'has_more': has_more,
+    }
+    if not has_more:
+        result['linked'] = _backfill_unlinked_emails(conn, partner_id)
+
+    return ok_response(result)
 
 
 # ---------------------------------------------------------------- telegram --
@@ -419,6 +805,7 @@ def send_telegram(conn, body):
             RETURNING *
         """, (partner_id, client_id, text, row['telegram_chat_id']))
         message = cur.fetchone()
+        message['attachments'] = []
         cur.execute("UPDATE crm_clients SET last_message_at = NOW() WHERE id = %s", (client_id,))
         conn.commit()
 

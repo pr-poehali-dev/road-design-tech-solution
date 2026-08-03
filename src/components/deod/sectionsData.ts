@@ -12,7 +12,7 @@ export interface DeodSection {
   metrics: SectionMetric[];
   accent: 'teal' | 'orange';
   featured?: boolean;
-  special?: 'crew' | 'chat' | 'depository' | 'tasks';
+  special?: 'crew' | 'chat' | 'depository' | 'tasks' | 'bridge';
 }
 
 export const sections: DeodSection[] = [
@@ -162,6 +162,20 @@ export const sections: DeodSection[] = [
       { label: 'Профили', value: 'да' },
       { label: 'Ранги', value: '6' },
       { label: 'Регистрация', value: 'вкл' },
+    ],
+  },
+  {
+    id: 'bridge',
+    title: 'Радужный мост',
+    subtitle: 'Единая переписка с клиентами',
+    icon: 'MessagesSquare',
+    route: '#bridge',
+    accent: 'teal',
+    special: 'bridge',
+    metrics: [
+      { label: 'Каналы', value: 'Почта/TG' },
+      { label: 'Вложения', value: 'да' },
+      { label: 'Авто-лиды', value: 'вкл' },
     ],
   },
 ];

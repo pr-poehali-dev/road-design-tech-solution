@@ -24,6 +24,12 @@
       "path": "/",
       "body": { "resource": "unknown_thing" },
       "expectedStatus": 400
+    },
+    {
+      "name": "Get mailboxes list",
+      "method": "GET",
+      "path": "/?resource=mailboxes",
+      "expectedStatus": 200
     }
   ]
 }

@@ -14,6 +14,8 @@ import CrewPanel from '@/components/deod/CrewPanel';
 import DepositoryPanel from '@/components/deod/DepositoryPanel';
 import TacticalLog from '@/components/deod/TacticalLog';
 import RecentFilesWidget from '@/components/deod/RecentFilesWidget';
+import BridgeWidget from '@/components/deod/BridgeWidget';
+import BridgePanel from '@/components/deod/BridgePanel';
 import DeodAuthGate from '@/components/deod/DeodAuthGate';
 import { CrewAuthProvider, useCrewAuth } from '@/components/deod/CrewAuthContext';
 import { sections } from '@/components/deod/sectionsData';
@@ -25,6 +27,8 @@ const DeodSpaceInner = () => {
   const [crewOpen, setCrewOpen] = useState(false);
   const [depoOpen, setDepoOpen] = useState(false);
   const [tasksOpen, setTasksOpen] = useState(false);
+  const [bridgeOpen, setBridgeOpen] = useState(false);
+  const [bridgeClientId, setBridgeClientId] = useState<number | null>(null);
   const [unread, setUnread] = useState(0);
   const [flashing, setFlashing] = useState(false);
   const prevUnread = useRef(0);
@@ -34,6 +38,7 @@ const DeodSpaceInner = () => {
     if (window.location.hash === '#crew') setCrewOpen(true);
     if (window.location.hash === '#depository') setDepoOpen(true);
     if (window.location.hash === '#tasks') setTasksOpen(true);
+    if (window.location.hash === '#bridge') setBridgeOpen(true);
   }, [me]);
 
   useEffect(() => {
@@ -53,11 +58,16 @@ const DeodSpaceInner = () => {
   const openCrew = () => setCrewOpen(true);
   const openDepo = () => setDepoOpen(true);
   const openTasks = () => setTasksOpen(true);
+  const openBridge = (clientId?: number) => {
+    setBridgeClientId(clientId ?? null);
+    setBridgeOpen(true);
+  };
 
-  const handleSpecial = (kind: 'crew' | 'chat' | 'depository' | 'tasks') => {
+  const handleSpecial = (kind: 'crew' | 'chat' | 'depository' | 'tasks' | 'bridge') => {
     if (kind === 'crew') openCrew();
     else if (kind === 'depository') openDepo();
     else if (kind === 'tasks') openTasks();
+    else if (kind === 'bridge') openBridge();
     else openChat();
   };
 
@@ -144,6 +154,10 @@ const DeodSpaceInner = () => {
             <RecentFilesWidget onOpenDepo={openDepo} />
           </div>
 
+          <div className="mb-8">
+            <BridgeWidget onOpen={openBridge} />
+          </div>
+
           <div className="flex items-center gap-2 mb-4">
             <Icon name="LayoutGrid" size={18} className="text-[#66FCF1]" />
             <h2 className="font-heading font-bold text-lg text-white tracking-wide">Модули станции</h2>
@@ -178,6 +192,7 @@ const DeodSpaceInner = () => {
       <CrewPanel open={crewOpen} onClose={() => setCrewOpen(false)} onOpenChat={openChat} />
       <DepositoryPanel open={depoOpen} onClose={() => setDepoOpen(false)} />
       <TacticalLog open={tasksOpen} onClose={() => setTasksOpen(false)} />
+      <BridgePanel open={bridgeOpen} onClose={() => setBridgeOpen(false)} initialClientId={bridgeClientId} />
     </div>
   );
 };
