@@ -282,7 +282,50 @@ def sync_email(conn, body):
             pass
         imap.logout()
 
-    return ok_response({'success': True, 'imported': imported})
+    linked = _backfill_unlinked_emails(conn, partner_id)
+
+    return ok_response({'success': True, 'imported': imported, 'linked': linked})
+
+
+def _backfill_unlinked_emails(conn, partner_id):
+    """Привязывает ранее сохранённые письма без client_id к клиентам, если с тех пор
+    в CRM появился клиент с совпадающим email (письмо могло прийти раньше, чем завели карточку)."""
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("SELECT id, email FROM crm_clients WHERE partner_id = %s AND email IS NOT NULL AND email != ''", (partner_id,))
+        clients_by_email = {r['email'].lower(): r['id'] for r in cur.fetchall() if r['email']}
+        if not clients_by_email:
+            return 0
+
+        cur.execute("""
+            SELECT id, email_from FROM bridge_messages
+            WHERE partner_id = %s AND channel = 'email' AND client_id IS NULL AND email_from IS NOT NULL
+        """, (partner_id,))
+        unlinked = cur.fetchall()
+
+        linked_count = 0
+        touched_clients = set()
+        for row in unlinked:
+            client_id = clients_by_email.get((row['email_from'] or '').lower())
+            if not client_id:
+                continue
+            cur.execute("UPDATE bridge_messages SET client_id = %s WHERE id = %s", (client_id, row['id']))
+            touched_clients.add(client_id)
+            linked_count += 1
+
+        for client_id in touched_clients:
+            cur.execute("""
+                UPDATE crm_clients SET
+                    last_message_at = NOW(),
+                    unread_messages_count = (
+                        SELECT COUNT(*) FROM bridge_messages
+                        WHERE client_id = %s AND direction = 'in' AND is_read = FALSE
+                    )
+                WHERE id = %s
+            """, (client_id, client_id))
+
+        conn.commit()
+
+    return linked_count
 
 
 def send_email(conn, body):
