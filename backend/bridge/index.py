@@ -1,4 +1,4 @@
-"""Радужный мост: единая переписка с клиентами через Email (IMAP/SMTP), Telegram и MAX"""
+"""Радужный мост: единая переписка с клиентами через Email (IMAP/SMTP), Telegram и MAX."""
 import json
 import os
 import re
@@ -215,7 +215,7 @@ def sync_email(conn, body):
         cur.execute("SELECT id, email FROM crm_clients WHERE partner_id = %s AND email IS NOT NULL AND email != ''", (partner_id,))
         clients_by_email = {r['email'].lower(): r['id'] for r in cur.fetchall() if r['email']}
 
-    imap = imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT)
+    imap = imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT, timeout=15)
     try:
         imap.login(address, password)
         imap.select('INBOX')
@@ -224,14 +224,20 @@ def sync_email(conn, body):
             return error_response('Не удалось получить список писем', 502)
 
         ids = data[0].split()
-        recent_ids = ids[-100:]  # последние 100 писем, чтобы не грузить всю историю каждый раз
+        recent_ids = ids[-30:]  # последние 30 писем за проход, чтобы уложиться в таймаут функции
+        if not recent_ids:
+            return ok_response({'success': True, 'imported': 0})
+
+        # Один batch-запрос вместо N отдельных fetch — резко сокращает число round-trip'ов к серверу
+        id_set = b','.join(recent_ids)
+        status, msg_data = imap.fetch(id_set, '(RFC822)')
+        if status != 'OK' or not msg_data:
+            return error_response('Не удалось получить письма', 502)
+
+        raw_messages = [part[1] for part in msg_data if isinstance(part, tuple)]
 
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            for msg_id in recent_ids:
-                status, msg_data = imap.fetch(msg_id, '(RFC822)')
-                if status != 'OK' or not msg_data or not msg_data[0]:
-                    continue
-                raw = msg_data[0][1]
+            for raw in raw_messages:
                 msg = email_lib.message_from_bytes(raw)
 
                 message_id = (msg.get('Message-ID') or '').strip()
@@ -239,6 +245,7 @@ def sync_email(conn, body):
                     continue
 
                 from_name, from_addr = parseaddr(msg.get('From', ''))
+                from_name = _decode_mime_words(from_name) or from_addr
                 from_addr = (from_addr or '').lower()
                 subject = _decode_mime_words(msg.get('Subject', ''))
                 body_text = _get_email_body(msg)[:20000]
@@ -262,6 +269,8 @@ def sync_email(conn, body):
                         SET last_message_at = NOW(), unread_messages_count = unread_messages_count + 1
                         WHERE id = %s
                     """, (client_id,))
+
+                known_ids.add(message_id)
 
                 imported += 1
 
