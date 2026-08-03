@@ -54,6 +54,15 @@ export const CRMBridge = () => {
     loadConversations();
   }, [loadConversations]);
 
+  // Тихое автообновление списка диалогов — почта синхронизируется фоном на уровне CRM,
+  // здесь просто периодически подтягиваем актуальный список без индикатора загрузки
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadConversations();
+    }, 15_000);
+    return () => clearInterval(interval);
+  }, [loadConversations]);
+
   const loadMessages = useCallback(async (clientId: number) => {
     try {
       const res = await bridgeApi.getMessages(clientId);
@@ -67,6 +76,15 @@ export const CRMBridge = () => {
 
   useEffect(() => {
     if (selectedClientId) loadMessages(selectedClientId);
+  }, [selectedClientId, loadMessages]);
+
+  // Автообновление открытого диалога — новые ответы клиента появляются без ручного обновления
+  useEffect(() => {
+    if (!selectedClientId) return;
+    const interval = setInterval(() => {
+      loadMessages(selectedClientId);
+    }, 15_000);
+    return () => clearInterval(interval);
   }, [selectedClientId, loadMessages]);
 
   useEffect(() => {

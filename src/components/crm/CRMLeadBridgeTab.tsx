@@ -56,6 +56,12 @@ export const CRMLeadBridgeTab = ({ clientId, clientEmail }: CRMLeadBridgeTabProp
     load();
   }, [load]);
 
+  // Автообновление переписки прямо в карточке клиента, пока она открыта
+  useEffect(() => {
+    const interval = setInterval(load, 15_000);
+    return () => clearInterval(interval);
+  }, [load]);
+
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);

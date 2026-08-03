@@ -9,6 +9,7 @@ import { CRMBridge } from '@/components/crm/CRMBridge';
 import StarfieldBackground from '@/components/deod/StarfieldBackground';
 import { getToken as getCrewToken } from '@/lib/crewApi';
 import { crmApi } from '@/lib/crmApi';
+import { bridgeApi } from '@/lib/bridgeApi';
 import { exportLeadsToExcel, importLeadsFromExcel } from '@/lib/crmExcel';
 import Icon from '@/components/ui/icon';
 
@@ -106,6 +107,24 @@ const CRM = () => {
     init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Фоновая проверка почты (пока открыта вкладка CRM) — каждую минуту, без участия пользователя
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const syncMail = async () => {
+      try {
+        await bridgeApi.syncEmail();
+        await loadData();
+      } catch {
+        // тихо — почта могла быть временно недоступна, попробуем на следующем цикле
+      }
+    };
+
+    const interval = setInterval(syncMail, 60_000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   const loadData = async () => {
     try {
