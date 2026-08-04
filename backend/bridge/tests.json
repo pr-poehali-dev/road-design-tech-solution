@@ -30,6 +30,51 @@
       "method": "GET",
       "path": "/?resource=mailboxes",
       "expectedStatus": 200
+    },
+    {
+      "name": "Folders require partner_id",
+      "method": "GET",
+      "path": "/?resource=folders",
+      "expectedStatus": 400
+    },
+    {
+      "name": "Get folders list",
+      "method": "GET",
+      "path": "/?resource=folders&partner_id=14",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Get signatures list",
+      "method": "GET",
+      "path": "/?resource=signatures&partner_id=14",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Get notifications",
+      "method": "GET",
+      "path": "/?resource=notifications&partner_id=14",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Save folder requires name",
+      "method": "POST",
+      "path": "/",
+      "body": { "resource": "save_folder", "partner_id": 14 },
+      "expectedStatus": 400
+    },
+    {
+      "name": "Move message requires ids",
+      "method": "POST",
+      "path": "/",
+      "body": { "resource": "move_message", "partner_id": 14 },
+      "expectedStatus": 400
+    },
+    {
+      "name": "Save signature requires name",
+      "method": "POST",
+      "path": "/",
+      "body": { "resource": "save_signature", "partner_id": 14 },
+      "expectedStatus": 400
     }
   ]
 }

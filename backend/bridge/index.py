@@ -62,6 +62,12 @@ def handler(event, context):
                 return get_email_list(conn, params)
             if resource == 'mailboxes':
                 return get_mailboxes()
+            if resource == 'folders':
+                return get_folders(conn, params)
+            if resource == 'signatures':
+                return get_signatures(conn, params)
+            if resource == 'notifications':
+                return get_notifications(conn, params)
             return error_response('Unknown resource', 400)
 
         if method == 'POST':
@@ -77,6 +83,14 @@ def handler(event, context):
                 return register_telegram_webhook(body)
             if resource == 'import_range':
                 return import_range(conn, body)
+            if resource == 'save_folder':
+                return save_folder(conn, body)
+            if resource == 'move_message':
+                return move_message(conn, body)
+            if resource == 'save_signature':
+                return save_signature(conn, body)
+            if resource == 'upload_signature_image':
+                return upload_signature_image(body)
             return error_response('Unknown resource', 400)
 
         return error_response('Method not allowed', 405)
@@ -142,12 +156,17 @@ def get_messages(conn, params):
     channel = params.get('channel')
 
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
-        query = "SELECT * FROM bridge_messages WHERE client_id = %s"
+        query = """
+            SELECT m.*, f.name AS folder_name, f.color AS folder_color
+            FROM bridge_messages m
+            LEFT JOIN bridge_folders f ON f.id = m.folder_id
+            WHERE m.client_id = %s
+        """
         args = [client_id]
         if channel:
-            query += " AND channel = %s"
+            query += " AND m.channel = %s"
             args.append(channel)
-        query += " ORDER BY created_at ASC"
+        query += " ORDER BY m.created_at ASC"
         cur.execute(query, args)
         messages = cur.fetchall()
 
@@ -167,18 +186,26 @@ def get_email_list(conn, params):
         return error_response("direction must be 'in' or 'out'", 400)
     mailbox = params.get('mailbox')
     limit = _parse_int(params.get('limit')) or 100
+    folder_id = params.get('folder_id')
 
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         query = """
-            SELECT m.*, c.company_name, c.contact_person
+            SELECT m.*, c.company_name, c.contact_person,
+                   f.name AS folder_name, f.color AS folder_color
             FROM bridge_messages m
             LEFT JOIN crm_clients c ON c.id = m.client_id
+            LEFT JOIN bridge_folders f ON f.id = m.folder_id
             WHERE m.partner_id = %s AND m.channel = 'email' AND m.direction = %s
         """
         args = [partner_id, direction]
         if mailbox:
             query += " AND m.mailbox = %s"
             args.append(mailbox)
+        if folder_id == 'none':
+            query += " AND m.folder_id IS NULL"
+        elif folder_id:
+            query += " AND m.folder_id = %s"
+            args.append(_parse_int(folder_id))
         query += " ORDER BY m.created_at DESC LIMIT %s"
         args.append(limit)
 
@@ -195,6 +222,28 @@ def get_mailboxes():
     return ok_response({'mailboxes': boxes})
 
 
+def get_notifications(conn, params):
+    """Новые входящие письма, о которых ещё не показывали уведомление.
+    Возвращает отправителя и название папки, куда письмо попало по правилу сортировки."""
+    partner_id = _parse_int(params.get('partner_id'))
+    if partner_id is None:
+        return error_response('Missing partner_id', 400)
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("""
+            SELECT m.id, m.subject, m.sender_name, m.email_from, m.client_id,
+                   f.name AS folder_name, f.color AS folder_color
+            FROM bridge_messages m
+            LEFT JOIN bridge_folders f ON f.id = m.folder_id
+            WHERE m.partner_id = %s AND m.direction = 'in' AND m.notified = FALSE
+            ORDER BY m.created_at ASC LIMIT 20
+        """, (partner_id,))
+        rows = cur.fetchall()
+        if rows:
+            cur.execute("UPDATE bridge_messages SET notified = TRUE WHERE id = ANY(%s)", ([r['id'] for r in rows],))
+            conn.commit()
+    return ok_response({'notifications': rows})
+
+
 def mark_read(conn, body):
     """Отметить сообщения клиента как прочитанные"""
     client_id = body.get('client_id')
@@ -205,6 +254,176 @@ def mark_read(conn, body):
         cur.execute("UPDATE crm_clients SET unread_messages_count = 0 WHERE id = %s", (client_id,))
         conn.commit()
     return ok_response({'success': True})
+
+
+# ------------------------------------------------------------------ folders --
+
+def get_folders(conn, params):
+    """Список папок почты партнёра вместе с правилами автосортировки по адресам"""
+    partner_id = _parse_int(params.get('partner_id'))
+    if partner_id is None:
+        return error_response('Missing partner_id', 400)
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("""
+            SELECT f.*, COUNT(m.id) AS messages_count
+            FROM bridge_folders f
+            LEFT JOIN bridge_messages m ON m.folder_id = f.id
+            WHERE f.partner_id = %s
+            GROUP BY f.id
+            ORDER BY f.sort_order ASC, f.id ASC
+        """, (partner_id,))
+        folders = cur.fetchall()
+        cur.execute("SELECT * FROM bridge_folder_rules WHERE partner_id = %s", (partner_id,))
+        rules = cur.fetchall()
+    rules_by_folder = {}
+    for r in rules:
+        rules_by_folder.setdefault(r['folder_id'], []).append(r['email_address'])
+    for f in folders:
+        f['rule_addresses'] = rules_by_folder.get(f['id'], [])
+    return ok_response({'folders': folders})
+
+
+def save_folder(conn, body):
+    """Создаёт или переименовывает папку почты"""
+    partner_id = body.get('partner_id')
+    name = (body.get('name') or '').strip()
+    if not partner_id or not name:
+        return error_response('partner_id and name are required', 400)
+    folder_id = body.get('id')
+    color = body.get('color') or '#45A29E'
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        if folder_id:
+            cur.execute("""
+                UPDATE bridge_folders SET name = %s, color = %s
+                WHERE id = %s AND partner_id = %s RETURNING *
+            """, (name, color, folder_id, partner_id))
+        else:
+            cur.execute("SELECT COALESCE(MAX(sort_order), 0) + 1 AS n FROM bridge_folders WHERE partner_id = %s", (partner_id,))
+            order = cur.fetchone()['n']
+            cur.execute("""
+                INSERT INTO bridge_folders (partner_id, name, color, sort_order)
+                VALUES (%s, %s, %s, %s) RETURNING *
+            """, (partner_id, name, color, order))
+        folder = cur.fetchone()
+        conn.commit()
+    return ok_response({'success': True, 'folder': folder})
+
+
+def move_message(conn, body):
+    """Перемещает письмо в папку. Запоминает правило: последующие письма с этого адреса
+    будут автоматически попадать в ту же папку."""
+    partner_id = body.get('partner_id')
+    message_id = body.get('message_id')
+    folder_id = body.get('folder_id')  # None -> вынуть из папки
+    apply_rule = body.get('apply_rule', True)
+    if not partner_id or not message_id:
+        return error_response('partner_id and message_id are required', 400)
+
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("""
+            UPDATE bridge_messages SET folder_id = %s
+            WHERE id = %s AND partner_id = %s RETURNING *
+        """, (folder_id, message_id, partner_id))
+        msg = cur.fetchone()
+        if not msg:
+            return error_response('Письмо не найдено', 404)
+
+        counterpart = (msg['email_from'] if msg['direction'] == 'in' else msg['email_to']) or ''
+        counterpart = counterpart.strip().lower()
+
+        if apply_rule and counterpart:
+            if folder_id:
+                cur.execute("""
+                    INSERT INTO bridge_folder_rules (partner_id, folder_id, email_address)
+                    VALUES (%s, %s, %s)
+                    ON CONFLICT (partner_id, email_address)
+                    DO UPDATE SET folder_id = EXCLUDED.folder_id
+                """, (partner_id, folder_id, counterpart))
+                # существующие письма этого адресата тоже переносим в папку
+                cur.execute("""
+                    UPDATE bridge_messages SET folder_id = %s
+                    WHERE partner_id = %s AND channel = 'email'
+                      AND (LOWER(email_from) = %s OR LOWER(email_to) = %s)
+                """, (folder_id, partner_id, counterpart, counterpart))
+            else:
+                cur.execute("""
+                    UPDATE bridge_folder_rules SET folder_id = NULL
+                    WHERE partner_id = %s AND email_address = %s AND FALSE
+                """, (partner_id, counterpart))
+        conn.commit()
+    return ok_response({'success': True})
+
+
+def _folder_for_address(cur, partner_id, address):
+    """Папка по правилу автосортировки для адреса отправителя (или None)"""
+    if not address:
+        return None
+    cur.execute("""
+        SELECT folder_id FROM bridge_folder_rules
+        WHERE partner_id = %s AND email_address = %s
+    """, (partner_id, address.strip().lower()))
+    row = cur.fetchone()
+    return row['folder_id'] if row else None
+
+
+# --------------------------------------------------------------- signatures --
+
+def get_signatures(conn, params):
+    """Список подписей партнёра для писем"""
+    partner_id = _parse_int(params.get('partner_id'))
+    if partner_id is None:
+        return error_response('Missing partner_id', 400)
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("""
+            SELECT * FROM bridge_signatures WHERE partner_id = %s
+            ORDER BY is_default DESC, id ASC
+        """, (partner_id,))
+        signatures = cur.fetchall()
+    return ok_response({'signatures': signatures})
+
+
+def save_signature(conn, body):
+    """Создаёт или обновляет подпись к письмам"""
+    partner_id = body.get('partner_id')
+    name = (body.get('name') or '').strip()
+    html = body.get('html') or ''
+    if not partner_id or not name:
+        return error_response('partner_id and name are required', 400)
+    sig_id = body.get('id')
+    is_default = bool(body.get('is_default'))
+
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        if is_default:
+            cur.execute("UPDATE bridge_signatures SET is_default = FALSE WHERE partner_id = %s", (partner_id,))
+        if sig_id:
+            cur.execute("""
+                UPDATE bridge_signatures SET name = %s, html = %s, is_default = %s, updated_at = NOW()
+                WHERE id = %s AND partner_id = %s RETURNING *
+            """, (name, html, is_default, sig_id, partner_id))
+        else:
+            cur.execute("""
+                INSERT INTO bridge_signatures (partner_id, name, html, is_default)
+                VALUES (%s, %s, %s, %s) RETURNING *
+            """, (partner_id, name, html, is_default))
+        signature = cur.fetchone()
+        conn.commit()
+    return ok_response({'success': True, 'signature': signature})
+
+
+def upload_signature_image(body):
+    """Загружает картинку для подписи в хранилище и возвращает публичную ссылку"""
+    data_url = body.get('data') or ''
+    name = body.get('name') or 'image.png'
+    mime = body.get('mime') or 'image/png'
+    raw_b64 = data_url.split(',', 1)[1] if ',' in data_url else data_url
+    try:
+        raw = base64.b64decode(raw_b64)
+    except Exception:
+        return error_response('Некорректный файл', 400)
+    if len(raw) > 5 * 1024 * 1024:
+        return error_response('Картинка больше 5 МБ', 400)
+    url = _upload_bytes(raw, name, mime, prefix='signatures')
+    return ok_response({'success': True, 'url': url})
 
 
 def _attach_attachments(cur, messages):
@@ -446,19 +665,32 @@ def _sync_mailbox(conn, partner_id, address, password, known_ids, clients_by_ema
                 body_text = _get_email_body(msg)[:20000]
                 to_addr = parseaddr(msg.get('To', ''))[1]
 
+                in_reply_to = (msg.get('In-Reply-To') or '').strip() or None
+                references = (msg.get('References') or '').strip() or None
+                cc_raw = _decode_mime_words(msg.get('Cc', ''))
+                cc_list = _split_addresses(cc_raw)
+                to_all = _split_addresses(_decode_mime_words(msg.get('To', '')))
+
                 client_id = _find_client_or_create(cur, partner_id, clients_by_email, from_addr, from_name, own_addresses, default_stage_key)
                 if client_id and from_addr not in clients_by_email:
                     created_leads += 1
 
+                folder_id = _folder_for_address(cur, partner_id, from_addr)
+
                 cur.execute("""
                     INSERT INTO bridge_messages (
                         partner_id, client_id, channel, direction, sender_name,
-                        subject, body, email_message_id, email_from, email_to, mailbox
-                    ) VALUES (%s, %s, 'email', 'in', %s, %s, %s, %s, %s, %s, %s)
+                        subject, body, email_message_id, email_from, email_to, mailbox,
+                        email_in_reply_to, email_references, email_cc, email_to_all, folder_id
+                    ) VALUES (%s, %s, 'email', 'in', %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     RETURNING id
                 """, (
                     partner_id, client_id, from_name or from_addr,
                     subject, body_text, message_id or None, from_addr, to_addr, address,
+                    in_reply_to, references,
+                    ', '.join(cc_list) if cc_list else None,
+                    ', '.join(to_all) if to_all else None,
+                    folder_id,
                 ))
                 msg_id = cur.fetchone()['id']
 
@@ -527,16 +759,42 @@ def _backfill_unlinked_emails(conn, partner_id):
     return linked_count
 
 
+def _split_addresses(value):
+    """Разбирает строку или список адресов в чистый список email-ов"""
+    if not value:
+        return []
+    items = value if isinstance(value, list) else re.split(r'[,;]\s*', str(value))
+    result = []
+    for item in items:
+        addr = parseaddr(str(item).strip())[1].strip().lower()
+        if addr and '@' in addr and addr not in result:
+            result.append(addr)
+    return result
+
+
+def _fetch_url_bytes(url):
+    """Скачивает файл по ссылке (для вложений из депозитария)"""
+    req = urllib.request.Request(url, headers={'User-Agent': 'bridge/1.0'})
+    with urllib.request.urlopen(req, timeout=20) as resp:
+        return resp.read()
+
+
 def send_email(conn, body):
-    """Отправляет письмо клиенту через SMTP (с выбором ящика-отправителя и вложениями)
-    и сохраняет в истории переписки"""
+    """Отправляет письмо через SMTP: несколько получателей, копии, ответ в цепочке письма,
+    подпись, вложения (в том числе из депозитария), опциональное создание нового лида."""
     client_id = body.get('client_id')
     partner_id = body.get('partner_id')
     subject = (body.get('subject') or '').strip()
     text = (body.get('body') or '').strip()
-    to_override = (body.get('to') or '').strip()
     mailbox_address = (body.get('mailbox') or '').strip()
     attachments_in = body.get('attachments') or []
+    depo_files = body.get('depo_files') or []      # [{name, mime, url}]
+    reply_to_message_id = body.get('reply_to_message_id')
+    signature_id = body.get('signature_id')
+    create_lead = bool(body.get('create_lead'))
+
+    to_list = _split_addresses(body.get('to'))
+    cc_list = _split_addresses(body.get('cc'))
 
     if not partner_id or not text:
         return error_response('partner_id and body are required', 400)
@@ -547,25 +805,84 @@ def send_email(conn, body):
 
     box = next((b for b in boxes if b['address'] == mailbox_address), None) or boxes[0]
     address, password = box['address'], box['password']
+    own_addresses = {b['address'].lower() for b in boxes}
 
-    to_addr = to_override
-    if not to_addr and client_id:
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+    in_reply_to = None
+    references = None
+
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        # ---- ответ в цепочке: подтягиваем заголовки исходного письма
+        if reply_to_message_id:
+            cur.execute("""
+                SELECT subject, email_message_id, email_references, email_from
+                FROM bridge_messages WHERE id = %s AND partner_id = %s
+            """, (reply_to_message_id, partner_id))
+            src = cur.fetchone()
+            if src:
+                in_reply_to = src['email_message_id']
+                refs = (src['email_references'] or '').strip()
+                references = f"{refs} {in_reply_to}".strip() if in_reply_to else refs or None
+                if not subject and src['subject']:
+                    base = src['subject']
+                    subject = base if base.lower().startswith('re:') else f"Re: {base}"
+
+        # ---- получатель по клиенту, если явно не задан
+        if not to_list and client_id:
             cur.execute("SELECT email FROM crm_clients WHERE id = %s", (client_id,))
             row = cur.fetchone()
-            to_addr = row['email'] if row else ''
+            if row and row['email']:
+                to_list = [row['email'].strip().lower()]
 
-    if not to_addr:
-        return error_response('Не указан email получателя (у клиента нет email)', 400)
+        if not to_list:
+            return error_response('Не указан email получателя', 400)
 
-    if attachments_in:
-        msg = MIMEMultipart()
-        msg.attach(MIMEText(text, 'plain', 'utf-8'))
-    else:
-        msg = MIMEText(text, 'plain', 'utf-8')
-    msg['Subject'] = subject or '(без темы)'
-    msg['From'] = address
-    msg['To'] = to_addr
+        # ---- подпись
+        signature_html = ''
+        if signature_id:
+            cur.execute("SELECT html FROM bridge_signatures WHERE id = %s AND partner_id = %s", (signature_id, partner_id))
+            sig = cur.fetchone()
+            if sig:
+                signature_html = sig['html'] or ''
+
+        # ---- создание нового лида по новому адресату
+        if create_lead and not client_id:
+            primary = to_list[0]
+            cur.execute("""
+                SELECT id FROM crm_clients WHERE partner_id = %s AND LOWER(email) = %s LIMIT 1
+            """, (partner_id, primary))
+            existing = cur.fetchone()
+            if existing:
+                client_id = existing['id']
+            else:
+                stage_key = _get_default_stage_key(cur, partner_id)
+                cur.execute("""
+                    INSERT INTO crm_clients (partner_id, company_name, contact_person, email, stage, auto_created)
+                    VALUES (%s, %s, %s, %s, %s, TRUE) RETURNING id
+                """, (partner_id, primary, '', primary, stage_key))
+                client_id = cur.fetchone()['id']
+        elif not client_id:
+            cur.execute("""
+                SELECT id FROM crm_clients WHERE partner_id = %s AND LOWER(email) = %s LIMIT 1
+            """, (partner_id, to_list[0]))
+            existing = cur.fetchone()
+            if existing:
+                client_id = existing['id']
+
+        conn.commit()
+
+    # ---- сборка письма
+    depo_attachments = []
+    for f in depo_files:
+        url = f.get('url')
+        if not url:
+            continue
+        try:
+            raw = _fetch_url_bytes(url)
+        except Exception:
+            continue
+        if len(raw) > MAX_ATTACH_SIZE:
+            continue
+        depo_attachments.append((f.get('name') or 'file', f.get('mime') or 'application/octet-stream', raw))
 
     decoded_attachments = []
     for att in attachments_in:
@@ -579,27 +896,67 @@ def send_email(conn, body):
             continue
         if len(raw) > MAX_ATTACH_SIZE:
             return error_response(f'Файл "{name}" превышает 25 МБ', 400)
+        decoded_attachments.append((name, mime, raw))
+
+    all_attachments = decoded_attachments + depo_attachments
+
+    body_html = text.replace('\n', '<br>')
+    if signature_html:
+        body_html = f"{body_html}<br><br>{signature_html}"
+        plain_text = text
+    else:
+        plain_text = text
+
+    msg = MIMEMultipart('mixed')
+    alt = MIMEMultipart('alternative')
+    alt.attach(MIMEText(plain_text, 'plain', 'utf-8'))
+    alt.attach(MIMEText(f"<div>{body_html}</div>", 'html', 'utf-8'))
+    msg.attach(alt)
+
+    new_message_id = f"<{uuid.uuid4().hex}@{address.split('@')[-1]}>"
+    msg['Message-ID'] = new_message_id
+    msg['Subject'] = subject or '(без темы)'
+    msg['From'] = address
+    msg['To'] = ', '.join(to_list)
+    if cc_list:
+        msg['Cc'] = ', '.join(cc_list)
+    if in_reply_to:
+        msg['In-Reply-To'] = in_reply_to
+    if references:
+        msg['References'] = references
+
+    for name, mime, raw in all_attachments:
         part = MIMEApplication(raw, Name=name)
         part['Content-Disposition'] = f'attachment; filename="{name}"'
         msg.attach(part)
-        decoded_attachments.append((name, mime, raw))
+
+    recipients = to_list + cc_list
 
     context = ssl.create_default_context()
     with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=context) as server:
         server.login(address, password)
-        server.sendmail(address, [to_addr], msg.as_string())
+        server.sendmail(address, recipients, msg.as_string())
 
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        folder_id = _folder_for_address(cur, partner_id, to_list[0])
         cur.execute("""
             INSERT INTO bridge_messages (
                 partner_id, client_id, channel, direction, sender_name,
-                subject, body, email_from, email_to, mailbox
-            ) VALUES (%s, %s, 'email', 'out', 'Менеджер', %s, %s, %s, %s, %s)
+                subject, body, email_from, email_to, mailbox,
+                email_message_id, email_in_reply_to, email_references,
+                email_cc, email_to_all, folder_id, is_read, notified
+            ) VALUES (%s, %s, 'email', 'out', 'Менеджер', %s, %s, %s, %s, %s,
+                      %s, %s, %s, %s, %s, %s, TRUE, TRUE)
             RETURNING *
-        """, (partner_id, client_id, subject, text, address, to_addr, address))
+        """, (
+            partner_id, client_id, subject, text, address, to_list[0], address,
+            new_message_id, in_reply_to, references,
+            ', '.join(cc_list) if cc_list else None,
+            ', '.join(to_list), folder_id,
+        ))
         message = cur.fetchone()
 
-        for name, mime, raw in decoded_attachments:
+        for name, mime, raw in all_attachments:
             _save_attachment(cur, message['id'], name, mime, raw)
 
         if client_id:
@@ -609,7 +966,7 @@ def send_email(conn, body):
         cur.execute("SELECT * FROM bridge_attachments WHERE message_id = %s", (message['id'],))
         message['attachments'] = cur.fetchall()
 
-    return ok_response({'success': True, 'message': message})
+    return ok_response({'success': True, 'message': message, 'client_id': client_id})
 
 
 # ------------------------------------------------------------- import_range --

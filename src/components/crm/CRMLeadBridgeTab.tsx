@@ -1,20 +1,14 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
-import { bridgeApi, BridgeMessage, BridgeChannel } from '@/lib/bridgeApi';
+import { bridgeApi, BridgeMessage, BridgeChannel, BridgeAttachment } from '@/lib/bridgeApi';
+import { fileIcon, formatSize } from '@/lib/fileUtils';
+import FilePreviewModal, { PreviewFile } from '@/components/deod/FilePreviewModal';
+import BridgeComposer from './BridgeComposer';
 
 const CHANNEL_ICON: Record<BridgeChannel, string> = {
   email: 'Mail',
   telegram: 'Send',
   max: 'MessageCircle',
-};
-
-const CHANNEL_LABEL: Record<BridgeChannel, string> = {
-  email: 'Почта',
-  telegram: 'Telegram',
-  max: 'MAX',
 };
 
 const CHANNEL_COLOR: Record<BridgeChannel, string> = {
@@ -34,11 +28,21 @@ interface CRMLeadBridgeTabProps {
 export const CRMLeadBridgeTab = ({ clientId, clientEmail }: CRMLeadBridgeTabProps) => {
   const [messages, setMessages] = useState<BridgeMessage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [replyChannel, setReplyChannel] = useState<BridgeChannel>('email');
-  const [replySubject, setReplySubject] = useState('');
-  const [replyText, setReplyText] = useState('');
-  const [sending, setSending] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [replyTo, setReplyTo] = useState<BridgeMessage | null>(null);
+  const [mailboxes, setMailboxes] = useState<string[]>([]);
+  const [preview, setPreview] = useState<PreviewFile | null>(null);
+
   const endRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const shouldAutoScrollRef = useRef(true);
+  const firstLoadRef = useRef(true);
+
+  useEffect(() => {
+    bridgeApi.getMailboxes().then((res) => {
+      setMailboxes(res.mailboxes.map((m) => m.address));
+    }).catch(() => {});
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -53,6 +57,8 @@ export const CRMLeadBridgeTab = ({ clientId, clientEmail }: CRMLeadBridgeTabProp
   }, [clientId]);
 
   useEffect(() => {
+    firstLoadRef.current = true;
+    shouldAutoScrollRef.current = true;
     load();
   }, [load]);
 
@@ -62,41 +68,64 @@ export const CRMLeadBridgeTab = ({ clientId, clientEmail }: CRMLeadBridgeTabProp
     return () => clearInterval(interval);
   }, [load]);
 
+  // Скроллим вниз только при первом открытии или если пользователь уже внизу —
+  // иначе автообновление сбрасывало бы чтение истории вниз
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const isFirst = firstLoadRef.current && messages.length > 0;
+    if (isFirst) firstLoadRef.current = false;
+    if (isFirst || shouldAutoScrollRef.current) {
+      endRef.current?.scrollIntoView({ behavior: isFirst ? 'auto' : 'smooth' });
+    }
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!replyText.trim()) return;
-    setSending(true);
-    try {
-      if (replyChannel === 'email') {
-        if (!clientEmail) {
-          alert('У клиента не указан email');
-          setSending(false);
-          return;
-        }
-        await bridgeApi.sendEmail({ client_id: clientId, subject: replySubject || undefined, body: replyText.trim() });
-      } else if (replyChannel === 'telegram') {
-        await bridgeApi.sendTelegram({ client_id: clientId, body: replyText.trim() });
-      } else {
-        alert('Канал MAX пока не подключён');
-        setSending(false);
-        return;
-      }
-      setReplyText('');
-      setReplySubject('');
-      await load();
-    } catch (error) {
-      alert(error instanceof Error ? error.message : 'Не удалось отправить сообщение');
-    } finally {
-      setSending(false);
-    }
+  const handleScroll = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    shouldAutoScrollRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+  };
+
+  const renderAttachments = (attachments: BridgeAttachment[]) => {
+    if (!attachments?.length) return null;
+    return (
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {attachments.map((a) => (
+          <button
+            key={a.id}
+            onClick={() => setPreview({ url: a.url, name: a.file_name, mime: a.mime, size: a.size_bytes })}
+            className="flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-md bg-[#0B0C10]/50 border border-[#45A29E]/30 text-[#8B98A5] hover:text-white transition-colors max-w-[200px]"
+          >
+            <Icon name={fileIcon(a.file_name, a.mime || '')} size={12} className="shrink-0" />
+            <span className="truncate">{a.file_name}</span>
+            {a.size_bytes ? <span className="shrink-0 opacity-60">{formatSize(a.size_bytes)}</span> : null}
+          </button>
+        ))}
+      </div>
+    );
   };
 
   return (
-    <div className="flex flex-col h-[420px] bg-[#1F2833]/70 rounded-lg border border-[#45A29E]/20 overflow-hidden">
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+    <div
+      className={
+        fullscreen
+          ? 'fixed inset-0 z-[110] flex flex-col bg-[#0B0C10] p-4'
+          : 'flex flex-col h-[420px] bg-[#1F2833]/70 rounded-lg border border-[#45A29E]/20 overflow-hidden'
+      }
+    >
+      <div className="flex items-center justify-between px-3 py-2 border-b border-[#45A29E]/20 shrink-0">
+        <span className="text-xs text-[#8B98A5] flex items-center gap-1.5">
+          <Icon name="MessagesSquare" size={13} className="text-[#66FCF1]" />
+          Переписка
+        </span>
+        <button
+          onClick={() => setFullscreen((v) => !v)}
+          className="text-[#8B98A5] hover:text-[#66FCF1] p-1"
+          title={fullscreen ? 'Свернуть' : 'Развернуть на весь экран'}
+        >
+          <Icon name={fullscreen ? 'Minimize2' : 'Maximize2'} size={14} />
+        </button>
+      </div>
+
+      <div ref={containerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-3 space-y-2 min-h-0">
         {loading ? (
           <div className="text-center py-8">
             <Icon name="Loader2" size={20} className="animate-spin text-[#66FCF1] mx-auto" />
@@ -106,14 +135,38 @@ export const CRMLeadBridgeTab = ({ clientId, clientEmail }: CRMLeadBridgeTabProp
         ) : (
           messages.map((m) => (
             <div key={m.id} className={`flex ${m.direction === 'out' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] rounded-lg px-3 py-2 ${m.direction === 'out' ? 'bg-[#45A29E]/20 text-white' : 'bg-[#0B0C10]/50 text-[#C5C6C7]'}`}>
+              <div
+                className={`relative group max-w-[80%] rounded-lg px-3 py-2 ${
+                  m.direction === 'out' ? 'bg-[#45A29E]/20 text-white' : 'bg-[#0B0C10]/50 text-[#C5C6C7]'
+                }`}
+              >
                 <div className="flex items-center gap-1.5 mb-1 text-[10px] text-[#8B98A5]">
                   <Icon name={CHANNEL_ICON[m.channel]} size={10} style={{ color: CHANNEL_COLOR[m.channel] }} />
                   {m.direction === 'out' ? 'Вы' : m.sender_name || 'Клиент'}
+                  {m.folder_name && (
+                    <span
+                      className="px-1.5 rounded-full"
+                      style={{ background: `${m.folder_color}22`, color: m.folder_color || '#45A29E' }}
+                    >
+                      {m.folder_name}
+                    </span>
+                  )}
                   <span className="ml-auto">{fmtTime(m.created_at)}</span>
                 </div>
                 {m.subject && <div className="text-xs font-semibold mb-1 text-[#66FCF1]">{m.subject}</div>}
+                {m.email_cc && <div className="text-[10px] text-[#6B7684] mb-1">Копия: {m.email_cc}</div>}
                 <div className="text-sm whitespace-pre-wrap break-words">{m.body}</div>
+                {renderAttachments(m.attachments)}
+
+                {m.channel === 'email' && (
+                  <button
+                    onClick={() => setReplyTo(m)}
+                    className="absolute -top-2 right-2 hidden group-hover:block text-[10px] px-1.5 py-0.5 rounded bg-[#1F2833] border border-[#45A29E]/40 text-[#66FCF1] hover:bg-[#45A29E]/20"
+                    title="Ответить с сохранением цепочки"
+                  >
+                    Ответить
+                  </button>
+                )}
               </div>
             </div>
           ))
@@ -121,47 +174,18 @@ export const CRMLeadBridgeTab = ({ clientId, clientEmail }: CRMLeadBridgeTabProp
         <div ref={endRef} />
       </div>
 
-      <div className="p-3 border-t border-[#45A29E]/20 space-y-2">
-        <div className="flex gap-1">
-          {(['email', 'telegram', 'max'] as const).map((ch) => (
-            <button
-              key={ch}
-              onClick={() => setReplyChannel(ch)}
-              disabled={ch === 'max'}
-              className={`text-[10px] px-2 py-1 rounded-md flex items-center gap-1 disabled:opacity-30 ${
-                replyChannel === ch ? 'bg-[#45A29E] text-[#0B0C10] font-bold' : 'bg-[#0B0C10]/40 text-[#8B98A5]'
-              }`}
-            >
-              <Icon name={CHANNEL_ICON[ch]} size={10} />
-              {CHANNEL_LABEL[ch]}
-            </button>
-          ))}
-        </div>
-        {replyChannel === 'email' && (
-          <Input
-            placeholder="Тема письма"
-            value={replySubject}
-            onChange={(e) => setReplySubject(e.target.value)}
-            className="h-8 text-xs bg-[#0B0C10]/40 border-[#45A29E]/30 text-white placeholder:text-[#6B7684]"
-          />
-        )}
-        <div className="flex gap-2">
-          <Textarea
-            placeholder="Сообщение..."
-            value={replyText}
-            onChange={(e) => setReplyText(e.target.value)}
-            rows={2}
-            className="text-sm bg-[#0B0C10]/40 border-[#45A29E]/30 text-white placeholder:text-[#6B7684] resize-none"
-          />
-          <Button
-            onClick={handleSend}
-            disabled={sending || !replyText.trim()}
-            className="h-auto px-4 bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold shrink-0 disabled:opacity-40"
-          >
-            <Icon name={sending ? 'Loader2' : 'Send'} size={16} className={sending ? 'animate-spin' : ''} />
-          </Button>
-        </div>
-      </div>
+      <BridgeComposer
+        clientId={clientId}
+        clientEmail={clientEmail}
+        mailboxes={mailboxes.length ? mailboxes : ['sale@sppi.ooo']}
+        replyTo={replyTo}
+        onCancelReply={() => setReplyTo(null)}
+        onSent={load}
+        allowNewLead={false}
+        compact={!fullscreen}
+      />
+
+      <FilePreviewModal file={preview} onClose={() => setPreview(null)} />
     </div>
   );
 };

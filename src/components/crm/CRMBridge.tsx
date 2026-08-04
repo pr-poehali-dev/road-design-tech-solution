@@ -1,11 +1,19 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
-import { bridgeApi, BridgeConversation, BridgeMessage, BridgeChannel, BridgeAttachment } from '@/lib/bridgeApi';
-import { fileToDataUrl, fileIcon, formatSize } from '@/lib/fileUtils';
+import {
+  bridgeApi,
+  BridgeConversation,
+  BridgeMessage,
+  BridgeChannel,
+  BridgeAttachment,
+  BridgeFolder,
+} from '@/lib/bridgeApi';
+import { fileIcon, formatSize } from '@/lib/fileUtils';
 import FilePreviewModal, { PreviewFile } from '@/components/deod/FilePreviewModal';
+import BridgeComposer from './BridgeComposer';
+import { useNotificationSound } from '@/components/deod/useNotificationSound';
+import { toast } from 'sonner';
 
 const CHANNEL_ICON: Record<BridgeChannel, string> = {
   email: 'Mail',
@@ -30,13 +38,6 @@ const fmtTime = (d?: string) =>
 
 type ViewTab = 'chat' | 'inbox' | 'sent';
 
-interface PendingAttachment {
-  name: string;
-  mime: string;
-  size: number;
-  dataUrl: string;
-}
-
 interface CRMBridgeProps {
   partnerId?: number;
   initialClientId?: number | null;
@@ -51,37 +52,55 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
   const [filterChannel, setFilterChannel] = useState<BridgeChannel | 'all'>('all');
   const [selectedClientId, setSelectedClientId] = useState<number | null>(initialClientId ?? null);
   const [messages, setMessages] = useState<BridgeMessage[]>([]);
-  const [replyText, setReplyText] = useState('');
-  const [replySubject, setReplySubject] = useState('');
-  const [replyChannel, setReplyChannel] = useState<BridgeChannel>('email');
-  const [replyMailbox, setReplyMailbox] = useState<string>('');
-  const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([]);
+  const [replyTo, setReplyTo] = useState<BridgeMessage | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const [sending, setSending] = useState(false);
   const [preview, setPreview] = useState<PreviewFile | null>(null);
 
   const [flatList, setFlatList] = useState<BridgeMessage[]>([]);
   const [flatLoading, setFlatLoading] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
 
+  const [folders, setFolders] = useState<BridgeFolder[]>([]);
+  const [folderFilter, setFolderFilter] = useState<number | 'none' | null>(null);
+  const [moveMenuFor, setMoveMenuFor] = useState<number | null>(null);
+
+  const [listWidth, setListWidth] = useState(320);
+  const [composeNew, setComposeNew] = useState(false);
+  const resizingRef = useRef(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const shouldAutoScrollRef = useRef(true);
   const prevClientIdRef = useRef<number | null>(null);
+  const playSound = useNotificationSound();
 
   useEffect(() => {
     bridgeApi.getMailboxes().then((res) => {
-      const addrs = res.mailboxes.map((m) => m.address);
-      setMailboxes(addrs);
-      if (addrs.length) setReplyMailbox(addrs[0]);
+      setMailboxes(res.mailboxes.map((m) => m.address));
     }).catch(() => {});
   }, []);
 
+  const loadFolders = useCallback(async () => {
+    try {
+      const res = await bridgeApi.getFolders(partnerId);
+      setFolders(res.folders);
+    } catch (error) {
+      console.error('Error loading folders:', error);
+    }
+  }, [partnerId]);
+
+  useEffect(() => {
+    loadFolders();
+  }, [loadFolders]);
+
   const loadConversations = useCallback(async () => {
     try {
-      const res = await bridgeApi.getConversations(filterChannel === 'all' ? undefined : filterChannel, mailboxFilter || undefined, partnerId);
+      const res = await bridgeApi.getConversations(
+        filterChannel === 'all' ? undefined : filterChannel,
+        mailboxFilter || undefined,
+        partnerId,
+      );
       setConversations(res.conversations);
     } catch (error) {
       console.error('Error loading conversations:', error);
@@ -94,15 +113,32 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
     if (tab === 'chat') loadConversations();
   }, [tab, loadConversations]);
 
-  // Тихое автообновление списка диалогов — почта синхронизируется фоном на уровне CRM,
-  // здесь просто периодически подтягиваем актуальный список без индикатора загрузки
   useEffect(() => {
     if (tab !== 'chat') return;
-    const interval = setInterval(() => {
-      loadConversations();
-    }, 15_000);
+    const interval = setInterval(loadConversations, 15_000);
     return () => clearInterval(interval);
   }, [tab, loadConversations]);
+
+  // Уведомления о новых письмах: показываем название папки, если письмо в неё отсортировано
+  useEffect(() => {
+    const check = async () => {
+      try {
+        const res = await bridgeApi.getNotifications(partnerId);
+        res.notifications.forEach((n) => {
+          const title = n.folder_name ? `Новое письмо · ${n.folder_name}` : 'Новое письмо';
+          toast(title, {
+            description: `${n.sender_name || n.email_from || 'Отправитель'} — ${n.subject || 'без темы'}`,
+          });
+        });
+        if (res.notifications.length) playSound();
+      } catch {
+        /* уведомления не критичны */
+      }
+    };
+    check();
+    const interval = setInterval(check, 20_000);
+    return () => clearInterval(interval);
+  }, [partnerId, playSound]);
 
   const loadMessages = useCallback(async (clientId: number) => {
     try {
@@ -119,23 +155,18 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
     if (selectedClientId) loadMessages(selectedClientId);
   }, [selectedClientId, loadMessages]);
 
-  // Автообновление открытого диалога — новые ответы клиента появляются без ручного обновления
   useEffect(() => {
     if (!selectedClientId || tab !== 'chat') return;
-    const interval = setInterval(() => {
-      loadMessages(selectedClientId);
-    }, 15_000);
+    const interval = setInterval(() => loadMessages(selectedClientId), 15_000);
     return () => clearInterval(interval);
   }, [selectedClientId, loadMessages, tab]);
 
   // Скроллим к последнему сообщению только при открытии диалога или если пользователь и так
-  // находится внизу переписки — иначе автообновление каждые 15с будет сбрасывать чтение истории вниз
+  // внизу переписки — иначе автообновление сбрасывало бы чтение истории вниз
   useEffect(() => {
     const isNewConversation = prevClientIdRef.current !== selectedClientId;
     prevClientIdRef.current = selectedClientId;
-    if (isNewConversation) {
-      shouldAutoScrollRef.current = true;
-    }
+    if (isNewConversation) shouldAutoScrollRef.current = true;
     if (shouldAutoScrollRef.current) {
       messagesEndRef.current?.scrollIntoView({ behavior: isNewConversation ? 'auto' : 'smooth' });
     }
@@ -144,21 +175,20 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
   const handleMessagesScroll = () => {
     const el = messagesContainerRef.current;
     if (!el) return;
-    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-    shouldAutoScrollRef.current = distanceFromBottom < 80;
+    shouldAutoScrollRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
   };
 
   const loadFlatList = useCallback(async (direction: 'in' | 'out') => {
     setFlatLoading(true);
     try {
-      const res = await bridgeApi.getEmailList(direction, mailboxFilter || undefined, undefined, partnerId);
+      const res = await bridgeApi.getEmailList(direction, mailboxFilter || undefined, undefined, partnerId, folderFilter);
       setFlatList(res.messages);
     } catch (error) {
       console.error('Error loading email list:', error);
     } finally {
       setFlatLoading(false);
     }
-  }, [mailboxFilter, partnerId]);
+  }, [mailboxFilter, partnerId, folderFilter]);
 
   useEffect(() => {
     if (tab === 'inbox') loadFlatList('in');
@@ -170,12 +200,11 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
   const handleSync = async () => {
     setSyncing(true);
     try {
-      const res = await bridgeApi.syncEmail(partnerId);
+      await bridgeApi.syncEmail(partnerId);
       await loadConversations();
+      await loadFolders();
       if (selectedClientId) await loadMessages(selectedClientId);
-      if (res.created_leads > 0) {
-        // тихо — новые лиды видны в разделе CRM автоматически
-      }
+      if (tab !== 'chat') await loadFlatList(tab === 'inbox' ? 'in' : 'out');
     } catch (error) {
       console.error('Sync error:', error);
       alert('Не удалось синхронизировать почту. Проверьте настройки подключения.');
@@ -184,54 +213,50 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
     }
   };
 
-  const handleFilesSelected = async (files: FileList | null) => {
-    if (!files || !files.length) return;
-    const added: PendingAttachment[] = [];
-    for (const file of Array.from(files)) {
-      if (file.size > 25 * 1024 * 1024) {
-        alert(`Файл "${file.name}" превышает 25 МБ и не будет прикреплён`);
-        continue;
-      }
-      const dataUrl = await fileToDataUrl(file);
-      added.push({ name: file.name, mime: file.type || 'application/octet-stream', size: file.size, dataUrl });
-    }
-    setPendingAttachments((prev) => [...prev, ...added]);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const removePendingAttachment = (idx: number) => {
-    setPendingAttachments((prev) => prev.filter((_, i) => i !== idx));
-  };
-
-  const handleSend = async () => {
-    if (!selectedClientId || !replyText.trim()) return;
-    setSending(true);
+  const handleCreateFolder = async () => {
+    const name = prompt('Название новой папки');
+    if (!name?.trim()) return;
     try {
-      if (replyChannel === 'email') {
-        await bridgeApi.sendEmail({
-          client_id: selectedClientId,
-          subject: replySubject || undefined,
-          body: replyText.trim(),
-          mailbox: replyMailbox || undefined,
-          attachments: pendingAttachments.map((a) => ({ name: a.name, mime: a.mime, data: a.dataUrl })),
-        }, partnerId);
-      } else if (replyChannel === 'telegram') {
-        await bridgeApi.sendTelegram({ client_id: selectedClientId, body: replyText.trim() }, partnerId);
-      } else {
-        alert('Канал MAX пока не подключён');
-        setSending(false);
-        return;
-      }
-      setReplyText('');
-      setReplySubject('');
-      setPendingAttachments([]);
-      await loadMessages(selectedClientId);
-      await loadConversations();
+      await bridgeApi.saveFolder({ name: name.trim() }, partnerId);
+      await loadFolders();
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Не удалось отправить сообщение');
-    } finally {
-      setSending(false);
+      alert(error instanceof Error ? error.message : 'Не удалось создать папку');
     }
+  };
+
+  const handleMoveToFolder = async (messageId: number, folderId: number | null) => {
+    try {
+      await bridgeApi.moveMessage({ message_id: messageId, folder_id: folderId, apply_rule: true }, partnerId);
+      setMoveMenuFor(null);
+      await loadFolders();
+      if (tab !== 'chat') await loadFlatList(tab === 'inbox' ? 'in' : 'out');
+      if (selectedClientId) await loadMessages(selectedClientId);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Не удалось переместить письмо');
+    }
+  };
+
+  const startResize = (e: React.MouseEvent) => {
+    e.preventDefault();
+    resizingRef.current = true;
+    const startX = e.clientX;
+    const startWidth = listWidth;
+
+    const onMove = (ev: MouseEvent) => {
+      if (!resizingRef.current) return;
+      const next = Math.min(Math.max(startWidth + (ev.clientX - startX), 220), 640);
+      setListWidth(next);
+    };
+    const onUp = () => {
+      resizingRef.current = false;
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.body.style.userSelect = '';
+    };
+
+    document.body.style.userSelect = 'none';
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
   };
 
   const openFromFlatList = (m: BridgeMessage) => {
@@ -248,10 +273,9 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
           <button
             key={a.id}
             onClick={() => setPreview({ url: a.url, name: a.file_name, mime: a.mime, size: a.size_bytes })}
-            className="flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-md bg-[#0B0C10]/50 border border-[#45A29E]/20 text-[#8B98A5] hover:text-[#66FCF1] hover:border-[#45A29E]/50 transition-colors max-w-[220px]"
-            title={a.file_name}
+            className="flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-md bg-[#0B0C10]/50 border border-[#45A29E]/30 text-[#8B98A5] hover:text-white hover:border-[#45A29E]/60 transition-colors max-w-[220px]"
           >
-            <Icon name={fileIcon(a.file_name, a.mime)} size={12} className="shrink-0" />
+            <Icon name={fileIcon(a.file_name, a.mime || '')} size={12} className="shrink-0" />
             <span className="truncate">{a.file_name}</span>
             {a.size_bytes ? <span className="shrink-0 opacity-60">{formatSize(a.size_bytes)}</span> : null}
           </button>
@@ -259,6 +283,34 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
       </div>
     );
   };
+
+  const renderFolderMenu = (messageId: number) => (
+    <div className="absolute right-0 top-6 z-20 w-48 rounded-md bg-[#1F2833] border border-[#45A29E]/30 shadow-xl py-1">
+      <div className="px-2 py-1 text-[10px] text-[#6B7684] uppercase tracking-wide">Переместить в папку</div>
+      {folders.map((f) => (
+        <button
+          key={f.id}
+          onClick={() => handleMoveToFolder(messageId, f.id)}
+          className="w-full text-left px-2 py-1.5 text-xs text-[#C5C6C7] hover:bg-[#45A29E]/10 flex items-center gap-2"
+        >
+          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: f.color }} />
+          <span className="truncate">{f.name}</span>
+        </button>
+      ))}
+      <button
+        onClick={() => handleMoveToFolder(messageId, null)}
+        className="w-full text-left px-2 py-1.5 text-xs text-[#8B98A5] hover:bg-[#45A29E]/10 border-t border-[#45A29E]/20 mt-1"
+      >
+        Убрать из папки
+      </button>
+      <button
+        onClick={handleCreateFolder}
+        className="w-full text-left px-2 py-1.5 text-xs text-[#66FCF1] hover:bg-[#45A29E]/10"
+      >
+        + Новая папка
+      </button>
+    </div>
+  );
 
   const mailboxOptions = mailboxes.length ? mailboxes : ['sale@sppi.ooo'];
 
@@ -270,7 +322,6 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
           : 'flex flex-col h-[calc(100vh-220px)] p-4 gap-3'
       }
     >
-      {/* ---- Tabs + mailbox filter ---- */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex gap-1 bg-[#0B0C10]/40 rounded-lg p-1">
           {([
@@ -306,6 +357,14 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
           )}
           <Button
             size="sm"
+            onClick={() => { setComposeNew(true); setSelectedClientId(null); setReplyTo(null); setTab('chat'); }}
+            className="h-8 px-3 text-xs bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold"
+          >
+            <Icon name="PenSquare" size={13} className="mr-1" />
+            Написать
+          </Button>
+          <Button
+            size="sm"
             variant="ghost"
             onClick={handleSync}
             disabled={syncing}
@@ -326,6 +385,47 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
         </div>
       </div>
 
+      {tab !== 'chat' && (
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button
+            onClick={() => setFolderFilter(null)}
+            className={`text-[10px] px-2 py-1 rounded-md ${
+              folderFilter === null ? 'bg-[#45A29E] text-[#0B0C10] font-bold' : 'bg-[#0B0C10]/40 text-[#8B98A5]'
+            }`}
+          >
+            Все письма
+          </button>
+          <button
+            onClick={() => setFolderFilter('none')}
+            className={`text-[10px] px-2 py-1 rounded-md ${
+              folderFilter === 'none' ? 'bg-[#45A29E] text-[#0B0C10] font-bold' : 'bg-[#0B0C10]/40 text-[#8B98A5]'
+            }`}
+          >
+            Без папки
+          </button>
+          {folders.map((f) => (
+            <button
+              key={f.id}
+              onClick={() => setFolderFilter(f.id)}
+              className={`text-[10px] px-2 py-1 rounded-md flex items-center gap-1 ${
+                folderFilter === f.id ? 'bg-[#45A29E] text-[#0B0C10] font-bold' : 'bg-[#0B0C10]/40 text-[#8B98A5]'
+              }`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: f.color }} />
+              {f.name}
+              <span className="opacity-60">{f.messages_count}</span>
+            </button>
+          ))}
+          <button
+            onClick={handleCreateFolder}
+            className="text-[10px] px-2 py-1 rounded-md text-[#66FCF1] hover:bg-[#45A29E]/10 flex items-center gap-1"
+          >
+            <Icon name="FolderPlus" size={11} />
+            Новая папка
+          </button>
+        </div>
+      )}
+
       {tab !== 'chat' ? (
         <div className="flex-1 bg-[#1F2833]/40 rounded-lg border border-[#45A29E]/20 overflow-y-auto">
           {flatLoading ? (
@@ -334,37 +434,58 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
             <div className="p-6 text-center text-sm text-[#6B7684]">Писем пока нет</div>
           ) : (
             flatList.map((m) => (
-              <button
-                key={m.id}
-                onClick={() => openFromFlatList(m)}
-                disabled={!m.client_id}
-                className="w-full text-left p-3 border-b border-[#45A29E]/10 hover:bg-[#45A29E]/5 transition-colors disabled:cursor-default disabled:hover:bg-transparent"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-medium text-white truncate">
-                    {m.company_name || m.contact_person || (tab === 'inbox' ? m.email_from : m.email_to) || '—'}
-                  </span>
-                  <span className="shrink-0 flex items-center gap-1.5">
-                    {m.mailbox && <span className="text-[10px] text-[#45A29E] font-mono">{m.mailbox}</span>}
-                    <span className="text-[10px] text-[#6B7684]">{fmtTime(m.created_at)}</span>
-                  </span>
-                </div>
-                {m.subject && <div className="text-xs font-semibold text-[#66FCF1] mt-0.5 truncate">{m.subject}</div>}
-                <div className="text-xs text-[#8B98A5] truncate mt-0.5">{m.body}</div>
-                {m.attachments?.length > 0 && (
-                  <div className="text-[10px] text-[#6B7684] mt-1 flex items-center gap-1">
-                    <Icon name="Paperclip" size={10} /> {m.attachments.length} вложение(й)
+              <div key={m.id} className="relative border-b border-[#45A29E]/10 hover:bg-[#45A29E]/5 transition-colors">
+                <button
+                  onClick={() => openFromFlatList(m)}
+                  disabled={!m.client_id}
+                  className="w-full text-left p-3 disabled:cursor-default"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-medium text-white truncate">
+                      {m.company_name || m.contact_person || (tab === 'inbox' ? m.email_from : m.email_to) || '—'}
+                    </span>
+                    <span className="shrink-0 flex items-center gap-1.5">
+                      {m.folder_name && (
+                        <span
+                          className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+                          style={{ background: `${m.folder_color}22`, color: m.folder_color || '#45A29E' }}
+                        >
+                          {m.folder_name}
+                        </span>
+                      )}
+                      {m.mailbox && <span className="text-[10px] text-[#45A29E] font-mono">{m.mailbox}</span>}
+                      <span className="text-[10px] text-[#6B7684]">{fmtTime(m.created_at)}</span>
+                    </span>
                   </div>
+                  {m.subject && <div className="text-xs font-semibold text-[#66FCF1] mt-0.5 truncate">{m.subject}</div>}
+                  <div className="text-xs text-[#8B98A5] truncate mt-0.5">{m.body}</div>
+                  {m.attachments?.length > 0 && (
+                    <div className="text-[10px] text-[#6B7684] mt-1 flex items-center gap-1">
+                      <Icon name="Paperclip" size={10} /> {m.attachments.length} вложение(й)
+                    </div>
+                  )}
+                </button>
+                <button
+                  onClick={() => setMoveMenuFor(moveMenuFor === m.id ? null : m.id)}
+                  className="absolute right-2 bottom-2 text-[#6B7684] hover:text-[#66FCF1] p-1"
+                  title="Переместить в папку"
+                >
+                  <Icon name="FolderInput" size={13} />
+                </button>
+                {moveMenuFor === m.id && (
+                  <div className="absolute right-2 bottom-8">{renderFolderMenu(m.id)}</div>
                 )}
-              </button>
+              </div>
             ))
           )}
         </div>
       ) : (
-        <div className="flex-1 flex gap-4 min-h-0">
-          {/* ---- LEFT: conversation list ---- */}
-          <div className="w-full sm:w-80 shrink-0 flex flex-col bg-[#1F2833]/40 rounded-lg border border-[#45A29E]/20 overflow-hidden">
-            <div className="p-3 border-b border-[#45A29E]/20 space-y-2">
+        <div className="flex-1 flex min-h-0">
+          <div
+            className="shrink-0 flex flex-col bg-[#1F2833]/40 rounded-lg border border-[#45A29E]/20 overflow-hidden"
+            style={{ width: listWidth }}
+          >
+            <div className="p-3 border-b border-[#45A29E]/20">
               <div className="flex gap-1">
                 {(['all', 'email', 'telegram', 'max'] as const).map((ch) => (
                   <button
@@ -396,7 +517,7 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
                 conversations.map((c) => (
                   <button
                     key={c.client_id}
-                    onClick={() => setSelectedClientId(c.client_id)}
+                    onClick={() => { setSelectedClientId(c.client_id); setReplyTo(null); }}
                     className={`w-full text-left p-3 border-b border-[#45A29E]/10 hover:bg-[#45A29E]/5 transition-colors ${
                       selectedClientId === c.client_id ? 'bg-[#45A29E]/10' : ''
                     }`}
@@ -429,9 +550,41 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
             </div>
           </div>
 
-          {/* ---- RIGHT: conversation window ---- */}
-          <div className="flex-1 flex flex-col bg-[#1F2833]/40 rounded-lg border border-[#45A29E]/20 overflow-hidden">
-            {!selectedConversation ? (
+          <div
+            onMouseDown={startResize}
+            className="w-2 mx-1 shrink-0 cursor-col-resize rounded-full hover:bg-[#45A29E]/40 transition-colors flex items-center justify-center group"
+            title="Потяните, чтобы изменить ширину"
+          >
+            <div className="w-0.5 h-10 rounded-full bg-[#45A29E]/30 group-hover:bg-[#66FCF1]" />
+          </div>
+
+          <div className="flex-1 flex flex-col bg-[#1F2833]/40 rounded-lg border border-[#45A29E]/20 overflow-hidden min-w-0">
+            {composeNew && !selectedConversation ? (
+              <>
+                <div className="p-3 border-b border-[#45A29E]/20 flex items-center justify-between">
+                  <div className="text-sm font-medium text-white flex items-center gap-2">
+                    <Icon name="PenSquare" size={14} className="text-[#66FCF1]" />
+                    Новое письмо
+                  </div>
+                  <button onClick={() => setComposeNew(false)} className="text-[#8B98A5] hover:text-white">
+                    <Icon name="X" size={16} />
+                  </button>
+                </div>
+                <div className="flex-1 flex items-center justify-center text-[#6B7684] text-sm px-6 text-center">
+                  Укажите адрес получателя ниже. Можно перечислить несколько адресов через запятую
+                  и поставить галочку «Создать новый лид».
+                </div>
+                <BridgeComposer
+                  mailboxes={mailboxOptions}
+                  partnerId={partnerId}
+                  onSent={(newClientId) => {
+                    setComposeNew(false);
+                    loadConversations();
+                    if (newClientId) setSelectedClientId(newClientId);
+                  }}
+                />
+              </>
+            ) : !selectedConversation ? (
               <div className="flex-1 flex items-center justify-center text-[#6B7684] text-sm">
                 Выберите диалог слева
               </div>
@@ -451,7 +604,7 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
                   {messages.map((m) => (
                     <div key={m.id} className={`flex ${m.direction === 'out' ? 'justify-end' : 'justify-start'}`}>
                       <div
-                        className={`max-w-[75%] rounded-lg px-3 py-2 ${
+                        className={`relative group max-w-[75%] rounded-lg px-3 py-2 ${
                           m.direction === 'out' ? 'bg-[#45A29E]/20 text-white' : 'bg-[#0B0C10]/50 text-[#C5C6C7]'
                         }`}
                       >
@@ -459,11 +612,42 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
                           <Icon name={CHANNEL_ICON[m.channel]} size={10} style={{ color: CHANNEL_COLOR[m.channel] }} />
                           {m.direction === 'out' ? 'Вы' : m.sender_name || 'Клиент'}
                           {m.mailbox && <span className="text-[#45A29E] font-mono">· {m.mailbox}</span>}
+                          {m.folder_name && (
+                            <span
+                              className="px-1.5 rounded-full"
+                              style={{ background: `${m.folder_color}22`, color: m.folder_color || '#45A29E' }}
+                            >
+                              {m.folder_name}
+                            </span>
+                          )}
                           <span className="ml-auto">{fmtTime(m.created_at)}</span>
                         </div>
                         {m.subject && <div className="text-xs font-semibold mb-1 text-[#66FCF1]">{m.subject}</div>}
+                        {m.email_cc && (
+                          <div className="text-[10px] text-[#6B7684] mb-1">Копия: {m.email_cc}</div>
+                        )}
                         <div className="text-sm whitespace-pre-wrap break-words">{m.body}</div>
                         {renderAttachments(m.attachments)}
+
+                        {m.channel === 'email' && (
+                          <div className="absolute -top-2 right-2 hidden group-hover:flex items-center gap-1">
+                            <button
+                              onClick={() => setReplyTo(m)}
+                              className="text-[10px] px-1.5 py-0.5 rounded bg-[#1F2833] border border-[#45A29E]/40 text-[#66FCF1] hover:bg-[#45A29E]/20"
+                              title="Ответить с сохранением цепочки"
+                            >
+                              Ответить
+                            </button>
+                            <button
+                              onClick={() => setMoveMenuFor(moveMenuFor === m.id ? null : m.id)}
+                              className="text-[10px] px-1.5 py-0.5 rounded bg-[#1F2833] border border-[#45A29E]/40 text-[#8B98A5] hover:text-white"
+                              title="Переместить в папку"
+                            >
+                              <Icon name="FolderInput" size={11} />
+                            </button>
+                          </div>
+                        )}
+                        {moveMenuFor === m.id && renderFolderMenu(m.id)}
                       </div>
                     </div>
                   ))}
@@ -473,86 +657,18 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
                   <div ref={messagesEndRef} />
                 </div>
 
-                <div className="p-3 border-t border-[#45A29E]/20 space-y-2">
-                  <div className="flex gap-1 items-center flex-wrap">
-                    {(['email', 'telegram', 'max'] as const).map((ch) => (
-                      <button
-                        key={ch}
-                        onClick={() => setReplyChannel(ch)}
-                        disabled={ch === 'max'}
-                        className={`text-[10px] px-2 py-1 rounded-md flex items-center gap-1 disabled:opacity-30 ${
-                          replyChannel === ch ? 'bg-[#45A29E] text-[#0B0C10] font-bold' : 'bg-[#0B0C10]/40 text-[#8B98A5]'
-                        }`}
-                      >
-                        <Icon name={CHANNEL_ICON[ch]} size={10} />
-                        {CHANNEL_LABEL[ch]}
-                      </button>
-                    ))}
-                    {replyChannel === 'email' && mailboxOptions.length > 1 && (
-                      <select
-                        value={replyMailbox}
-                        onChange={(e) => setReplyMailbox(e.target.value)}
-                        className="text-[10px] h-6 rounded-md bg-[#0B0C10]/40 border border-[#45A29E]/30 text-white px-1.5 ml-auto"
-                        title="С какой почты отправить"
-                      >
-                        {mailboxOptions.map((mb) => (
-                          <option key={mb} value={mb}>{mb}</option>
-                        ))}
-                      </select>
-                    )}
-                  </div>
-                  {replyChannel === 'email' && (
-                    <Input
-                      placeholder="Тема письма"
-                      value={replySubject}
-                      onChange={(e) => setReplySubject(e.target.value)}
-                      className="h-8 text-xs bg-[#0B0C10]/40 border-[#45A29E]/30 text-white placeholder:text-[#6B7684]"
-                    />
-                  )}
-                  {pendingAttachments.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {pendingAttachments.map((a, idx) => (
-                        <span key={idx} className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-[#0B0C10]/50 border border-[#45A29E]/30 text-[#8B98A5] max-w-[180px]">
-                          <Icon name={fileIcon(a.name, a.mime)} size={11} className="shrink-0" />
-                          <span className="truncate">{a.name}</span>
-                          <button onClick={() => removePendingAttachment(idx)} className="shrink-0 hover:text-[#FF6600]">
-                            <Icon name="X" size={11} />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <div className="flex gap-2">
-                    <Textarea
-                      placeholder="Сообщение..."
-                      value={replyText}
-                      onChange={(e) => setReplyText(e.target.value)}
-                      rows={2}
-                      className="text-sm bg-[#0B0C10]/40 border-[#45A29E]/30 text-white placeholder:text-[#6B7684] resize-none"
-                    />
-                    {replyChannel === 'email' && (
-                      <>
-                        <input ref={fileInputRef} type="file" multiple className="hidden" onChange={(e) => handleFilesSelected(e.target.files)} />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="h-auto px-3 text-[#8B98A5] hover:text-[#66FCF1] shrink-0"
-                          title="Прикрепить файл"
-                        >
-                          <Icon name="Paperclip" size={16} />
-                        </Button>
-                      </>
-                    )}
-                    <Button
-                      onClick={handleSend}
-                      disabled={sending || !replyText.trim()}
-                      className="h-auto px-4 bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold shrink-0 disabled:opacity-40"
-                    >
-                      <Icon name={sending ? 'Loader2' : 'Send'} size={16} className={sending ? 'animate-spin' : ''} />
-                    </Button>
-                  </div>
-                </div>
+                <BridgeComposer
+                  clientId={selectedClientId}
+                  clientEmail={selectedConversation.email}
+                  mailboxes={mailboxOptions}
+                  partnerId={partnerId}
+                  replyTo={replyTo}
+                  onCancelReply={() => setReplyTo(null)}
+                  onSent={() => {
+                    if (selectedClientId) loadMessages(selectedClientId);
+                    loadConversations();
+                  }}
+                />
               </>
             )}
           </div>
