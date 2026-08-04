@@ -29,14 +29,13 @@ export const CRMLeadBridgeTab = ({ clientId, clientEmail }: CRMLeadBridgeTabProp
   const [messages, setMessages] = useState<BridgeMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
+  const [headerCollapsed, setHeaderCollapsed] = useState(false);
   const [replyTo, setReplyTo] = useState<BridgeMessage | null>(null);
   const [mailboxes, setMailboxes] = useState<string[]>([]);
   const [preview, setPreview] = useState<PreviewFile | null>(null);
 
-  const endRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const shouldAutoScrollRef = useRef(true);
-  const firstLoadRef = useRef(true);
 
   useEffect(() => {
     bridgeApi.getMailboxes().then((res) => {
@@ -57,7 +56,6 @@ export const CRMLeadBridgeTab = ({ clientId, clientEmail }: CRMLeadBridgeTabProp
   }, [clientId]);
 
   useEffect(() => {
-    firstLoadRef.current = true;
     shouldAutoScrollRef.current = true;
     load();
   }, [load]);
@@ -68,20 +66,39 @@ export const CRMLeadBridgeTab = ({ clientId, clientEmail }: CRMLeadBridgeTabProp
     return () => clearInterval(interval);
   }, [load]);
 
-  // Скроллим вниз только при первом открытии или если пользователь уже внизу —
-  // иначе автообновление сбрасывало бы чтение истории вниз
+  // Самое новое письмо теперь сверху, поэтому "актуальная" позиция — верх списка.
+  // Прокручиваем наверх только если пользователь и так читает свежие письма —
+  // иначе автообновление сбрасывало бы чтение старой переписки
   useEffect(() => {
-    const isFirst = firstLoadRef.current && messages.length > 0;
-    if (isFirst) firstLoadRef.current = false;
-    if (isFirst || shouldAutoScrollRef.current) {
-      endRef.current?.scrollIntoView({ behavior: isFirst ? 'auto' : 'smooth' });
+    if (shouldAutoScrollRef.current && containerRef.current) {
+      containerRef.current.scrollTop = 0;
     }
   }, [messages]);
 
   const handleScroll = () => {
     const el = containerRef.current;
     if (!el) return;
-    shouldAutoScrollRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    shouldAutoScrollRef.current = el.scrollTop < 80;
+  };
+
+  const handleDeleteMessage = async (messageId: number) => {
+    if (!confirm('Удалить это письмо? Действие необратимо.')) return;
+    try {
+      await bridgeApi.deleteMessage(messageId);
+      setMessages((prev) => prev.filter((m) => m.id !== messageId));
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Не удалось удалить письмо');
+    }
+  };
+
+  const handleDeleteConversation = async () => {
+    if (!confirm('Удалить всю переписку с этим клиентом? Все письма и вложения будут стёрты без возможности восстановления.')) return;
+    try {
+      await bridgeApi.deleteConversation(clientId);
+      setMessages([]);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Не удалось удалить переписку');
+    }
   };
 
   const renderAttachments = (attachments: BridgeAttachment[]) => {
@@ -111,19 +128,46 @@ export const CRMLeadBridgeTab = ({ clientId, clientEmail }: CRMLeadBridgeTabProp
           : 'flex flex-col h-[420px] bg-[#1F2833]/70 rounded-lg border border-[#45A29E]/20 overflow-hidden'
       }
     >
-      <div className="flex items-center justify-between px-3 py-2 border-b border-[#45A29E]/20 shrink-0">
-        <span className="text-xs text-[#8B98A5] flex items-center gap-1.5">
-          <Icon name="MessagesSquare" size={13} className="text-[#66FCF1]" />
-          Переписка
-        </span>
+      {!headerCollapsed && (
+        <div className="flex items-center justify-between px-3 py-2 border-b border-[#45A29E]/20 shrink-0">
+          <span className="text-xs text-[#8B98A5] flex items-center gap-1.5">
+            <Icon name="MessagesSquare" size={13} className="text-[#66FCF1]" />
+            Переписка
+          </span>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handleDeleteConversation}
+              className="text-[#8B98A5] hover:text-[#EF476F] p-1"
+              title="Удалить всю переписку"
+            >
+              <Icon name="Trash2" size={13} />
+            </button>
+            <button
+              onClick={() => setFullscreen((v) => !v)}
+              className="text-[#8B98A5] hover:text-[#66FCF1] p-1"
+              title={fullscreen ? 'Свернуть' : 'Развернуть на весь экран'}
+            >
+              <Icon name={fullscreen ? 'Minimize2' : 'Maximize2'} size={14} />
+            </button>
+            <button
+              onClick={() => setHeaderCollapsed(true)}
+              className="text-[#8B98A5] hover:text-[#66FCF1] p-1"
+              title="Скрыть шапку, расширить переписку"
+            >
+              <Icon name="ChevronUp" size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+      {headerCollapsed && (
         <button
-          onClick={() => setFullscreen((v) => !v)}
-          className="text-[#8B98A5] hover:text-[#66FCF1] p-1"
-          title={fullscreen ? 'Свернуть' : 'Развернуть на весь экран'}
+          onClick={() => setHeaderCollapsed(false)}
+          className="w-full flex items-center justify-center gap-1 py-1 border-b border-[#45A29E]/20 text-[#6B7684] hover:text-[#66FCF1] hover:bg-[#45A29E]/5 transition-colors shrink-0"
+          title="Показать шапку"
         >
-          <Icon name={fullscreen ? 'Minimize2' : 'Maximize2'} size={14} />
+          <Icon name="ChevronDown" size={14} />
         </button>
-      </div>
+      )}
 
       <div ref={containerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-3 space-y-2 min-h-0">
         {loading ? (
@@ -158,20 +202,28 @@ export const CRMLeadBridgeTab = ({ clientId, clientEmail }: CRMLeadBridgeTabProp
                 <div className="text-sm whitespace-pre-wrap break-words">{m.body}</div>
                 {renderAttachments(m.attachments)}
 
-                {m.channel === 'email' && (
+                <div className="absolute -top-2 right-2 hidden group-hover:flex items-center gap-1">
+                  {m.channel === 'email' && (
+                    <button
+                      onClick={() => setReplyTo(m)}
+                      className="text-[10px] px-1.5 py-0.5 rounded bg-[#1F2833] border border-[#45A29E]/40 text-[#66FCF1] hover:bg-[#45A29E]/20"
+                      title="Ответить с сохранением цепочки"
+                    >
+                      Ответить
+                    </button>
+                  )}
                   <button
-                    onClick={() => setReplyTo(m)}
-                    className="absolute -top-2 right-2 hidden group-hover:block text-[10px] px-1.5 py-0.5 rounded bg-[#1F2833] border border-[#45A29E]/40 text-[#66FCF1] hover:bg-[#45A29E]/20"
-                    title="Ответить с сохранением цепочки"
+                    onClick={() => handleDeleteMessage(m.id)}
+                    className="text-[10px] px-1.5 py-0.5 rounded bg-[#1F2833] border border-[#45A29E]/40 text-[#8B98A5] hover:text-[#EF476F]"
+                    title="Удалить письмо"
                   >
-                    Ответить
+                    <Icon name="Trash2" size={11} />
                   </button>
-                )}
+                </div>
               </div>
             </div>
           ))
         )}
-        <div ref={endRef} />
       </div>
 
       <BridgeComposer

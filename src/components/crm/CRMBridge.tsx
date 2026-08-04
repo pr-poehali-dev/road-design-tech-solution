@@ -12,6 +12,7 @@ import {
 import { fileIcon, formatSize } from '@/lib/fileUtils';
 import FilePreviewModal, { PreviewFile } from '@/components/deod/FilePreviewModal';
 import BridgeComposer from './BridgeComposer';
+import BridgeFoldersPanel from './BridgeFoldersPanel';
 import { useNotificationSound } from '@/components/deod/useNotificationSound';
 import { toast } from 'sonner';
 
@@ -36,7 +37,7 @@ const CHANNEL_COLOR: Record<BridgeChannel, string> = {
 const fmtTime = (d?: string) =>
   d ? new Date(d).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
 
-type ViewTab = 'chat' | 'inbox' | 'sent';
+type ViewTab = 'chat' | 'inbox' | 'sent' | 'folders';
 
 interface CRMBridgeProps {
   partnerId?: number;
@@ -67,9 +68,9 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
 
   const [listWidth, setListWidth] = useState(320);
   const [composeNew, setComposeNew] = useState(false);
+  const [contactCardCollapsed, setContactCardCollapsed] = useState(false);
   const resizingRef = useRef(false);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const shouldAutoScrollRef = useRef(true);
   const prevClientIdRef = useRef<number | null>(null);
@@ -161,21 +162,22 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
     return () => clearInterval(interval);
   }, [selectedClientId, loadMessages, tab]);
 
-  // Скроллим к последнему сообщению только при открытии диалога или если пользователь и так
-  // внизу переписки — иначе автообновление сбрасывало бы чтение истории вниз
+  // Самые новые письма показываются сверху списка, поэтому "актуальная" позиция — верх контейнера.
+  // Прокручиваем наверх только при открытии диалога или если пользователь и так читает верхние письма —
+  // иначе автообновление сбрасывало бы чтение более старой переписки наверх
   useEffect(() => {
     const isNewConversation = prevClientIdRef.current !== selectedClientId;
     prevClientIdRef.current = selectedClientId;
     if (isNewConversation) shouldAutoScrollRef.current = true;
-    if (shouldAutoScrollRef.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: isNewConversation ? 'auto' : 'smooth' });
+    if (shouldAutoScrollRef.current && messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = 0;
     }
   }, [messages, selectedClientId]);
 
   const handleMessagesScroll = () => {
     const el = messagesContainerRef.current;
     if (!el) return;
-    shouldAutoScrollRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    shouldAutoScrollRef.current = el.scrollTop < 80;
   };
 
   const loadFlatList = useCallback(async (direction: 'in' | 'out') => {
@@ -233,6 +235,33 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
       if (selectedClientId) await loadMessages(selectedClientId);
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Не удалось переместить письмо');
+    }
+  };
+
+  const handleDeleteMessage = async (messageId: number) => {
+    if (!confirm('Удалить это письмо? Действие необратимо.')) return;
+    try {
+      await bridgeApi.deleteMessage(messageId, partnerId);
+      setMessages((prev) => prev.filter((m) => m.id !== messageId));
+      setFlatList((prev) => prev.filter((m) => m.id !== messageId));
+      await loadFolders();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Не удалось удалить письмо');
+    }
+  };
+
+  const handleDeleteConversation = async () => {
+    if (!selectedClientId || !selectedConversation) return;
+    const name = selectedConversation.contact_person || selectedConversation.company_name || 'этим клиентом';
+    if (!confirm(`Удалить всю переписку с ${name}? Все письма и вложения будут стёрты без возможности восстановления.`)) return;
+    try {
+      await bridgeApi.deleteConversation(selectedClientId, partnerId);
+      setSelectedClientId(null);
+      setMessages([]);
+      await loadConversations();
+      await loadFolders();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Не удалось удалить переписку');
     }
   };
 
@@ -328,6 +357,7 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
             { id: 'chat', label: 'Диалоги', icon: 'MessagesSquare' },
             { id: 'inbox', label: 'Входящие', icon: 'Inbox' },
             { id: 'sent', label: 'Отправленные', icon: 'SendHorizontal' },
+            { id: 'folders', label: 'Папки', icon: 'FolderKanban' },
           ] as const).map((t) => (
             <button
               key={t.id}
@@ -385,7 +415,7 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
         </div>
       </div>
 
-      {tab !== 'chat' && (
+      {(tab === 'inbox' || tab === 'sent') && (
         <div className="flex items-center gap-1.5 flex-wrap">
           <button
             onClick={() => setFolderFilter(null)}
@@ -426,7 +456,14 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
         </div>
       )}
 
-      {tab !== 'chat' ? (
+      {tab === 'folders' ? (
+        <BridgeFoldersPanel
+          partnerId={partnerId}
+          folders={folders}
+          onFoldersChanged={loadFolders}
+          onOpenConversation={(clientId) => { setSelectedClientId(clientId); setTab('chat'); }}
+        />
+      ) : tab !== 'chat' ? (
         <div className="flex-1 bg-[#1F2833]/40 rounded-lg border border-[#45A29E]/20 overflow-y-auto">
           {flatLoading ? (
             <div className="p-6 text-center"><Icon name="Loader2" size={22} className="animate-spin text-[#66FCF1] mx-auto" /></div>
@@ -465,13 +502,22 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
                     </div>
                   )}
                 </button>
-                <button
-                  onClick={() => setMoveMenuFor(moveMenuFor === m.id ? null : m.id)}
-                  className="absolute right-2 bottom-2 text-[#6B7684] hover:text-[#66FCF1] p-1"
-                  title="Переместить в папку"
-                >
-                  <Icon name="FolderInput" size={13} />
-                </button>
+                <div className="absolute right-2 bottom-2 flex items-center gap-1">
+                  <button
+                    onClick={() => setMoveMenuFor(moveMenuFor === m.id ? null : m.id)}
+                    className="text-[#6B7684] hover:text-[#66FCF1] p-1"
+                    title="Переместить в папку"
+                  >
+                    <Icon name="FolderInput" size={13} />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteMessage(m.id)}
+                    className="text-[#6B7684] hover:text-[#EF476F] p-1"
+                    title="Удалить письмо"
+                  >
+                    <Icon name="Trash2" size={13} />
+                  </button>
+                </div>
                 {moveMenuFor === m.id && (
                   <div className="absolute right-2 bottom-8">{renderFolderMenu(m.id)}</div>
                 )}
@@ -590,15 +636,42 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
               </div>
             ) : (
               <>
-                <div className="p-3 border-b border-[#45A29E]/20 flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-medium text-white">{selectedConversation.contact_person || selectedConversation.company_name}</div>
-                    <div className="text-xs text-[#8B98A5] flex items-center gap-2">
-                      {selectedConversation.email && <span className="flex items-center gap-1"><Icon name="Mail" size={11} />{selectedConversation.email}</span>}
-                      {selectedConversation.phone && <span className="flex items-center gap-1"><Icon name="Phone" size={11} />{selectedConversation.phone}</span>}
+                {!contactCardCollapsed && (
+                  <div className="p-3 border-b border-[#45A29E]/20 flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-medium text-white">{selectedConversation.contact_person || selectedConversation.company_name}</div>
+                      <div className="text-xs text-[#8B98A5] flex items-center gap-2">
+                        {selectedConversation.email && <span className="flex items-center gap-1"><Icon name="Mail" size={11} />{selectedConversation.email}</span>}
+                        {selectedConversation.phone && <span className="flex items-center gap-1"><Icon name="Phone" size={11} />{selectedConversation.phone}</span>}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={handleDeleteConversation}
+                        className="text-[#6B7684] hover:text-[#EF476F] p-1.5"
+                        title="Удалить всю переписку с этим клиентом"
+                      >
+                        <Icon name="Trash2" size={14} />
+                      </button>
+                      <button
+                        onClick={() => setContactCardCollapsed(true)}
+                        className="text-[#6B7684] hover:text-[#66FCF1] p-1.5"
+                        title="Скрыть карточку, расширить переписку"
+                      >
+                        <Icon name="ChevronUp" size={14} />
+                      </button>
                     </div>
                   </div>
-                </div>
+                )}
+                {contactCardCollapsed && (
+                  <button
+                    onClick={() => setContactCardCollapsed(false)}
+                    className="w-full flex items-center justify-center gap-1 py-1 border-b border-[#45A29E]/20 text-[#6B7684] hover:text-[#66FCF1] hover:bg-[#45A29E]/5 transition-colors"
+                    title="Показать карточку клиента"
+                  >
+                    <Icon name="ChevronDown" size={14} />
+                  </button>
+                )}
 
                 <div ref={messagesContainerRef} onScroll={handleMessagesScroll} className="flex-1 overflow-y-auto p-4 space-y-3">
                   {messages.map((m) => (
@@ -629,8 +702,8 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
                         <div className="text-sm whitespace-pre-wrap break-words">{m.body}</div>
                         {renderAttachments(m.attachments)}
 
-                        {m.channel === 'email' && (
-                          <div className="absolute -top-2 right-2 hidden group-hover:flex items-center gap-1">
+                        <div className="absolute -top-2 right-2 hidden group-hover:flex items-center gap-1">
+                          {m.channel === 'email' && (
                             <button
                               onClick={() => setReplyTo(m)}
                               className="text-[10px] px-1.5 py-0.5 rounded bg-[#1F2833] border border-[#45A29E]/40 text-[#66FCF1] hover:bg-[#45A29E]/20"
@@ -638,6 +711,8 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
                             >
                               Ответить
                             </button>
+                          )}
+                          {m.channel === 'email' && (
                             <button
                               onClick={() => setMoveMenuFor(moveMenuFor === m.id ? null : m.id)}
                               className="text-[10px] px-1.5 py-0.5 rounded bg-[#1F2833] border border-[#45A29E]/40 text-[#8B98A5] hover:text-white"
@@ -645,8 +720,15 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
                             >
                               <Icon name="FolderInput" size={11} />
                             </button>
-                          </div>
-                        )}
+                          )}
+                          <button
+                            onClick={() => handleDeleteMessage(m.id)}
+                            className="text-[10px] px-1.5 py-0.5 rounded bg-[#1F2833] border border-[#45A29E]/40 text-[#8B98A5] hover:text-[#EF476F]"
+                            title="Удалить письмо"
+                          >
+                            <Icon name="Trash2" size={11} />
+                          </button>
+                        </div>
                         {moveMenuFor === m.id && renderFolderMenu(m.id)}
                       </div>
                     </div>
@@ -654,7 +736,6 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
                   {messages.length === 0 && (
                     <div className="text-center text-sm text-[#6B7684] py-8">Сообщений пока нет</div>
                   )}
-                  <div ref={messagesEndRef} />
                 </div>
 
                 <BridgeComposer

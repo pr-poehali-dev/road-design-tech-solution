@@ -68,6 +68,8 @@ def handler(event, context):
                 return get_signatures(conn, params)
             if resource == 'notifications':
                 return get_notifications(conn, params)
+            if resource == 'folder_messages':
+                return get_folder_messages(conn, params)
             return error_response('Unknown resource', 400)
 
         if method == 'POST':
@@ -91,6 +93,12 @@ def handler(event, context):
                 return save_signature(conn, body)
             if resource == 'upload_signature_image':
                 return upload_signature_image(body)
+            if resource == 'delete_message':
+                return delete_message(conn, body)
+            if resource == 'delete_conversation':
+                return delete_conversation(conn, body)
+            if resource == 'delete_folder':
+                return delete_folder(conn, body)
             return error_response('Unknown resource', 400)
 
         return error_response('Method not allowed', 405)
@@ -166,7 +174,7 @@ def get_messages(conn, params):
         if channel:
             query += " AND m.channel = %s"
             args.append(channel)
-        query += " ORDER BY m.created_at ASC"
+        query += " ORDER BY m.created_at DESC"
         cur.execute(query, args)
         messages = cur.fetchall()
 
@@ -242,6 +250,28 @@ def get_notifications(conn, params):
             cur.execute("UPDATE bridge_messages SET notified = TRUE WHERE id = ANY(%s)", ([r['id'] for r in rows],))
             conn.commit()
     return ok_response({'notifications': rows})
+
+
+def get_folder_messages(conn, params):
+    """Все письма (входящие и исходящие) внутри конкретной папки, сгруппированные по диалогам,
+    для просмотра содержимого папки в 'Радужном мосте'."""
+    partner_id = _parse_int(params.get('partner_id'))
+    folder_id = _parse_int(params.get('folder_id'))
+    if partner_id is None or folder_id is None:
+        return error_response('Missing partner_id or folder_id', 400)
+
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("""
+            SELECT m.*, c.company_name, c.contact_person
+            FROM bridge_messages m
+            LEFT JOIN crm_clients c ON c.id = m.client_id
+            WHERE m.partner_id = %s AND m.folder_id = %s
+            ORDER BY m.created_at DESC
+        """, (partner_id, folder_id))
+        messages = cur.fetchall()
+        _attach_attachments(cur, messages)
+
+    return ok_response({'messages': messages})
 
 
 def mark_read(conn, body):
@@ -347,8 +377,7 @@ def move_message(conn, body):
                 """, (folder_id, partner_id, counterpart, counterpart))
             else:
                 cur.execute("""
-                    UPDATE bridge_folder_rules SET folder_id = NULL
-                    WHERE partner_id = %s AND email_address = %s AND FALSE
+                    DELETE FROM bridge_folder_rules WHERE partner_id = %s AND email_address = %s
                 """, (partner_id, counterpart))
         conn.commit()
     return ok_response({'success': True})
@@ -364,6 +393,50 @@ def _folder_for_address(cur, partner_id, address):
     """, (partner_id, address.strip().lower()))
     row = cur.fetchone()
     return row['folder_id'] if row else None
+
+
+def delete_folder(conn, body):
+    """Удаляет папку почты. Письма из неё не стираются, просто становятся 'без папки'."""
+    partner_id = body.get('partner_id')
+    folder_id = body.get('folder_id')
+    if not partner_id or not folder_id:
+        return error_response('partner_id and folder_id are required', 400)
+    with conn.cursor() as cur:
+        cur.execute("UPDATE bridge_messages SET folder_id = NULL WHERE folder_id = %s AND partner_id = %s", (folder_id, partner_id))
+        cur.execute("DELETE FROM bridge_folder_rules WHERE folder_id = %s AND partner_id = %s", (folder_id, partner_id))
+        cur.execute("DELETE FROM bridge_folders WHERE id = %s AND partner_id = %s", (folder_id, partner_id))
+        conn.commit()
+    return ok_response({'success': True})
+
+
+def delete_message(conn, body):
+    """Удаляет одно письмо/сообщение вместе с его вложениями"""
+    partner_id = body.get('partner_id')
+    message_id = body.get('message_id')
+    if not partner_id or not message_id:
+        return error_response('partner_id and message_id are required', 400)
+    with conn.cursor() as cur:
+        cur.execute("DELETE FROM bridge_attachments WHERE message_id = %s", (message_id,))
+        cur.execute("DELETE FROM bridge_messages WHERE id = %s AND partner_id = %s", (message_id, partner_id))
+        conn.commit()
+    return ok_response({'success': True})
+
+
+def delete_conversation(conn, body):
+    """Удаляет всю переписку с клиентом (все сообщения и вложения по всем каналам)"""
+    partner_id = body.get('partner_id')
+    client_id = body.get('client_id')
+    if not partner_id or not client_id:
+        return error_response('partner_id and client_id are required', 400)
+    with conn.cursor() as cur:
+        cur.execute("""
+            DELETE FROM bridge_attachments WHERE message_id IN (
+                SELECT id FROM bridge_messages WHERE client_id = %s AND partner_id = %s
+            )
+        """, (client_id, partner_id))
+        cur.execute("DELETE FROM bridge_messages WHERE client_id = %s AND partner_id = %s", (client_id, partner_id))
+        conn.commit()
+    return ok_response({'success': True})
 
 
 # --------------------------------------------------------------- signatures --

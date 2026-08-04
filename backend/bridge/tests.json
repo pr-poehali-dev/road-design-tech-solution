@@ -75,6 +75,39 @@
       "path": "/",
       "body": { "resource": "save_signature", "partner_id": 14 },
       "expectedStatus": 400
+    },
+    {
+      "name": "Folder messages require ids",
+      "method": "GET",
+      "path": "/?resource=folder_messages",
+      "expectedStatus": 400
+    },
+    {
+      "name": "Get folder messages",
+      "method": "GET",
+      "path": "/?resource=folder_messages&partner_id=14&folder_id=1",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Delete message requires ids",
+      "method": "POST",
+      "path": "/",
+      "body": { "resource": "delete_message", "partner_id": 14 },
+      "expectedStatus": 400
+    },
+    {
+      "name": "Delete conversation requires ids",
+      "method": "POST",
+      "path": "/",
+      "body": { "resource": "delete_conversation", "partner_id": 14 },
+      "expectedStatus": 400
+    },
+    {
+      "name": "Delete folder requires ids",
+      "method": "POST",
+      "path": "/",
+      "body": { "resource": "delete_folder", "partner_id": 14 },
+      "expectedStatus": 400
     }
   ]
 }

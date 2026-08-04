@@ -231,4 +231,24 @@ export const bridgeApi = {
     const pid = getPartnerId();
     return call(BRIDGE_URL, { method: 'POST', body: JSON.stringify({ resource: 'import_range', partner_id: pid, ...payload }) });
   },
+
+  getFolderMessages: (folderId: number, partnerId?: number): Promise<{ messages: BridgeMessage[] }> => {
+    const pid = partnerId ?? getPartnerId();
+    return call(`${BRIDGE_URL}?resource=folder_messages&partner_id=${pid}&folder_id=${folderId}`);
+  },
+
+  deleteMessage: (messageId: number, partnerId?: number) => {
+    const pid = partnerId ?? getPartnerId();
+    return call(BRIDGE_URL, { method: 'POST', body: JSON.stringify({ resource: 'delete_message', partner_id: pid, message_id: messageId }) });
+  },
+
+  deleteConversation: (clientId: number, partnerId?: number) => {
+    const pid = partnerId ?? getPartnerId();
+    return call(BRIDGE_URL, { method: 'POST', body: JSON.stringify({ resource: 'delete_conversation', partner_id: pid, client_id: clientId }) });
+  },
+
+  deleteFolder: (folderId: number, partnerId?: number) => {
+    const pid = partnerId ?? getPartnerId();
+    return call(BRIDGE_URL, { method: 'POST', body: JSON.stringify({ resource: 'delete_folder', partner_id: pid, folder_id: folderId }) });
+  },
 };
