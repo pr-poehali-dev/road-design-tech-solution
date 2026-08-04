@@ -331,8 +331,20 @@ def _save_attachment(cur, message_id, filename, mime, raw):
     """, (message_id, filename, mime, len(raw), url))
 
 
-def _find_client_or_create(cur, partner_id, clients_by_email, counterpart_addr, counterpart_name, own_addresses):
-    """Находит клиента по email; если не найден и адрес не наш собственный — создаёт новый лид."""
+def _get_default_stage_key(cur, partner_id):
+    """Первая по порядку стадия воронки партнёра (та, что крайняя слева в канбане) —
+    именно на неё должны попадать новые лиды, созданные автоматически по письму.
+    Ключи стадий у каждого партнёра свои (настраиваются в CRM), поэтому 'new' захардкодить нельзя."""
+    cur.execute("""
+        SELECT stage_key FROM crm_stages WHERE partner_id = %s ORDER BY sort_order ASC LIMIT 1
+    """, (partner_id,))
+    row = cur.fetchone()
+    return row['stage_key'] if row else 'new'
+
+
+def _find_client_or_create(cur, partner_id, clients_by_email, counterpart_addr, counterpart_name, own_addresses, default_stage_key):
+    """Находит клиента по email; если не найден и адрес не наш собственный — создаёт новый лид
+    на первой стадии воронки партнёра."""
     if not counterpart_addr:
         return None
     client_id = clients_by_email.get(counterpart_addr)
@@ -344,9 +356,9 @@ def _find_client_or_create(cur, partner_id, clients_by_email, counterpart_addr, 
     company_name = counterpart_name or counterpart_addr
     cur.execute("""
         INSERT INTO crm_clients (partner_id, company_name, contact_person, email, stage, auto_created)
-        VALUES (%s, %s, %s, %s, 'new', TRUE)
+        VALUES (%s, %s, %s, %s, %s, TRUE)
         RETURNING id
-    """, (partner_id, company_name, counterpart_name or '', counterpart_addr))
+    """, (partner_id, company_name, counterpart_name or '', counterpart_addr, default_stage_key))
     new_id = cur.fetchone()['id']
     clients_by_email[counterpart_addr] = new_id
     return new_id
@@ -372,13 +384,15 @@ def sync_email(conn, body):
         cur.execute("SELECT id, email FROM crm_clients WHERE partner_id = %s AND email IS NOT NULL AND email != ''", (partner_id,))
         clients_by_email = {r['email'].lower(): r['id'] for r in cur.fetchall() if r['email']}
 
+        default_stage_key = _get_default_stage_key(cur, partner_id)
+
     total_imported = 0
     total_created = 0
     errors = []
 
     for box in boxes:
         try:
-            imported, created = _sync_mailbox(conn, partner_id, box['address'], box['password'], known_ids, clients_by_email, own_addresses)
+            imported, created = _sync_mailbox(conn, partner_id, box['address'], box['password'], known_ids, clients_by_email, own_addresses, default_stage_key)
             total_imported += imported
             total_created += created
         except Exception as exc:
@@ -392,7 +406,7 @@ def sync_email(conn, body):
     return ok_response(result)
 
 
-def _sync_mailbox(conn, partner_id, address, password, known_ids, clients_by_email, own_addresses):
+def _sync_mailbox(conn, partner_id, address, password, known_ids, clients_by_email, own_addresses, default_stage_key):
     """Синхронизирует последние 30 писем одного почтового ящика"""
     imported = 0
     created_leads = 0
@@ -432,7 +446,7 @@ def _sync_mailbox(conn, partner_id, address, password, known_ids, clients_by_ema
                 body_text = _get_email_body(msg)[:20000]
                 to_addr = parseaddr(msg.get('To', ''))[1]
 
-                client_id = _find_client_or_create(cur, partner_id, clients_by_email, from_addr, from_name, own_addresses)
+                client_id = _find_client_or_create(cur, partner_id, clients_by_email, from_addr, from_name, own_addresses, default_stage_key)
                 if client_id and from_addr not in clients_by_email:
                     created_leads += 1
 
@@ -659,6 +673,7 @@ def import_range(conn, body):
         known_ids = {r['email_message_id'] for r in cur.fetchall()}
         cur.execute("SELECT id, email FROM crm_clients WHERE partner_id = %s AND email IS NOT NULL AND email != ''", (partner_id,))
         clients_by_email = {r['email'].lower(): r['id'] for r in cur.fetchall() if r['email']}
+        default_stage_key = _get_default_stage_key(cur, partner_id)
 
     imap = imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT, timeout=20)
     try:
@@ -711,7 +726,7 @@ def import_range(conn, body):
                             counterpart_addr, counterpart_name = to_addr, None
                             sender_name = 'Менеджер'
 
-                        client_id = _find_client_or_create(cur, partner_id, clients_by_email, counterpart_addr, counterpart_name, own_addresses)
+                        client_id = _find_client_or_create(cur, partner_id, clients_by_email, counterpart_addr, counterpart_name, own_addresses, default_stage_key)
 
                         cur.execute("""
                             INSERT INTO bridge_messages (
