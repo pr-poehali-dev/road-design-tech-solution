@@ -63,9 +63,13 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
 
   const [flatList, setFlatList] = useState<BridgeMessage[]>([]);
   const [flatLoading, setFlatLoading] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const shouldAutoScrollRef = useRef(true);
+  const prevClientIdRef = useRef<number | null>(null);
 
   useEffect(() => {
     bridgeApi.getMailboxes().then((res) => {
@@ -124,9 +128,25 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
     return () => clearInterval(interval);
   }, [selectedClientId, loadMessages, tab]);
 
+  // Скроллим к последнему сообщению только при открытии диалога или если пользователь и так
+  // находится внизу переписки — иначе автообновление каждые 15с будет сбрасывать чтение истории вниз
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    const isNewConversation = prevClientIdRef.current !== selectedClientId;
+    prevClientIdRef.current = selectedClientId;
+    if (isNewConversation) {
+      shouldAutoScrollRef.current = true;
+    }
+    if (shouldAutoScrollRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: isNewConversation ? 'auto' : 'smooth' });
+    }
+  }, [messages, selectedClientId]);
+
+  const handleMessagesScroll = () => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    shouldAutoScrollRef.current = distanceFromBottom < 80;
+  };
 
   const loadFlatList = useCallback(async (direction: 'in' | 'out') => {
     setFlatLoading(true);
@@ -243,7 +263,13 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
   const mailboxOptions = mailboxes.length ? mailboxes : ['sale@sppi.ooo'];
 
   return (
-    <div className="flex flex-col h-[calc(100vh-220px)] p-4 gap-3">
+    <div
+      className={
+        fullscreen
+          ? 'fixed inset-0 z-[100] flex flex-col bg-[#0B0C10] p-4 gap-3'
+          : 'flex flex-col h-[calc(100vh-220px)] p-4 gap-3'
+      }
+    >
       {/* ---- Tabs + mailbox filter ---- */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex gap-1 bg-[#0B0C10]/40 rounded-lg p-1">
@@ -287,6 +313,15 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
             title="Проверить новые письма"
           >
             <Icon name={syncing ? 'Loader2' : 'RefreshCw'} size={14} className={syncing ? 'animate-spin' : ''} />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setFullscreen((v) => !v)}
+            className="h-8 px-2 text-[#66FCF1] hover:bg-[#45A29E]/10"
+            title={fullscreen ? 'Свернуть' : 'Развернуть на весь экран'}
+          >
+            <Icon name={fullscreen ? 'Minimize2' : 'Maximize2'} size={14} />
           </Button>
         </div>
       </div>
@@ -412,7 +447,7 @@ export const CRMBridge = ({ partnerId, initialClientId }: CRMBridgeProps = {}) =
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                <div ref={messagesContainerRef} onScroll={handleMessagesScroll} className="flex-1 overflow-y-auto p-4 space-y-3">
                   {messages.map((m) => (
                     <div key={m.id} className={`flex ${m.direction === 'out' ? 'justify-end' : 'justify-start'}`}>
                       <div
