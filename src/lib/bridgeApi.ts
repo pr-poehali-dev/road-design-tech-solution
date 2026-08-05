@@ -218,9 +218,18 @@ export const bridgeApi = {
     return call(BRIDGE_URL, { method: 'POST', body: JSON.stringify({ resource: 'send_telegram', partner_id: pid, ...payload }) });
   },
 
-  syncEmail: (partnerId?: number) => {
+  // Синхронизация вызывается из нескольких мест одновременно (фоновый таймер CRM, виджет на
+  // главном экране, ручная кнопка обновления). Если запрос уже выполняется — переиспользуем
+  // тот же промис вместо повторного похода на сервер, чтобы почта не сканировалась параллельно
+  // и письма не дублировались.
+  _syncInFlight: null as Promise<any> | null,
+  syncEmail(partnerId?: number) {
+    if (this._syncInFlight) return this._syncInFlight;
     const pid = partnerId ?? getPartnerId();
-    return call(BRIDGE_URL, { method: 'POST', body: JSON.stringify({ resource: 'sync_email', partner_id: pid }) });
+    const req = call(BRIDGE_URL, { method: 'POST', body: JSON.stringify({ resource: 'sync_email', partner_id: pid }) })
+      .finally(() => { this._syncInFlight = null; });
+    this._syncInFlight = req;
+    return req;
   },
 
   markRead: (client_id: number) => {

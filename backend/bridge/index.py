@@ -138,7 +138,7 @@ def get_conversations(conn, params):
                 m.created_at AS last_message_created_at
             FROM crm_clients c
             JOIN bridge_messages m ON m.client_id = c.id
-            WHERE c.partner_id = %s
+            WHERE c.partner_id = %s AND m.is_duplicate = FALSE
         """
         args = [partner_id]
         if channel:
@@ -168,7 +168,7 @@ def get_messages(conn, params):
             SELECT m.*, f.name AS folder_name, f.color AS folder_color
             FROM bridge_messages m
             LEFT JOIN bridge_folders f ON f.id = m.folder_id
-            WHERE m.client_id = %s
+            WHERE m.client_id = %s AND m.is_duplicate = FALSE
         """
         args = [client_id]
         if channel:
@@ -203,7 +203,7 @@ def get_email_list(conn, params):
             FROM bridge_messages m
             LEFT JOIN crm_clients c ON c.id = m.client_id
             LEFT JOIN bridge_folders f ON f.id = m.folder_id
-            WHERE m.partner_id = %s AND m.channel = 'email' AND m.direction = %s
+            WHERE m.partner_id = %s AND m.channel = 'email' AND m.direction = %s AND m.is_duplicate = FALSE
         """
         args = [partner_id, direction]
         if mailbox:
@@ -242,7 +242,7 @@ def get_notifications(conn, params):
                    f.name AS folder_name, f.color AS folder_color
             FROM bridge_messages m
             LEFT JOIN bridge_folders f ON f.id = m.folder_id
-            WHERE m.partner_id = %s AND m.direction = 'in' AND m.notified = FALSE
+            WHERE m.partner_id = %s AND m.direction = 'in' AND m.notified = FALSE AND m.is_duplicate = FALSE
             ORDER BY m.created_at ASC LIMIT 20
         """, (partner_id,))
         rows = cur.fetchall()
@@ -265,7 +265,7 @@ def get_folder_messages(conn, params):
             SELECT m.*, c.company_name, c.contact_person
             FROM bridge_messages m
             LEFT JOIN crm_clients c ON c.id = m.client_id
-            WHERE m.partner_id = %s AND m.folder_id = %s
+            WHERE m.partner_id = %s AND m.folder_id = %s AND m.is_duplicate = FALSE
             ORDER BY m.created_at DESC
         """, (partner_id, folder_id))
         messages = cur.fetchall()
@@ -295,7 +295,7 @@ def get_folders(conn, params):
         return error_response('Missing partner_id', 400)
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute("""
-            SELECT f.*, COUNT(m.id) AS messages_count
+            SELECT f.*, COUNT(m.id) FILTER (WHERE m.is_duplicate = FALSE) AS messages_count
             FROM bridge_folders f
             LEFT JOIN bridge_messages m ON m.folder_id = f.id
             WHERE f.partner_id = %s
@@ -658,44 +658,60 @@ def _find_client_or_create(cur, partner_id, clients_by_email, counterpart_addr, 
 
 def sync_email(conn, body):
     """Синхронизирует входящую почту по всем настроенным IMAP-ящикам: скачивает новые письма,
-    привязывает к клиенту по email, создаёт нового лида если отправитель неизвестен."""
+    привязывает к клиенту по email, создаёт нового лида если отправитель неизвестен.
+    Защищена advisory-блокировкой: если синхронизация для этого партнёра уже выполняется
+    (например, запущена параллельно фоновым таймером и ручной кнопкой), повторный запуск
+    просто пропускается — это устраняет дублирование писем из-за гонки запросов."""
     partner_id = body.get('partner_id')
     if not partner_id:
         return error_response('Missing partner_id', 400)
 
-    boxes = _get_mailboxes()
-    if not boxes:
-        return error_response('Не настроен ни один почтовый ящик', 500)
+    with conn.cursor() as lock_cur:
+        lock_cur.execute("SELECT pg_try_advisory_lock(918273645, %s)", (int(partner_id),))
+        got_lock = lock_cur.fetchone()[0]
+    if not got_lock:
+        return ok_response({'success': True, 'imported': 0, 'linked': 0, 'created_leads': 0, 'skipped': 'sync already in progress'})
 
-    own_addresses = {b['address'].lower() for b in boxes}
+    try:
+        boxes = _get_mailboxes()
+        if not boxes:
+            return error_response('Не настроен ни один почтовый ящик', 500)
 
-    with conn.cursor(cursor_factory=RealDictCursor) as cur:
-        cur.execute("SELECT email_message_id FROM bridge_messages WHERE channel = 'email' AND email_message_id IS NOT NULL")
-        known_ids = {r['email_message_id'] for r in cur.fetchall()}
+        own_addresses = {b['address'].lower() for b in boxes}
 
-        cur.execute("SELECT id, email FROM crm_clients WHERE partner_id = %s AND email IS NOT NULL AND email != ''", (partner_id,))
-        clients_by_email = {r['email'].lower(): r['id'] for r in cur.fetchall() if r['email']}
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                SELECT email_message_id FROM bridge_messages
+                WHERE channel = 'email' AND email_message_id IS NOT NULL AND is_duplicate = FALSE
+            """)
+            known_ids = {r['email_message_id'] for r in cur.fetchall()}
 
-        default_stage_key = _get_default_stage_key(cur, partner_id)
+            cur.execute("SELECT id, email FROM crm_clients WHERE partner_id = %s AND email IS NOT NULL AND email != ''", (partner_id,))
+            clients_by_email = {r['email'].lower(): r['id'] for r in cur.fetchall() if r['email']}
 
-    total_imported = 0
-    total_created = 0
-    errors = []
+            default_stage_key = _get_default_stage_key(cur, partner_id)
 
-    for box in boxes:
-        try:
-            imported, created = _sync_mailbox(conn, partner_id, box['address'], box['password'], known_ids, clients_by_email, own_addresses, default_stage_key)
-            total_imported += imported
-            total_created += created
-        except Exception as exc:
-            errors.append(f"{box['address']}: {exc}")
+        total_imported = 0
+        total_created = 0
+        errors = []
 
-    linked = _backfill_unlinked_emails(conn, partner_id)
+        for box in boxes:
+            try:
+                imported, created = _sync_mailbox(conn, partner_id, box['address'], box['password'], known_ids, clients_by_email, own_addresses, default_stage_key)
+                total_imported += imported
+                total_created += created
+            except Exception as exc:
+                errors.append(f"{box['address']}: {exc}")
 
-    result = {'success': True, 'imported': total_imported, 'linked': linked, 'created_leads': total_created}
-    if errors:
-        result['errors'] = errors
-    return ok_response(result)
+        linked = _backfill_unlinked_emails(conn, partner_id)
+
+        result = {'success': True, 'imported': total_imported, 'linked': linked, 'created_leads': total_created}
+        if errors:
+            result['errors'] = errors
+        return ok_response(result)
+    finally:
+        with conn.cursor() as lock_cur:
+            lock_cur.execute("SELECT pg_advisory_unlock(918273645, %s)", (int(partner_id),))
 
 
 def _sync_mailbox(conn, partner_id, address, password, known_ids, clients_by_email, own_addresses, default_stage_key):
@@ -756,6 +772,8 @@ def _sync_mailbox(conn, partner_id, address, password, known_ids, clients_by_ema
                         subject, body, email_message_id, email_from, email_to, mailbox,
                         email_in_reply_to, email_references, email_cc, email_to_all, folder_id
                     ) VALUES (%s, %s, 'email', 'in', %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (email_message_id) WHERE channel = 'email' AND email_message_id IS NOT NULL AND is_duplicate = FALSE
+                    DO NOTHING
                     RETURNING id
                 """, (
                     partner_id, client_id, from_name or from_addr,
@@ -765,7 +783,12 @@ def _sync_mailbox(conn, partner_id, address, password, known_ids, clients_by_ema
                     ', '.join(to_all) if to_all else None,
                     folder_id,
                 ))
-                msg_id = cur.fetchone()['id']
+                inserted_row = cur.fetchone()
+                if not inserted_row:
+                    # письмо уже было сохранено параллельным процессом — пропускаем
+                    known_ids.add(message_id)
+                    continue
+                msg_id = inserted_row['id']
 
                 for filename, mime, raw_bytes in _extract_email_attachments(msg):
                     _save_attachment(cur, msg_id, filename, mime, raw_bytes)
@@ -1099,7 +1122,10 @@ def import_range(conn, body):
     own_addresses = {b['address'].lower() for b in boxes}
 
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
-        cur.execute("SELECT email_message_id FROM bridge_messages WHERE channel = 'email' AND email_message_id IS NOT NULL")
+        cur.execute("""
+            SELECT email_message_id FROM bridge_messages
+            WHERE channel = 'email' AND email_message_id IS NOT NULL AND is_duplicate = FALSE
+        """)
         known_ids = {r['email_message_id'] for r in cur.fetchall()}
         cur.execute("SELECT id, email FROM crm_clients WHERE partner_id = %s AND email IS NOT NULL AND email != ''", (partner_id,))
         clients_by_email = {r['email'].lower(): r['id'] for r in cur.fetchall() if r['email']}
@@ -1163,12 +1189,19 @@ def import_range(conn, body):
                                 partner_id, client_id, channel, direction, sender_name,
                                 subject, body, email_message_id, email_from, email_to, mailbox
                             ) VALUES (%s, %s, 'email', %s, %s, %s, %s, %s, %s, %s, %s)
+                            ON CONFLICT (email_message_id) WHERE channel = 'email' AND email_message_id IS NOT NULL AND is_duplicate = FALSE
+                            DO NOTHING
                             RETURNING id
                         """, (
                             partner_id, client_id, direction, sender_name,
                             subject, body_text, message_id or None, from_addr, to_addr, mailbox_address,
                         ))
-                        msg_id = cur.fetchone()['id']
+                        inserted_row = cur.fetchone()
+                        if not inserted_row:
+                            if message_id:
+                                known_ids.add(message_id)
+                            continue
+                        msg_id = inserted_row['id']
 
                         for filename, mime, raw_bytes in _extract_email_attachments(msg):
                             _save_attachment(cur, msg_id, filename, mime, raw_bytes)
