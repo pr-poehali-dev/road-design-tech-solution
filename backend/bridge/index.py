@@ -7,6 +7,7 @@ import re
 import ssl
 import uuid
 import base64
+import html as html_lib
 import smtplib
 import imaplib
 import email as email_lib
@@ -16,7 +17,7 @@ from email.header import decode_header
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
-from email.utils import parseaddr
+from email.utils import parseaddr, formatdate, make_msgid
 
 import boto3
 import psycopg2
@@ -659,59 +660,48 @@ def _find_client_or_create(cur, partner_id, clients_by_email, counterpart_addr, 
 def sync_email(conn, body):
     """Синхронизирует входящую почту по всем настроенным IMAP-ящикам: скачивает новые письма,
     привязывает к клиенту по email, создаёт нового лида если отправитель неизвестен.
-    Защищена advisory-блокировкой: если синхронизация для этого партнёра уже выполняется
-    (например, запущена параллельно фоновым таймером и ручной кнопкой), повторный запуск
-    просто пропускается — это устраняет дублирование писем из-за гонки запросов."""
+    От дублирования при параллельных запусках (фоновый таймер + ручная кнопка) защищает
+    ON CONFLICT DO NOTHING при вставке и дедупликация запроса на фронтенде."""
     partner_id = body.get('partner_id')
     if not partner_id:
         return error_response('Missing partner_id', 400)
 
-    with conn.cursor() as lock_cur:
-        lock_cur.execute("SELECT pg_try_advisory_lock(918273645, %s)", (int(partner_id),))
-        got_lock = lock_cur.fetchone()[0]
-    if not got_lock:
-        return ok_response({'success': True, 'imported': 0, 'linked': 0, 'created_leads': 0, 'skipped': 'sync already in progress'})
+    boxes = _get_mailboxes()
+    if not boxes:
+        return error_response('Не настроен ни один почтовый ящик', 500)
 
-    try:
-        boxes = _get_mailboxes()
-        if not boxes:
-            return error_response('Не настроен ни один почтовый ящик', 500)
+    own_addresses = {b['address'].lower() for b in boxes}
 
-        own_addresses = {b['address'].lower() for b in boxes}
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("""
+            SELECT email_message_id FROM bridge_messages
+            WHERE channel = 'email' AND email_message_id IS NOT NULL AND is_duplicate = FALSE
+        """)
+        known_ids = {r['email_message_id'] for r in cur.fetchall()}
 
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute("""
-                SELECT email_message_id FROM bridge_messages
-                WHERE channel = 'email' AND email_message_id IS NOT NULL AND is_duplicate = FALSE
-            """)
-            known_ids = {r['email_message_id'] for r in cur.fetchall()}
+        cur.execute("SELECT id, email FROM crm_clients WHERE partner_id = %s AND email IS NOT NULL AND email != ''", (partner_id,))
+        clients_by_email = {r['email'].lower(): r['id'] for r in cur.fetchall() if r['email']}
 
-            cur.execute("SELECT id, email FROM crm_clients WHERE partner_id = %s AND email IS NOT NULL AND email != ''", (partner_id,))
-            clients_by_email = {r['email'].lower(): r['id'] for r in cur.fetchall() if r['email']}
+        default_stage_key = _get_default_stage_key(cur, partner_id)
 
-            default_stage_key = _get_default_stage_key(cur, partner_id)
+    total_imported = 0
+    total_created = 0
+    errors = []
 
-        total_imported = 0
-        total_created = 0
-        errors = []
+    for box in boxes:
+        try:
+            imported, created = _sync_mailbox(conn, partner_id, box['address'], box['password'], known_ids, clients_by_email, own_addresses, default_stage_key)
+            total_imported += imported
+            total_created += created
+        except Exception as exc:
+            errors.append(f"{box['address']}: {exc}")
 
-        for box in boxes:
-            try:
-                imported, created = _sync_mailbox(conn, partner_id, box['address'], box['password'], known_ids, clients_by_email, own_addresses, default_stage_key)
-                total_imported += imported
-                total_created += created
-            except Exception as exc:
-                errors.append(f"{box['address']}: {exc}")
+    linked = _backfill_unlinked_emails(conn, partner_id)
 
-        linked = _backfill_unlinked_emails(conn, partner_id)
-
-        result = {'success': True, 'imported': total_imported, 'linked': linked, 'created_leads': total_created}
-        if errors:
-            result['errors'] = errors
-        return ok_response(result)
-    finally:
-        with conn.cursor() as lock_cur:
-            lock_cur.execute("SELECT pg_advisory_unlock(918273645, %s)", (int(partner_id),))
+    result = {'success': True, 'imported': total_imported, 'linked': linked, 'created_leads': total_created}
+    if errors:
+        result['errors'] = errors
+    return ok_response(result)
 
 
 def _sync_mailbox(conn, partner_id, address, password, known_ids, clients_by_email, own_addresses, default_stage_key):
@@ -996,21 +986,24 @@ def send_email(conn, body):
 
     all_attachments = decoded_attachments + depo_attachments
 
-    body_html = text.replace('\n', '<br>')
+    body_html = html_lib.escape(text).replace('\n', '<br>')
     if signature_html:
         body_html = f"{body_html}<br><br>{signature_html}"
-        plain_text = text
-    else:
-        plain_text = text
+    plain_text = text
 
     msg = MIMEMultipart('mixed')
     alt = MIMEMultipart('alternative')
     alt.attach(MIMEText(plain_text, 'plain', 'utf-8'))
-    alt.attach(MIMEText(f"<div>{body_html}</div>", 'html', 'utf-8'))
+    html_doc = (
+        '<!DOCTYPE html><html><head><meta charset="utf-8"></head>'
+        f'<body style="font-family:Arial,sans-serif;font-size:14px;color:#222;">{body_html}</body></html>'
+    )
+    alt.attach(MIMEText(html_doc, 'html', 'utf-8'))
     msg.attach(alt)
 
-    new_message_id = f"<{uuid.uuid4().hex}@{address.split('@')[-1]}>"
+    new_message_id = make_msgid(domain=address.split('@')[-1])
     msg['Message-ID'] = new_message_id
+    msg['Date'] = formatdate(localtime=True)
     msg['Subject'] = subject or '(без темы)'
     msg['From'] = address
     msg['To'] = ', '.join(to_list)
@@ -1020,6 +1013,8 @@ def send_email(conn, body):
         msg['In-Reply-To'] = in_reply_to
     if references:
         msg['References'] = references
+    msg['MIME-Version'] = '1.0'
+    msg['X-Mailer'] = 'sppi.ooo Bridge'
 
     for name, mime, raw in all_attachments:
         part = MIMEApplication(raw, Name=name)
