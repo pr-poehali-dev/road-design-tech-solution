@@ -543,6 +543,20 @@ def _decode_mime_words(s):
     return decoded
 
 
+def _html_to_text(html):
+    """Превращает HTML-письмо в читаемый текст: убирает <style>/<script> целиком (иначе их
+    содержимое остаётся текстом после вырезания тегов), заменяет теги-разделители на переносы
+    строк, декодирует HTML-сущности (&nbsp;, &amp; и т.п.) и схлопывает лишние пробелы."""
+    text = re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', html, flags=re.IGNORECASE | re.DOTALL)
+    text = re.sub(r'<!--.*?-->', ' ', text, flags=re.DOTALL)
+    text = re.sub(r'<(br|/p|/div|/tr|/li|/h[1-6])\s*/?>', '\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'<[^>]+>', ' ', text)
+    text = html_lib.unescape(text)
+    text = re.sub(r'[ \t]+', ' ', text)
+    text = re.sub(r'\n\s*\n+', '\n\n', text)
+    return text.strip()
+
+
 def _get_email_body(msg):
     """Извлекает текстовое тело письма (предпочитая text/plain)"""
     if msg.is_multipart():
@@ -567,15 +581,20 @@ def _get_email_body(msg):
         if plain:
             return plain
         if html:
-            return re.sub('<[^<]+?>', ' ', html)
+            return _html_to_text(html)
         return ''
     else:
         try:
             payload = msg.get_payload(decode=True)
             charset = msg.get_content_charset() or 'utf-8'
-            return payload.decode(charset, errors='ignore') if payload else ''
+            text = payload.decode(charset, errors='ignore') if payload else ''
         except Exception:
             return ''
+        # Письмо без multipart-обёртки, но с типом text/html (например от Bidzaar) —
+        # нужно так же вырезать теги, иначе в переписке сохранится исходный код страницы
+        if msg.get_content_type() == 'text/html':
+            return _html_to_text(text)
+        return text
 
 
 def _extract_email_attachments(msg):
