@@ -27,10 +27,13 @@ const CHANNEL_LABEL: Record<BridgeChannel, string> = {
 };
 
 export interface PendingAttachment {
+  id: string;
   name: string;
   mime: string;
   size: number;
-  dataUrl: string;
+  url?: string;
+  uploading?: boolean;
+  error?: boolean;
 }
 
 interface BridgeComposerProps {
@@ -121,19 +124,45 @@ export const BridgeComposer = ({
     setShowCc(true);
   };
 
+  // Каждый файл загружается в хранилище отдельным запросом сразу при выборе, а в письмо
+  // попадает только ссылка. Так письмо с несколькими вложениями не собирается в один
+  // огромный запрос (что раньше приводило к ошибке 413 при отправке).
   const handleFiles = async (files: FileList | null) => {
     if (!files?.length) return;
-    const added: PendingAttachment[] = [];
-    for (const file of Array.from(files)) {
+    const picked = Array.from(files).filter((file) => {
       if (file.size > 25 * 1024 * 1024) {
         alert(`Файл "${file.name}" превышает 25 МБ и не будет прикреплён`);
-        continue;
+        return false;
       }
-      const dataUrl = await fileToDataUrl(file);
-      added.push({ name: file.name, mime: file.type || 'application/octet-stream', size: file.size, dataUrl });
-    }
-    setAttachments((prev) => [...prev, ...added]);
+      return true;
+    });
     if (fileInputRef.current) fileInputRef.current.value = '';
+
+    const pending: PendingAttachment[] = picked.map((file) => ({
+      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      name: file.name,
+      mime: file.type || 'application/octet-stream',
+      size: file.size,
+      uploading: true,
+    }));
+    setAttachments((prev) => [...prev, ...pending]);
+
+    await Promise.all(
+      picked.map(async (file, idx) => {
+        const id = pending[idx].id;
+        try {
+          const dataUrl = await fileToDataUrl(file);
+          const res = await bridgeApi.uploadAttachment({
+            name: file.name,
+            mime: file.type || 'application/octet-stream',
+            data: dataUrl,
+          });
+          setAttachments((prev) => prev.map((a) => (a.id === id ? { ...a, url: res.url, uploading: false } : a)));
+        } catch {
+          setAttachments((prev) => prev.map((a) => (a.id === id ? { ...a, uploading: false, error: true } : a)));
+        }
+      }),
+    );
   };
 
   const reset = () => {
@@ -149,6 +178,14 @@ export const BridgeComposer = ({
 
   const handleSend = async () => {
     if (!text.trim()) return;
+    if (attachments.some((a) => a.uploading)) {
+      alert('Дождитесь загрузки вложений');
+      return;
+    }
+    if (attachments.some((a) => a.error)) {
+      alert('Не все вложения загрузились — удалите их или прикрепите заново');
+      return;
+    }
     setSending(true);
     try {
       if (channel === 'email') {
@@ -166,7 +203,7 @@ export const BridgeComposer = ({
             to: recipients,
             cc: cc.trim() || undefined,
             mailbox: mailbox || undefined,
-            attachments: attachments.map((a) => ({ name: a.name, mime: a.mime, data: a.dataUrl })),
+            attachments: attachments.map((a) => ({ name: a.name, mime: a.mime, url: a.url })),
             depo_files: depoFiles.length ? depoFiles : undefined,
             reply_to_message_id: replyTo?.id,
             signature_id: signatureId,
@@ -284,15 +321,23 @@ export const BridgeComposer = ({
 
       {totalFiles > 0 && (
         <div className="flex flex-wrap gap-1.5">
-          {attachments.map((a, idx) => (
+          {attachments.map((a) => (
             <span
-              key={`a-${idx}`}
-              className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-[#0B0C10]/50 border border-[#45A29E]/30 text-[#8B98A5] max-w-[180px]"
+              key={a.id}
+              className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded-md border max-w-[180px] ${
+                a.error
+                  ? 'bg-[#FF6600]/10 border-[#FF6600]/40 text-[#FF9B4D]'
+                  : 'bg-[#0B0C10]/50 border-[#45A29E]/30 text-[#8B98A5]'
+              }`}
             >
-              <Icon name={fileIcon(a.name, a.mime)} size={11} className="shrink-0" />
+              {a.uploading ? (
+                <Icon name="Loader2" size={11} className="shrink-0 animate-spin" />
+              ) : (
+                <Icon name={a.error ? 'AlertCircle' : fileIcon(a.name, a.mime)} size={11} className="shrink-0" />
+              )}
               <span className="truncate">{a.name}</span>
               <button
-                onClick={() => setAttachments((prev) => prev.filter((_, i) => i !== idx))}
+                onClick={() => setAttachments((prev) => prev.filter((x) => x.id !== a.id))}
                 className="shrink-0 hover:text-[#FF6600]"
               >
                 <Icon name="X" size={11} />
@@ -383,8 +428,9 @@ export const BridgeComposer = ({
         )}
         <Button
           onClick={handleSend}
-          disabled={sending || !text.trim()}
+          disabled={sending || !text.trim() || attachments.some((a) => a.uploading)}
           className="h-auto px-4 bg-[#45A29E] hover:bg-[#3d8f8b] text-[#0B0C10] font-bold shrink-0 disabled:opacity-40"
+          title={attachments.some((a) => a.uploading) ? 'Дождитесь загрузки вложений' : undefined}
         >
           <Icon name={sending ? 'Loader2' : 'Send'} size={16} className={sending ? 'animate-spin' : ''} />
         </Button>

@@ -108,6 +108,13 @@
       "path": "/",
       "body": { "resource": "delete_folder", "partner_id": 14 },
       "expectedStatus": 400
+    },
+    {
+      "name": "Upload attachment rejects invalid base64",
+      "method": "POST",
+      "path": "/",
+      "body": { "resource": "upload_attachment", "name": "test.txt", "data": "not-valid-base64!!!" },
+      "expectedStatus": 400
     }
   ]
 }

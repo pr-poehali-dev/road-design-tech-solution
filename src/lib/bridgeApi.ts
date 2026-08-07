@@ -98,7 +98,8 @@ export interface BridgeConversation {
 export interface BridgeAttachmentInput {
   name: string;
   mime: string;
-  data: string; // data URL (base64)
+  data?: string; // data URL (base64) — старый формат, для обратной совместимости
+  url?: string; // ссылка на уже загруженный в хранилище файл (текущий формат)
 }
 
 // Аккаунт CRM, к которому привязан модуль "Радужный мост" на главном экране станции (/deod-space).
@@ -121,6 +122,9 @@ async function call(url: string, options: RequestInit = {}): Promise<any> {
     ...options,
     headers: { 'Content-Type': 'application/json', ...(options.headers as any) },
   });
+  if (res.status === 413) {
+    throw new Error('Файл слишком большой для отправки одним запросом. Попробуйте прикрепить файл меньшего размера.');
+  }
   let data: any = {};
   try {
     data = await res.json();
@@ -206,6 +210,13 @@ export const bridgeApi = {
 
   uploadSignatureImage: (payload: { name: string; mime: string; data: string }): Promise<{ url: string }> => {
     return call(BRIDGE_URL, { method: 'POST', body: JSON.stringify({ resource: 'upload_signature_image', ...payload }) });
+  },
+
+  // Вложения письма загружаются по одному отдельными запросами (а не все разом в теле send_email) —
+  // иначе при нескольких файлах суммарный размер base64 в одном запросе превышает лимит сервера
+  // и приходит ошибка 413 (Payload Too Large).
+  uploadAttachment: (payload: { name: string; mime: string; data: string }): Promise<{ success: boolean; url: string; name: string; mime: string; size: number }> => {
+    return call(BRIDGE_URL, { method: 'POST', body: JSON.stringify({ resource: 'upload_attachment', ...payload }) });
   },
 
   getNotifications: (partnerId?: number): Promise<{ notifications: BridgeNotification[] }> => {

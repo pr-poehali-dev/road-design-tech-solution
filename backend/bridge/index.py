@@ -94,6 +94,8 @@ def handler(event, context):
                 return save_signature(conn, body)
             if resource == 'upload_signature_image':
                 return upload_signature_image(body)
+            if resource == 'upload_attachment':
+                return upload_attachment(body)
             if resource == 'delete_message':
                 return delete_message(conn, body)
             if resource == 'delete_conversation':
@@ -498,6 +500,25 @@ def upload_signature_image(body):
         return error_response('Картинка больше 5 МБ', 400)
     url = _upload_bytes(raw, name, mime, prefix='signatures')
     return ok_response({'success': True, 'url': url})
+
+
+def upload_attachment(body):
+    """Загружает одно вложение письма в хранилище и возвращает публичную ссылку.
+    Файлы для письма с несколькими вложениями загружаются по одному отдельными запросами —
+    иначе при отправке письма одним запросом с несколькими base64-файлами тело запроса
+    превышает допустимый размер и сервер отвечает ошибкой 413 (Payload Too Large)."""
+    data_url = body.get('data') or ''
+    name = body.get('name') or 'file'
+    mime = body.get('mime') or 'application/octet-stream'
+    raw_b64 = data_url.split(',', 1)[1] if ',' in data_url else data_url
+    try:
+        raw = base64.b64decode(raw_b64)
+    except Exception:
+        return error_response('Некорректный файл', 400)
+    if len(raw) > MAX_ATTACH_SIZE:
+        return error_response(f'Файл "{name}" превышает 25 МБ', 400)
+    url = _upload_bytes(raw, name, mime, prefix='bridge-attachments')
+    return ok_response({'success': True, 'url': url, 'name': name, 'mime': mime, 'size': len(raw)})
 
 
 def _attach_attachments(cur, messages):
@@ -992,13 +1013,23 @@ def send_email(conn, body):
     decoded_attachments = []
     for att in attachments_in:
         name = att.get('name') or 'file'
-        data_url = att.get('data') or ''
         mime = att.get('mime') or 'application/octet-stream'
-        raw_b64 = data_url.split(',', 1)[1] if ',' in data_url else data_url
-        try:
-            raw = base64.b64decode(raw_b64)
-        except Exception:
-            continue
+        url = att.get('url')
+        if url:
+            # Вложение уже загружено в хранилище отдельным запросом (upload_attachment) —
+            # так письмо с несколькими файлами не упирается в лимит размера тела запроса
+            try:
+                raw = _fetch_url_bytes(url)
+            except Exception:
+                continue
+        else:
+            # Фолбэк на старый формат: файл целиком в base64 внутри тела запроса
+            data_url = att.get('data') or ''
+            raw_b64 = data_url.split(',', 1)[1] if ',' in data_url else data_url
+            try:
+                raw = base64.b64decode(raw_b64)
+            except Exception:
+                continue
         if len(raw) > MAX_ATTACH_SIZE:
             return error_response(f'Файл "{name}" превышает 25 МБ', 400)
         decoded_attachments.append((name, mime, raw))
