@@ -7,6 +7,7 @@ import re
 import ssl
 import uuid
 import base64
+import hashlib
 import html as html_lib
 import smtplib
 import imaplib
@@ -536,6 +537,18 @@ def _attach_attachments(cur, messages):
 
 # ------------------------------------------------------------------- email --
 
+def _synthetic_message_id(from_addr, subject, date_header, body_text):
+    """Некоторые отправители (автоматические рассылки, например уведомления с сайта
+    trade@enplus-td.ru) не проставляют заголовок Message-ID вообще. Без него нечем
+    отличить уже импортированное письмо от нового при повторной проверке почты — оно
+    попадало бы в переписку заново на каждом цикле синхронизации.
+    Строим устойчивый отпечаток письма из отправителя, темы, даты и начала текста —
+    он одинаков при каждой проверке одного и того же письма."""
+    fingerprint = f"{from_addr}|{subject}|{date_header}|{(body_text or '')[:500]}"
+    digest = hashlib.sha256(fingerprint.encode('utf-8', errors='ignore')).hexdigest()
+    return f"<synthetic-{digest}@bridge.local>"
+
+
 def _get_mailboxes():
     """Настроенные почтовые ящики (адрес + пароль), для которых заведены секреты"""
     boxes = []
@@ -773,16 +786,20 @@ def _sync_mailbox(conn, partner_id, address, password, known_ids, clients_by_ema
             for raw in raw_messages:
                 msg = email_lib.message_from_bytes(raw)
 
-                message_id = (msg.get('Message-ID') or '').strip()
-                if message_id and message_id in known_ids:
-                    continue
-
                 from_name, from_addr = parseaddr(msg.get('From', ''))
                 from_name = _decode_mime_words(from_name) or from_addr
                 from_addr = (from_addr or '').lower()
                 subject = _decode_mime_words(msg.get('Subject', ''))
                 body_text = _get_email_body(msg)[:20000]
                 to_addr = parseaddr(msg.get('To', ''))[1]
+
+                message_id = (msg.get('Message-ID') or '').strip()
+                if not message_id:
+                    # письмо без Message-ID (частые автоматические рассылки) — строим устойчивый
+                    # отпечаток, иначе оно будет заново засчитано как новое на каждой проверке почты
+                    message_id = _synthetic_message_id(from_addr, subject, msg.get('Date', ''), body_text)
+                if message_id in known_ids:
+                    continue
 
                 in_reply_to = (msg.get('In-Reply-To') or '').strip() or None
                 references = (msg.get('References') or '').strip() or None
@@ -807,7 +824,7 @@ def _sync_mailbox(conn, partner_id, address, password, known_ids, clients_by_ema
                     RETURNING id
                 """, (
                     partner_id, client_id, from_name or from_addr,
-                    subject, body_text, message_id or None, from_addr, to_addr, address,
+                    subject, body_text, message_id, from_addr, to_addr, address,
                     in_reply_to, references,
                     ', '.join(cc_list) if cc_list else None,
                     ', '.join(to_all) if to_all else None,
@@ -1206,12 +1223,16 @@ def import_range(conn, body):
                 with conn.cursor(cursor_factory=RealDictCursor) as cur:
                     for raw in raw_messages:
                         msg = email_lib.message_from_bytes(raw)
-                        message_id = (msg.get('Message-ID') or '').strip()
-                        if message_id and message_id in known_ids:
-                            continue
 
                         subject = _decode_mime_words(msg.get('Subject', ''))
                         body_text = _get_email_body(msg)[:20000]
+
+                        message_id = (msg.get('Message-ID') or '').strip()
+                        if not message_id:
+                            fp_addr = parseaddr(msg.get('From' if direction == 'in' else 'To', ''))[1].lower()
+                            message_id = _synthetic_message_id(fp_addr, subject, msg.get('Date', ''), body_text)
+                        if message_id in known_ids:
+                            continue
 
                         if direction == 'in':
                             from_name, from_addr = parseaddr(msg.get('From', ''))
@@ -1239,12 +1260,11 @@ def import_range(conn, body):
                             RETURNING id
                         """, (
                             partner_id, client_id, direction, sender_name,
-                            subject, body_text, message_id or None, from_addr, to_addr, mailbox_address,
+                            subject, body_text, message_id, from_addr, to_addr, mailbox_address,
                         ))
                         inserted_row = cur.fetchone()
                         if not inserted_row:
-                            if message_id:
-                                known_ids.add(message_id)
+                            known_ids.add(message_id)
                             continue
                         msg_id = inserted_row['id']
 
