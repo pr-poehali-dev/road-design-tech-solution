@@ -30,6 +30,7 @@ IMAP_PORT = 993
 SMTP_HOST = 'smtp.beget.com'
 SMTP_PORT = 465
 MAX_ATTACH_SIZE = 25 * 1024 * 1024  # 25 МБ на файл
+MAX_SYNC_MSG_SIZE = 20 * 1024 * 1024  # письма крупнее при синхронизации почты скачиваются только заголовком, без тела и вложений — иначе разбор такого MIME в памяти функции (лимит 256 МБ) валит весь процесс
 DEFAULT_MAILBOX_ADDRESS = 'info@sppi.ooo'
 
 
@@ -758,7 +759,12 @@ def sync_email(conn, body):
 
 
 def _sync_mailbox(conn, partner_id, address, password, known_ids, clients_by_email, own_addresses, default_stage_key):
-    """Синхронизирует последние 30 писем одного почтового ящика"""
+    """Синхронизирует последние 30 писем одного почтового ящика.
+    Каждый цикл сперва лёгким запросом (только заголовок Message-ID, без тела и вложений)
+    проверяет, какие из последних 30 писем уже сохранены — и полностью (со всеми вложениями)
+    скачивает только реально новые. Раньше все 30 писем перекачивались целиком на каждой
+    проверке (раз в минуту) даже если они уже были импортированы — при письмах с крупными
+    вложениями это раздувало память функции сверх лимита и вызывало аварийную остановку."""
     imported = 0
     created_leads = 0
 
@@ -776,22 +782,81 @@ def _sync_mailbox(conn, partner_id, address, password, known_ids, clients_by_ema
             return 0, 0
 
         id_set = b','.join(recent_ids)
-        status, msg_data = imap.fetch(id_set, '(RFC822)')
-        if status != 'OK' or not msg_data:
-            raise RuntimeError('Не удалось получить письма')
+        status, header_data = imap.fetch(id_set, '(BODY.PEEK[HEADER.FIELDS (MESSAGE-ID)])')
+        if status != 'OK' or not header_data:
+            raise RuntimeError('Не удалось получить список писем')
 
-        raw_messages = [part[1] for part in msg_data if isinstance(part, tuple)]
+        # Определяем, какие письма уже импортированы (по Message-ID), чтобы не перекачивать
+        # их содержимое заново. Письма без Message-ID (некоторые рассылки) считаем новыми —
+        # их отпечаток можно построить только после того, как известно тело письма.
+        new_num_ids = []
+        for part in header_data:
+            if not isinstance(part, tuple):
+                continue
+            seq_match = re.match(rb'(\d+)\s+\(', part[0])
+            if not seq_match:
+                continue
+            seq_num = seq_match.group(1)
+            header_msg = email_lib.message_from_bytes(part[1])
+            mid = (header_msg.get('Message-ID') or '').strip()
+            if not mid or mid not in known_ids:
+                new_num_ids.append(seq_num)
+
+        if not new_num_ids:
+            return 0, 0
+
+        # Не более 10 новых писем за один проход: письма скачиваются и обрабатываются по одному
+        # (а не все разом одним FETCH), чтобы память не росла пропорционально суммарному размеру
+        # вложений сразу многих писем. Если новых писем больше — доберём их на следующих проверках
+        # почты (каждую минуту), пока хвост не рассосётся.
+        new_num_ids = new_num_ids[:10]
+
+        # Узнаём размер каждого письма заранее (лёгкий запрос без скачивания содержимого) —
+        # письмо на 32 МБ уже выводило функцию из строя: при разборе такого большого MIME
+        # с вложениями в памяти функция превышала лимит в 256 МБ и аварийно останавливалась,
+        # из-за чего синхронизация зависала на одном и том же письме на каждой проверке почты.
+        id_set = b','.join(new_num_ids)
+        status, size_data = imap.fetch(id_set, '(RFC822.SIZE)')
+        sizes = {}
+        if status == 'OK' and size_data:
+            for part in size_data:
+                raw_line = part if isinstance(part, bytes) else (part[0] if isinstance(part, tuple) else b'')
+                m = re.match(rb'(\d+)\s+\(RFC822\.SIZE\s+(\d+)\)', raw_line)
+                if m:
+                    sizes[m.group(1)] = int(m.group(2))
 
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            for raw in raw_messages:
+            for num_id in new_num_ids:
+                msg_size = sizes.get(num_id)
+                too_large = msg_size is not None and msg_size > MAX_SYNC_MSG_SIZE
+
+                if too_large:
+                    # Письмо слишком большое, чтобы безопасно разобрать его целиком в памяти —
+                    # скачиваем только заголовки, без тела и вложений
+                    status, msg_data = imap.fetch(num_id, '(BODY.PEEK[HEADER])')
+                else:
+                    status, msg_data = imap.fetch(num_id, '(RFC822)')
+                if status != 'OK' or not msg_data:
+                    continue
+                raw = next((part[1] for part in msg_data if isinstance(part, tuple)), None)
+                if not raw:
+                    continue
                 msg = email_lib.message_from_bytes(raw)
 
                 from_name, from_addr = parseaddr(msg.get('From', ''))
                 from_name = _decode_mime_words(from_name) or from_addr
                 from_addr = (from_addr or '').lower()
                 subject = _decode_mime_words(msg.get('Subject', ''))
-                body_text = _get_email_body(msg)[:20000]
                 to_addr = parseaddr(msg.get('To', ''))[1]
+
+                if too_large:
+                    size_mb = round(msg_size / 1024 / 1024, 1)
+                    body_text = (
+                        f"[Письмо слишком большое для автоматической загрузки: {size_mb} МБ. "
+                        f"Текст и вложения не были скачаны — откройте письмо напрямую в почтовом ящике.]"
+                    )
+                else:
+                    body_text = _get_email_body(msg)[:20000]
 
                 message_id = (msg.get('Message-ID') or '').strip()
                 if not message_id:
@@ -837,8 +902,9 @@ def _sync_mailbox(conn, partner_id, address, password, known_ids, clients_by_ema
                     continue
                 msg_id = inserted_row['id']
 
-                for filename, mime, raw_bytes in _extract_email_attachments(msg):
-                    _save_attachment(cur, msg_id, filename, mime, raw_bytes)
+                if not too_large:
+                    for filename, mime, raw_bytes in _extract_email_attachments(msg):
+                        _save_attachment(cur, msg_id, filename, mime, raw_bytes)
 
                 if client_id:
                     cur.execute("""
@@ -856,7 +922,10 @@ def _sync_mailbox(conn, partner_id, address, password, known_ids, clients_by_ema
             imap.close()
         except Exception:
             pass
-        imap.logout()
+        try:
+            imap.logout()
+        except Exception:
+            pass
 
     return imported, created_leads
 
@@ -1215,76 +1284,104 @@ def import_range(conn, body):
         imported = 0
         if page_ids:
             id_set = b','.join(page_ids)
-            status, msg_data = imap.fetch(id_set, '(RFC822)')
-            if status == 'OK' and msg_data:
-                raw_messages = [part[1] for part in msg_data if isinstance(part, tuple)]
-                direction = 'in' if folder == 'INBOX' else 'out'
+            # Узнаём размер каждого письма заранее — письмо с крупным вложением при разборе
+            # целиком в памяти может превысить лимит функции и оборвать весь импорт диапазона
+            status, size_data = imap.fetch(id_set, '(RFC822.SIZE)')
+            sizes = {}
+            if status == 'OK' and size_data:
+                for part in size_data:
+                    raw_line = part if isinstance(part, bytes) else (part[0] if isinstance(part, tuple) else b'')
+                    m = re.match(rb'(\d+)\s+\(RFC822\.SIZE\s+(\d+)\)', raw_line)
+                    if m:
+                        sizes[m.group(1)] = int(m.group(2))
 
-                with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                    for raw in raw_messages:
-                        msg = email_lib.message_from_bytes(raw)
+            direction = 'in' if folder == 'INBOX' else 'out'
 
-                        subject = _decode_mime_words(msg.get('Subject', ''))
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                for num_id in page_ids:
+                    msg_size = sizes.get(num_id)
+                    too_large = msg_size is not None and msg_size > MAX_SYNC_MSG_SIZE
+
+                    if too_large:
+                        status, msg_data = imap.fetch(num_id, '(BODY.PEEK[HEADER])')
+                    else:
+                        status, msg_data = imap.fetch(num_id, '(RFC822)')
+                    if status != 'OK' or not msg_data:
+                        continue
+                    raw = next((part[1] for part in msg_data if isinstance(part, tuple)), None)
+                    if not raw:
+                        continue
+                    msg = email_lib.message_from_bytes(raw)
+
+                    subject = _decode_mime_words(msg.get('Subject', ''))
+                    if too_large:
+                        size_mb = round(msg_size / 1024 / 1024, 1)
+                        body_text = (
+                            f"[Письмо слишком большое для автоматической загрузки: {size_mb} МБ. "
+                            f"Текст и вложения не были скачаны — откройте письмо напрямую в почтовом ящике.]"
+                        )
+                    else:
                         body_text = _get_email_body(msg)[:20000]
 
-                        message_id = (msg.get('Message-ID') or '').strip()
-                        if not message_id:
-                            fp_addr = parseaddr(msg.get('From' if direction == 'in' else 'To', ''))[1].lower()
-                            message_id = _synthetic_message_id(fp_addr, subject, msg.get('Date', ''), body_text)
-                        if message_id in known_ids:
-                            continue
+                    message_id = (msg.get('Message-ID') or '').strip()
+                    if not message_id:
+                        fp_addr = parseaddr(msg.get('From' if direction == 'in' else 'To', ''))[1].lower()
+                        message_id = _synthetic_message_id(fp_addr, subject, msg.get('Date', ''), body_text)
+                    if message_id in known_ids:
+                        continue
 
-                        if direction == 'in':
-                            from_name, from_addr = parseaddr(msg.get('From', ''))
-                            from_name = _decode_mime_words(from_name) or from_addr
-                            from_addr = (from_addr or '').lower()
-                            to_addr = parseaddr(msg.get('To', ''))[1]
-                            counterpart_addr, counterpart_name = from_addr, from_name
-                            sender_name = from_name or from_addr
-                        else:
-                            _, to_addr_raw = parseaddr(msg.get('To', ''))
-                            to_addr = (to_addr_raw or '').lower()
-                            from_addr = mailbox_address
-                            counterpart_addr, counterpart_name = to_addr, None
-                            sender_name = 'Менеджер'
+                    if direction == 'in':
+                        from_name, from_addr = parseaddr(msg.get('From', ''))
+                        from_name = _decode_mime_words(from_name) or from_addr
+                        from_addr = (from_addr or '').lower()
+                        to_addr = parseaddr(msg.get('To', ''))[1]
+                        counterpart_addr, counterpart_name = from_addr, from_name
+                        sender_name = from_name or from_addr
+                    else:
+                        _, to_addr_raw = parseaddr(msg.get('To', ''))
+                        to_addr = (to_addr_raw or '').lower()
+                        from_addr = mailbox_address
+                        counterpart_addr, counterpart_name = to_addr, None
+                        sender_name = 'Менеджер'
 
-                        client_id = _find_client_or_create(cur, partner_id, clients_by_email, counterpart_addr, counterpart_name, own_addresses, default_stage_key)
+                    client_id = _find_client_or_create(cur, partner_id, clients_by_email, counterpart_addr, counterpart_name, own_addresses, default_stage_key)
 
-                        cur.execute("""
-                            INSERT INTO bridge_messages (
-                                partner_id, client_id, channel, direction, sender_name,
-                                subject, body, email_message_id, email_from, email_to, mailbox
-                            ) VALUES (%s, %s, 'email', %s, %s, %s, %s, %s, %s, %s, %s)
-                            ON CONFLICT (email_message_id) WHERE channel = 'email' AND email_message_id IS NOT NULL AND is_duplicate = FALSE
-                            DO NOTHING
-                            RETURNING id
-                        """, (
-                            partner_id, client_id, direction, sender_name,
-                            subject, body_text, message_id, from_addr, to_addr, mailbox_address,
-                        ))
-                        inserted_row = cur.fetchone()
-                        if not inserted_row:
-                            known_ids.add(message_id)
-                            continue
-                        msg_id = inserted_row['id']
+                    cur.execute("""
+                        INSERT INTO bridge_messages (
+                            partner_id, client_id, channel, direction, sender_name,
+                            subject, body, email_message_id, email_from, email_to, mailbox
+                        ) VALUES (%s, %s, 'email', %s, %s, %s, %s, %s, %s, %s, %s)
+                        ON CONFLICT (email_message_id) WHERE channel = 'email' AND email_message_id IS NOT NULL AND is_duplicate = FALSE
+                        DO NOTHING
+                        RETURNING id
+                    """, (
+                        partner_id, client_id, direction, sender_name,
+                        subject, body_text, message_id, from_addr, to_addr, mailbox_address,
+                    ))
+                    inserted_row = cur.fetchone()
+                    if not inserted_row:
+                        known_ids.add(message_id)
+                        continue
+                    msg_id = inserted_row['id']
 
+                    if not too_large:
                         for filename, mime, raw_bytes in _extract_email_attachments(msg):
                             _save_attachment(cur, msg_id, filename, mime, raw_bytes)
 
-                        if client_id and direction == 'in':
-                            cur.execute("""
-                                UPDATE crm_clients
-                                SET last_message_at = NOW(), unread_messages_count = unread_messages_count + 1
-                                WHERE id = %s
-                            """, (client_id,))
-                        elif client_id:
-                            cur.execute("UPDATE crm_clients SET last_message_at = NOW() WHERE id = %s", (client_id,))
+                    if client_id and direction == 'in':
+                        cur.execute("""
+                            UPDATE crm_clients
+                            SET last_message_at = NOW(), unread_messages_count = unread_messages_count + 1
+                            WHERE id = %s
+                        """, (client_id,))
+                    elif client_id:
+                        cur.execute("UPDATE crm_clients SET last_message_at = NOW() WHERE id = %s", (client_id,))
 
-                        if message_id:
-                            known_ids.add(message_id)
-                        imported += 1
+                    if message_id:
+                        known_ids.add(message_id)
+                    imported += 1
 
-                    conn.commit()
+                conn.commit()
     finally:
         try:
             imap.logout()
