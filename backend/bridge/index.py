@@ -551,7 +551,7 @@ def _synthetic_message_id(from_addr, subject, date_header, body_text):
 
 
 def _get_mailboxes():
-    """Настроенные почтовые ящики (адрес + пароль), для которых заведены секреты"""
+    """Настроенные почтовые ящики (адрес + пароль), для которых заведены секреты."""
     boxes = []
     addr1 = os.environ.get('EMAIL_ADDRESS')
     pass1 = os.environ.get('EMAIL_PASSWORD')
