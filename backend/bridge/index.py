@@ -551,7 +551,7 @@ def _synthetic_message_id(from_addr, subject, date_header, body_text):
 
 
 def _get_mailboxes():
-    """Настроенные почтовые ящики (адрес + пароль), для которых заведены секреты"""
+    """Настроенные почтовые ящики (адрес + пароль), для которых заведены секреты."""
     boxes = []
     addr1 = os.environ.get('EMAIL_ADDRESS')
     pass1 = os.environ.get('EMAIL_PASSWORD')
@@ -770,7 +770,11 @@ def _sync_mailbox(conn, partner_id, address, password, known_ids, clients_by_ema
 
     imap = imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT, timeout=15)
     try:
-        imap.login(address, password)
+        try:
+            imap.login(address, password)
+        except imaplib.IMAP4.error as exc:
+            masked = (password[:1] + '*' * max(len(password) - 2, 0) + password[-1:]) if len(password) > 1 else '*'
+            raise RuntimeError(f"login failed, pwd_len={len(password)}, pwd_masked={masked}: {exc}")
         imap.select('INBOX')
         status, data = imap.search(None, 'ALL')
         if status != 'OK':
