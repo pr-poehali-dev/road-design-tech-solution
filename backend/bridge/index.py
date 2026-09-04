@@ -558,7 +558,9 @@ def _get_mailboxes():
     if addr1 and pass1:
         boxes.append({'address': addr1, 'password': pass1})
 
-    pass2 = os.environ.get('INFO_EMAIL_PASSWORD')
+    # INFO_EMAIL_PASSWORD_V2 — новый секрет; INFO_EMAIL_PASSWORD оставлен как запасной вариант
+    # на случай, если V2 ещё не успел появиться в окружении
+    pass2 = os.environ.get('INFO_EMAIL_PASSWORD_V2') or os.environ.get('INFO_EMAIL_PASSWORD')
     if pass2:
         boxes.append({'address': DEFAULT_MAILBOX_ADDRESS, 'password': pass2})
 
