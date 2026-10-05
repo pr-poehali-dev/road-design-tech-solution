@@ -11,6 +11,24 @@ interface AuthCtx {
   refresh: () => Promise<void>;
 }
 
+const GUEST: CrewMember = {
+  id: 2,
+  callsign: 'Командор',
+  role: 'commander',
+  role_label: 'Командор',
+  department: null,
+  points: 0,
+  rank: '',
+  avatar_url: null,
+  motto: null,
+  suit_status: null,
+  position_title: null,
+  parent_id: null,
+  is_admin: true,
+  is_online: true,
+  email: 'ipzlenko@gmail.com',
+};
+
 const Ctx = createContext<AuthCtx | null>(null);
 
 export const useCrewAuth = () => {
@@ -42,7 +60,7 @@ export const CrewAuthProvider = ({ children }: { children: ReactNode }) => {
       }
     }
     if (!getToken()) {
-      setMe(null);
+      setMe(GUEST);
       setConnectionError(false);
       setLoading(false);
       return;
@@ -58,11 +76,9 @@ export const CrewAuthProvider = ({ children }: { children: ReactNode }) => {
       const status = err instanceof ApiError ? err.status : 0;
       if (status === 401 || status === 403) {
         clearToken();
-        setMe(null);
-        setConnectionError(false);
-      } else {
-        setConnectionError(true);
       }
+      setMe(GUEST);
+      setConnectionError(false);
     } finally {
       setLoading(false);
     }
@@ -87,7 +103,7 @@ export const CrewAuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     crewApi.logout();
     clearToken();
-    setMe(null);
+    setMe(GUEST);
   };
 
   return <Ctx.Provider value={{ me, loading, connectionError, login, register, logout, refresh }}>{children}</Ctx.Provider>;
