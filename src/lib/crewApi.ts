@@ -172,6 +172,8 @@ export const crewApi = {
   register: (email: string, password: string, callsign: string, invite_code?: string) =>
     call(CREW_URL, { method: 'POST', body: JSON.stringify({ action: 'register', email, password, callsign, invite_code }) }, false),
 
+  keyLogin: (key: string) =>
+    call<{ member: CrewMember; token: string }>(CREW_URL, { method: 'POST', body: JSON.stringify({ action: 'key_login', key }) }, false),
   login: (email: string, password: string) =>
     call(CREW_URL, { method: 'POST', body: JSON.stringify({ action: 'login', email, password }) }, false),
 

@@ -25,6 +25,22 @@ export const CrewAuthProvider = ({ children }: { children: ReactNode }) => {
   const [connectionError, setConnectionError] = useState(false);
 
   const refresh = useCallback(async () => {
+    const url = new URL(window.location.href);
+    const key = url.searchParams.get('key');
+    if (key) {
+      url.searchParams.delete('key');
+      window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+      try {
+        const res = await crewApi.keyLogin(key);
+        setToken(res.token);
+        setMe(res.member);
+        setConnectionError(false);
+        setLoading(false);
+        return;
+      } catch {
+        clearToken();
+      }
+    }
     if (!getToken()) {
       setMe(null);
       setConnectionError(false);

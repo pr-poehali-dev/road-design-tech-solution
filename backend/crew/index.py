@@ -127,6 +127,8 @@ def handler(event, context):
             return do_register(conn, body)
         if action == 'login':
             return do_login(conn, body)
+        if action == 'key_login':
+            return do_key_login(conn, body)
 
         # authed actions
         me = get_member_by_token(conn, token)
@@ -236,6 +238,24 @@ def do_login(conn, body):
         if not member or member['password_hash'] != hash_pw(password):
             return err('Неверный email или пароль', 401)
 
+        cur.execute("UPDATE crew_members SET is_online = TRUE, last_seen = NOW() WHERE id = %s", (member['id'],))
+        token = create_session(cur, member['id'])
+        conn.commit()
+
+    return ok({'member': member_public(member, include_email=True), 'token': token})
+
+
+def do_key_login(conn, body):
+    expected = os.environ.get('DEOD_ACCESS_KEY') or ''
+    key = body.get('key') or ''
+    if not expected or not secrets.compare_digest(key.encode(), expected.encode()):
+        return err('Неверная ссылка доступа', 401)
+
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("SELECT * FROM crew_members WHERE email = %s", ('ipzlenko@gmail.com',))
+        member = cur.fetchone()
+        if not member:
+            return err('Пользователь не найден', 404)
         cur.execute("UPDATE crew_members SET is_online = TRUE, last_seen = NOW() WHERE id = %s", (member['id'],))
         token = create_session(cur, member['id'])
         conn.commit()
